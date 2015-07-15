@@ -193,6 +193,8 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=NULL){
   return(G)
 }
 
+## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
+## Also I should add the function for olives sparse trees used by Santos 2012
 momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a, b,mountainous=FALSE, surf.model){
   if(method=="short.crops"){
     print="using method for short agricultural crops (Tasumi 2003)"
@@ -207,6 +209,21 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   return(Z.om)
 }
 
+aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1, z2, mountainous=FALSE, surf.model){
+    u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
+    if(mountainous==TRUE){
+      u200 <- u200 * (1+0.1*(surf.model$DEM-height.ws))
+    }
+    friction.velocity <- 0.41 * u200 / log(200/Z.om)
+    r.ah <- log(z2/z1)/friction.velocity*0.41
+}
+
+
+
+
+
+
+## Add a function to stimate all parameters for some points
 
 #########################################################################
 save(create.aoi, load_L8data, checkSRTMgrids, prepareSRTMdata, solar.angles,
