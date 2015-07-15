@@ -218,6 +218,41 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1, z
     r.ah <- log(z2/z1)/friction.velocity*0.41
 }
 
+hot.and.cold <- function(method="random", path=getwd(), ETr, Rn, G, r.ah, DEM, LAI, n=1, aoi){
+  bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
+  bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
+  if(!missing(aoi)){
+    bright.temp.b10 <- crop(bright.temp.b10,aoi) 
+    bright.temp.b11 <- crop(bright.temp.b11,aoi) 
+  }
+  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1
+  Ts_datum <- Ts - (DEM - 702) * 6.49 / 1000
+  P <- 101.3*((293-0.0065 * dem)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  if(method=="random"){
+    if(!max(values(Ts))>=310){
+      warning(paste("Ts max value is", round(max(values(Ts)),2)))
+      hot <- sample(which(values(Ts)==max(values(Ts))),1)  
+    } else hot <- sample(which(values(Ts>310)),n) 
+    if(!max(values(LAI))>=4){
+      warning(paste("LAI max value is", round(max(values(LAI)),2)))
+      cold <- sample(which(values(LAI)==max(values(LAI))),1)  
+    } else cold <- sample(which(values(LAI>4)),n)  
+    
+    
+    cold <- sample(which(values(LAI>4)),n)
+  }
+  dT_hot <- (Rn[hot] - G[hot])*r_ah[hot]/(air.density[hot]*1007)
+  lambda <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
+  LE_cold <- 1.05 * ETr * lambda[cold]
+  H_cold <- Rn[cold]-G[cold]-LE_cold
+  dT_cold <- H_cold*r_ah[cold]/(air.density[cold]*1007)
+  a <- (dT_hot-dT_cold)/(Ts_datum[hot]-Ts_datum[cold])
+  b <- (dT_hot-a)/Ts_datum[hot]
+  dT <- a+b*Ts_datum
+  return(dT)
+}
+
 
 
 
