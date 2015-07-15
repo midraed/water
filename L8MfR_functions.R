@@ -193,12 +193,24 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=NULL){
   return(G)
 }
 
-
+momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a, b,mountainous=FALSE, surf.model){
+  if(method=="short.crops"){
+    print="using method for short agricultural crops (Tasumi 2003)"
+    Z.om <- (0.018*LAI)
+  }
+  if(method=="custom"){
+    Z.om <- exp((a*NDVI/albedo)+b)
+  }
+  if(mountainous==TRUE){
+    Z.om <- Z.om * (1 + (180/pi*surf.model$Slope - 5)/20)
+  }
+  return(Z.om)
+}
 
 
 #########################################################################
 save(create.aoi, load_L8data, checkSRTMgrids, prepareSRTMdata, solar.angles,
      sw.trasmisivity, incoming.solar.radiation, albedo,
      LAI.metric, outgoing.lw.radiation, incoming.lw.radiation,
-     soil.heat.flux1,
+     soil.heat.flux1, momentum.roughness.length,
      file="L8METRICforR/MfR_functions.RData")
