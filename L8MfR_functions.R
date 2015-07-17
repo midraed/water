@@ -255,6 +255,12 @@ hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, D
   return(result)
 }
 
+sensible.heat.flux <- function(path=getwd(), DEM, dT, r.ah, aoi=NULL){
+  Ts <- surface.temperature(path=path, aoi=aoi)
+  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  air.density*1007*dT/r.ah
+}
 
 
 
