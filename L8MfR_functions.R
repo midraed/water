@@ -28,7 +28,7 @@ load_L8data <-  function(landsat.band, aoi=NULL){
     return(raw.image)
    }
   else
-  print("ERROR: I expected something like LC82320832013319LGN00_BX.TIF")
+  print("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF")
   return(NULL)
 }
 
@@ -45,7 +45,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
   asd@proj4string <- raw.image@crs
   limits <- project(xy = matrix(asd@bbox, ncol=2, nrow=2), proj = asd@proj4string, 
           inverse = TRUE)
-  # I have to improve this. It should ONLY work for west and south coordinates.. maybe
+  # I have to improve this. It should work ONLY for west and south coordinates.. maybe
   lat_needed <- seq(floor(limits[3])+1, floor(limits[4])+1, by=1)
   long_needed <- seq(floor(limits[1]), floor(limits[2])+1, by = 1)
   grids <- expand.grid(lat_needed, long_needed)
@@ -208,6 +208,7 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   return(Z.om)
 }
 
+## Add iteractive solution for r.ah
 aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1=0.1, z2=2, mountainous=FALSE, surf.model){
     u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
     if(mountainous==TRUE){
@@ -219,35 +220,38 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1=0.
 
 hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, DEM, LAI, aoi){
   Ts <- surface.temperature(path=path, aoi=aoi)
-  Ts_datum <- Ts - (DEM - 702) * 6.49 / 1000
+  Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   if(method=="random"){
     if(!max(values(Ts))>=310){
-      warning(paste("Ts max value is", round(max(values(Ts)),2), "and I expected Ts>=310"))
-      hot <- sample(which(values(Ts)==max(values(Ts))),1)  
+      warning(paste("Ts max value is", round(max(values(Ts)),2), "and the expected was Ts >= 310 for hot pixel"))
+      hot <- sample(which(values(Ts)>quantile(Ts,0.9999)),n)  
     } else hot <- sample(which(values(Ts>310)),n) 
     if(!max(values(LAI))>=4){
-      warning(paste("LAI max value is", round(max(values(LAI)),2), "and I expected LAI>=4"))
-      cold <- sample(which(values(LAI)==max(values(LAI))),1)  
+      warning(paste("LAI max value is", round(max(values(LAI)),2), "and the expected was LAI >= 4 for cold pixel"))
+      cold <- sample(which(values(LAI)>quantile(LAI,0.9999)),n)  
     } else cold <- sample(which(values(LAI>4)),n)  
   }
-  dT_hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
-  lambda <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
-  LE_cold <- 1.05 * ETr * lambda[cold]
-  H_cold <- Rn[cold]-G[cold]-LE_cold
-  dT_cold <- H_cold*r.ah[cold]/(air.density[cold]*1007)
-  a <- (dT_hot-dT_cold)/(Ts_datum[hot]-Ts_datum[cold])
-  b <- (dT_hot-a)/Ts_datum[hot]
+  dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
+  latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
+  LE.cold <- 1.05 * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
+  H.cold <- Rn[cold]-G[cold]-LE.cold
+  dT.cold <- H.cold*r.ah[cold]/(air.density[cold]*1007)
+  a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
+  b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
   dT <- a+b*Ts_datum
   # Prepare and populate result list
   result <- list()
   result$dT <- dT
-  result$hot.and.cold <- data.frame(pixel=integer(), Ts=double(), 
-                                    LAI=double(), factor(levels = c("hot", "cold")))
-  for(i in 1:n){result$hot.and.cold[i, ] <- c(hot, Ts[hot], LAI[hot], "hot")}
-  for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold, Ts[cold], LAI[cold], "cold")}
+  result$hot.and.cold <- data.frame(pixel=integer(),  X=integer(), Y=integer(), Ts=double(), 
+                                    LAI=double(), type=factor(levels = c("hot", "cold")))
+  for(i in 1:n){result$hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]), Ts[hot][i], round(LAI[hot][i],2), "hot")}
+  for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, hot[i]), Ts[cold][i], round(LAI[cold][i],2), "cold")}
   #removeTmpFiles(h=0)
+  plot(LAI, main="hot and cold pixels")
+  points(xyFromCell(LAI, hot), col="red", pch=3)
+  points(xyFromCell(LAI, cold), col="blue", pch=4)
   return(result)
 }
 
