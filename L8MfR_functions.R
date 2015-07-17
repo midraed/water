@@ -96,8 +96,6 @@ solar.angles <- function(L8MTL, raw.image, slope, aspect){
    values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
    # hour angle
    hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination)))
-#  hour.angle2 <- asin((sin(sun.elevation)-(sin(declination)*sin(latitude)))
-#         /(cos(declination)*cos(latitude)))
    ## solar incidence angle, for horizontal surface
    incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)*cos(latitude)*cos(hour.angle))
    ##solar incidence angle, for sloping surface
