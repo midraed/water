@@ -137,18 +137,41 @@ albedo <- function(path=getwd(), aoi= NULL){
     return(l8.albedo[[1]])
 }
 
-LAI.metric <- function(path=getwd(), L=0.1, aoi=NULL){
-  toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
-  toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
-  toa.4.5 <- stack(toa.red, toa.nir)
-  if(!missing(aoi)){
-    toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
-  }    
-  SAVI_ID <- (1 + L)*(toa.4.5[[2]]*0.0001 - toa.4.5[[1]]*0.0001)/(L + toa.4.5[[1]]*0.0001 + toa.4.5[[2]]*0.0001)
-  LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
+LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
+  if(method=="metric" | method=="vineyard"){
+    toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
+    toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
+    toa.4.5 <- stack(toa.red, toa.nir)
+    if(!missing(aoi)){
+      toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
+    }    
+    toa.4.5 <- toa.4.5 * 0.0001
+  }
+  if(method=="turner"){
+    toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
+    toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
+    toa.4.5 <- stack(toa.red, toa.nir)
+    if(!missing(aoi)){
+      toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
+    }    
+    toa.4.5 <- toa.4.5 * 0.0001
+  }
+  if(method=="metric"){
+    SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
+    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1  
+  }
+  if(method=="vineyard"){
+    NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
+    LAI <- 4.9 * NDVI -0.46 # Johnson 2003
+  }
+  if(method=="turner"){
+    NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
+    LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
+  }
   removeTmpFiles(h=0)
   return(LAI)
 }
+
 
 surface.temperature <- function(path=getwd(), aoi=NULL){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
@@ -255,13 +278,13 @@ hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, D
   return(result)
 }
 
+## Calculates again the air.density... maybe I should make a insolate function for air.density
 sensible.heat.flux <- function(path=getwd(), DEM, dT, r.ah, aoi=NULL){
   Ts <- surface.temperature(path=path, aoi=aoi)
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   air.density*1007*dT/r.ah
 }
-
 
 
 
