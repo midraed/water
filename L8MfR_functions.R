@@ -152,14 +152,19 @@ LAI.metric <- function(path=getwd(), L=0.1, aoi=NULL){
   return(LAI)
 }
 
-outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=NULL){
+surface.temperature <- function(path=getwd(), aoi=NULL){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
   bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
   if(!missing(aoi)){
     bright.temp.b10 <- crop(bright.temp.b10,aoi) 
     bright.temp.b11 <- crop(bright.temp.b11,aoi) 
   }
-  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1 ## this isn't split-window corrections
+  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1 
+  return(Ts)
+}
+
+outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=NULL){
+  Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
   return(surf.emissivity * 5.67e-8 * Ts^4)
 }
@@ -176,18 +181,14 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=NUL
 }
 
 soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=NULL){
-  bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
-  bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
   toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
   toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
   if(!missing(aoi)){
-    bright.temp.b10 <- crop(bright.temp.b10,aoi) 
-    bright.temp.b11 <- crop(bright.temp.b11,aoi)
     toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
   }
   NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
-  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1 ## this isn't split-window corrections
+  Ts <- surface.temperature(path=path, aoi=aoi)
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   removeTmpFiles(h=0)
   return(G)
@@ -219,13 +220,7 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1=0.
 }
 
 hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, DEM, LAI, aoi){
-  bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
-  bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
-  if(!missing(aoi)){
-    bright.temp.b10 <- crop(bright.temp.b10,aoi) 
-    bright.temp.b11 <- crop(bright.temp.b11,aoi) 
-  }
-  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1
+  Ts <- surface.temperature(path=path, aoi=aoi)
   Ts_datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
