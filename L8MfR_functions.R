@@ -132,8 +132,9 @@ albedo <- function(path=getwd(), aoi= NULL){
     if(!missing(aoi)){
       l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
       }                                # I have to read every row or chunk and then do the calc
-    values(l8.albedo) <- values(l8.albedo[[1]])*0.0001*0.254+values(l8.albedo[[2]])*0.0001*0.149+values(l8.albedo[[3]])*0.0001*0.147+
-                         values(l8.albedo[[4]])*0.0001*0.311+values(l8.albedo[[5]])*0.0001*0.103+values(l8.albedo[[6]])*0.0001*0.036
+    wb <- c(0.264, 0.127, 0.161, 0.252, 0.086, 0.007) # Calculated using SMARTS for Kimberly and Global horiz irr
+    values(l8.albedo) <- values(l8.albedo[[1]])*0.0001*wb[1]+values(l8.albedo[[2]])*0.0001*wb[2]+values(l8.albedo[[3]])*0.0001*wb[3]+
+                         values(l8.albedo[[4]])*0.0001*wb[4]+values(l8.albedo[[5]])*0.0001*wb[5]+values(l8.albedo[[6]])*0.0001*wb[6]
     return(l8.albedo[[1]])
 }
 
@@ -150,7 +151,7 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
   if(method=="turner"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
-    toa.4.5 <- stack(toa.red, toa.nir)
+    toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are sr images
     if(!missing(aoi)){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
     }    
