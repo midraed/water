@@ -232,10 +232,10 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   return(Z.om)
 }
 
-aerodynamic.transport.0 <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surf.model){
+aerodynamic.transport.0 <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, mountainous=FALSE, ws.elevation, surface.model){
   u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
   if(mountainous==TRUE){
-    u200 <- u200 * (1+0.1*(surf.model$DEM-ws.elevation))
+    u200 <- u200 * (1+0.1*((surface.model$DEM-ws.elevation)/1000))
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om)
   r.ah.0 <- log(2/0.1)/friction.velocity*0.41
@@ -280,10 +280,10 @@ hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI,
 
 
 ## Add iteractive solution for r.ah
-aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surf.model){
+aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surface.model){
   u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
   if(mountainous==TRUE){
-    u200 <- u200 * (1+0.1*(surf.model$DEM-ws.elevation))
+    u200 <- u200 * (1+0.1*((surface.model$DEM-ws.elevation)/1000))
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om)
   r.ah.0 <- log(2/0.1)/friction.velocity*0.41
@@ -292,8 +292,20 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, m
   air.density <- 1000 * P / (1.01*(Ts)*287)
   H <- air.density*1007*dT/r.ah.0
   Monin.Obukhov.L <- air.density * 1007 * friction.velocity^3 * Ts / 0.41 * 9.807 * H
-  ## L over 0
-  
+  ## stable condition = L > 0
+  phi.200 <- - 5*(2/Monin.Obukhov.L)
+  phi.2 <- - 5*(2/Monin.Obukhov.L)
+  phi.01 <-  - 5*(0.1/Monin.Obukhov.L) 
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25
+  phi.200 <- 2 * log(1+x.200/2) + log(1 + x.200^2 /2) - 2* atan(x.200) + 0.5 * pi
+  phi.2 <- 2 * log(1 + x.2^2 / 2)
+  phi.01 <- 2 * log(1 + x.01^2 / 2) 
+  ##
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (ln(2/0.1) - phi.2 + phi.01) / friction.velocity * 0.41
 }
 
 
