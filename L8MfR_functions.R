@@ -232,18 +232,17 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   return(Z.om)
 }
 
-## Add iteractive solution for r.ah
-aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, z1=0.1, z2=2, mountainous=FALSE, surf.model){
-    u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
-    if(mountainous==TRUE){
-      u200 <- u200 * (1+0.1*(surf.model$DEM-height.ws))
-    }
-    friction.velocity <- 0.41 * u200 / log(200/Z.om)
-    r.ah <- log(z2/z1)/friction.velocity*0.41
+aerodynamic.transport.0 <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surf.model){
+  u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
+  if(mountainous==TRUE){
+    u200 <- u200 * (1+0.1*(surf.model$DEM-ws.elevation))
+  }
+  friction.velocity <- 0.41 * u200 / log(200/Z.om)
+  r.ah.0 <- log(2/0.1)/friction.velocity*0.41
 }
 
-hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, DEM, LAI, aoi){
-  Ts <- surface.temperature(path=path, aoi=aoi)
+
+hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI, aoi){
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -278,6 +277,26 @@ hot.and.cold <- function(method="random", n=1, path=getwd(), ETr, Rn, G, r.ah, D
   points(xyFromCell(LAI, cold), col="blue", pch=4)
   return(result)
 }
+
+
+## Add iteractive solution for r.ah
+aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surf.model){
+  u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
+  if(mountainous==TRUE){
+    u200 <- u200 * (1+0.1*(surf.model$DEM-ws.elevation))
+  }
+  friction.velocity <- 0.41 * u200 / log(200/Z.om)
+  r.ah.0 <- log(2/0.1)/friction.velocity*0.41
+  Ts <- surface.temperature(path=path, aoi=aoi)
+  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  H <- air.density*1007*dT/r.ah.0
+  Monin.Obukhov.L <- air.density * 1007 * friction.velocity^3 * Ts / 0.41 * 9.807 * H
+  ## L over 0
+  
+}
+
+
 
 ## Calculates again the air.density... maybe I should make a insolate function for air.density
 sensible.heat.flux <- function(path=getwd(), DEM, dT, r.ah, aoi=NULL){
