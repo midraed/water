@@ -122,12 +122,12 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
 }
 
 albedo <- function(path=getwd(), aoi= NULL){
-    srb2 <- raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep=""))
-    srb3 <- raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep=""))
-    srb4 <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
-    srb5 <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
-    srb6 <- raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep=""))
-    srb7 <- raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep=""))
+    srb2 <- raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1])
+    srb3 <- raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1])
+    srb4 <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1])
+    srb5 <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1])
+    srb6 <- raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1])
+    srb7 <- raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1])
     l8.albedo <-  stack(srb2, srb3, srb4, srb5, srb6, srb7)
     if(!missing(aoi)){
       l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
@@ -151,7 +151,7 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
   if(method=="turner"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
-    toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are sr images
+    toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are the sr images
     if(!missing(aoi)){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
     }    
@@ -159,7 +159,8 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
   }
   if(method=="metric"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
-    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1  
+    LAI <- 11 * SAVI_ID ^3 # for SAVI <= 0.817
+    LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="vineyard"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
@@ -277,7 +278,7 @@ hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI,
   return(result)
 }
 
-
+r.ah
 ## Add iteractive solution for r.ah
 aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surface.model){
   u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
