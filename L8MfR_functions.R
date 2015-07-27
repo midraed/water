@@ -268,10 +268,10 @@ hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI,
   result$dT <- dT
   result$hot.and.cold <- data.frame(pixel=integer(),  X=integer(), Y=integer(), Ts=double(), 
                                     LAI=double(), type=factor(levels = c("hot", "cold")))
-  for(i in 1:n){result$hot.and.cold[i, ] <- c(as.numeric(hot[i]), as.numeric(xyFromCell(LAI, hot[i])), as.numeric(Ts[hot][i]), as.numeric(round(LAI[hot][i],2)), "hot")}
+  for(i in 1:n){result$hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]), Ts[hot][i], round(LAI[hot][i],2), "hot")}
   for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, hot[i]), Ts[cold][i], round(LAI[cold][i],2), "cold")}
-  #removeTmpFiles(h=0)
-  plot(LAI, main="hot and cold pixels")
+  removeTmpFiles(h=0)
+  plot(LAI, main="LAI and hot and cold pixels")
   points(xyFromCell(LAI, hot), col="red", pch=3)
   points(xyFromCell(LAI, cold), col="blue", pch=4)
   return(result)
@@ -311,11 +311,12 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, m
   return(r.ah)
 }
 
-update.dT <- function(pixels, Ts, DEM, ){
+update.dT <- function(hc.data, Ts, DEM, Rn, G, r.ah, ETr){
+  hot <- as.numeric(hc.data$pixel[hc.data$type =="hot"])
+  cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
-  
   dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
   LE.cold <- 1.05 * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
@@ -324,7 +325,7 @@ update.dT <- function(pixels, Ts, DEM, ){
   a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
   b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
   dT <- a+b*Ts_datum
-  
+  return(dT)
 }
 
 ## Calculates again the air.density... maybe I should make a insolate function for air.density
