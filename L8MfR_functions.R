@@ -25,6 +25,7 @@ load_L8data <-  function(landsat.band, aoi=NULL){
   else
     raw.image <- crop(raw.image, aoi)
     print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
+    plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
     return(raw.image)
    }
   else
