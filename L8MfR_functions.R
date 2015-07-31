@@ -123,20 +123,20 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
 }
 
 albedo <- function(path=getwd(), aoi= NULL){
-    srb2 <- raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1])
-    srb3 <- raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1])
-    srb4 <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1])
-    srb5 <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1])
-    srb6 <- raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1])
-    srb7 <- raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1])
+    wb <- c(0.264, 0.127, 0.161, 0.252, 0.086, 0.007) # Calculated using SMARTS for Kimberly and Global horiz irr
+    srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x /10000*wb[1]})
+    srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x /10000*wb[2]})
+    srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x /10000*wb[3]})
+    srb5 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1]), fun=function(x){x /10000*wb[4]})
+    srb6 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1]), fun=function(x){x /10000*wb[5]})
+    srb7 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1]), fun=function(x){x /10000*wb[6]})
     l8.albedo <-  stack(srb2, srb3, srb4, srb5, srb6, srb7)
     if(!missing(aoi)){
       l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
-      }                                # I have to read every row or chunk and then do the calc
-    wb <- c(0.264, 0.127, 0.161, 0.252, 0.086, 0.007) # Calculated using SMARTS for Kimberly and Global horiz irr
-    values(l8.albedo) <- values(l8.albedo[[1]])*0.0001*wb[1]+values(l8.albedo[[2]])*0.0001*wb[2]+values(l8.albedo[[3]])*0.0001*wb[3]+
-                         values(l8.albedo[[4]])*0.0001*wb[4]+values(l8.albedo[[5]])*0.0001*wb[5]+values(l8.albedo[[6]])*0.0001*wb[6]
-    return(l8.albedo[[1]])
+      }                                
+    l8.albedo <- stackApply(l8.albedo, indices = c(1,1,1,1,1,1), fun=sum)
+    return(l8.albedo)
+    removeTmpFiles(h=0)
 }
 
 LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
