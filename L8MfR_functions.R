@@ -1,3 +1,5 @@
+### ADD writeRaster to all the functions
+
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   asd <- SpatialPolygons(
@@ -7,6 +9,8 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
         bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
   return(asd)
 }
+
+
 
 # Better get the images from a folder...! (like albedo)
 load_L8data <-  function(landsat.band, aoi=NULL){
@@ -123,7 +127,7 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
 }
 
 albedo <- function(path=getwd(), aoi= NULL){
-    wb <- c(0.264, 0.127, 0.161, 0.252, 0.086, 0.007) # Calculated using SMARTS for Kimberly and Global horiz irr
+    wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x /10000*wb[1]})
     srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x /10000*wb[2]})
     srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x /10000*wb[3]})
@@ -136,10 +140,9 @@ albedo <- function(path=getwd(), aoi= NULL){
       }                                
     l8.albedo <- stackApply(l8.albedo, indices = c(1,1,1,1,1,1), fun=sum)
     return(l8.albedo)
-    removeTmpFiles(h=0)
 }
 
-LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL){
+LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL, L=0.1){
   if(method=="metric" | method=="vineyard"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
@@ -205,8 +208,8 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=NUL
 }
 
 soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=NULL){
-  toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
-  toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
+  toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1])
+  toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1])
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
   if(!missing(aoi)){
     toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
@@ -243,7 +246,7 @@ aerodynamic.transport.0 <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, mou
   r.ah.0 <- log(2/0.1)/friction.velocity*0.41
 }
 
-hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI, aoi){
+hot.and.cold <- function(method="random", n=1, Ts, ETr, ETp.coef= 1.05, Rn, G, r.ah = r.ah.0, DEM, LAI, aoi){
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -259,12 +262,12 @@ hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI,
   }
   dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
-  LE.cold <- 1.05 * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
+  LE.cold <- ETp.coef * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
   H.cold <- Rn[cold]-G[cold]-LE.cold
   dT.cold <- H.cold*r.ah[cold]/(air.density[cold]*1007)
   a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
   b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
-  dT <- a+b*Ts_datum
+  dT <- a+b*Ts.datum
   # Prepare and populate result list
   result <- list()
   result$dT <- dT
@@ -279,8 +282,8 @@ hot.and.cold <- function(method="random", n=1, Ts, ETr, Rn, G, r.ah.0, DEM, LAI,
   return(result)
 }
 
-r.ah
 ## Add iteractive solution for r.ah
+## Add iteraction between r.ah.0 and r.ah
 aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, mountainous=FALSE, ws.elevation, surface.model){
   u200 <- wind * log(200/Z.omw)/log(height.ws/Z.omw)
   if(mountainous==TRUE){
@@ -313,7 +316,7 @@ aerodynamic.transport <- function(Z.om, wind, height.ws=2, Z.omw = 0.0018, dT, m
   return(r.ah)
 }
 
-update.dT <- function(hc.data, Ts, DEM, Rn, G, r.ah, ETr){
+update.dT <- function(hc.data, Ts, DEM, Rn, G, r.ah, ETr, ETp.coef= 1.05){
   hot <- as.numeric(hc.data$pixel[hc.data$type =="hot"])
   cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
@@ -321,12 +324,12 @@ update.dT <- function(hc.data, Ts, DEM, Rn, G, r.ah, ETr){
   air.density <- 1000 * P / (1.01*(Ts)*287)
   dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))  # En el paper dice por 1e6
-  LE.cold <- 1.05 * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
+  LE.cold <- ETp.coef * ETr * latent.heat.vaporization[cold] # instead of ETr better use ETr ~ LAI
   H.cold <- Rn[cold]-G[cold]-LE.cold
   dT.cold <- H.cold*r.ah[cold]/(air.density[cold]*1007)
   a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
   b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
-  dT <- a+b*Ts_datum
+  dT <- a+b*Ts.datum
   return(dT)
 }
 
