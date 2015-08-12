@@ -33,8 +33,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     points(xyFromCell(LAI, cold), col="blue", pch=4)
   }
   ### We calculate the initial conditions assuming neutral stability
-  friction.velocity <- 0.41 * wind / log(height.ws/Z.om.ws) # Tasumi 2003
-  u200 <- wind * (log(200/Z.om)/0.41) # Tasumi 2003 / not the same as Allen 2007
+  u200 <- wind * log(200/Z.om.ws)/log(height.ws/Z.om.ws)
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-elev.ws)/1000))
   }
