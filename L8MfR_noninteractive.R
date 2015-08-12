@@ -2,7 +2,7 @@
 ### This could fill you temp folder making this script to fail.
 ### You should watch the free space of your temp folder
 ### Your temp folder it's located on: rasterOptions()$tmpdir
-
+start.all <- Sys.time ()
 library(raster)
 library(sp)
 library(rgdal)
@@ -76,6 +76,8 @@ plot(G, main="Soil Heat Flux")
 ###  Sensible Heat Flux
 Z.om <- momentum.roughness.length(method="short.crops", LAI=LAI, mountainous = TRUE, surf.model = surface.model)
 plot(Z.om)
+
+print (Sys.time () - start.all)
 
 delta <- aerodynamic.transport.i(Ts = Ts, LAI = LAI, n = 1, wind = WeatherStation["wind"], 
                                  ETr = WeatherStation["ETr"], ETp.coef = 1.2, Z.om.ws = 0.03, 

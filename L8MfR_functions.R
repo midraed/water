@@ -73,7 +73,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 }
 
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
-prepareSRTMdata <- function(path=getwd(), format="tif", slope=TRUE, aspect=TRUE, extent=raw.image){
+prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", format, "$", sep="")) 
   stack1 <- list()
   for(i in 1:length(files)){
@@ -82,10 +82,14 @@ prepareSRTMdata <- function(path=getwd(), format="tif", slope=TRUE, aspect=TRUE,
   SRTMmosaic <- do.call(mosaic, stack1)
   destino  <-  projectExtent(raw.image, raw.image@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
-  aspect <- terrain(mosaicp, opt="aspect") 
-  slope <- terrain(mosaicp, opt="slope") 
+  return(mosaicp)
+}
+
+METRIC.topo <- function(DEM){ 
+  aspect <- terrain(DEM, opt="aspect") 
+  slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
-  surface.model <- stack(mosaicp, slope, aspect_metric)
+  surface.model <- stack(DEM, slope, aspect_metric)
   names(surface.model) <- c("DEM", "Slope", "Aspect")
   removeTmpFiles(h=0)
   return(surface.model)
