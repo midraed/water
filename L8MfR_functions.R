@@ -242,12 +242,13 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   return(Z.om)
 }
 
-
-## Calculates again the air.density... maybe I should make a insolate function for air.density
-sensible.heat.flux <- function(Ts, dem, dT, r.ah){
+air.density <- function(DEM, Ts){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
-  air.density*1007*dT/r.ah
+}
+
+sensible.heat.flux <- function(rho.air, dT, r.ah){
+  rho.air*1007*dT/r.ah
 }
 
 
