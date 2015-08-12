@@ -33,7 +33,8 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     points(xyFromCell(LAI, cold), col="blue", pch=4)
   }
   ### We calculate the initial conditions assuming neutral stability
-  u200 <- wind * log(200/Z.om.ws)/log(height.ws/Z.om.ws)
+  friction.velocity <- 0.41 * wind / log(height.ws/Z.om.ws) # Tasumi 2003
+  u200 <- wind * (log(200/Z.om)/0.41) # Tasumi 2003 / not the same as Allen 2007
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-elev.ws)/1000))
   }
@@ -42,9 +43,9 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   ### Iteractive process start here:
   delta.r.ah <- vector()
   delta.fric <- vector()
-  for(i in 1:5){
+  for(i in 1:15){
     prev.r.ah <- r.ah
-    print("iteraction")
+    print(paste("iteraction #", i))
     ### We calculate dT and H 
     dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
     LE.cold <- ETp.coef * ETr * latent.heat.vaporization[cold]# instead of ETr better use ETr~LAI
@@ -54,6 +55,12 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
     dT <- a+b*Ts.datum
     H <- air.density*1007*(dT/r.ah)
+    print(a)
+    print(b)
+    print(r.ah[cold])
+    print(dT[cold])
+    print(r.ah[hot])
+    print(dT[hot])
     ### Then we calculate L and phi200, phi2, and phi0.1
     Monin.Obukhov.L <- (air.density * 1007 * friction.velocity^3 * Ts) / (0.41 * 9.807 * H)
     phi.200 <- raster(Monin.Obukhov.L) # copy raster extent and pixel size, not values!
@@ -72,6 +79,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     phi.01[Monin.Obukhov.L < 0] <- (2 * log(1 + x.01^2 / 2))[Monin.Obukhov.L < 0]
     ## And finally, r.ah and friction velocity
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+    ### SAVE
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / friction.velocity * 0.41
     r.ah[r.ah > quantile(r.ah, 0.999)] <-  NA # to eliminate very high values
     delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
