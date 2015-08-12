@@ -8,6 +8,8 @@ library(sp)
 library(rgdal)
 library(proj4)
 
+rasterOptions(tmpdir="L8METRICforR/TMP/")
+
 WeatherStation  <- c(wind=2.3, ETr= 8.94, ea= 0.5322, Ta=294.05)
 
 setwd("~/Documentos/Doctorado/")
@@ -22,12 +24,13 @@ raw.image <-  load_L8data("ESPA/LC82320832013319-SC20150618080812_nov15/LC823208
 plot(raw.image[[1]])
 
 # check (but not get) SRTM 1 arc-second data
-checkSRTMgrids(raw.image)
+# checkSRTMgrids(raw.image)
+# 
+# DEM <- prepareSRTMdata(path = "L8METRICforR/", format = "tif", extent = raw.image)
+# plot(DEM)
 
-# This may takes some (many) minutes with a full scene. 
-surface.model <- prepareSRTMdata(path = "L8METRICforR/", format = "tif", extent = raw.image)
+surface.model <-METRIC.topo("L8METRICforR/DEM.ON.tif")
 plot(surface.model)
-
 
 ### Incoming Solar Radiation
 solar.angles.r <- solar.angles("ESPA/LC82320832013319-SC20150618080812_nov15/LC82320832013319LGN00_MTL.txt",

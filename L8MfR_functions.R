@@ -34,9 +34,9 @@ load_L8data <-  function(landsat.band, aoi){
     print("Bands 2,3,4,5,6,7 full scene loaded successfully")
     return(raw.image)}
   else
-    raw.image <- crop(raw.image, aoi)
+    raw.image <- crop(raw.image, aoi, filename="raw.image.tiff", overwrite=TRUE)
     print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
-    plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
+    #plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
     return(raw.image)
    }
   else
@@ -85,13 +85,13 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image){
   return(mosaicp)
 }
 
-METRIC.topo <- function(DEM){ 
+METRIC.topo <- function(DEM){
+  DEM <- raster(DEM)
   aspect <- terrain(DEM, opt="aspect") 
   slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
   names(surface.model) <- c("DEM", "Slope", "Aspect")
-  removeTmpFiles(h=0)
   return(surface.model)
 }
 
@@ -138,14 +138,14 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
 }
 
 albedo <- function(path=getwd(), aoi){
-    wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
-    srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x /10000*wb[1]})
-    srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x /10000*wb[2]})
-    srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x /10000*wb[3]})
-    srb5 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1]), fun=function(x){x /10000*wb[4]})
-    srb6 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1]), fun=function(x){x /10000*wb[5]})
-    srb7 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1]), fun=function(x){x /10000*wb[6]})
-    l8.albedo <-  stack(srb2, srb3, srb4, srb5, srb6, srb7)
+    wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
+    srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x *wb[1]})
+    srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x *wb[2]})
+    srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x *wb[3]})
+    srb5 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1]), fun=function(x){x *wb[4]})
+    srb6 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1]), fun=function(x){x *wb[5]})
+    srb7 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1]), fun=function(x){x *wb[6]})
+    l8.albedo <-  stack(srb2, srb3, srb4, srb5, srb6, srb7)/1e+08
     if(!missing(aoi)){
       l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
       }                                
@@ -263,7 +263,7 @@ sensible.heat.flux <- function(rho.air, dT, r.ah){
 
 #########################################################################
 save(create.aoi, load_L8data, checkSRTMgrids, prepareSRTMdata, solar.angles,
-     sw.trasmisivity, incoming.solar.radiation, albedo,
+     METRIC.topo, sw.trasmisivity, incoming.solar.radiation, albedo,
      LAI.from.L8, outgoing.lw.radiation, incoming.lw.radiation,
      soil.heat.flux1, momentum.roughness.length, air.density, sensible.heat.flux,
      file="L8METRICforR/MfR_functions.RData")

@@ -45,16 +45,21 @@ samples$SUM <- rowSums(samples@data[,4:9])
 # b6 | 1.57 - 1.65 | 1.225 - 1.880 | 0.655
 # b7 | 2.11 - 2.29 | 1.880 - 4.000 | 2.120
 
-samples$w2 <- (samples$b2 * 0.220) / (samples$SUM * 3.7)
-samples$w3 <- (samples$b3 * 0.095) / (samples$SUM * 3.7)
-samples$w4 <- (samples$b4 * 0.145) / (samples$SUM * 3.7)
-samples$w5 <- (samples$b5 * 0.465) / (samples$SUM * 3.7)
-samples$w6 <- (samples$b6 * 0.655) / (samples$SUM * 3.7)
-samples$w7 <- (samples$b7 * 2.120) / (samples$SUM * 3.7)
+wl <- c(0.220, 0.095, 0.145, 0.465, 0.655, 2.12)
+samples$SUM.wl <- samples$b2 * wl[1] + samples$b3 * wl[2] + samples$b4 * wl[3] +
+                  samples$b5 * wl[4] + samples$b6 * wl[5] + samples$b7 * wl[6]
 
-colSums(samples@data[-c(2,6,16),11:16])/20
+samples$w2 <- (samples$b2 * wl[1]) / samples$SUM.wl
+samples$w3 <- (samples$b3 * wl[2]) / samples$SUM.wl
+samples$w4 <- (samples$b4 * wl[3]) / samples$SUM.wl
+samples$w5 <- (samples$b5 * wl[4]) / samples$SUM.wl
+samples$w6 <- (samples$b6 * wl[5]) / samples$SUM.wl
+samples$w7 <- (samples$b7 * wl[6]) / samples$SUM.wl
+
+colSums(samples@data[-c(2,6,16),11:16])/nrow(samples@data)
 
 # > colSums(samples@data[-c(2,6,16),11:16])/20
 # w2          w3          w4          w5          w6          w7 
 # 0.003871170 0.002449617 0.004805069 0.024487127 0.035110190 0.099525157
 
+write.csv(samples@data, "L8METRICforR/l8albedo_groundsamples_result.csv")

@@ -43,7 +43,7 @@ l8.albedo <- albedo(path = "ESPA/LC82320832013319-SC20150618080812_nov15/", aoi 
 plot(l8.albedo, main="surface albedo")
 
 ### Outgoing Long-Wave Radiation
-LAI <- LAI.from.L8(method = "metric", path="ESPA/LC82320832013319-SC20150618080812_nov15/", aoi=lujan)
+LAI <- LAI.from.L8(method = "vineyard", path="ESPA/LC82320832013319-SC20150618080812_nov15/", aoi=lujan)
 plot(LAI, main="leaf area index")
 
 Rl.out <- outgoing.lw.radiation(path = "ESPA/LC82320832013319-SC20150618080812_nov15/", LAI, lujan)
@@ -78,5 +78,8 @@ plot(pixels$dT)
 
 H <- sensible.heat.flux(path="ESPA/LC82320832013319-SC20150618080812_nov15/", DEM=surface.model$DEM, dT, r.ah, lujan)
 plot(H, main="sensible.heat.flux")
+
+
+################################33
 
 
