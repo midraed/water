@@ -1,8 +1,10 @@
 ### ADD writeRaster to all the functions
-### Add a function to estimate all parameters for some points
+### Add a function to estimate all parameters for some points (and only for those points!)
+### Add some meta-functions to insolate processes
 ### Add METRIC function
 ### Maybe we need a new class to store all data? 
 ### Maybe a class for weather stations... check previous work on the field
+### Maybe add knitr and generate pdf report on METRIC function
 
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
@@ -18,7 +20,7 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
 
 # Better get the images from a folder...! (like albedo)
 # Check when creates temp files... on raster() or in stack()
-load_L8data <-  function(landsat.band, aoi=NULL){
+load_L8data <-  function(landsat.band, aoi){
   require(raster)
   if(grepl("[LC[:digit:]]+LGN00_B", landsat.band, perl=TRUE) == TRUE){
   B2 <- raster(sub("B[[:digit:]]", "B2", landsat.band))
@@ -131,7 +133,7 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
   1367 * cos(incidence.rel) * tau.sw / d^2
 }
 
-albedo <- function(path=getwd(), aoi= NULL){
+albedo <- function(path=getwd(), aoi){
     wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x /10000*wb[1]})
     srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x /10000*wb[2]})
@@ -147,7 +149,7 @@ albedo <- function(path=getwd(), aoi= NULL){
     return(l8.albedo)
 }
 
-LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL, L=0.1){
+LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
   if(method=="metric" | method=="vineyard"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
@@ -184,7 +186,7 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi=NULL, L=0.1){
 }
 
 
-surface.temperature <- function(path=getwd(), aoi=NULL){
+surface.temperature <- function(path=getwd(), aoi){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
   bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
   if(!missing(aoi)){
@@ -195,24 +197,23 @@ surface.temperature <- function(path=getwd(), aoi=NULL){
   return(Ts)
 }
 
-outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=NULL){
+outgoing.lw.radiation <- function(path=getwd(), LAI, aoi){
   Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
   return(surf.emissivity * 5.67e-8 * Ts^4)
 }
 
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=NULL){
+incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi){
   Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
     if(!missing(aoi)){
     Ta <- crop(Ta,aoi) 
   }
-  plot(Ta, main="near surface air temperature in K")
-  ef.atm.emissivity <- epsilon_a <- 0.85*(-1*log(sw.trasmisivity))^0.09
+  ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
   return(ef.atm.emissivity * 5.67e-8 * Ta^4)
 }
 
-soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=NULL){
+soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi){
   toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1])
   toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1])
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
@@ -260,6 +261,5 @@ sensible.heat.flux <- function(rho.air, dT, r.ah){
 save(create.aoi, load_L8data, checkSRTMgrids, prepareSRTMdata, solar.angles,
      sw.trasmisivity, incoming.solar.radiation, albedo,
      LAI.from.L8, outgoing.lw.radiation, incoming.lw.radiation,
-     soil.heat.flux1, momentum.roughness.length, aerodynamic.transport.0,
-     hot.and.cold, aerodynamic.transport, update.dT, sensible.heat.flux,
+     soil.heat.flux1, momentum.roughness.length, air.density, sensible.heat.flux,
      file="L8METRICforR/MfR_functions.RData")

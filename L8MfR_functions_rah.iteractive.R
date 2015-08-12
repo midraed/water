@@ -41,7 +41,6 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   r.ah <- log(2/0.1)/friction.velocity*0.41
   ### Iteractive process start here:
   delta.r.ah <- vector()
-  delta.fric <- vector()
   for(i in 1:15){
     prev.r.ah <- r.ah
     print(paste("iteraction #", i))
@@ -53,7 +52,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
     b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
     dT <- a+b*Ts.datum
-    H <- air.density*1007*(dT/r.ah)
+    H <- air.density*1007*dT/r.ah
     print(a)
     print(b)
     print(r.ah[cold])
@@ -78,9 +77,8 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     phi.01[Monin.Obukhov.L < 0] <- (2 * log(1 + x.01^2 / 2))[Monin.Obukhov.L < 0]
     ## And finally, r.ah and friction velocity
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
-    ### SAVE
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / friction.velocity * 0.41
-    r.ah[r.ah > quantile(r.ah, 0.999)] <-  NA # to eliminate very high values
+    r.ah[r.ah > quantile(r.ah, 0.9999)] <-  NA # to eliminate very high values
     delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
   } # End interactive process
   print (Sys.time () - start)
