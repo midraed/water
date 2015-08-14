@@ -137,8 +137,9 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
   1367 * cos(incidence.rel) * tau.sw / d^2
 }
 
-albedo <- function(path=getwd(), aoi){
-    wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
+albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
+    if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} # Tasumi 2008
+    if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }# Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x *wb[1]})
     srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x *wb[2]})
     srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x *wb[3]})
@@ -154,7 +155,7 @@ albedo <- function(path=getwd(), aoi){
 }
 
 LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
-  if(method=="metric" | method=="vineyard"){
+  if(method=="metric" | method=="vineyard" | method=="carrasco-benavides"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
     toa.4.5 <- stack(toa.red, toa.nir)
@@ -180,6 +181,11 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
   if(method=="vineyard"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
+  }
+  ## method carrasco
+  if(method=="carrasco-benavides"){
+    NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
+    LAI <- 1.2 - 3.08*exp(-2013.35*NDVI^6.41) # Turner 1999
   }
   if(method=="turner"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
