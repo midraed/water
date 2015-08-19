@@ -10,7 +10,7 @@
 ### Export anchor as kml or view in Google
 ### select anchor points with buffer for not too close pixels...
 ### Select anchor for multiple criteria with table from Marcos
-### Check Rsky
+### Check Rsky on METRIC 2010
 
 
 #################################################################################3
@@ -22,10 +22,12 @@
 
 ####################
 
-save.and.load <- function(imagestack, file, ...){
+save.load.clean <- function(imagestack, file, ...){
   if(missing(file)){file <- paste(deparse(substitute(raw.image)),".tif", sep="")}
   writeRaster(imagestack, filename = file, ...)
   stack <- stack(file)
+  removeTmpFiles(h=0)
+  return(stack)
 }
 
 
@@ -40,7 +42,6 @@ save.and.load <- function(imagestack, file, ...){
 #' aoi <- create.aoi(topleft = tl, bottomright=br)
 #' plot(aoi)
 #' @export
-#' SpatialPolygon
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @seealso \code{\link{brocolors}}
 #' @keywords hplot
@@ -78,11 +79,13 @@ load_L8data <-  function(landsat.band, aoi){
   raw.image <- stack(B2,B3,B4,B5,B6,B7)
   if(missing(aoi)){
     print("Bands 2,3,4,5,6,7 full scene loaded successfully")
+    raw.image <- save.load.clean(imagestack = raw.image, file = "raw.image.tif", overwrite=TRUE)
     return(raw.image)}
   else
     raw.image <- crop(raw.image, aoi)
     print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
     #plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
+    raw.image <- save.load.clean(imagestack = raw.image, file = "raw.image.tif", overwrite=TRUE)
     return(raw.image)
    }
   else
@@ -128,6 +131,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image){
   SRTMmosaic <- do.call(mosaic, stack1)
   destino  <-  projectExtent(raw.image, raw.image@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
+  mosaicp <- save.load.clean(imagestack = mosaicp, file = "DEM.tif", overwrite=TRUE)
   return(mosaicp)
 }
 
@@ -138,6 +142,7 @@ METRIC.topo <- function(DEM){
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
   names(surface.model) <- c("DEM", "Slope", "Aspect")
+  surface.model <- save.load.clean(imagestack = surface.model, file = "surface.model.tif", overwrite=TRUE)
   return(surface.model)
 }
 
@@ -169,18 +174,23 @@ solar.angles <- function(L8MTL, raw.image, slope, aspect){
    ## End
    solar.angles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
    names(solar.angles) <- c("latitude", "declination", "hour.angle", "incidence.hor", "incidence.rel") 
+   solar.angles <- save.load.clean(imagestack = solar.angles, file = "solar.angles.tif", overwrite=TRUE)
    return(solar.angles)
 }
 
 sw.trasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
-  0.35 + 0.627 * exp((-0.00149 * P / Kt * cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
+  sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
+  sw.t <- save.load.clean(imagestack = sw.t, file = "sw.t.tif", overwrite=TRUE)
+  return(sw.t)
 }
 
 incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
-  1367 * cos(incidence.rel) * tau.sw / d^2
+  Rs.inc <- 1367 * cos(incidence.rel) * tau.sw / d^2
+  Rs.inc <- save.load.clean(imagestack = Rs.inc, file = "Rs.inc.tif", overwrite=TRUE)
+  return(Rs.inc)
 }
 
 albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
@@ -201,6 +211,7 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
       l8.albedo <- l8.albedo - 0.0018
     }
     l8.albedo <- stackApply(l8.albedo, indices = c(1,1,1,1,1,1), fun=sum)
+    l8.albedo <- save.load.clean(imagestack = l8.albedo, file = "l8.albedo.tif", overwrite=TRUE)
     return(l8.albedo)
 }
 
@@ -235,13 +246,14 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
   ## method carrasco
   if(method=="carrasco-benavides"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
-    LAI <- 1.2 - 3.08*exp(-2013.35*NDVI^6.41) # Turner 1999
+    LAI <- 1.2 - 3.08*exp(-2013.35*NDVI^6.41) 
   }
   if(method=="turner"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
   }
   removeTmpFiles(h=0)
+  LAI <- save.load.clean(imagestack = LAI, file = "LAI.tif", overwrite=TRUE)
   return(LAI)
 }
 
@@ -253,14 +265,17 @@ surface.temperature <- function(path=getwd(), aoi){
     bright.temp.b10 <- crop(bright.temp.b10,aoi) 
     bright.temp.b11 <- crop(bright.temp.b11,aoi) 
   }
-  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1 
+  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1
+  Ts <- save.load.clean(imagestack = Ts, file = "Ts.tif", overwrite=TRUE)
   return(Ts)
 }
 
 outgoing.lw.radiation <- function(path=getwd(), LAI, aoi){
   Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
-  return(surf.emissivity * 5.67e-8 * Ts^4)
+  Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
+  Rl.out <- save.load.clean(imagestack = Rs.out, file = "Rs.out.tif", overwrite=TRUE)
+  return(Rl.out)
 }
 
 # Add a function to get "cold" pixel temperature so in can be used in the next function
@@ -270,7 +285,9 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi){
     Ta <- crop(Ta,aoi) 
   }
   ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
-  return(ef.atm.emissivity * 5.67e-8 * Ta^4)
+  Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
+  Rl.in <- save.load.clean(imagestack = Rl.in, file = "Rl.in.tif", overwrite=TRUE)
+  return(Rl.in)
 }
 
 soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi){
@@ -283,7 +300,7 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi){
   NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
   Ts <- surface.temperature(path=path, aoi=aoi)
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
-  removeTmpFiles(h=0)
+  G <- save.load.clean(imagestack = G, file = "G.tif", overwrite=TRUE)
   return(G)
 }
 
@@ -300,6 +317,7 @@ momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surf.model$Slope - 5)/20)
   }
+  Z.om <- save.load.clean(imagestack = Z.om, file = "Z.om.tif", overwrite=TRUE)
   return(Z.om)
 }
 
@@ -318,7 +336,9 @@ air.density <- function(DEM, Ts){
 #' R. G. Allen, M. Tasumi, and R. Trezza, “Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model,” Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 sensible.heat.flux <- function(rho.air, dT, r.ah){
-  rho.air*1007*dT/r.ah
+  H <- rho.air*1007*dT/r.ah
+  H <- save.load.clean(imagestack = H, file = "H.tif", overwrite=TRUE)
+  return(H)
 }
 
 

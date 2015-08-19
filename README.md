@@ -5,8 +5,7 @@ Author: Guillermo Federico Olmedo [aut, cre]
 
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 
-Description: Toos and functions to calculate actual evapotranspiration using energy balance models. 
-
+Description: Toos and functions to calculate actual evapotranspiration using surface energy balance models. 
 Depends: R (>= 3.2.1), raster (>= 2.1), sp (>= 1.1-1), proj4, stringr
 
 License: GPL (>= 2)
