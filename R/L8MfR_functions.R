@@ -5,15 +5,48 @@
 ### Maybe we need a new class to store all data? 
 ### Maybe a class for weather stations... check previous work on the field
 ### Maybe add knitr and generate pdf report on METRIC function
+### Add Perrier equation for zom
+### Maybe change from this.names to thisNames
+### Export anchor as kml or view in Google
+### select anchor points with buffer for not too close pixels...
+### Select anchor for multiple criteria with table from Marcos
+### Check Rsky
+
 
 #################################################################################3
+# Common fields for docs
+# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+# @references 
+# R. G. Allen, M. Tasumi, and R. Trezza, “Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model,” Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 
 
-#' Create aoi from topleft and bottomright coordinates
-#' @param topleft a vector with topleft coordinates 
-#' @param bottomright a vector with bottomright coordinates
-#' @return object of class SpatialPolygons-class
+####################
+
+save.and.load <- function(imagestack, file, ...){
+  if(missing(file)){file <- paste(deparse(substitute(raw.image)),".tif", sep="")}
+  writeRaster(imagestack, filename = file, ...)
+  stack <- stack(file)
+}
+
+
+#' Create aoi polygon from topleft and bottomright coordinates
+#' @param topleft a vector with topleft x,y coordinates 
+#' @param bottomright a vector with bottomright x,y coordinates
+#' @return object of class SpatialPolygons
+#' @author Guillermo F Olmedo
+#' @examples 
+#' tl <- c(493300, -3592700)
+#' br <- c(557200, -3700000) 
+#' aoi <- create.aoi(topleft = tl, bottomright=br)
+#' plot(aoi)
 #' @export
+#' SpatialPolygon
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @seealso \code{\link{brocolors}}
+#' @keywords hplot
+#' ...
+#' @importFrom grDevices rgb2hsv
+#' @importFrom graphics par plot rect text
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   library(sp)
@@ -25,8 +58,12 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   return(aoi)
 }
 
-
-
+#' Load Landsat 8 data from a folder 
+#' @param landsat.band one of the landsat 8 bands to import
+#' @param aoi area of interest to crop the raster after loading
+#' @return object of class rasterStack
+#' @exportClass object of class RasterStack
+#' @export
 # Better get the images from a folder...! (like albedo)
 # Check when creates temp files... on raster() or in stack()
 load_L8data <-  function(landsat.band, aoi){
@@ -43,7 +80,7 @@ load_L8data <-  function(landsat.band, aoi){
     print("Bands 2,3,4,5,6,7 full scene loaded successfully")
     return(raw.image)}
   else
-    raw.image <- crop(raw.image, aoi, filename="raw.image.tiff", overwrite=TRUE)
+    raw.image <- crop(raw.image, aoi)
     print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
     #plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
     return(raw.image)
@@ -278,7 +315,7 @@ air.density <- function(DEM, Ts){
 #' @param r.ah - rugosity
 #' @return Returns sensible heat flux
 #' @references 
-#' [1] Allen et al. METRIC Model
+#' R. G. Allen, M. Tasumi, and R. Trezza, “Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model,” Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 sensible.heat.flux <- function(rho.air, dT, r.ah){
   rho.air*1007*dT/r.ah

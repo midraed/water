@@ -52,7 +52,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     LE.cold <- ETp.coef * ETr * latent.heat.vaporization[cold]# instead of ETr better use ETr~LAI
     H.cold <- Rn[cold]-G[cold]-LE.cold
     dT.cold <- H.cold*r.ah[cold]/(air.density[cold]*1007)
-    a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T)
+    a <- mean((dT.hot-dT.cold)/(Ts.datum[hot]-Ts.datum[cold]), na.rm=T) # CITRA uses the mean of H instead of the mean of a and b
     b <- mean((dT.hot-a)/Ts.datum[hot], na.rm=T)
     dT <- a+b*Ts.datum
     H <- air.density*1007*dT/r.ah
