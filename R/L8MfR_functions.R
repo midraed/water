@@ -9,20 +9,20 @@
 #################################################################################3
 
 
-#' descrip
-#' @param rho.air - air density
-#' @return Returns sensible heat flux
-#' @references 
-#' [1] Allen et al. METRIC Model
+#' Create aoi from topleft and bottomright coordinates
+#' @param topleft a vector with topleft coordinates 
+#' @param bottomright a vector with bottomright coordinates
+#' @return object of class SpatialPolygons-class
 #' @export
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
-  asd <- SpatialPolygons(
+  library(sp)
+  aoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
         topleft[2], topleft[2], bottomright[2], 
         bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
-  return(asd)
+  return(aoi)
 }
 
 
