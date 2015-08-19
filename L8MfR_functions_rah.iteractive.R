@@ -41,10 +41,13 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   r.ah <- log(2/0.1)/friction.velocity*0.41
   ### Iteractive process start here:
   delta.r.ah <- vector()
+  delta.H <- vector()
+  H <- 0
   for(i in 1:15){
-    prev.r.ah <- r.ah
     print(paste("iteraction #", i))
     ### We calculate dT and H 
+    prev.r.ah <- r.ah
+    prev.H <- H
     dT.hot <- (Rn[hot] - G[hot])*r.ah[hot]/(air.density[hot]*1007)
     LE.cold <- ETp.coef * ETr * latent.heat.vaporization[cold]# instead of ETr better use ETr~LAI
     H.cold <- Rn[cold]-G[cold]-LE.cold
@@ -80,8 +83,12 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / friction.velocity * 0.41
     r.ah[r.ah > quantile(r.ah, 0.9999)] <-  NA # to eliminate very high values
     delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
+    delta.H
+    prev.r.ah <- r.ah
+    prev.H <- H
   } # End interactive process
   print (Sys.time () - start)
+  x
   return(delta.r.ah)
 }
 

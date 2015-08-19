@@ -8,10 +8,10 @@ library(sp)
 library(rgdal)
 library(proj4)
 
-rasterOptions(tmpdir="L8METRICforR/TMP/")
+rasterOptions(tmpdir="/tmp/")
 
 WeatherStation  <- c(wind=2.3, ETr= 8.94, ea= 0.5322, Ta=294.05)
-
+#http://www.srh.noaa.gov/epz/?n=wxcalc_vaporpressure
 setwd("~/Documentos/Doctorado/")
 load("L8METRICforR/MfR_functions.RData")
 
@@ -45,14 +45,14 @@ plot(Rs.inc)
 
 removeTmpFiles(h=0)
 ### Surface albedo
-l8.albedo <- albedo(path = "ESPA/LC82320832013319-SC20150618080812_nov15/", aoi = lujan)
+l8.albedo <- albedo(path = "ESPA/LC82320832013319-SC20150618080812_nov15/", coeff = "Tasumi", aoi = lujan)
 plot(l8.albedo)
 
 Ts <- surface.temperature(path="ESPA/LC82320832013319-SC20150618080812_nov15/", lujan)
 plot(Ts-273)
 
 ### Outgoing Long-Wave Radiation
-LAI <- LAI.from.L8(path="ESPA/LC82320832013319-SC20150618080812_nov15/", L=0.5, aoi=lujan)
+LAI <- LAI.from.L8(path="ESPA/LC82320832013319-SC20150618080812_nov15/", L=0.5, method="metric", aoi=lujan)
 plot(LAI)
 
 Rl.out <- outgoing.lw.radiation(path = "ESPA/LC82320832013319-SC20150618080812_nov15/", LAI, lujan)

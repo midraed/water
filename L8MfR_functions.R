@@ -140,6 +140,7 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY){
 albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} # Tasumi 2008
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }# Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
+    if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} # Liang 2001
     srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x *wb[1]})
     srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x *wb[2]})
     srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x *wb[3]})
@@ -150,6 +151,9 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
     if(!missing(aoi)){
       l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
       }                                
+    if(coeff=="Liang"){
+      l8.albedo <- l8.albedo - 0.0018
+    }
     l8.albedo <- stackApply(l8.albedo, indices = c(1,1,1,1,1,1), fun=sum)
     return(l8.albedo)
 }
@@ -268,8 +272,4 @@ sensible.heat.flux <- function(rho.air, dT, r.ah){
 
 
 #########################################################################
-save(create.aoi, load_L8data, checkSRTMgrids, prepareSRTMdata, solar.angles,
-     METRIC.topo, sw.trasmisivity, incoming.solar.radiation, albedo,
-     LAI.from.L8, outgoing.lw.radiation, incoming.lw.radiation,
-     soil.heat.flux1, momentum.roughness.length, air.density, sensible.heat.flux,
-     file="L8METRICforR/MfR_functions.RData")
+R

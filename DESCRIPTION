@@ -1,10 +1,11 @@
 Package: Water
 Title: Modelling Actual Crop Evapotranspiration with energy balance models
 Version: 0.10
+Date: 2015-08-17
 Authors@R: c(person("Guillermo Federico", "Olmedo", role = c("aut", "cre"), email = "guillermo.olmedo@gmail.com"))
 Author: Guillermo Federico Olmedo [aut, cre]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
-Description: What the package does (one paragraph)
+Description: Models and functions to calculate actual evapotranspiration using energy balance equations. 
 Depends: R (>= 3.2.1), raster, sp
 License: GPL (>= 2)
 LazyData: true

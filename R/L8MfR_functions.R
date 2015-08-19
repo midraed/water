@@ -6,6 +6,15 @@
 ### Maybe a class for weather stations... check previous work on the field
 ### Maybe add knitr and generate pdf report on METRIC function
 
+#################################################################################3
+
+
+#' descrip
+#' @param rho.air - air density
+#' @return Returns sensible heat flux
+#' @references 
+#' [1] Allen et al. METRIC Model
+#' @export
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   asd <- SpatialPolygons(
