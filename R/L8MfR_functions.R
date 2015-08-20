@@ -5,7 +5,6 @@
 ### Maybe we need a new class to store all data? 
 ### Maybe a class for weather stations... check previous work on the field
 ### Maybe add knitr and generate pdf report on METRIC function
-### Add Perrier equation for zom
 ### Maybe change from this.names to thisNames
 ### Export anchor as kml or view in Google
 ### select anchor points with buffer for not too close pixels...
@@ -211,8 +210,9 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
     return(l8.albedo)
 }
 
-LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
-  if(method=="metric" | method=="vineyard" | method=="carrasco-benavides"){
+## Cite Pocas work for LAI from METRIC2010
+LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi, L=0.1){
+  if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="carrasco-benavides"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
     toa.4.5 <- stack(toa.red, toa.nir)
@@ -229,6 +229,11 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
     }    
     toa.4.5 <- toa.4.5 * 0.0001
+  }
+  if(method=="metric2010"){
+    SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
+    LAI <- 11 * SAVI_ID ^3 # for SAVI <= 0.817
+    LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="metric"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
@@ -253,7 +258,6 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
   return(LAI)
 }
 
-### Correcto to only B10
 surface.temperature <- function(path=getwd(), aoi){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
   if(!missing(aoi)){
@@ -300,15 +304,19 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi){
 
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
-## Also I should add the function for olives sparse trees used by Santos 2012
-## Or Pocas 2014.
-momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a, b,mountainous=FALSE, surf.model){
+## Perrier by Santos 2012 and Pocas 2014.
+momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, NDVI, 
+                                      albedo, a, b, fLAI.Perrier, h.Perrier, mountainous=FALSE, surf.model){
   if(method=="short.crops"){
-    print="using method for short agricultural crops (Tasumi 2003)"
     Z.om <- (0.018*LAI)
   }
   if(method=="custom"){
     Z.om <- exp((a*NDVI/albedo)+b)
+  }
+  if(method=="Perrier"){
+    if(fLAI.Perrier >=0.5){ a <- (2*(1-fLAI.Perrier))^-1 }
+    if(fLAI.Perrier <0.5){ a <- 2*fLAI.Perrier }
+    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h
   }
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surf.model$Slope - 5)/20)
