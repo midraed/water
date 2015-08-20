@@ -192,22 +192,21 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi"){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} # Tasumi 2008
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }# Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} # Liang 2001
-    srb2 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band2.tif"), sep="")[1]), fun=function(x){x *wb[1]})
-    srb3 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band3.tif"), sep="")[1]), fun=function(x){x *wb[2]})
-    srb4 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep="")[1]), fun=function(x){x *wb[3]})
-    srb5 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep="")[1]), fun=function(x){x *wb[4]})
-    srb6 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band6.tif"), sep="")[1]), fun=function(x){x *wb[5]})
-    srb7 <- calc(raster(paste(path, list.files(path = path, pattern = "_sr_band7.tif"), sep="")[1]), fun=function(x){x *wb[6]})
-    l8.albedo <-  stack(srb2, srb3, srb4, srb5, srb6, srb7)/1e+08
+    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
+    albedo <- calc(raster(paste(path, files[1], sep="")), fun=function(x){x *wb[1]})
+    for(i in 2:6){
+      albedo <- albedo + calc(raster(paste(path, files[i], sep="")), fun=function(x){x *wb[i]})
+      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
+    }
+    albedo <-  albedo/1e+08
     if(!missing(aoi)){
-      l8.albedo <- crop(l8.albedo,aoi) # Without aoi this should fail on most computers.
+      albedo <- crop(albedo,aoi) # Without aoi this should fail on most computers.
       }                                
     if(coeff=="Liang"){
-      l8.albedo <- l8.albedo - 0.0018
+      albedo <- albedo - 0.0018
     }
-    l8.albedo <- stackApply(l8.albedo, indices = c(1,1,1,1,1,1), fun=sum)
-    l8.albedo <- save.load.clean(imagestack = l8.albedo, file = "l8.albedo.tif", overwrite=TRUE)
-    return(l8.albedo)
+    albedo <- save.load.clean(imagestack = albedo, file = "albedo.tif", overwrite=TRUE)
+    return(albedo)
 }
 
 ## Cite Pocas work for LAI from METRIC2010
