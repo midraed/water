@@ -256,12 +256,10 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
 ### Correcto to only B10
 surface.temperature <- function(path=getwd(), aoi){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
-  bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
   if(!missing(aoi)){
     bright.temp.b10 <- crop(bright.temp.b10,aoi) 
-    bright.temp.b11 <- crop(bright.temp.b11,aoi) 
   }
-  Ts <- mean(bright.temp.b10, bright.temp.b11)*0.1
+  Ts <- bright.temp.b10*0.1
   Ts <- save.load.clean(imagestack = Ts, file = "Ts.tif", overwrite=TRUE)
   return(Ts)
 }
