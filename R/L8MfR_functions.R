@@ -24,10 +24,11 @@
 
 ####################
 
-save.load.clean <- function(imagestack, file, ...){
+save.load.clean <- function(imagestack, stack.names=NULL, file,  ...){
   if(missing(file)){file <- paste(deparse(substitute(raw.image)),".tif", sep="")}
   writeRaster(imagestack, filename = file, ...)
   stack <- stack(file)
+  names(stack) <- stack.names
   removeTmpFiles(h=0)
   return(stack)
 }
@@ -85,7 +86,7 @@ load_L8data <-  function(landsat.band, aoi){
     raw.image <- crop(raw.image, aoi)
     print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
     #plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
-    raw.image <- save.load.clean(imagestack = raw.image, file = "raw.image.tif", overwrite=TRUE)
+    raw.image <- save.load.clean(imagestack = raw.image, stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), file = "raw.image.tif", overwrite=TRUE)
     return(raw.image)
    }
   else
@@ -129,7 +130,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image){
   SRTMmosaic <- do.call(mosaic, stack1)
   destino  <-  projectExtent(raw.image, raw.image@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
-  mosaicp <- save.load.clean(imagestack = mosaicp, file = "DEM.tif", overwrite=TRUE)
+  mosaicp <- save.load.clean(imagestack = mosaicp, stack.names = "DEM", file = "DEM.tif", overwrite=TRUE)
   return(mosaicp)
 }
 
@@ -139,8 +140,7 @@ METRIC.topo <- function(DEM){
   slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
-  names(surface.model) <- c("DEM", "Slope", "Aspect")
-  surface.model <- save.load.clean(imagestack = surface.model, file = "surface.model.tif", overwrite=TRUE)
+  surface.model <- save.load.clean(imagestack = surface.model, stack.names = c("DEM", "Slope", "Aspect"), file = "surface.model.tif", overwrite=TRUE)
   return(surface.model)
 }
 
@@ -170,8 +170,7 @@ solar.angles <- function(L8MTL, raw.image, slope, aspect){
                      + cos(declination)*sin(aspect)*sin(slope)*sin(hour.angle))
    ## End
    solar.angles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
-   names(solar.angles) <- c("latitude", "declination", "hour.angle", "incidence.hor", "incidence.rel") 
-   solar.angles <- save.load.clean(imagestack = solar.angles, file = "solar.angles.tif", overwrite=TRUE)
+   solar.angles <- save.load.clean(imagestack = solar.angles, stack.names = c("latitude", "declination", "hour.angle", "incidence.hor", "incidence.rel"), file = "solar.angles.tif", overwrite=TRUE)
    return(solar.angles)
 }
 
@@ -250,11 +249,11 @@ LAI.from.L8 <- function(method="metric", path=getwd(), aoi, L=0.1){
     LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
   }
   removeTmpFiles(h=0)
-  LAI <- save.load.clean(imagestack = LAI, file = "LAI.tif", overwrite=TRUE)
+  LAI <- save.load.clean(imagestack = LAI, stack.names = "LAI", file = "LAI.tif", overwrite=TRUE)
   return(LAI)
 }
 
-
+### Correcto to only B10
 surface.temperature <- function(path=getwd(), aoi){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, pattern = "_toa_band10.tif"), sep=""))
   bright.temp.b11 <- raster(paste(path, list.files(path = path, pattern = "_toa_band11.tif"), sep=""))
