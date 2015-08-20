@@ -11,6 +11,8 @@
 ### select anchor points with buffer for not too close pixels...
 ### Select anchor for multiple criteria with table from Marcos
 ### Check Rsky on METRIC 2010
+### Add dependency with evapotranspiration and used to measure ETp
+### Add three source temperature model..!
 
 
 #################################################################################3
@@ -50,7 +52,6 @@ save.load.clean <- function(imagestack, file, ...){
 #' @importFrom graphics par plot rect text
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
-  library(sp)
   aoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
@@ -68,7 +69,6 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
 # Better get the images from a folder...! (like albedo)
 # Check when creates temp files... on raster() or in stack()
 load_L8data <-  function(landsat.band, aoi){
-  require(raster)
   if(grepl("[LC[:digit:]]+LGN00_B", landsat.band, perl=TRUE) == TRUE){
   B2 <- raster(sub("B[[:digit:]]", "B2", landsat.band))
   B3 <- raster(sub("B[[:digit:]]", "B3", landsat.band))
@@ -95,16 +95,14 @@ load_L8data <-  function(landsat.band, aoi){
 
 # Get links or optionally open web pages... 
 checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
-  require(raster)
-  require(proj4)
-  asd <- SpatialPolygons(
+  polyaoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(xmin(raw.image), xmax(raw.image), xmax(raw.image),
         xmin(raw.image),xmin(raw.image), ymax(raw.image),
         ymax(raw.image), ymin(raw.image), ymin(raw.image),
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
-  asd@proj4string <- raw.image@crs
-  limits <- project(xy = matrix(asd@bbox, ncol=2, nrow=2), proj = asd@proj4string, 
+  polyaoi@proj4string <- raw.image@crs
+  limits <- project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
           inverse = TRUE)
   # I have to improve this. It should work ONLY for west and south coordinates.. maybe
   lat_needed <- seq(floor(limits[3])+1, floor(limits[4])+1, by=1)
@@ -147,8 +145,7 @@ METRIC.topo <- function(DEM){
 }
 
 solar.angles <- function(L8MTL, raw.image, slope, aspect){
-   require(stringr)
-   test <- scan(L8MTL, character(0), sep = "\n")
+   test <- scan(L8MTL, character(0), sep = "\n") ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
    sun.azimuth <- as.numeric(str_extract(test[68], pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
    sun.elevation <- as.numeric(str_extract(test[69], pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
    # latitude
@@ -305,7 +302,9 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi){
 }
 
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
+## using some points and tabulated z.om for their covers.
 ## Also I should add the function for olives sparse trees used by Santos 2012
+## Or Pocas 2014.
 momentum.roughness.length <- function(method, path=getwd(), LAI, NDVI, albedo, a, b,mountainous=FALSE, surf.model){
   if(method=="short.crops"){
     print="using method for short agricultural crops (Tasumi 2003)"
@@ -333,7 +332,7 @@ air.density <- function(DEM, Ts){
 #' @param r.ah - rugosity
 #' @return Returns sensible heat flux
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, “Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model,” Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 sensible.heat.flux <- function(rho.air, dT, r.ah){
   H <- rho.air*1007*dT/r.ah
