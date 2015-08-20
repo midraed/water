@@ -2,19 +2,35 @@
 % Please edit documentation in R/L8MfR_functions.R
 \name{create.aoi}
 \alias{create.aoi}
-\title{Create aoi from topleft and bottomright coordinates}
+\title{Create aoi polygon from topleft and bottomright coordinates}
 \usage{
 create.aoi(topleft = c(x, y), bottomright = c(x, y))
 }
 \arguments{
-\item{topleft}{a vector with topleft coordinates}
+\item{topleft}{a vector with topleft x,y coordinates}
 
-\item{bottomright}{a vector with bottomright coordinates}
+\item{bottomright}{a vector with bottomright x,y coordinates}
 }
 \value{
-object of class SpatialPolygons-class
+object of class SpatialPolygons
 }
 \description{
-Create aoi from topleft and bottomright coordinates
+Create aoi polygon from topleft and bottomright coordinates
 }
+\examples{
+tl <- c(493300, -3592700)
+br <- c(557200, -3700000)
+aoi <- create.aoi(topleft = tl, bottomright=br)
+plot(aoi)
+}
+\author{
+Guillermo F Olmedo
+
+Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+}
+\seealso{
+\code{\link{brocolors}}
+}
+\keyword{...}
+\keyword{hplot}
 

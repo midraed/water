@@ -271,7 +271,7 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi){
   Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
-  Rl.out <- save.load.clean(imagestack = Rs.out, file = "Rs.out.tif", overwrite=TRUE)
+  Rl.out <- save.load.clean(imagestack = Rl.out, file = "Rs.out.tif", overwrite=TRUE)
   return(Rl.out)
 }
 
