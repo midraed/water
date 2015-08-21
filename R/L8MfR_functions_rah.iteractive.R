@@ -4,8 +4,8 @@
 # 
 
 aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
-                                    wind, ETr, ETp.coef= 1.05, Z.om.ws=0.0018, height.ws=2, 
-                                    mountainous=FALSE, elev.ws, DEM,
+                                    WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
+                                    mountainous=FALSE, DEM,
                                     Rn, G, plots=TRUE){
   ### Some values used later
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
@@ -37,10 +37,10 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     points(xyFromCell(LAI, cold), col="blue", pch=4)
   }
   ### We calculate the initial conditions assuming neutral stability
-  u.ws <- wind * 0.41 / log(height.ws/Z.om.ws)
+  u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
   if(mountainous==TRUE){
-    u200 <- u200 * (1+0.1*((DEM-elev.ws)/1000))
+    u200 <- u200 * (1+0.1*((DEM-WeaterStation$elev)/1000))
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok

@@ -321,39 +321,57 @@ momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, N
   return(Z.om)
 }
 
-ETo.PM.hourly <- function(alt.ws, Gr.Rad, wind, Ta, HR, ea, lat.ws, long.ws, hours){
-  Rs <- Gr.Rad * 3600 / 1e6
-  P <- 101.3*((293-0.0065*alt.ws)/293)^5.26
+#' Calculates ET using Penman Monteith hourly formula
+#' @param WeatherStation a data frame with all the needed fields (see example)
+#' @param hours time of the day in hours in 24hs format
+#' @param DOY day of year
+#' @param long.z longitude for local time
+#' @return ET hourly in mm.h-1
+#' @author Guillermo F Olmedo
+#' @examples 
+#' WeatherStation  <- data.frame(wind=4.72,
+#'                               RH=59, 
+#'                               Ta=24.3,
+#'                               Gr.Rad=675, 
+#'                               height=2.2, 
+#'                               lat=-35.37, 
+#'                               long=71.5946, 
+#'                               elev=124)
+#'   ETo.PM.hourly(WeatherStation, hours=10.5, DOY=363, long.z=71.635)
+#' @export
+#' @references 
+#' Allen 2005 ASCE
+ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z){
+  TaK <- WeatherStation$Ta + 273.16
+  Rs <- WeatherStation$Gr.Rad * 3600 / 1e6
+  P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
   psi <- 0.000665*P
-  Delta <- 2503 * exp((17.27*Ta)/(Ta+237.3))/((Ta+237.3)^2)
-  ea.sat <- 0.6108*exp((17.27*Ta)/(Ta+237.3))
-  ea <- (RH/100)*ea.sat
+  Delta <- 2503 * exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))/((WeatherStation$Ta+237.3)^2)
+  ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  ea <- (WeatherStation$RH/100)*ea.sat
   DPV <- ea.sat - ea
-  dr <- 1 + 0.0033*(cos(2*pi*DOY/365))
+  dr <- 1 + 0.033*(cos(2*pi*DOY/365))
   delta <- 0.409*sin((2*pi*DOY/365)-1.39)
-  phi <- lat.ws*(pi/180)
+  phi <- WeatherStation$lat*(pi/180)
   b <- 2*pi*(DOY-81)/364
   Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
-  hour.angle <- (pi/12)*((hours+0.06667*(long.ws-long.z)+Sc)-12)
+  hour.angle <- (pi/12)*((hours+0.06667*(WeatherStation$long*pi/180-long.z*pi/180)+Sc)-12)
   w1 <- hour.angle-((pi)/24)
   w2 <- hour.angle+((pi)/24)
   hour.angle.s <- acos(-tan(phi)*tan(delta))
-  if(w1<-hour.angle.s){w1c <- -hour.angle.s}
-  if(w1>hour.angle.s){w1c <- hour.angle.s}
-  if(w1>w2){w1c <- w2}else(w1c <- w1)
-  if(w2<.hour.angle.s){w2c <- hour.angle.s}
-  if(w2>hour.angle.s){w2c <- hour.angle.s}else(w2c <- w2)
-  Beta <- asin((sen(phi)*sen(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
-  if(Beta<=0){Ra <- 1e-45}else(Ra <- ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
-  Rso <- (0.75+2e-5*alt.ws)*Ra
-  if(Rs/Rso<=0.3){Rs.Rso <- 0}  
-  if(Rs/Rso>=1){Rs.Rso <- 1} else (Rs.Rso <- Rs/Rso)
-  if(1.35*Rs.Rso-0.35<=0.05){fcd <- 0.05}
-  if(1.35*Rs.Rso-0.35<1){fcd <- 1.35*Rs.Rso-0.35}else(1)
-  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*Ta^4)
+  if(w1< -hour.angle.s){w1c <- -hour.angle.s}else(if(w1>hour.angle.s){w1c <- hour.angle.s}else(if(w1>w2){w1c <- w2}else(w1c <- w1)))
+  w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s, 
+                ifelse(w2>hour.angle.s, hour.angle.s, w2))
+  Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
+  if(Beta<=0){Ra <- 1e-45}else(
+    Ra <- ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
+  Rso <- (0.75+2e-5*WeatherStation$elev)*Ra
+  Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
+  fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
+  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*TaK^4)
   G.day <- Rn.a * 0.1
-  wind.2 <- wind *(4.87/(log(67.8*height.ws-5.42)))
-  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/Ta)*wind.2*(DPV)))/(Delta+(psi*(1+(0.24*wind.2))))
+  wind.2 <- WeatherStation$wind *(4.87/(log(67.8*WeatherStation$height-5.42)))
+  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/TaK)*wind.2*(DPV)))/(Delta+(psi*(1+(0.24*wind.2))))
   return(ETo.hourly)
 }
 
