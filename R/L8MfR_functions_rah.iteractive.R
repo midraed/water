@@ -1,3 +1,8 @@
+# Error in mean(values(prev.r.ah), na.rm = T) : 
+#   error in evaluating the argument 'x' in selecting a method for function 'mean': Error in values(prev.r.ah) : 
+#   error in evaluating the argument 'x' in selecting a method for function 'values': Error: objeto 'prev.r.ah' no encontrado
+# 
+
 aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
                                     wind, ETr, ETp.coef= 1.05, Z.om.ws=0.0018, height.ws=2, 
                                     mountainous=FALSE, elev.ws, DEM,
@@ -40,8 +45,8 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
   ### Iteractive process start here:
-  delta.r.ah <- vector()
-  delta.H <- vector()
+  #delta.r.ah <- vector()
+  #delta.H <- vector()
   ETr.hourly <-  0.56 ## need to calculate this first - MCB uses PM.ASCE hourly eq
   LE.cold <- ETr.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 # here uses latent.heat.vapo
   H.cold <- Rn[cold] - G[cold] - LE.cold #ok
@@ -49,8 +54,6 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   for(i in 1:5){
     print(paste("iteraction #", i))
     ### We calculate dT and H 
-    prev.r.ah <- r.ah
-    prev.H <- H
     dT.cold <- H.cold * r.ah[cold] / (air.density[cold]*1004)
     dT.hot <- (Rn[hot] - G[hot]) * r.ah[hot] / (air.density[hot]*1004)
     a <- (dT.hot - dT.cold) / (Ts.datum[hot] - Ts.datum[cold])
@@ -84,8 +87,10 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
     #r.ah[r.ah > quantile(r.ah, 0.9999)] <-  NA # to eliminate very high alues
-    delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
-    delta.H
+    #delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
+    #delta.H
+    #prev.r.ah <- r.ah
+    #prev.H <- H
   } # End interactive process
   dT <- save.load.clean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
   H <- save.load.clean(imagestack = H, file = "H.tif", overwrite=TRUE)
