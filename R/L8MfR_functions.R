@@ -12,7 +12,7 @@
 ### Check Rsky on METRIC 2010
 ### Add dependency with evapotranspiration and used to measure ETp
 ### Add three source temperature model..!
-
+### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
 
 #################################################################################3
 # Common fields for docs
@@ -323,30 +323,6 @@ momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, N
   Z.om <- save.load.clean(imagestack = Z.om, file = "Z.om.tif", overwrite=TRUE)
   return(Z.om)
 }
-
-air.density <- function(DEM, Ts){
-  P <- 101.3*((293-0.0065 * dem)/293)^5.26
-  air.density <- 1000 * P / (1.01*(Ts)*287)
-}
-
-
-#' Calculates sensible heat flux for METRIC Model
-#' @param rho.air - air density
-#' @param dT - dT from anchor points
-#' @param r.ah - rugosity
-#' @return Returns sensible heat flux
-#' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
-sensible.heat.flux <- function(rho.air, dT, r.ah){
-  H <- rho.air*1007*dT/r.ah
-  H <- save.load.clean(imagestack = H, file = "H.tif", overwrite=TRUE)
-  return(H)
-}
-
-
-
-
 
 
 #########################################################################
