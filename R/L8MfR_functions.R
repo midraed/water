@@ -1,16 +1,13 @@
-### ADD writeRaster to all the functions
 ### Add a function to estimate all parameters for some points (and only for those points!)
 ### Add some meta-functions to insolate processes
 ### Add METRIC function
 ### Maybe we need a new class to store all data? 
 ### Maybe a class for weather stations... check previous work on the field
 ### Maybe add knitr and generate pdf report on METRIC function
-### Maybe change from this.names to thisNames
 ### Export anchor as kml or view in Google
 ### select anchor points with buffer for not too close pixels...
 ### Select anchor for multiple criteria with table from Marcos
 ### Check Rsky on METRIC 2010
-### Add dependency with evapotranspiration and used to measure ETp
 ### Add three source temperature model..!
 ### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
 
@@ -18,7 +15,7 @@
 # Common fields for docs
 # @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 # @references 
-# R. G. Allen, M. Tasumi, and R. Trezza, “Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model,” Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+# R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 
 
 ####################
@@ -322,6 +319,42 @@ momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, N
   }
   Z.om <- save.load.clean(imagestack = Z.om, file = "Z.om.tif", overwrite=TRUE)
   return(Z.om)
+}
+
+ETo.PM.hourly <- function(alt.ws, Gr.Rad, wind, Ta, HR, ea, lat.ws, long.ws, hours){
+  Rs <- Gr.Rad * 3600 / 1e6
+  P <- 101.3*((293-0.0065*alt.ws)/293)^5.26
+  psi <- 0.000665*P
+  Delta <- 2503 * exp((17.27*Ta)/(Ta+237.3))/((Ta+237.3)^2)
+  ea.sat <- 0.6108*exp((17.27*Ta)/(Ta+237.3))
+  ea <- (RH/100)*ea.sat
+  DPV <- ea.sat - ea
+  dr <- 1 + 0.0033*(cos(2*pi*DOY/365))
+  delta <- 0.409*sin((2*pi*DOY/365)-1.39)
+  phi <- lat.ws*(pi/180)
+  b <- 2*pi*(DOY-81)/364
+  Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
+  hour.angle <- (pi/12)*((hours+0.06667*(long.ws-long.z)+Sc)-12)
+  w1 <- hour.angle-((pi)/24)
+  w2 <- hour.angle+((pi)/24)
+  hour.angle.s <- acos(-tan(phi)*tan(delta))
+  if(w1<-hour.angle.s){w1c <- -hour.angle.s}
+  if(w1>hour.angle.s){w1c <- hour.angle.s}
+  if(w1>w2){w1c <- w2}else(w1c <- w1)
+  if(w2<.hour.angle.s){w2c <- hour.angle.s}
+  if(w2>hour.angle.s){w2c <- hour.angle.s}else(w2c <- w2)
+  Beta <- asin((sen(phi)*sen(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
+  if(Beta<=0){Ra <- 1e-45}else(Ra <- ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
+  Rso <- (0.75+2e-5*alt.ws)*Ra
+  if(Rs/Rso<=0.3){Rs.Rso <- 0}  
+  if(Rs/Rso>=1){Rs.Rso <- 1} else (Rs.Rso <- Rs/Rso)
+  if(1.35*Rs.Rso-0.35<=0.05){fcd <- 0.05}
+  if(1.35*Rs.Rso-0.35<1){fcd <- 1.35*Rs.Rso-0.35}else(1)
+  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*Ta^4)
+  G.day <- Rn.a * 0.1
+  wind.2 <- wind *(4.87/(log(67.8*height.ws-5.42)))
+  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/Ta)*wind.2*(DPV)))/(Delta+(psi*(1+(0.24*wind.2))))
+  return(ETo.hourly)
 }
 
 
