@@ -341,7 +341,7 @@ momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, N
 #' @export
 #' @references 
 #' Allen 2005 ASCE
-ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z){
+ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
   TaK <- WeatherStation$Ta + 273.16
   Rs <- WeatherStation$Gr.Rad * 3600 / 1e6
   P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26

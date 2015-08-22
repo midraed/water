@@ -3,10 +3,9 @@
 #   error in evaluating the argument 'x' in selecting a method for function 'values': Error: objeto 'prev.r.ah' no encontrado
 # 
 
-aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
-                                    WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
-                                    mountainous=FALSE, DEM,
-                                    Rn, G, plots=TRUE){
+H <- function(anchors, Ts, LAI, n=1, anchors.method= "random", 
+              WeatherStation, ETo.hourly, ETp.coef= 1.05, Z.om.ws=0.0018, 
+              mountainous=FALSE, DEM, Rn, G, plots=TRUE){
   ### Some values used later
   Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
@@ -24,8 +23,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
         warning(paste("LAI max value is", round(max(values(LAI)),2), 
                       "and the expected was LAI >= 4 for cold pixel"))
         cold <- sample(which(values(LAI)>quantile(LAI,0.9999)),n)  
-      } else cold <- sample(which(values(LAI>4)),n)  
-    }}
+      } else cold <- sample(which(values(LAI>4)),n)}}
   else{
     hot <- as.numeric(hc.data$pixel[hc.data$type =="hot"])
     cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
@@ -40,7 +38,7 @@ aerodynamic.transport.i <- function(anchors, Ts, LAI, n=1, anchors.method= "rand
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
   if(mountainous==TRUE){
-    u200 <- u200 * (1+0.1*((DEM-WeaterStation$elev)/1000))
+    u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
