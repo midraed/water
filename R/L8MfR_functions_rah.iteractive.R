@@ -1,8 +1,3 @@
-# Error in mean(values(prev.r.ah), na.rm = T) : 
-#   error in evaluating the argument 'x' in selecting a method for function 'mean': Error in values(prev.r.ah) : 
-#   error in evaluating the argument 'x' in selecting a method for function 'values': Error: objeto 'prev.r.ah' no encontrado
-# 
-
 H <- function(anchors, Ts, LAI, n=1, anchors.method= "random", 
               WeatherStation, ETo.hourly, ETp.coef= 1.05, Z.om.ws=0.0018, 
               mountainous=FALSE, DEM, Rn, G, plots=TRUE){
@@ -46,7 +41,8 @@ H <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
   #delta.r.ah <- vector()
   #delta.H <- vector()
   ETr.hourly <-  0.56 ## need to calculate this first - MCB uses PM.ASCE hourly eq
-  LE.cold <- ETr.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 # here uses latent.heat.vapo
+  LE.cold <- ETr.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 
+  # here uses latent.heat.vapo
   H.cold <- Rn[cold] - G[cold] - LE.cold #ok
   result <- list()
   for(i in 1:5){
@@ -61,9 +57,12 @@ H <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
     dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
     rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
     H <- rho * 1004 * dT / r.ah
-    Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) / (0.41 * 9.807 * H)
-    ### Then we calculate L and phi200, phi2, and phi0.1 ## !!! This is very time consumig... maybe only for hot and cold pixels?
-    phi.200 <- raster(Monin.Obukhov.L) # copy raster extent and pixel size, not values!
+    Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) / 
+      (0.41 * 9.807 * H)
+    ### Then we calculate L and phi200, phi2, and phi0.1 
+    ## !!! This is very time consumig... maybe only for hot and cold pixels?
+    phi.200 <- raster(Monin.Obukhov.L) 
+    # copy raster extent and pixel size, not values!
     phi.2 <- raster(Monin.Obukhov.L)
     phi.01 <- raster(Monin.Obukhov.L)
     ## stable condition = L > 0
@@ -74,7 +73,8 @@ H <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
     x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
     x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
     x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
-    phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + log((1 + x.200^2) /2) - 2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+    phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + log((1 + x.200^2) /2) - 
+                                       2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
     phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
     phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
     print(r.ah[cold])
@@ -90,16 +90,18 @@ H <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
     #prev.r.ah <- r.ah
     #prev.H <- H
   } # End interactive process
-  dT <- save.load.clean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
-  H <- save.load.clean(imagestack = H, file = "H.tif", overwrite=TRUE)
+  dT <- save.load.clean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
+  H <- save.load.clean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
   result$a <- a
   result$b <- b
   result$dT <- dT
   result$H <- H
   result$hot.and.cold <- data.frame(pixel=integer(),  X=integer(), Y=integer(), Ts=double(), 
                                     LAI=double(), type=factor(levels = c("hot", "cold")))
-  for(i in 1:n){result$hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]), Ts[hot][i], round(LAI[hot][i],2), "hot")}
-  for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, hot[i]), Ts[cold][i], round(LAI[cold][i],2), "cold")}
+  for(i in 1:n){result$hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
+                                              Ts[hot][i], round(LAI[hot][i],2), "hot")}
+  for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, hot[i]), 
+                                                Ts[cold][i], round(LAI[cold][i],2), "cold")}
   return(result)
 }
 
