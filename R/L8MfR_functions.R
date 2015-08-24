@@ -359,12 +359,11 @@ ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long
   w1 <- hour.angle-((pi)/24)
   w2 <- hour.angle+((pi)/24)
   hour.angle.s <- acos(-tan(phi)*tan(delta))
-  if(w1< -hour.angle.s){w1c <- -hour.angle.s}else(if(w1>hour.angle.s){w1c <- hour.angle.s}else(if(w1>w2){w1c <- w2}else(w1c <- w1)))
+  w1c <- ifelse(w1< -hour.angle.s, -hour.angle.s, ifelse(w1>hour.angle.s, hour.angle.s, ifelse(w1>w2, w2, w1)))
   w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s, 
                 ifelse(w2>hour.angle.s, hour.angle.s, w2))
   Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
-  if(Beta<=0){Ra <- 1e-45}else(
-    Ra <- ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
+  Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
   Rso <- (0.75+2e-5*WeatherStation$elev)*Ra
   Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
   fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
