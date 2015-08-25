@@ -1,4 +1,4 @@
-H <- function(anchors, Ts, LAI, n=1, anchors.method= "random", 
+H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
               WeatherStation, ETo.hourly, ETp.coef= 1.05, Z.om.ws=0.0018, 
               mountainous=FALSE, DEM, Rn, G, plots=TRUE){
   ### Some values used later
@@ -18,7 +18,27 @@ H <- function(anchors, Ts, LAI, n=1, anchors.method= "random",
         warning(paste("LAI max value is", round(max(values(LAI)),2), 
                       "and the expected was LAI >= 4 for cold pixel"))
         cold <- sample(which(values(LAI)>quantile(LAI,0.9999)),n)  
-      } else cold <- sample(which(values(LAI>4)),n)}}
+      } else cold <- sample(which(values(LAI>4)),n)}
+    if(anchors.method=="random2"){
+      if(!max(values(Ts))>=310){
+        warning(paste("Ts max value is", round(max(values(Ts)),2), 
+                      "and the expected was Ts >= 310 for hot pixel"))
+        hot <- sample(which(values(Ts)>quantile(Ts,0.9999)& 
+                              values(albedo>=0.13) & values(albedo<=0.15) &
+                              values(Z.om>0) & values(Z.om<=0.005)),n)  # CITRA
+      } else hot <- sample(which(values(Ts>310) & 
+                                   values(albedo>=0.13) & values(albedo<=0.15) &
+                                   values(Z.om>0) & values(Z.om<=0.005)),n) # CITRA
+      if(!max(values(LAI))>=3){
+        warning(paste("LAI max value is", round(max(values(LAI)),2), 
+                      "and the expected was LAI >= 3 for cold pixel"))
+        cold <- sample(which(values(LAI)>quantile(LAI,0.9999)& values(LAI<=6) & values(Ts>288) & 
+                               values(albedo>=0.18) & values(albedo<=0.25) &
+                               values(Z.om>=0.08)),n)  # CITRA
+      } else cold <- sample(which(values(LAI>=3) & values(LAI<=6) & values(Ts>288) & 
+                                    values(albedo>=0.18) & values(albedo<=0.25) &
+                                    values(Z.om>=0.08)),n)} # CITRA 
+    }
   else{
     hot <- as.numeric(hc.data$pixel[hc.data$type =="hot"])
     cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
