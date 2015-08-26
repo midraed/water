@@ -110,9 +110,10 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi, resul
                                overwrite=TRUE)
   return(image_TOA)
 }  
-  
 
-image.SR <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, result.folder=NULL){
+# incidence hor from TML?? 
+calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
+                     aoi, result.folder=NULL, incidence.hor, WeatherStation, surface.model){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -125,13 +126,46 @@ image.SR <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, re
     image_SR <- do.call(stack, stack1)
     if(!is.null(aoi)){
       image_SR <- crop(image_SR,aoi) 
+    }}
+  if(sat=="L7"){
+    if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
+    P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
+    ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+    ea <- (WeatherStation$RH/100)*ea.sat
+    W <- 0.14 * ea * P + 2.1
+    Kt <- 1
+    Cnb <- matrix(data=c(0.987, 2.319, 0.951, 0.375, 0.234, 0.365,
+                           -0.00071, -0.00016, -0.00033, -0.00048, -0.00101, -0.00097,
+                           0.000036, 0.000105, 0.00028, 0.005018, 0.004336, 0.004296,
+                           0.0880, 0.0437, 0.0875, 0.1355, 0.056, 0.0155,
+                           0.0789, -1.2697, 0.1014, 0.6621, 0.7757, 0.639,
+                           0.64, 0.31, 0.286, 0.189, 0.274, -0.186), byrow = T, nrow=6, ncol=6)
+    tau_in <- list()
+    tau_out <- list()
+    for(i in 1:6){
+      tau_in[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/Kt*cos(incidence.hor))-
+                                    ((Cnb[3,i]*W+Cnb[4,i])/cos(incidence.hor)))+Cnb[5,i]
     }
-    image_SR <- save.load.clean(imagestack = image_SR, 
-                                 stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                                 file = paste0(result.folder, "image_SR.tif"), 
-                                 overwrite=TRUE)
-    return(image_SR)
+    eta = 0 # eta it's the satellite nadir angle
+    for(i in 1:6){
+      tau_out[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/Kt*cos(eta))-
+                                    ((Cnb[3,i]*W+Cnb[4,i])/cos(eta)))+Cnb[5,i]
+    }
+    path_refl <- list()
+    for(i in 1:6){
+      path_refl[i] <- Cnb[6,1] * (1 - tau_in[[i]])
+    }
+    stack_SR <- list()
+    for(i in 1:6){
+      stack_SR[i] <- (image.TOAr[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
+    }
+    image_SR <- do.call(stack, stack_SR)
   }
+  image_SR <- save.load.clean(imagestack = image_SR, 
+                              stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                              file = paste0(result.folder, "image_SR.tif"), 
+                              overwrite=TRUE)
+  return(image_SR)
 }  
 
 
@@ -146,7 +180,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
   polyaoi@proj4string <- raw.image@crs
   limits <- project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
-          inverse = TRUE)
+                    inverse = TRUE)
   # I have to improve this. It should work ONLY for west and south coordinates.. maybe
   lat_needed <- seq(floor(limits[3])+1, floor(limits[4])+1, by=1)
   long_needed <- seq(floor(limits[1]), floor(limits[2])+1, by = 1)
@@ -155,7 +189,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
   link <- "http://earthexplorer.usgs.gov/download/options/8360/SRTM1"
   for(i in 1:nrow(grids)){
     result[[i]] <- paste(link, ifelse(grids[i,1]>0,"N", "S"), abs(grids[i,1]),
-       ifelse(grids[i,2]>0,"E", "W"), "0", abs(grids[i,2]),"V3/", sep="")
+                         ifelse(grids[i,2]>0,"E", "W"), "0", abs(grids[i,2]),"V3/", sep="")
   }
   print(paste("You need", nrow(grids), "1deg x 1deg SRTM grids"))
   print("You can get them here:")
@@ -194,42 +228,42 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 
 ### Change to look in metadata for keyword instead of using line #
 solar.angles <- function(L8MTL, raw.image, slope, aspect, result.folder=NULL){
-   test <- scan(L8MTL, character(0), sep = "\n") 
-   ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
-   sun.azimuth <- as.numeric(str_extract(test[68], 
-                                         pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
-   sun.elevation <- as.numeric(str_extract(test[69], 
-                                           pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
-   # latitude
-   latitude <- raw.image[[1]]
-   xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
-   xy@proj4string <- latitude@crs
-   lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
-   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
-   # declination
-   DOY <- strptime(str_extract(test[21], 
-                               pattern = "([0-9]{4})([-]+)([0-9]{2})([-]+)([0-9]{2})"), 
-                   "%Y-%m-%d")$yday+1
-   declination <- raw.image[[1]]
-   values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
-   # hour angle
-   hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination)))
-   ## solar incidence angle, for horizontal surface
-   incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)
-                         *cos(latitude)*cos(hour.angle))
-   ##solar incidence angle, for sloping surface
-   incidence.rel <- acos(sin(declination)*sin(latitude)*cos(slope) 
-                     - sin(declination)*cos(latitude)*sin(slope)*cos(aspect)
-                     + cos(declination)*cos(latitude)*cos(slope)*cos(hour.angle)
-                     + cos(declination)*sin(latitude)*sin(slope)*cos(aspect)*cos(hour.angle)
-                     + cos(declination)*sin(aspect)*sin(slope)*sin(hour.angle))
-   ## End
-   solar.angles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
-   solar.angles <- save.load.clean(imagestack = solar.angles, 
-                                   stack.names = c("latitude", "declination", 
-                                                   "hour.angle", "incidence.hor", "incidence.rel"), 
-                                   file = paste0(result.folder, "solar.angles.tif"), overwrite=TRUE)
-   return(solar.angles)
+  test <- scan(L8MTL, character(0), sep = "\n") 
+  ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
+  sun.azimuth <- as.numeric(str_extract(test[68], 
+                                        pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
+  sun.elevation <- as.numeric(str_extract(test[69], 
+                                          pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
+  # latitude
+  latitude <- raw.image[[1]]
+  xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
+  xy@proj4string <- latitude@crs
+  lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
+  values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
+  # declination
+  DOY <- strptime(str_extract(test[21], 
+                              pattern = "([0-9]{4})([-]+)([0-9]{2})([-]+)([0-9]{2})"), 
+                  "%Y-%m-%d")$yday+1
+  declination <- raw.image[[1]]
+  values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
+  # hour angle
+  hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination)))
+  ## solar incidence angle, for horizontal surface
+  incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)
+                        *cos(latitude)*cos(hour.angle))
+  ##solar incidence angle, for sloping surface
+  incidence.rel <- acos(sin(declination)*sin(latitude)*cos(slope) 
+                        - sin(declination)*cos(latitude)*sin(slope)*cos(aspect)
+                        + cos(declination)*cos(latitude)*cos(slope)*cos(hour.angle)
+                        + cos(declination)*sin(latitude)*sin(slope)*cos(aspect)*cos(hour.angle)
+                        + cos(declination)*sin(aspect)*sin(slope)*sin(hour.angle))
+  ## End
+  solar.angles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
+  solar.angles <- save.load.clean(imagestack = solar.angles, 
+                                  stack.names = c("latitude", "declination", 
+                                                  "hour.angle", "incidence.hor", "incidence.rel"), 
+                                  file = paste0(result.folder, "solar.angles.tif"), overwrite=TRUE)
+  return(solar.angles)
 }
 
 sw.trasmisivity <- function(Kt = 1, ea, dem, incidence.hor, result.folder=NULL){
@@ -250,29 +284,29 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=N
 }
 
 albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
-    if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
+  if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
   # Tasumi 2008
-    if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
+  if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
   # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
-    if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} 
+  if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} 
   # Liang 2001
-    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
-    albedo <- calc(raster(paste(path, files[1], sep="")), fun=function(x){x *wb[1]})
-    for(i in 2:6){
-      albedo <- albedo + calc(raster(paste(path, files[i], sep="")), 
-                              fun=function(x){x *wb[i]})
-      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
-    }
-    albedo <-  albedo/1e+08
-    if(!missing(aoi)){
-      albedo <- crop(albedo,aoi) # Without aoi this should fail on most computers.
-      }                                
-    if(coeff=="Liang"){
-      albedo <- albedo - 0.0018
-    }
-    albedo <- save.load.clean(imagestack = albedo, 
-                              file = paste0(result.folder, "albedo.tif"), overwrite=TRUE)
-    return(albedo)
+  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
+  albedo <- calc(raster(paste(path, files[1], sep="")), fun=function(x){x *wb[1]})
+  for(i in 2:6){
+    albedo <- albedo + calc(raster(paste(path, files[i], sep="")), 
+                            fun=function(x){x *wb[i]})
+    removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
+  }
+  albedo <-  albedo/1e+08
+  if(!missing(aoi)){
+    albedo <- crop(albedo,aoi) # Without aoi this should fail on most computers.
+  }                                
+  if(coeff=="Liang"){
+    albedo <- albedo - 0.0018
+  }
+  albedo <- save.load.clean(imagestack = albedo, 
+                            file = paste0(result.folder, "albedo.tif"), overwrite=TRUE)
+  return(albedo)
 }
 
 ## Cite Pocas work for LAI from METRIC2010
@@ -348,7 +382,7 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi, result.folder=NULL){
   Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
-    if(!missing(aoi)){
+  if(!missing(aoi)){
     Ta <- crop(Ta,aoi) 
   }
   ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
