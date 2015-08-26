@@ -64,7 +64,7 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
 #' @export
 # Better get the images from a folder...! (like albedo)
 # Check when creates temp files... on raster() or in stack()
-load_L8data <-  function(landsat.band, aoi, result.folder=NULL){
+image.DN <-  function(landsat.band, aoi, result.folder=NULL){
   if(grepl("[LC[:digit:]]+LGN00_B", landsat.band, perl=TRUE) == TRUE){
   B2 <- raster(sub("B[[:digit:]]", "B2", landsat.band))
   B3 <- raster(sub("B[[:digit:]]", "B3", landsat.band))
@@ -93,6 +93,37 @@ load_L8data <-  function(landsat.band, aoi, result.folder=NULL){
   print("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF")
   return(NULL)
 }
+
+
+
+image.TOA <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, result.folder=NULL){
+  if(sat=="auto"){
+    band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_B2.TIF")), 0,3)
+    if(length(band)==0){
+      print(paste("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF in ", path))
+      return()
+    }
+    if(band =="LC8"){sensor="L8"}
+    if(band =="LE7"){sensor="L7"}
+    if(band != "LE7" & band != "LC8"){
+      print("Can't establish sat from band names")
+      return()
+    }}
+  if(ESPA==TRUE & sat=="L8"){
+    files <- list.files(path = path, pattern = "_toa_band+[2-7].tif$")
+    stack1 <- list()
+    for(i in 1:6){
+      stack1[i] <- raster(paste0(path, files[i]))
+    }
+    toa.image <- do.call(stack, stack1)
+    if(!missing(aoi)){
+      toa.image <- crop(toa.image,aoi) # Without aoi this should fail on most computers.
+    }                                
+  }
+}  
+  
+
+
 
 # Get links or optionally open web pages... 
 checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
