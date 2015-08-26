@@ -1,8 +1,5 @@
 ### Add a function to estimate all parameters for some points (and only for those points!)
 ### Add some meta-functions to insolate processes
-### Add METRIC function
-### Maybe we need a new class to store all data? 
-### Maybe add knitr and generate pdf report on METRIC function
 ### Export anchor as kml or view in Google
 ### select anchor points with buffer for not too close pixels...
 ### Select anchor for multiple criteria with table from Marcos
@@ -47,9 +44,9 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   return(aoi)
 }
 
-#' Load Landsat 8 data from a folder 
+#' Load Landsat data from a folder 
 #' @export
-load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL){
+load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi){
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -59,7 +56,7 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL){
     stack1[i] <- raster(paste0(path, files[i], bands[i], ".TIF"))
   }
   raw.image <- do.call(stack, stack1)
-  if(!is.null(aoi)){
+  if(exists(x="aoi")){
     raw.image <- crop(raw.image,aoi) # Without aoi this should fail on most computers.
   }                                
   raw.image <- save.load.clean(imagestack = raw.image, 
@@ -71,7 +68,7 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL){
 
 
 # References L7: LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
-calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi, result.folder=NULL, incidence.rel){
+calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi=aoi, result.folder=NULL, incidence.rel){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -82,7 +79,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi, resul
       stack1[i] <- raster(paste0(path, files[i]))
     }
     image_TOA <- do.call(stack, stack1)
-    if(!is.null(aoi)){
+    if(exists(x="aoi")){
       image_TOA <- crop(image_TOA,aoi) 
     }}
   ### Ro TOA L7
@@ -113,7 +110,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi, resul
 
 # incidence hor from TML?? 
 calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                     aoi, result.folder=NULL, incidence.hor, WeatherStation, surface.model){
+                     aoi=aoi, result.folder=NULL, incidence.hor, WeatherStation, surface.model){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -124,7 +121,7 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
       stack1[i] <- raster(paste0(path, files[i]))
     }
     image_SR <- do.call(stack, stack1)
-    if(!is.null(aoi)){
+    if(exists(x="aoi")){
       image_SR <- crop(image_SR,aoi) 
     }}
   if(sat=="L7"){
@@ -227,8 +224,8 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 
 
 ### Change to look in metadata for keyword instead of using line #
-solar.angles <- function(L8MTL, raw.image, slope, aspect, result.folder=NULL){
-  test <- scan(L8MTL, character(0), sep = "\n") 
+solar.angles <- function(Landsat.MTL, raw.image, slope, aspect, result.folder=NULL){
+  test <- scan(Landsat.MTL, character(0), sep = "\n") 
   ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
   sun.azimuth <- as.numeric(str_extract(test[68], 
                                         pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
@@ -283,7 +280,7 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=N
   return(Rs.inc)
 }
 
-albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
+albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
   # Tasumi 2008
   if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
@@ -298,7 +295,7 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
     removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
   }
   albedo <-  albedo/1e+08
-  if(!missing(aoi)){
+  if(exists(x="aoi")){
     albedo <- crop(albedo,aoi) # Without aoi this should fail on most computers.
   }                                
   if(coeff=="Liang"){
@@ -310,12 +307,12 @@ albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
 }
 
 ## Cite Pocas work for LAI from METRIC2010
-LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi, L=0.1, result.folder=NULL){
+LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="carrasco-benavides"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
     toa.4.5 <- stack(toa.red, toa.nir)
-    if(!missing(aoi)){
+    if(exists(x="aoi")){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
     }    
     toa.4.5 <- toa.4.5 * 0.0001
@@ -358,10 +355,10 @@ LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi, L=0.1, result.fo
   return(LAI)
 }
 
-surface.temperature <- function(path=getwd(), aoi, result.folder=NULL){
+surface.temperature <- function(path=getwd(), aoi=aoi, result.folder=NULL){
   bright.temp.b10 <- raster(paste(path, list.files(path = path, 
                                                    pattern = "_toa_band10.tif"), sep=""))
-  if(!missing(aoi)){
+  if(exists(x="aoi")){
     bright.temp.b10 <- crop(bright.temp.b10,aoi) 
   }
   Ts <- bright.temp.b10*0.1
@@ -370,7 +367,7 @@ surface.temperature <- function(path=getwd(), aoi, result.folder=NULL){
   return(Ts)
 }
 
-outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
+outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=aoi, result.folder=NULL){
   Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
@@ -380,9 +377,9 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
 }
 
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi, result.folder=NULL){
+incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi, result.folder=NULL){
   Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
-  if(!missing(aoi)){
+  if(exists(x="aoi")){
     Ta <- crop(Ta,aoi) 
   }
   ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
@@ -392,13 +389,13 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi, re
   return(Rl.in)
 }
 
-soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi, result.folder=NULL){
+soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=aoi, result.folder=NULL){
   toa.red <- raster(paste(path, list.files(path = path, 
                                            pattern = "_sr_band4.tif"), sep="")[1])
   toa.nir <- raster(paste(path, list.files(path = path, 
                                            pattern = "_sr_band5.tif"), sep="")[1])
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
-  if(!missing(aoi)){
+  if(exists(x="aoi")){
     toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
   }
   NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
