@@ -19,16 +19,6 @@
 
 ####################
 
-save.load.clean <- function(imagestack, stack.names=NULL, file, ...){
-  if(missing(file)){file <- paste(deparse(substitute(raw.image)),".tif", sep="")}
-  writeRaster(imagestack, filename = file, ...)
-  stack <- stack(file)
-  names(stack) <- stack.names
-  removeTmpFiles(h=0)
-  return(stack)
-}
-
-
 #' Create aoi polygon from topleft and bottomright coordinates
 #' @param topleft a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
@@ -57,68 +47,46 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
 }
 
 #' Load Landsat 8 data from a folder 
-#' @param landsat.band one of the landsat 8 bands to import
-#' @param aoi area of interest to crop the raster after loading
-#' @return object of class rasterStack
-#' @exportClass object of class RasterStack
 #' @export
-# Better get the images from a folder...! (like albedo)
-# Check when creates temp files... on raster() or in stack()
-image.DN <-  function(landsat.band, aoi, result.folder=NULL){
-  if(grepl("[LC[:digit:]]+LGN00_B", landsat.band, perl=TRUE) == TRUE){
-  B2 <- raster(sub("B[[:digit:]]", "B2", landsat.band))
-  B3 <- raster(sub("B[[:digit:]]", "B3", landsat.band))
-  B4 <- raster(sub("B[[:digit:]]", "B4", landsat.band))
-  B5 <- raster(sub("B[[:digit:]]", "B5", landsat.band))
-  B6 <- raster(sub("B[[:digit:]]", "B6", landsat.band))
-  B7 <- raster(sub("B[[:digit:]]", "B7", landsat.band))
-  raw.image <- stack(B2,B3,B4,B5,B6,B7)
-  if(missing(aoi)){
-    print("Bands 2,3,4,5,6,7 full scene loaded successfully")
-    raw.image <- save.load.clean(imagestack = raw.image, 
-                                 file = paste0(result.folder, "raw.image.tif"), 
-                                 overwrite=TRUE)
-    return(raw.image)}
-  else
-    raw.image <- crop(raw.image, aoi)
-    print("Bands 2,3,4,5,6,7 loaded successfully and cropped with aoi")
-    #plotRGB(raw.image, 3,2,1, stretch="lin",  main="RGB 4,3,2")
-    raw.image <- save.load.clean(imagestack = raw.image, 
-                                 stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                                 file = paste0(result.folder, "raw.image.tif"), 
-                                 overwrite=TRUE)
-    return(raw.image)
-   }
-  else
-  print("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF")
-  return(NULL)
-}
-
-
+image.DN <-  function(path=getwd(), sat="auto", aoi, result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(path)} #DRY!
+  if(sat=="L8"){bands <- 2:7}
+  if(sat=="L7"){bands <- c(1:5,7)}
+  files <- substr(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$"),0,23)
+  stack1 <- list()
+  for(i in 1:6){
+    stack1[i] <- raster(paste0(path, files[i], bands[i], ".TIF"))
+  }
+  raw.image <- do.call(stack, stack1)
+  if(!is.null(aoi)){
+    raw.image <- crop(raw.image,aoi) # Without aoi this should fail on most computers.
+  }                                
+  raw.image <- save.load.clean(imagestack = raw.image, 
+                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                               file = paste0(result.folder, "image_DN.tif"), 
+                               overwrite=TRUE)
+  return(raw.image) 
+}  
 
 image.TOA <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, result.folder=NULL){
-  if(sat=="auto"){
-    band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_B2.TIF")), 0,3)
-    if(length(band)==0){
-      print(paste("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF in ", path))
-      return()
-    }
-    if(band =="LC8"){sensor="L8"}
-    if(band =="LE7"){sensor="L7"}
-    if(band != "LE7" & band != "LC8"){
-      print("Can't establish sat from band names")
-      return()
-    }}
+  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="L8"){bands <- 2:7}
+  if(sat=="L7"){bands <- c(1:5,7)}
   if(ESPA==TRUE & sat=="L8"){
     files <- list.files(path = path, pattern = "_toa_band+[2-7].tif$")
     stack1 <- list()
     for(i in 1:6){
       stack1[i] <- raster(paste0(path, files[i]))
     }
-    toa.image <- do.call(stack, stack1)
-    if(!missing(aoi)){
-      toa.image <- crop(toa.image,aoi) # Without aoi this should fail on most computers.
-    }                                
+    image_TOA <- do.call(stack, stack1)
+    if(!is.null(aoi)){
+      image_TOA <- crop(image_TOA,aoi) 
+    }
+    image_TOA <- save.load.clean(imagestack = image_TOA, 
+                                 stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                                 file = paste0(result.folder, "image_TOA.tif"), 
+                                 overwrite=TRUE)
+    return(image_TOA)
   }
 }  
   
