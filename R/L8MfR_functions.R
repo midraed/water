@@ -15,8 +15,9 @@
 # @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 # @references 
 # R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-
-
+# Description
+# @export
+# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 ####################
 
 #' Create aoi polygon from topleft and bottomright coordinates
@@ -48,7 +49,7 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
 
 #' Load Landsat 8 data from a folder 
 #' @export
-image.DN <-  function(path=getwd(), sat="auto", aoi, result.folder=NULL){
+load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -68,7 +69,9 @@ image.DN <-  function(path=getwd(), sat="auto", aoi, result.folder=NULL){
   return(raw.image) 
 }  
 
-image.TOA <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, result.folder=NULL){
+
+# References L7: LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
+calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi, result.folder=NULL, incidence.rel){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -81,13 +84,31 @@ image.TOA <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, r
     image_TOA <- do.call(stack, stack1)
     if(!is.null(aoi)){
       image_TOA <- crop(image_TOA,aoi) 
+    }}
+  ### Ro TOA L7
+  if(sat=="L7"){
+    L5_ESUN <- c(1957, 1826, 1554, 1036, 215.0, 80.67) #Chandler & Markham 2003
+    L7_ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06)
+    ESUN <- L7_ESUN 
+    #L5_Gain <- c(0.762824, 1.442510, 1.039880, 0.872588, 0.119882, 0.055158, 0.065294) # Chandler 2003
+    Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
+    #L5_Bias <- c(-1.52, -2.84, -1.17, -1.51, -0.37, 1.2387, -0.15)
+    Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
+    if(missing(image.DN)){image.DN <- load.image.DN(path = path)}
+    DOY <- as.integer(substr(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
+    d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
+    Ro.TOAr <- list()
+    for(i in 1:6){
+      Ro.TOAr[i] <- pi * Gain[i] * image.DN[[i]] + Bias[i] * d^2 / ESUN[i] * cos(incidence.rel)
     }
-    image_TOA <- save.load.clean(imagestack = image_TOA, 
-                                 stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                                 file = paste0(result.folder, "image_TOA.tif"), 
-                                 overwrite=TRUE)
-    return(image_TOA)
+    image_TOA <- do.call(stack, Ro.TOAr)
   }
+  #### 
+  image_TOA <- save.load.clean(imagestack = image_TOA, 
+                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                               file = paste0(result.folder, "image_TOAr.tif"), 
+                               overwrite=TRUE)
+  return(image_TOA)
 }  
   
 
@@ -170,6 +191,8 @@ METRIC.topo <- function(DEM, result.folder=NULL){
   return(surface.model)
 }
 
+
+### Change to look in metadata for keyword instead of using line #
 solar.angles <- function(L8MTL, raw.image, slope, aspect, result.folder=NULL){
    test <- scan(L8MTL, character(0), sep = "\n") 
    ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
