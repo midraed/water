@@ -8,13 +8,12 @@
 ### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
 
 #################################################################################3
-# Common fields for docs
-# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-# @references 
-# R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-# Description
-# @export
-# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' Short Descript
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+#
 ####################
 
 #' Create aoi polygon from topleft and bottomright coordinates
@@ -44,13 +43,17 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
   return(aoi)
 }
 
-#' Load Landsat data from a folder 
+#' Load Landsat data from folder
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi){
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  files <- substr(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$"),0,23)
+  files <- substr(list.files(path = path, 
+                             pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$"),0,23)
   stack1 <- list()
   for(i in 1:6){
     stack1[i] <- raster(paste0(path, files[i], bands[i], ".TIF"))
@@ -66,9 +69,14 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi
   return(raw.image) 
 }  
 
-
-# References L7: LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
-calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi=aoi, result.folder=NULL, incidence.rel){
+#' Calculates Top of atmosphere reflectance
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
+#' @export
+calc.TOAr <- function(path=getwd(), image.DN, sat="auto", 
+                      ESPA=FALSE, aoi=aoi, result.folder=NULL, incidence.rel){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -92,7 +100,8 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi=aoi, r
     #L5_Bias <- c(-1.52, -2.84, -1.17, -1.51, -0.37, 1.2387, -0.15)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
     if(missing(image.DN)){image.DN <- load.image.DN(path = path)}
-    DOY <- as.integer(substr(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
+    DOY <- as.integer(substr(list.files(path = path, 
+                                        pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
     d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
     Ro.TOAr <- list()
     for(i in 1:6){
@@ -108,9 +117,15 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto", ESPA=FALSE, aoi=aoi, r
   return(image_TOA)
 }  
 
+#' Calculates surface reflectance for L7
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 # incidence hor from TML?? 
 calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                     aoi=aoi, result.folder=NULL, incidence.hor, WeatherStation, surface.model){
+                     aoi=aoi, result.folder=NULL, incidence.hor, 
+                    WeatherStation, surface.model){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -166,7 +181,9 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
 }  
 
 
-
+#' Check needed SRTM grids from image extent
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 # Get links or optionally open web pages... 
 checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
   polyaoi <- SpatialPolygons(
@@ -193,6 +210,9 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
   return(unlist(result))
 }
 
+#' Create a mosaic with SRTM grid from image extent
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image, result.folder=NULL){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
@@ -209,6 +229,11 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image, result
   return(mosaicp)
 }
 
+#' Calculates surface model used in METRIC
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 METRIC.topo <- function(DEM, result.folder=NULL){
   DEM <- raster(DEM)
   aspect <- terrain(DEM, opt="aspect") 
@@ -222,15 +247,17 @@ METRIC.topo <- function(DEM, result.folder=NULL){
   return(surface.model)
 }
 
-
+#' Calculates solar angles
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 ### Change to look in metadata for keyword instead of using line #
-solar.angles <- function(Landsat.MTL, raw.image, slope, aspect, result.folder=NULL){
-  test <- scan(Landsat.MTL, character(0), sep = "\n") 
-  ## Here uses stringr,.. only 1 line.. doesn't justify adding a dependency!
-  sun.azimuth <- as.numeric(str_extract(test[68], 
-                                        pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
-  sun.elevation <- as.numeric(str_extract(test[69], 
-                                          pattern = "([0-9]{1,5})([.]+)([0-9]+)"))*pi/180
+solar.angles <- function(path=getwd(), raw.image, surface.model, result.folder=NULL){
+  Landsat.MTL <- list.files(path = path, pattern = "MTL", full.names = T)
+  MTL <- readLines(Landsat.MTL)
+  Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
+  sun.elevation <- as.numeric(str_extract(Elev.line ,"([0-9]{1,5})([.]+)([0-9]+)"))
   # latitude
   latitude <- raw.image[[1]]
   xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
@@ -238,9 +265,9 @@ solar.angles <- function(Landsat.MTL, raw.image, slope, aspect, result.folder=NU
   lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
-  DOY <- strptime(str_extract(test[21], 
-                              pattern = "([0-9]{4})([-]+)([0-9]{2})([-]+)([0-9]{2})"), 
-                  "%Y-%m-%d")$yday+1
+  DOY <- as.integer(substr(list.files(path = path, 
+                                      pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],
+                           14,16))
   declination <- raw.image[[1]]
   values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
   # hour angle
@@ -263,15 +290,26 @@ solar.angles <- function(Landsat.MTL, raw.image, slope, aspect, result.folder=NU
   return(solar.angles)
 }
 
+#' Calculates short wave transmisivity
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 sw.trasmisivity <- function(Kt = 1, ea, dem, incidence.hor, result.folder=NULL){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
-  sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
+  sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
+                                cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
   sw.t <- save.load.clean(imagestack = sw.t, 
                           file = paste0(result.folder, "sw.t.tif"), overwrite=TRUE)
   return(sw.t)
 }
 
+#' Calculates Incoming Solar Radiation
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=NULL){
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
   Rs.inc <- 1367 * cos(incidence.rel) * tau.sw / d^2
@@ -280,6 +318,11 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=N
   return(Rs.inc)
 }
 
+#' Calculates Broadband Albedo from Landsat data
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
   # Tasumi 2008
@@ -306,9 +349,14 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
   return(albedo)
 }
 
+#' Estimate LAI from Landsat Data
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
-  if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="carrasco-benavides"){
+  if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
     toa.4.5 <- stack(toa.red, toa.nir)
@@ -341,7 +389,7 @@ LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, resul
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }
   ## method carrasco
-  if(method=="carrasco-benavides"){
+  if(method=="MCB"){
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 1.2 - 3.08*exp(-2013.35*NDVI^6.41) 
   }
@@ -355,18 +403,49 @@ LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, resul
   return(LAI)
 }
 
-surface.temperature <- function(path=getwd(), aoi=aoi, result.folder=NULL){
-  bright.temp.b10 <- raster(paste(path, list.files(path = path, 
-                                                   pattern = "_toa_band10.tif"), sep=""))
-  if(exists(x="aoi")){
-    bright.temp.b10 <- crop(bright.temp.b10,aoi) 
+#' Estimates Land Surface Temperature from Landsat Data
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+## Add Sobrino and Qin improvements to LST in ETM+
+surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi=aoi, result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="L8"){
+    bright.temp.b10 <- raster(paste(path, list.files(path = path, 
+                                                     pattern = "_toa_band10.tif"), sep=""))
+    Ts <- bright.temp.b10*0.1
+    if(exists(x="aoi")){
+      Ts <- crop(Ts,aoi) 
+    }
   }
-  Ts <- bright.temp.b10*0.1
+  if(sat=="L7"){
+    if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
+    #http://landsathandbook.gsfc.nasa.gov/data_prod/prog_sect11_3.html
+    SAVI_ID <- (1.1)*(image.TOAr[[4]] - image.TOAr[[3]])/
+      (0.1 + image.TOAr[[4]] + image.TOAr[[3]])
+    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
+    epsilon_NB <- raster(LAI)
+    epsilon_NB[LAI <= 3] <- 0.97 + 0.0033 * LAI  
+    epsilon_NB[LAI > 3] <- 0.98
+    L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) + 3.1628
+    L7_K1 <- 666.09 
+    L7_K2 <- 1282.71 
+    Rp <- 0           #Allen estimo en Idaho que el valor medio era 0.91
+    tau_NB <- 1       #Allen estimo en Idaho que el valor medio era 0.866
+    R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
+    Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)/R_sky
+    Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- save.load.clean(imagestack = Ts, 
                         file = paste0(result.folder, "Ts.tif"), overwrite=TRUE)
   return(Ts)
 }
 
+#' Calculates Long wave outgoing radiation
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=aoi, result.folder=NULL){
   Ts <- surface.temperature(path=path, aoi=aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
@@ -376,6 +455,11 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=aoi, result.folder=NULL
   return(Rl.out)
 }
 
+#' Calculates long wave incoming radiation
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi, result.folder=NULL){
   Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
@@ -389,6 +473,11 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi
   return(Rl.in)
 }
 
+#' Estimates Soil Heat Flux
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=aoi, result.folder=NULL){
   toa.red <- raster(paste(path, list.files(path = path, 
                                            pattern = "_sr_band4.tif"), sep="")[1])
@@ -405,6 +494,11 @@ soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=aoi, result.folder=NUL
   return(G)
 }
 
+#' Calculates Momentum Roughness Length
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
 ## Perrier by Santos 2012 and Pocas 2014.

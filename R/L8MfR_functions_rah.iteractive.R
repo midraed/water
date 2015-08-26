@@ -1,3 +1,8 @@
+#' Iterative function to estimate H and R.ah
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
               WeatherStation, ETo.hourly, ETp.coef= 1.05, Z.om.ws=0.0018, 
               mountainous=FALSE, DEM, Rn, G, plots=TRUE){
