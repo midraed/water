@@ -91,6 +91,28 @@ image.TOA <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, r
 }  
   
 
+image.SR <- function(path=getwd(), sat="auto", ESPA=FALSE, format="tif", aoi, result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="L8"){bands <- 2:7}
+  if(sat=="L7"){bands <- c(1:5,7)}
+  if(ESPA==TRUE & sat=="L8"){
+    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
+    stack1 <- list()
+    for(i in 1:6){
+      stack1[i] <- raster(paste0(path, files[i]))
+    }
+    image_SR <- do.call(stack, stack1)
+    if(!is.null(aoi)){
+      image_SR <- crop(image_SR,aoi) 
+    }
+    image_SR <- save.load.clean(imagestack = image_SR, 
+                                 stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                                 file = paste0(result.folder, "image_SR.tif"), 
+                                 overwrite=TRUE)
+    return(image_SR)
+  }
+}  
+
 
 
 # Get links or optionally open web pages... 
