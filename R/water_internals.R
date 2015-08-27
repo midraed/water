@@ -35,3 +35,16 @@ sw.trasmisivity <- function(Kt = 1, ea, dem, incidence.hor, result.folder=NULL){
                           file = paste0(result.folder, "sw.t.tif"), overwrite=TRUE)
   return(sw.t)
 }
+
+aoi.crop <- function(raster, aoi){
+  if(!missing(aoi)){
+    raster <- crop(raster,aoi)
+    return(crop)
+  }
+  if(missing(aoi) & exists(x = "aoi", envir=environment())){
+    aoi <- get(x = "aoi", envir=.GlobalEnv)
+    raster <- crop(raster,aoi)
+    return(crop)
+  }
+  return()
+}
