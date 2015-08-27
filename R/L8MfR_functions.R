@@ -85,7 +85,8 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
       stack1[i] <- raster(files[i])
     }
     image_TOA <- do.call(stack, stack1)
-    image_TOA <- aoi.crop(image_TOA, aoi) 
+    image_TOA <- aoi.crop(image_TOA, aoi)
+  }
   ### Ro TOA L7
   if(sat=="L7"){
     L5_ESUN <- c(1957, 1826, 1554, 1036, 215.0, 80.67) #Chandler & Markham 2003
@@ -188,11 +189,11 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
         ymax(raw.image), ymin(raw.image), ymin(raw.image),
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
   polyaoi@proj4string <- raw.image@crs
-  limits <- project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
+  limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
                     inverse = TRUE)
   # I have to improve this. It should work ONLY for west and south coordinates.. maybe
-  lat_needed <- seq(floor(limits[3])+1, floor(limits[4])+1, by=1)
-  long_needed <- seq(floor(limits[1]), floor(limits[2])+1, by = 1)
+  lat_needed <- seq(trunc(limits[3])-1, trunc(limits[4])-1, by=1)
+  long_needed <- seq(trunc(limits[1])-1, trunc(limits[2])-1, by = 1)
   grids <- expand.grid(lat_needed, long_needed)
   result <- list()
   link <- "http://earthexplorer.usgs.gov/download/options/8360/SRTM1"
@@ -209,7 +210,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
-prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image, result.folder=NULL){
+prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.folder=NULL){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
                                                  format, "$", sep=""), full.names = T) 
   stack1 <- list()
@@ -217,7 +218,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image, result
     stack1[[i]] <- raster(files[i])}
   stack1$fun <- mean
   SRTMmosaic <- do.call(mosaic, stack1)
-  destino  <-  projectExtent(raw.image, raw.image@crs)
+  destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- save.load.clean(imagestack = mosaicp, stack.names = "DEM", 
                              file = paste0(result.folder, "DEM.tif"), overwrite=TRUE)
@@ -549,7 +550,4 @@ ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long
     (Delta+(psi*(1+(0.24*wind.2))))
   return(ETo.hourly)
 }
-
-
-#########################################################################
 
