@@ -26,7 +26,7 @@
 #' @examples 
 #' tl <- c(493300, -3592700)
 #' br <- c(557200, -3700000) 
-#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
+#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=326)
 #' plot(aoi)
 #' @import raster sp proj4 
 #' @export
@@ -51,11 +51,12 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  files <- substr(list.files(path = path, 
-                             pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$"),0,23)
+  files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$", 
+                   full.names = T)
+  files <- substr(files,1,nchar(files)-5)
   stack1 <- list()
   for(i in 1:6){
-    stack1[i] <- raster(paste0(path, files[i], bands[i], ".TIF"))
+    stack1[i] <- raster(paste0(files[i], bands[i], ".TIF"))
   }
   raw.image <- do.call(stack, stack1)
   if(exists(x="aoi")){
@@ -80,10 +81,10 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(ESPA==TRUE & sat=="L8"){
-    files <- list.files(path = path, pattern = "_toa_band+[2-7].tif$")
+    files <- list.files(path = path, pattern = "_toa_band+[2-7].tif$", full.names = T)
     stack1 <- list()
     for(i in 1:6){
-      stack1[i] <- raster(paste0(path, files[i]))
+      stack1[i] <- raster(files[i])
     }
     image_TOA <- do.call(stack, stack1)
     if(exists(x="aoi")){
@@ -129,10 +130,10 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(ESPA==TRUE & sat=="L8"){
-    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
+    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
     stack1 <- list()
     for(i in 1:6){
-      stack1[i] <- raster(paste0(path, files[i]))
+      stack1[i] <- raster(files[i])
     }
     image_SR <- do.call(stack, stack1)
     if(exists(x="aoi")){
@@ -215,10 +216,10 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 prepareSRTMdata <- function(path=getwd(), format="tif", extent=raw.image, result.folder=NULL){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
-                                                 format, "$", sep="")) 
+                                                 format, "$", sep=""), full.names = T) 
   stack1 <- list()
   for(i in 1:length(files)){
-    stack1[[i]] <- raster(paste(path, files[i], sep=""))}
+    stack1[[i]] <- raster(files[i])}
   stack1$fun <- mean
   SRTMmosaic <- do.call(mosaic, stack1)
   destino  <-  projectExtent(raw.image, raw.image@crs)
@@ -314,8 +315,8 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
   # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
   if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} 
   # Liang 2001
-  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$")
-  albedo <- calc(raster(paste(path, files[1], sep="")), fun=function(x){x *wb[1]})
+  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
+  albedo <- calc(raster(files[1]), fun=function(x){x *wb[1]})
   for(i in 2:6){
     albedo <- albedo + calc(raster(paste(path, files[i], sep="")), 
                             fun=function(x){x *wb[i]})
@@ -341,8 +342,8 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
-    toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
-    toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
+    toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
+    toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
     toa.4.5 <- stack(toa.red, toa.nir)
     if(exists(x="aoi")){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
@@ -350,8 +351,8 @@ LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder
     toa.4.5 <- toa.4.5 * 0.0001
   }
   if(method=="turner"){
-    toa.red <- raster(paste(path, list.files(path = path, pattern = "_sr_band4.tif"), sep=""))
-    toa.nir <- raster(paste(path, list.files(path = path, pattern = "_sr_band5.tif"), sep=""))
+    toa.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
+    toa.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
     toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are the sr images
     if(!missing(aoi)){
       toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
@@ -396,8 +397,8 @@ LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder
 surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi=aoi, result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){
-    bright.temp.b10 <- raster(paste(path, list.files(path = path, 
-                                                     pattern = "_toa_band10.tif"), sep=""))
+    bright.temp.b10 <- raster(list.files(path = path, 
+                                                     pattern = "_toa_band10.tif"))
     Ts <- bright.temp.b10*0.1
     if(exists(x="aoi")){
       Ts <- crop(Ts,aoi) 
@@ -463,10 +464,10 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=aoi, result.folder=NULL){
-  toa.red <- raster(paste(path, list.files(path = path, 
-                                           pattern = "_sr_band4.tif"), sep="")[1])
-  toa.nir <- raster(paste(path, list.files(path = path, 
-                                           pattern = "_sr_band5.tif"), sep="")[1])
+  toa.red <- raster(list.files(path = path, 
+                                           pattern = "_sr_band4.tif", full.names = T)[1])
+  toa.nir <- raster(list.files(path = path, 
+                                           pattern = "_sr_band5.tif", full.names = T)[1])
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
   if(exists(x="aoi")){
     toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
