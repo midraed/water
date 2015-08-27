@@ -47,7 +47,7 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi){
+load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -59,9 +59,7 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi=aoi
     stack1[i] <- raster(paste0(files[i], bands[i], ".TIF"))
   }
   raw.image <- do.call(stack, stack1)
-  if(exists(x="aoi")){
-    raw.image <- crop(raw.image,aoi) # Without aoi this should fail on most computers.
-  }                                
+  aoi.crop(raw.image, aoi)                               
   raw.image <- save.load.clean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
                                file = paste0(result.folder, "image_DN.tif"), 
