@@ -4,12 +4,14 @@
 \alias{create.aoi}
 \title{Create aoi polygon from topleft and bottomright coordinates}
 \usage{
-create.aoi(topleft = c(x, y), bottomright = c(x, y))
+create.aoi(topleft = c(x, y), bottomright = c(x, y), EPSG)
 }
 \arguments{
 \item{topleft}{a vector with topleft x,y coordinates}
 
 \item{bottomright}{a vector with bottomright x,y coordinates}
+
+\item{EPSG}{Coordinate reference system EPSG code}
 }
 \value{
 object of class SpatialPolygons
@@ -20,7 +22,7 @@ Create aoi polygon from topleft and bottomright coordinates
 \examples{
 tl <- c(493300, -3592700)
 br <- c(557200, -3700000)
-aoi <- create.aoi(topleft = tl, bottomright=br)
+aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
 plot(aoi)
 }
 \author{
@@ -28,9 +30,4 @@ Guillermo F Olmedo
 
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
-\seealso{
-\code{\link{brocolors}}
-}
-\keyword{...}
-\keyword{hplot}
 
