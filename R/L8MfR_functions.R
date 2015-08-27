@@ -59,7 +59,7 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
     stack1[i] <- raster(paste0(files[i], bands[i], ".TIF"))
   }
   raw.image <- do.call(stack, stack1)
-  aoi.crop(raw.image, aoi)                               
+  raw.image <- aoi.crop(raw.image, aoi)                               
   raw.image <- save.load.clean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
                                file = paste0(result.folder, "image_DN.tif"), 
@@ -74,7 +74,7 @@ load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
 #' @export
 calc.TOAr <- function(path=getwd(), image.DN, sat="auto", 
-                      ESPA=FALSE, aoi=aoi, result.folder=NULL, incidence.rel){
+                      ESPA=FALSE, aoi, result.folder=NULL, incidence.rel){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -85,9 +85,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
       stack1[i] <- raster(files[i])
     }
     image_TOA <- do.call(stack, stack1)
-    if(exists(x="aoi")){
-      image_TOA <- crop(image_TOA,aoi) 
-    }}
+    image_TOA <- aoi.crop(image_TOA, aoi) 
   ### Ro TOA L7
   if(sat=="L7"){
     L5_ESUN <- c(1957, 1826, 1554, 1036, 215.0, 80.67) #Chandler & Markham 2003
@@ -122,7 +120,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
 #' @export
 # incidence hor from TML?? 
 calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                     aoi=aoi, result.folder=NULL, incidence.hor, 
+                     aoi, result.folder=NULL, incidence.hor, 
                     WeatherStation, surface.model){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
@@ -134,9 +132,8 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
       stack1[i] <- raster(files[i])
     }
     image_SR <- do.call(stack, stack1)
-    if(exists(x="aoi")){
-      image_SR <- crop(image_SR,aoi) 
-    }}
+    image_SR <- aoi.crop(image_SR, aoi) 
+    }
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
@@ -306,7 +303,7 @@ incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=N
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
+albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
   # Tasumi 2008
   if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
@@ -321,9 +318,7 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
     removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
   }
   albedo <-  albedo/1e+08
-  if(exists(x="aoi")){
-    albedo <- crop(albedo,aoi) # Without aoi this should fail on most computers.
-  }                                
+  albedo <- aoi.crop(albedo, aoi) 
   if(coeff=="Liang"){
     albedo <- albedo - 0.0018
   }
@@ -338,23 +333,19 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
+LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, result.folder=NULL){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
     toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
     toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
     toa.4.5 <- stack(toa.red, toa.nir)
-    if(exists(x="aoi")){
-      toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
-    }    
+    toa.4.5 <- aoi.crop(toa.4.5, aoi) 
     toa.4.5 <- toa.4.5 * 0.0001
   }
   if(method=="turner"){
     toa.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
     toa.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
     toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are the sr images
-    if(!missing(aoi)){
-      toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
-    }    
+    toa.4.5 <- aoi.crop(toa.4.5, aoi)   
     toa.4.5 <- toa.4.5 * 0.0001
   }
   if(method=="metric2010"){
@@ -392,15 +383,13 @@ LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
-surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi=aoi, result.folder=NULL){
+surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi, result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
                                                      pattern = "_toa_band10.tif"))
+    bright.temp.b10 <- aoi.crop(bright.temp.b10, aoi) 
     Ts <- bright.temp.b10*0.1
-    if(exists(x="aoi")){
-      Ts <- crop(Ts,aoi) 
-    }
   }
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
@@ -429,8 +418,8 @@ surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi=aoi, r
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=aoi, result.folder=NULL){
-  Ts <- surface.temperature(path=path, aoi=aoi)
+outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
+  Ts <- surface.temperature(path=path, aoi)
   surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- save.load.clean(imagestack = Rl.out, 
@@ -444,11 +433,9 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi=aoi, result.folder=NULL
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi, result.folder=NULL){
+incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi, result.folder=NULL){
   Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
-  if(exists(x="aoi")){
-    Ta <- crop(Ta,aoi) 
-  }
+  Ta <- aoi.crop(Ta,aoi) 
   ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- save.load.clean(imagestack = Rl.in, 
@@ -461,17 +448,15 @@ incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi=aoi
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi=aoi, result.folder=NULL){
+soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi, result.folder=NULL){
   toa.red <- raster(list.files(path = path, 
                                            pattern = "_sr_band4.tif", full.names = T)[1])
   toa.nir <- raster(list.files(path = path, 
                                            pattern = "_sr_band5.tif", full.names = T)[1])
   toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
-  if(exists(x="aoi")){
-    toa.4.5 <- crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
-  }
+  toa.4.5 <- aoi.crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
   NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
-  Ts <- surface.temperature(path=path, aoi=aoi)
+  Ts <- surface.temperature(path=path, aoi)
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   G <- save.load.clean(imagestack = G, file = paste0(result.folder, "G.tif"), overwrite=TRUE)
   return(G)
