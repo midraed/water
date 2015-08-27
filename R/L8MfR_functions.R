@@ -7,39 +7,38 @@
 ### Add three source temperature model..!
 ### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
 
+
 #################################################################################3
-#' Short Descript
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
+# Short Descript
+# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+# @references 
+# R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+# @export
 #
 ####################
 
 #' Create aoi polygon from topleft and bottomright coordinates
 #' @param topleft a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
+#' @param EPSG Coordinate reference system EPSG code
 #' @return object of class SpatialPolygons
 #' @author Guillermo F Olmedo
 #' @examples 
 #' tl <- c(493300, -3592700)
 #' br <- c(557200, -3700000) 
-#' aoi <- create.aoi(topleft = tl, bottomright=br)
+#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
+#' @import raster sp proj4 
 #' @export
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @seealso \code{\link{brocolors}}
-#' @keywords hplot
-#' ...
-#' @importFrom grDevices rgb2hsv
-#' @importFrom graphics par plot rect text
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
-create.aoi <- function(topleft = c(x, y), bottomright= c(x, y)){
+create.aoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
   aoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
         topleft[2], topleft[2], bottomright[2], 
         bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
+  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("+init=epsg:", EPSG))}
   return(aoi)
 }
 
@@ -253,8 +252,8 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-solar.angles <- function(path=getwd(), raw.image, surface.model, result.folder=NULL){
-  Landsat.MTL <- list.files(path = path, pattern = "MTL", full.names = T)
+  solar.angles <- function(path=getwd(), raw.image, surface.model, result.folder=NULL){
+  Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)
   MTL <- readLines(Landsat.MTL)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- as.numeric(str_extract(Elev.line ,"([0-9]{1,5})([.]+)([0-9]+)"))
@@ -288,21 +287,6 @@ solar.angles <- function(path=getwd(), raw.image, surface.model, result.folder=N
                                                   "hour.angle", "incidence.hor", "incidence.rel"), 
                                   file = paste0(result.folder, "solar.angles.tif"), overwrite=TRUE)
   return(solar.angles)
-}
-
-#' Calculates short wave transmisivity
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
-sw.trasmisivity <- function(Kt = 1, ea, dem, incidence.hor, result.folder=NULL){
-  P <- 101.3*((293-0.0065 * dem)/293)^5.26
-  W <- 0.14 * ea * P + 2.1
-  sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
-                                cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
-  sw.t <- save.load.clean(imagestack = sw.t, 
-                          file = paste0(result.folder, "sw.t.tif"), overwrite=TRUE)
-  return(sw.t)
 }
 
 #' Calculates Incoming Solar Radiation
@@ -355,7 +339,7 @@ albedo <- function(path=getwd(), aoi=aoi, coeff="Tasumi", result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI.from.L8 <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
+LAI <- function(method="metric2010", path=getwd(), aoi=aoi, L=0.1, result.folder=NULL){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
     toa.red <- raster(paste(path, list.files(path = path, pattern = "_toa_band4.tif"), sep=""))
     toa.nir <- raster(paste(path, list.files(path = path, pattern = "_toa_band5.tif"), sep=""))
