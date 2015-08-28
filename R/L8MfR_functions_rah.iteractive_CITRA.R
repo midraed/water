@@ -5,7 +5,7 @@
 #' @export
 H.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1, anchors.method= "CITRA-MCB", 
                     WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, sat="auto", ESPA=F,
-                    mountainous=FALSE, DEM, Rn, G, plots=TRUE, result.folder=NULL){
+                    mountainous=FALSE, DEM, Rn, G, plots=TRUE, deltaTemp=5, result.folder=NULL){
   ### Some values used later
   if(sat=="auto"){sat = get.sat(getwd())}
   if(sat=="L8" & ESPA==T){
@@ -27,12 +27,16 @@ H.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1, anchors.method= 
   ### We create anchors points if they dont exist
   if(missing(anchors)){
     if(anchors.method=="CITRA-MCB"){
+      minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&Z.om<=0.08], 0.25)
+      if(minT+deltaTemp<288){minT = 288 + deltaTemp}
       cold <- sample(which(values(LAI>=3) & values(LAI<=6) &  
                              values(albedo>=0.18) & values(albedo<=0.25) &
-                             values(Z.om>=0.03) & values(Z.om<=0.08)),n)
+                             values(Z.om>=0.03) & values(Z.om<=0.08) &
+                             values(Ts<(minT+deltaTemp)) & values(Ts>288)),n)
+      maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&Z.om<=0.005])
       hot <- sample(which(values(albedo>=0.13) & values(albedo<=0.15) &
                             values(NDVI>=0.1) & values(NDVI<=0.28) &
-                            values(Z.om<=0.005)),n)
+                            values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))),n)
       }
     }
     else{
