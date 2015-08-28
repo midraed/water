@@ -452,9 +452,9 @@ surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi, resul
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
-  Ts <- surface.temperature(path=path, aoi)
-  surf.emissivity <- 0.95 + 0.01 * LAI ## And when LAI 3 or more = 0.98
+outgoing.lw.radiation <- function(LAI, Ts, result.folder=NULL){
+  surf.emissivity <- 0.95 + 0.01 * LAI
+  surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- save.load.clean(imagestack = Rl.out, 
                             file = paste0(result.folder, "Rs.out.tif"), overwrite=TRUE)
@@ -467,10 +467,12 @@ outgoing.lw.radiation <- function(path=getwd(), LAI, aoi, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incoming.lw.radiation <- function(air.temperature, DEM, sw.trasmisivity, aoi, result.folder=NULL){
-  Ta <-  air.temperature - (DEM - 702) * 6.49 / 1000 ## Temperature in Kelvin
-  Ta <- aoi.crop(Ta,aoi) 
-  ef.atm.emissivity  <- 0.85*(-1*log(sw.trasmisivity))^0.09
+incoming.lw.radiation <- function(WeatherStation, DEM, solar.angles, result.folder=NULL){
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  tau.sw <- sw.trasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
+  Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 ## Temperature in Kelvin
+  #Mountain lapse effects from International Civil Aviation Organization
+  ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- save.load.clean(imagestack = Rl.in, 
                            file = paste0(result.folder, "Rl.in.tif"), overwrite=TRUE)
