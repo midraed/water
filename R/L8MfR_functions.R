@@ -314,7 +314,7 @@ incoming.sw.radiation <- function(surface.model, solar.angles, WeatherStation, r
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", ESPA=FALSE, result.folder=NULL){
+albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE, result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -338,7 +338,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", ESPA=FALSE, resu
       albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]/10})
       removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
     }
-  }
+  albedo <-  albedo/1e+06}
   albedo <- aoi.crop(albedo, aoi) 
   if(coeff=="Liang"){
     albedo <- albedo - 0.0018
@@ -354,20 +354,33 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", ESPA=FALSE, resu
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, result.folder=NULL){
-  if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
-    toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
-    toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
-    toa.4.5 <- stack(toa.red, toa.nir)
-    toa.4.5 <- aoi.crop(toa.4.5, aoi) 
-    toa.4.5 <- toa.4.5 * 0.0001
+LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sat="auto", result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="L8" & ESPA==T){
+    if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
+      removeTmpFiles(h=0)
+      toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
+      toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
+      toa.4.5 <- stack(toa.red, toa.nir)
+      toa.4.5 <- aoi.crop(toa.4.5, aoi)
+      toa.4.5 <- toa.4.5 * 0.0001
+      }
+    if(method=="turner"){
+      removeTmpFiles(h=0)
+      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
+      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+      sr.4.5 <- stack(sr.red, sr.nir)
+      sr.4.5 <- aoi.crop(sr.4.5, aoi)}
   }
+  if(sat=="L7"){
+    if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
+      toa.4.5 <- stack(image[[3]], image[[4]])}
+    if(method=="turner"){
+      sr.4.5 <- stack(image[[3]], image[[4]])
+    }
+  }  
   if(method=="turner"){
-    toa.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
-    toa.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
-    toa.4.5 <- stack(toa.red, toa.nir) # It says toa, but they are the sr images
-    toa.4.5 <- aoi.crop(toa.4.5, aoi)   
-    toa.4.5 <- toa.4.5 * 0.0001
+    sr.4.5 <- sr.4.5 * 0.0001
   }
   if(method=="metric2010"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
@@ -392,7 +405,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, result.folder=NUL
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
   }
-  removeTmpFiles(h=0)
+  LAI[LAI<0]  <- 0
   LAI <- save.load.clean(imagestack = LAI, stack.names = "LAI", 
                          file = paste0(result.folder, "LAI.tif"), overwrite=TRUE)
   return(LAI)
