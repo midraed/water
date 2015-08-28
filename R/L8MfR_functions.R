@@ -6,6 +6,7 @@
 ### Check Rsky on METRIC 2010
 ### Add three source temperature model..!
 ### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
+### Change to call bands by name and not position... this solve the issue between L7 and L8
 
 
 #################################################################################3
@@ -484,15 +485,19 @@ incoming.lw.radiation <- function(WeatherStation, DEM, solar.angles, result.fold
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soil.heat.flux1 <- function(path=getwd(), albedo, Rn, aoi, result.folder=NULL){
-  toa.red <- raster(list.files(path = path, 
-                                           pattern = "_sr_band4.tif", full.names = T)[1])
-  toa.nir <- raster(list.files(path = path, 
-                                           pattern = "_sr_band5.tif", full.names = T)[1])
-  toa.4.5 <- stack(toa.red*0.0001, toa.nir*0.0001) ## chuncks
-  toa.4.5 <- aoi.crop(toa.4.5,aoi) # Without aoi this should fail on most computers.
-  NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
-  Ts <- surface.temperature(path=path, aoi)
+soil.heat.flux <- function(image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(getwd())}
+  if(sat=="L8" & ESPA==T){
+      removeTmpFiles(h=0)
+      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
+      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+      sr.4.5 <- stack(sr.red, sr.nir)
+      sr.4.5 <- aoi.crop(sr.4.5, aoi)
+  }
+  if(sat=="L7"){
+      sr.4.5 <- stack(image[[3]], image[[4]])
+  }
+  NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   G <- save.load.clean(imagestack = G, file = paste0(result.folder, "G.tif"), overwrite=TRUE)
   return(G)
