@@ -418,6 +418,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
+## Add Rsky estimation from WeatherStation
 surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){
@@ -428,7 +429,7 @@ surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folde
   }
   if(sat=="L7"){
     epsilon_NB <- raster(LAI)
-    epsilon_NB[LAI <= 3] <- 0.97 + 0.0033 * LAI  
+    epsilon_NB <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
     L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) + 3.1628
     L7_K1 <- 666.09 
