@@ -4,7 +4,7 @@
 ### select anchor points with buffer for not too close pixels...
 ### Select anchor for multiple criteria with table from Marcos
 ### Check Rsky on METRIC 2010
-### Add three source temperature model..!
+### Add three source temperature model..! from Pocas
 ### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
 ### Change to call bands by name and not position... this solve the issue between L7 and L8
 
@@ -388,9 +388,9 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
     LAI <- 11 * SAVI_ID ^3 # for SAVI <= 0.817
     LAI[SAVI_ID > 0.817] <- 6
   }
-  if(method=="metric"){
+  if(method=="Bastiaanssen"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
-    LAI <- 11 * SAVI_ID ^3 # for SAVI <= 0.817
+    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="vineyard"){
@@ -418,7 +418,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
-surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi, result.folder=NULL){
+surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder=NULL){
   if(sat=="auto"){sat = get.sat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
@@ -427,11 +427,6 @@ surface.temperature <- function(path=getwd(), sat="auto", image.TOAr, aoi, resul
     Ts <- bright.temp.b10*0.1
   }
   if(sat=="L7"){
-    if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
-    #http://landsathandbook.gsfc.nasa.gov/data_prod/prog_sect11_3.html
-    SAVI_ID <- (1.1)*(image.TOAr[[4]] - image.TOAr[[3]])/
-      (0.1 + image.TOAr[[4]] + image.TOAr[[3]])
-    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
     epsilon_NB <- raster(LAI)
     epsilon_NB[LAI <= 3] <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
@@ -511,9 +506,9 @@ soil.heat.flux <- function(image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, resul
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
 ## Perrier by Santos 2012 and Pocas 2014.
-momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, NDVI, 
+momentum.roughness.length <- function(method="short.crops", LAI, NDVI, 
                                       albedo, a, b, fLAI.Perrier, h.Perrier, 
-                                      mountainous=FALSE, surf.model, result.folder=NULL){
+                                      mountainous=FALSE, surface.model, result.folder=NULL){
   if(method=="short.crops"){
     Z.om <- (0.018*LAI)
   }
@@ -526,7 +521,7 @@ momentum.roughness.length <- function(method="short.crops", path=getwd(), LAI, N
     Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h
   }
   if(mountainous==TRUE){
-    Z.om <- Z.om * (1 + (180/pi*surf.model$Slope - 5)/20)
+    Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
   }
   Z.om <- save.load.clean(imagestack = Z.om, 
                           file = paste0(result.folder, "Z.om.tif"), overwrite=TRUE)
