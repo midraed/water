@@ -217,7 +217,8 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.
   for(i in 1:length(files)){
     stack1[[i]] <- raster(files[i])}
   stack1$fun <- mean
-  SRTMmosaic <- do.call(mosaic, stack1)
+  if(length(files)>1){SRTMmosaic <- do.call(mosaic, stack1)}
+  if(length(files)==1){SRTMmosaic <- stack1[[1]]}
   destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- save.load.clean(imagestack = mosaicp, stack.names = "DEM", 
@@ -231,7 +232,6 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 METRIC.topo <- function(DEM, result.folder=NULL){
-  DEM <- raster(DEM)
   aspect <- terrain(DEM, opt="aspect") 
   slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
@@ -249,13 +249,19 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-  solar.angles <- function(path=getwd(), raw.image, surface.model, result.folder=NULL){
-  Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)
+  solar.angles <- function(path=getwd(), surface.model, MTL, result.folder=NULL){
+  if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
   MTL <- readLines(Landsat.MTL)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
-  sun.elevation <- as.numeric(str_extract(Elev.line ,"([0-9]{1,5})([.]+)([0-9]+)"))
+  sun.elevation <- as.numeric(regmatches(Elev.line, 
+                                         regexec(text=Elev.line ,
+                                                 pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
+  Azim.line <- grep("SUN_AZIMUTH",MTL,value=TRUE)
+  sun.azimuth <- as.numeric(regmatches(Azim.line, 
+                                       regexec(text=Azim.line ,
+                                               pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
   # latitude
-  latitude <- raw.image[[1]]
+  latitude <- surface.model[[1]]
   xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
   xy@proj4string <- latitude@crs
   lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
@@ -264,13 +270,15 @@ METRIC.topo <- function(DEM, result.folder=NULL){
   DOY <- as.integer(substr(list.files(path = path, 
                                       pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],
                            14,16))
-  declination <- raw.image[[1]]
+  declination <- surface.model[[1]]
   values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
   # hour angle
   hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination)))
   ## solar incidence angle, for horizontal surface
   incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)
                         *cos(latitude)*cos(hour.angle))
+  slope <- surface.model$Slope
+  aspect <- surface.model$Aspect
   ##solar incidence angle, for sloping surface
   incidence.rel <- acos(sin(declination)*sin(latitude)*cos(slope) 
                         - sin(declination)*cos(latitude)*sin(slope)*cos(aspect)
