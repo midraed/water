@@ -4,28 +4,29 @@
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
-              WeatherStation, ETo.hourly, ETp.coef= 1.05, Z.om.ws=0.0018, 
-              mountainous=FALSE, DEM, Rn, G, plots=TRUE){
+              WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
+              mountainous=FALSE, DEM, Rn, G, plots=TRUE, result.folder=NULL){
   ### Some values used later
-  Ts.datum <- Ts - (DEM - 702) * 6.49 / 1000
+  ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
   ### We create anchors points if they dont exist
   if(missing(anchors)){
     if(anchors.method=="random"){
-      if(!max(values(Ts))>=310){
+      if(!max(values(Ts), na.rm=T)>=310){
         warning(paste("Ts max value is", round(max(values(Ts)),2), 
                       "and the expected was Ts >= 310 for hot pixel"))
         hot <- sample(which(values(Ts)>quantile(Ts,0.9999)),n)  
       } else hot <- sample(which(values(Ts>310)),n) 
-      if(!max(values(LAI))>=4){
+      if(!max(values(LAI), na.rm=T)>=4){
         warning(paste("LAI max value is", round(max(values(LAI)),2), 
                       "and the expected was LAI >= 4 for cold pixel"))
         cold <- sample(which(values(LAI)>quantile(LAI,0.9999)),n)  
       } else cold <- sample(which(values(LAI>4)),n)}
-    if(anchors.method=="random2"){
-      if(!max(values(Ts))>=310){
+    if(anchors.method=="CITRA-MCB"){
+      if(!max(values(Ts), na.rm=T)>=310){
         warning(paste("Ts max value is", round(max(values(Ts)),2), 
                       "and the expected was Ts >= 310 for hot pixel"))
         hot <- sample(which(values(Ts)>quantile(Ts,0.9999)& 
@@ -34,7 +35,7 @@ H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random",
       } else hot <- sample(which(values(Ts>310) & 
                                    values(albedo>=0.13) & values(albedo<=0.15) &
                                    values(Z.om>0) & values(Z.om<=0.005)),n) # CITRA
-      if(!max(values(LAI))>=3){
+      if(!max(values(LAI), na.rm=T)>=3){
         warning(paste("LAI max value is", round(max(values(LAI)),2), 
                       "and the expected was LAI >= 3 for cold pixel"))
         cold <- sample(which(values(LAI)>quantile(LAI,0.9999)& values(LAI<=6) & values(Ts>288) & 
@@ -63,13 +64,19 @@ H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random",
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
   ### Iteractive process start here:
-  #delta.r.ah <- vector()
-  #delta.H <- vector()
-  ETr.hourly <-  0.56 ## need to calculate this first - MCB uses PM.ASCE hourly eq
-  LE.cold <- ETr.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 
+  LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 
   # here uses latent.heat.vapo
   H.cold <- Rn[cold] - G[cold] - LE.cold #ok
   result <- list()
+  print("starting conditions")
+  print("Cold")
+  print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], "Rn"=Rn[cold], 
+                   "G"=G[cold], "Z.om"=Z.om[cold], "u200"=u200[cold], 
+                   "u*"=friction.velocity[cold])))
+  print("Hot")
+  print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
+                         "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
+                         "u*"=friction.velocity[hot])))
   for(i in 1:5){
     print(paste("iteraction #", i))
     ### We calculate dT and H 
@@ -77,8 +84,8 @@ H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random",
     dT.hot <- (Rn[hot] - G[hot]) * r.ah[hot] / (air.density[hot]*1004)
     a <- (dT.hot - dT.cold) / (Ts.datum[hot] - Ts.datum[cold])
     b <- -a * Ts.datum[cold] + dT.cold
-    print(a)
-    print(b)
+    print(paste("a",a))
+    print(paste("b",b))
     dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
     rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
     H <- rho * 1004 * dT / r.ah
@@ -102,18 +109,14 @@ H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random",
                                        2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
     phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
     phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
-    print(r.ah[cold])
-    print(dT[cold])
-    print(r.ah[hot])
-    print(dT[hot])
+    print(paste("r.ah cold", r.ah[cold]))
+    print(paste("r.ah hot", r.ah[hot]))
+    print(paste("dT cold", dT[cold]))
+    print(paste("dT hot", dT[hot]))
+    print("##############")
     ## And finally, r.ah and friction velocity
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
-    #r.ah[r.ah > quantile(r.ah, 0.9999)] <-  NA # to eliminate very high alues
-    #delta.r.ah <- c(delta.r.ah, mean(values(prev.r.ah), na.rm=T) - mean(values(r.ah), na.rm=T))
-    #delta.H
-    #prev.r.ah <- r.ah
-    #prev.H <- H
   } # End interactive process
   dT <- save.load.clean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
   H <- save.load.clean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
