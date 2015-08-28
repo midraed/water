@@ -138,8 +138,7 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
-    ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
-    ea <- (WeatherStation$RH/100)*ea.sat
+    ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
     W <- 0.14 * ea * P + 2.1
     Kt <- 1
     Cnb <- matrix(data=c(0.987, 2.319, 0.951, 0.375, 0.234, 0.365,
@@ -299,7 +298,7 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-incoming.solar.radiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
+incoming.sw.radiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
   tau.sw <- sw.trasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
@@ -315,21 +314,31 @@ incoming.solar.radiation <- function(surface.model, solar.angles, WeatherStation
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), aoi, coeff="Tasumi", result.folder=NULL){
+albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", ESPA=FALSE, result.folder=NULL){
+  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="L8"){bands <- 2:7}
+  if(sat=="L7"){bands <- c(1:5,7)}
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
   # Tasumi 2008
   if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
   # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
   if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} 
   # Liang 2001
+  if(ESPA==TRUE & sat=="L8"){
   files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
   albedo <- calc(raster(files[1]), fun=function(x){x *wb[1]})
   for(i in 2:6){
-    albedo <- albedo + calc(raster(paste(path, files[i], sep="")), 
-                            fun=function(x){x *wb[i]})
+    albedo <- albedo + calc(raster(files[i]), fun=function(x){x *wb[i]})
     removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
   }
-  albedo <-  albedo/1e+08
+  albedo <-  albedo/1e+08}
+  if(sat=="L7"){
+    albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]/10})
+    for(i in 2:6){
+      albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]/10})
+      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
+    }
+  }
   albedo <- aoi.crop(albedo, aoi) 
   if(coeff=="Liang"){
     albedo <- albedo - 0.0018
