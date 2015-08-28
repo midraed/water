@@ -299,9 +299,12 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-incoming.solar.radiation <- function(incidence.rel, tau.sw, DOY, result.folder=NULL){
+incoming.solar.radiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  tau.sw <- sw.trasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
+  DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
-  Rs.inc <- 1367 * cos(incidence.rel) * tau.sw / d^2
+  Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- save.load.clean(imagestack = Rs.inc, 
                             file = paste0(result.folder, "Rs.inc.tif"), overwrite=TRUE)
   return(Rs.inc)
