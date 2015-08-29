@@ -587,15 +587,20 @@ ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long
   return(ETo.hourly)
 }
 
+#' Calculates ET-24hs from energy balance and Weather Station 
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
 ET.24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   LE = Rn - G - H
   ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6) * 10)
   ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
-  ET.24 <- ETr.Fr * ETr.daily * Crad
+  ET.24 <- ETr.Fr * ETr.daily * C.rad
   rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
-  spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
-         colorkey=list(height=1), at=seq(0,2,length.out=50), maxpixels=ncell(ET.24) * 0.3)
+  print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
+         colorkey=list(height=1), at=seq(0,2,length.out=50), maxpixels=ncell(ET.24) * 0.3))
   save.load.clean(imagestack = ET.24, 
                   file = "ET24.tif", overwrite=TRUE)
 }
