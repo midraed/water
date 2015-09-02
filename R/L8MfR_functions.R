@@ -48,7 +48,7 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-load.image.DN <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
+load.image <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
   if(sat=="auto"){sat = get.sat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
