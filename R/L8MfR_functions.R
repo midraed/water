@@ -27,7 +27,7 @@
 #' @examples 
 #' tl <- c(493300, -3592700)
 #' br <- c(557200, -3700000) 
-#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=326)
+#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
 #' @import raster sp proj4 
 #' @export
@@ -594,15 +594,29 @@ ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long
 #' @export
 ET.24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   LE = Rn - G - H
-  ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6) * 10)
+  ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
   ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
   rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
-         colorkey=list(height=1), at=seq(0,2,length.out=50), maxpixels=ncell(ET.24) * 0.3))
+         colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
   save.load.clean(imagestack = ET.24, 
                   file = "ET24.tif", overwrite=TRUE)
 }
 
+
+#' Calculates daily ET using Penman Monteith hourly formula for every hour
+#' @param WeatherStation a data frame with all the needed fields (see example)
+#' @param DOY day of year
+#' @param long.z longitude for local time
+#' @return ET daily in mm.h-1
+#' @author Guillermo F Olmedo
+#' @export
+#' @references 
+#' Allen 2005 ASCE
+ETo.PM.hdaily <- function(WeatherStation, DOY, long.z=WeatherStation$long){
+  print("not yet")
+  return(ETo.hourly)
+}
 

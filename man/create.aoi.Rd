@@ -22,7 +22,7 @@ Create aoi polygon from topleft and bottomright coordinates
 \examples{
 tl <- c(493300, -3592700)
 br <- c(557200, -3700000)
-aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=326)
+aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
 plot(aoi)
 }
 \author{
