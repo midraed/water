@@ -27,13 +27,13 @@
 #' @examples 
 #' tl <- c(493300, -3592700)
 #' br <- c(557200, -3700000) 
-#' aoi <- create.aoi(topleft = tl, bottomright=br, EPSG=32619)
+#' aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
 #' @import raster sp proj4 
 #' @export
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
-create.aoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
+createAoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
   aoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
@@ -48,8 +48,8 @@ create.aoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-load.image <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
-  if(sat=="auto"){sat = get.sat(path)} #DRY!
+loadImage <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
+  if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$", 
@@ -60,8 +60,8 @@ load.image <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
     stack1[i] <- raster(paste0(files[i], bands[i], ".TIF"))
   }
   raw.image <- do.call(stack, stack1)
-  raw.image <- aoi.crop(raw.image, aoi)                               
-  raw.image <- save.load.clean(imagestack = raw.image, 
+  raw.image <- aoiCrop(raw.image, aoi)                               
+  raw.image <- saveLoadClean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
                                file = paste0(result.folder, "image_DN.tif"), 
                                overwrite=TRUE)
@@ -74,9 +74,9 @@ load.image <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
 #' @export
-calc.TOAr <- function(path=getwd(), image.DN, sat="auto", 
+calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
                       ESPA=FALSE, aoi, result.folder=NULL, incidence.rel){
-  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(ESPA==TRUE & sat=="L8"){
@@ -86,7 +86,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
       stack1[i] <- raster(files[i])
     }
     image_TOA <- do.call(stack, stack1)
-    image_TOA <- aoi.crop(image_TOA, aoi)
+    image_TOA <- aoiCrop(image_TOA, aoi)
   }
   ### Ro TOA L7
   if(sat=="L7"){
@@ -97,7 +97,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     #L5_Bias <- c(-1.52, -2.84, -1.17, -1.51, -0.37, 1.2387, -0.15)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
-    if(missing(image.DN)){image.DN <- load.image.DN(path = path)}
+    if(missing(image.DN)){image.DN <- loadImage(path = path)}
     DOY <- as.integer(substr(list.files(path = path, 
                                         pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
     d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
@@ -108,7 +108,7 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
     image_TOA <- do.call(stack, Ro.TOAr)
   }
   #### 
-  image_TOA <- save.load.clean(imagestack = image_TOA, 
+  image_TOA <- saveLoadClean(imagestack = image_TOA, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
                                file = paste0(result.folder, "image_TOAr.tif"), 
                                overwrite=TRUE)
@@ -121,10 +121,10 @@ calc.TOAr <- function(path=getwd(), image.DN, sat="auto",
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # incidence hor from TML?? 
-calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
+calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
                      aoi, result.folder=NULL, incidence.hor, 
                     WeatherStation, surface.model){
-  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(ESPA==TRUE & sat=="L8"){
@@ -134,10 +134,10 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
       stack1[i] <- raster(files[i])
     }
     image_SR <- do.call(stack, stack1)
-    image_SR <- aoi.crop(image_SR, aoi) 
+    image_SR <- aoiCrop(image_SR, aoi) 
     }
   if(sat=="L7"){
-    if(missing(image.TOAr)){image.TOAr <- calc.TOAr(path = path)}
+    if(missing(image.TOAr)){image.TOAr <- calcTOAr(path = path)}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
     ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
     W <- 0.14 * ea * P + 2.1
@@ -169,7 +169,7 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
     }
     image_SR <- do.call(stack, stack_SR)
   }
-  image_SR <- save.load.clean(imagestack = image_SR, 
+  image_SR <- saveLoadClean(imagestack = image_SR, 
                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
                               file = paste0(result.folder, "image_SR.tif"), 
                               overwrite=TRUE)
@@ -181,6 +181,7 @@ calc.SR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="ti
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 # Get links or optionally open web pages... 
+# Check if the files are present on path o in a specific SRTM local repo
 checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
   polyaoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
@@ -210,6 +211,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
+# Also look for files on path and local repo
 prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.folder=NULL){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
                                                  format, "$", sep=""), full.names = T) 
@@ -221,7 +223,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.
   if(length(files)==1){SRTMmosaic <- stack1[[1]]}
   destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
-  mosaicp <- save.load.clean(imagestack = mosaicp, stack.names = "DEM", 
+  mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
                              file = paste0(result.folder, "DEM.tif"), overwrite=TRUE)
   return(mosaicp)
 }
@@ -231,12 +233,12 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.topo <- function(DEM, result.folder=NULL){
+METRICtopo <- function(DEM, result.folder=NULL){
   aspect <- terrain(DEM, opt="aspect") 
   slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
-  surface.model <- save.load.clean(imagestack = surface.model, 
+  surface.model <- saveLoadClean(imagestack = surface.model, 
                                    stack.names = c("DEM", "Slope", "Aspect"), 
                                    file = paste0(result.folder, "surface.model.tif"), 
                                    overwrite=TRUE)
@@ -249,7 +251,7 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-  solar.angles <- function(path=getwd(), surface.model, MTL, result.folder=NULL){
+  solarAngles <- function(path=getwd(), surface.model, MTL, result.folder=NULL){
   if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
   MTL <- readLines(Landsat.MTL)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
@@ -286,12 +288,12 @@ METRIC.topo <- function(DEM, result.folder=NULL){
                         + cos(declination)*sin(latitude)*sin(slope)*cos(aspect)*cos(hour.angle)
                         + cos(declination)*sin(aspect)*sin(slope)*sin(hour.angle))
   ## End
-  solar.angles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
-  solar.angles <- save.load.clean(imagestack = solar.angles, 
+  solarAngles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
+  solarAngles <- saveLoadClean(imagestack = solarAngles, 
                                   stack.names = c("latitude", "declination", 
                                                   "hour.angle", "incidence.hor", "incidence.rel"), 
-                                  file = paste0(result.folder, "solar.angles.tif"), overwrite=TRUE)
-  return(solar.angles)
+                                  file = paste0(result.folder, "solarAngles.tif"), overwrite=TRUE)
+  return(solarAngles)
 }
 
 #' Calculates Incoming Solar Radiation
@@ -299,13 +301,13 @@ METRIC.topo <- function(DEM, result.folder=NULL){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-incoming.sw.radiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
+incSWradiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
-  tau.sw <- sw.trasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
-  Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
-  Rs.inc <- save.load.clean(imagestack = Rs.inc, 
+  Rs.inc <- 1367 * cos(solarAngles$incidence.rel) * tau.sw / d^2
+  Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
                             file = paste0(result.folder, "Rs.inc.tif"), overwrite=TRUE)
   return(Rs.inc)
 }
@@ -316,7 +318,7 @@ incoming.sw.radiation <- function(surface.model, solar.angles, WeatherStation, r
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE, result.folder=NULL){
-  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
@@ -340,11 +342,11 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
       removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
     }
   albedo <-  albedo/1e+06}
-  albedo <- aoi.crop(albedo, aoi) 
+  albedo <- aoiCrop(albedo, aoi) 
   if(coeff=="Liang"){
     albedo <- albedo - 0.0018
   }
-  albedo <- save.load.clean(imagestack = albedo, 
+  albedo <- saveLoadClean(imagestack = albedo, 
                             file = paste0(result.folder, "albedo.tif"), overwrite=TRUE)
   return(albedo)
 }
@@ -356,14 +358,14 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sat="auto", result.folder=NULL){
-  if(sat=="auto"){sat = get.sat(path)}
+  if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8" & ESPA==T){
     if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       removeTmpFiles(h=0)
       toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
       toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
       toa.4.5 <- stack(toa.red, toa.nir)
-      toa.4.5 <- aoi.crop(toa.4.5, aoi)
+      toa.4.5 <- aoiCrop(toa.4.5, aoi)
       toa.4.5 <- toa.4.5 * 0.0001
       }
     if(method=="turner"){
@@ -371,7 +373,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
       sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
       sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
       sr.4.5 <- stack(sr.red, sr.nir)
-      sr.4.5 <- aoi.crop(sr.4.5, aoi)}
+      sr.4.5 <- aoiCrop(sr.4.5, aoi)}
   }
   if(sat=="L7"){
     if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
@@ -407,7 +409,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
     LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
   }
   LAI[LAI<0]  <- 0
-  LAI <- save.load.clean(imagestack = LAI, stack.names = "LAI", 
+  LAI <- saveLoadClean(imagestack = LAI, stack.names = "LAI", 
                          file = paste0(result.folder, "LAI.tif"), overwrite=TRUE)
   return(LAI)
 }
@@ -419,12 +421,12 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder=NULL){
-  if(sat=="auto"){sat = get.sat(path)}
+surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder=NULL){
+  if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
                                                      pattern = "_toa_band10.tif"))
-    bright.temp.b10 <- aoi.crop(bright.temp.b10, aoi) 
+    bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
     Ts <- bright.temp.b10*0.1
   }
   if(sat=="L7"){
@@ -439,7 +441,7 @@ surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folde
     R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)/R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
-  Ts <- save.load.clean(imagestack = Ts, 
+  Ts <- saveLoadClean(imagestack = Ts, 
                         file = paste0(result.folder, "Ts.tif"), overwrite=TRUE)
   return(Ts)
 }
@@ -449,11 +451,11 @@ surface.temperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folde
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-outgoing.lw.radiation <- function(LAI, Ts, result.folder=NULL){
+outLWradiation <- function(LAI, Ts, result.folder=NULL){
   surf.emissivity <- 0.95 + 0.01 * LAI
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
-  Rl.out <- save.load.clean(imagestack = Rl.out, 
+  Rl.out <- saveLoadClean(imagestack = Rl.out, 
                             file = paste0(result.folder, "Rs.out.tif"), overwrite=TRUE)
   return(Rl.out)
 }
@@ -464,14 +466,14 @@ outgoing.lw.radiation <- function(LAI, Ts, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incoming.lw.radiation <- function(WeatherStation, DEM, solar.angles, result.folder=NULL){
+incLWradiation <- function(WeatherStation, DEM, solarAngles, result.folder=NULL){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
-  tau.sw <- sw.trasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solarAngles$incidence.hor)
   Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
-  Rl.in <- save.load.clean(imagestack = Rl.in, 
+  Rl.in <- saveLoadClean(imagestack = Rl.in, 
                            file = paste0(result.folder, "Rl.in.tif"), overwrite=TRUE)
   return(Rl.in)
 }
@@ -481,21 +483,21 @@ incoming.lw.radiation <- function(WeatherStation, DEM, solar.angles, result.fold
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soil.heat.flux <- function(image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, result.folder=NULL){
-  if(sat=="auto"){sat = get.sat(getwd())}
+soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, result.folder=NULL){
+  if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
       removeTmpFiles(h=0)
       sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
       sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
       sr.4.5 <- stack(sr.red, sr.nir)
-      sr.4.5 <- aoi.crop(sr.4.5, aoi)
+      sr.4.5 <- aoiCrop(sr.4.5, aoi)
   }
   if(sat=="L7"){
       sr.4.5 <- stack(image[[3]], image[[4]])
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
-  G <- save.load.clean(imagestack = G, file = paste0(result.folder, "G.tif"), overwrite=TRUE)
+  G <- saveLoadClean(imagestack = G, file = paste0(result.folder, "G.tif"), overwrite=TRUE)
   return(G)
 }
 
@@ -507,7 +509,7 @@ soil.heat.flux <- function(image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, resul
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
 ## Perrier by Santos 2012 and Pocas 2014.
-momentum.roughness.length <- function(method="short.crops", LAI, NDVI, 
+momentumRoughnessLength <- function(method="short.crops", LAI, NDVI, 
                                       albedo, a, b, fLAI.Perrier, h.Perrier, 
                                       mountainous=FALSE, surface.model, result.folder=NULL){
   if(method=="short.crops"){
@@ -519,104 +521,14 @@ momentum.roughness.length <- function(method="short.crops", LAI, NDVI,
   if(method=="Perrier"){
     if(fLAI.Perrier >=0.5){ a <- (2*(1-fLAI.Perrier))^-1 }
     if(fLAI.Perrier <0.5){ a <- 2*fLAI.Perrier }
-    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h
+    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h.Perrier
   }
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
   }
-  Z.om <- save.load.clean(imagestack = Z.om, 
+  Z.om <- saveLoadClean(imagestack = Z.om, 
                           file = paste0(result.folder, "Z.om.tif"), overwrite=TRUE)
   return(Z.om)
 }
 
-#' Calculates ET using Penman Monteith hourly formula
-#' @param WeatherStation a data frame with all the needed fields (see example)
-#' @param hours time of the day in hours in 24hs format
-#' @param DOY day of year
-#' @param long.z longitude for local time
-#' @return ET hourly in mm.h-1
-#' @author Guillermo F Olmedo
-#' @examples 
-#' WeatherStation  <- data.frame(wind=4.72,
-#'                               RH=59, 
-#'                               Ta=24.3,
-#'                               Gr.Rad=675, 
-#'                               height=2.2, 
-#'                               lat=-35.37, 
-#'                               long=71.5946, 
-#'                               elev=124)
-#'   ETo.PM.hourly(WeatherStation, hours=10.5, DOY=363, long.z=71.635)
-#' @export
-#' @references 
-#' Allen 2005 ASCE
-ETo.PM.hourly <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
-  TaK <- WeatherStation$Ta + 273.16
-  Rs <- WeatherStation$Gr.Rad * 3600 / 1e6
-  P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
-  psi <- 0.000665*P
-  Delta <- 2503 * exp((17.27*WeatherStation$Ta)/
-                        (WeatherStation$Ta+237.3))/((WeatherStation$Ta+237.3)^2)
-  ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
-  ea <- (WeatherStation$RH/100)*ea.sat
-  DPV <- ea.sat - ea
-  dr <- 1 + 0.033*(cos(2*pi*DOY/365))
-  delta <- 0.409*sin((2*pi*DOY/365)-1.39)
-  phi <- WeatherStation$lat*(pi/180)
-  b <- 2*pi*(DOY-81)/364
-  Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
-  hour.angle <- (pi/12)*((hours+0.06667*(WeatherStation$long*pi/180-long.z*pi/180)+Sc)-12)
-  w1 <- hour.angle-((pi)/24)
-  w2 <- hour.angle+((pi)/24)
-  hour.angle.s <- acos(-tan(phi)*tan(delta))
-  w1c <- ifelse(w1< -hour.angle.s, -hour.angle.s, 
-                ifelse(w1>hour.angle.s, hour.angle.s, ifelse(w1>w2, w2, w1)))
-  w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s, 
-                ifelse(w2>hour.angle.s, hour.angle.s, w2))
-  Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
-  Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*
-                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
-  Rso <- (0.75+2e-5*WeatherStation$elev)*Ra
-  Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
-  fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, 
-                ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
-  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*TaK^4)
-  G.day <- Rn.a * 0.1
-  wind.2 <- WeatherStation$wind *(4.87/(log(67.8*WeatherStation$height-5.42)))
-  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/TaK)*wind.2*(DPV)))/
-    (Delta+(psi*(1+(0.24*wind.2))))
-  return(ETo.hourly)
-}
-
-#' Calculates ET-24hs from energy balance and Weather Station 
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
-ET.24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
-  LE = Rn - G - H
-  ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
-  ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
-  ETr.Fr <- ET.inst/ETo.hourly
-  ET.24 <- ETr.Fr * ETr.daily * C.rad
-  rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
-  print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
-         colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
-  save.load.clean(imagestack = ET.24, 
-                  file = "ET24.tif", overwrite=TRUE)
-}
-
-
-#' Calculates daily ET using Penman Monteith hourly formula for every hour
-#' @param WeatherStation a data frame with all the needed fields (see example)
-#' @param DOY day of year
-#' @param long.z longitude for local time
-#' @return ET daily in mm.h-1
-#' @author Guillermo F Olmedo
-#' @export
-#' @references 
-#' Allen 2005 ASCE
-ETo.PM.hdaily <- function(WeatherStation, DOY, long.z=WeatherStation$long){
-  print("not yet")
-  return(ETo.hourly)
-}
 

@@ -3,23 +3,25 @@
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
-H.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1, anchors.method= "CITRA-MCB", 
-                    WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, sat="auto", ESPA=F,
-                    mountainous=FALSE, DEM, Rn, G, plots=TRUE, deltaTemp=5, result.folder=NULL){
+sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
+                                   anchors.method= "CITRA-MCB", WeatherStation, 
+                                   ETp.coef= 1.05, Z.om.ws=0.0018, sat="auto", 
+                                   ESPA=F, mountainous=FALSE, DEM, Rn, G, 
+                                   plots=TRUE, deltaTemp=5) {
   ### Some values used later
-  if(sat=="auto"){sat = get.sat(getwd())}
+  if(sat=="auto"){sat <- getSat(getwd())}
   if(sat=="L8" & ESPA==T){
     removeTmpFiles(h=0)
     sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
     sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
     sr.4.5 <- stack(sr.red, sr.nir)
-    sr.4.5 <- aoi.crop(sr.4.5, aoi)
+    sr.4.5 <- aoiCrop(sr.4.5, aoi)
   }
   if(sat=="L7"){
     sr.4.5 <- stack(image[[3]], image[[4]])
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
-  ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -116,8 +118,8 @@ H.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1, anchors.method= 
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
     } # End interactive process
-    dT <- save.load.clean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
-    H <- save.load.clean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
+    dT <- saveLoadClean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
+    H <- saveLoadClean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
     result$a <- a
     result$b <- b
     result$dT <- dT

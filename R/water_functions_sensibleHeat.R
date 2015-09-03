@@ -3,11 +3,11 @@
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
+sensibleHeatFlux <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
               WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
               mountainous=FALSE, DEM, Rn, G, plots=TRUE, result.folder=NULL){
   ### Some values used later
-  ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -118,8 +118,8 @@ H <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random",
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
   } # End interactive process
-  dT <- save.load.clean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
-  H <- save.load.clean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
+  dT <- saveLoadClean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
+  H <- saveLoadClean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
   result$a <- a
   result$b <- b
   result$dT <- dT
