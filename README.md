@@ -24,3 +24,9 @@ License: GPL (>= 2)
 ## Style Guide
 
 I (try) to follow this [style guide](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml)
+
+## Contributing
+
+Contributing it's accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
+
+
