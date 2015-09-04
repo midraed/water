@@ -1,22 +1,3 @@
-### Add a function to estimate all parameters for some points (and only for those points!)
-### Add some meta-functions to insolate processes
-### Export anchor as kml or view in Google
-### select anchor points with buffer for not too close pixels...
-### Select anchor for multiple criteria with table from Marcos
-### Check Rsky on METRIC 2010
-### Add three source temperature model..! from Pocas
-### A function to get a template: file.copy(system.file('test.R','MyPackage'), '.')
-### Change to call bands by name and not position... this solve the issue between L7 and L8
-
-
-#################################################################################3
-# Short Descript
-# @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-# @references 
-# R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-# @export
-#
-####################
 
 #' Create aoi polygon from topleft and bottomright coordinates
 #' @param topleft a vector with topleft x,y coordinates 
