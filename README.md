@@ -1,11 +1,11 @@
 #Package: water#
-Title: Actual Evapotranspiration with Energy Balance models
+Title: Actual Evapotranspiration with Surface Energy Balance models
 
 Author: Guillermo Federico Olmedo [aut, cre]
 
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 
-Description: Toos and functions to calculate actual evapotranspiration using surface energy balance models. 
+Description: Tools and functions to calculate actual evapotranspiration using surface energy balance models. 
 Depends: R (>= 3.2.1), raster (>= 2.1), sp (>= 1.1-1), proj4, stringr
 
 License: GPL (>= 2)
@@ -27,6 +27,6 @@ I (try) to follow this [style guide](https://google-styleguide.googlecode.com/sv
 
 ## Contributing
 
-Contributing it's accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
+Contributing is accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
 
 
