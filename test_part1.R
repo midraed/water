@@ -1,11 +1,10 @@
 start.all <- Sys.time ()
-library(raster)
-library(sp)
-library(rgdal)
-library(proj4)
-library(stringr)
+
+library(water)
 
 setwd("~/Documentos/Doctorado")
+
+results = "METRIC_results/"
 
 WeatherStation  <- data.frame(hours=11.5,
                      wind=2.3,
@@ -18,8 +17,11 @@ WeatherStation  <- data.frame(hours=11.5,
                      elev.ws=764,
                      hours=10.5)
 
+
+
+
 lujan <- create.aoi(topleft = c(493350, -3592750), bottomright = c(557200, -3700000))
-raw.image <-  load_L8data("ESPA/LC82320832013319-SC20150618080812_nov15/LC82320832013319LGN00_B1.TIF", aoi= lujan)
+raw.image <-  load.image.DN(path="ESPA/LC82320832013319-SC20150618080812_nov15/", result.folder = results, aoi = lujan)
 surface.model <-METRIC.topo("old_L8METRICforR/DEM.ON.tif")
 solar.angles.r <- solar.angles(L8MTL = "ESPA/LC82320832013319-SC20150618080812_nov15/LC82320832013319LGN00_MTL.txt",
                                raw.image = raw.image, slope = surface.model$Slope, aspect = surface.model$Aspect)
@@ -42,7 +44,10 @@ ET.inst <- 3600*LE/(latent.heat.vaporization*1000)
 ###################### Evapotranspiration
 LE <- Rn - G - H.and.dT$H
 ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
-ETr.F <- ETo.hourly/ETr
+ET.daily <- 7
+ETo.hourly <- ETo.PM.hourly(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+ETr.F <- ETo.hourly/ET.daily
+
 print (Sys.time () - start.all)
 
 
