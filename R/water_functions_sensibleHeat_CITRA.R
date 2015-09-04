@@ -118,8 +118,8 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
     } # End interactive process
-    dT <- saveLoadClean(imagestack = dT, file = paste0(result.folder,"dT.tif"), overwrite=TRUE)
-    H <- saveLoadClean(imagestack = H, file = paste0(result.folder,"H.tif"), overwrite=TRUE)
+    dT <- saveLoadClean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
+    H <- saveLoadClean(imagestack = H, file = "H.tif", overwrite=TRUE)
     result$a <- a
     result$b <- b
     result$dT <- dT

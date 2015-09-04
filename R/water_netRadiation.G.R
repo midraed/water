@@ -44,7 +44,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = paste0(result.folder, "image_DN.tif"), 
+                               file = "image_DN.tif", 
                                overwrite=TRUE)
   return(raw.image) 
 }  
@@ -91,7 +91,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   #### 
   image_TOA <- saveLoadClean(imagestack = image_TOA, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = paste0(result.folder, "image_TOAr.tif"), 
+                               file = "image_TOAr.tif", 
                                overwrite=TRUE)
   return(image_TOA)
 }  
@@ -152,7 +152,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
   }
   image_SR <- saveLoadClean(imagestack = image_SR, 
                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                              file = paste0(result.folder, "image_SR.tif"), 
+                              file = "image_SR.tif", 
                               overwrite=TRUE)
   return(image_SR)
 }  
@@ -205,7 +205,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN){
   destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
-                             file = paste0(result.folder, "DEM.tif"), overwrite=TRUE)
+                             file = "DEM.tif", overwrite=TRUE)
   return(mosaicp)
 }
 
@@ -221,7 +221,7 @@ METRICtopo <- function(DEM){
   surface.model <- stack(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
                                    stack.names = c("DEM", "Slope", "Aspect"), 
-                                   file = paste0(result.folder, "surface.model.tif"), 
+                                   file = "surface.model.tif", 
                                    overwrite=TRUE)
   return(surface.model)
 }
@@ -273,7 +273,7 @@ METRICtopo <- function(DEM){
   solarAngles <- saveLoadClean(imagestack = solarAngles, 
                                   stack.names = c("latitude", "declination", 
                                                   "hour.angle", "incidence.hor", "incidence.rel"), 
-                                  file = paste0(result.folder, "solarAngles.tif"), overwrite=TRUE)
+                                  file = "solarAngles.tif", overwrite=TRUE)
   return(solarAngles)
 }
 
@@ -289,7 +289,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
   Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
-                            file = paste0(result.folder, "Rs.inc.tif"), overwrite=TRUE)
+                            file = "Rs.inc.tif", overwrite=TRUE)
   return(Rs.inc)
 }
 
@@ -328,7 +328,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
     albedo <- albedo - 0.0018
   }
   albedo <- saveLoadClean(imagestack = albedo, 
-                            file = paste0(result.folder, "albedo.tif"), overwrite=TRUE)
+                            file = "albedo.tif", overwrite=TRUE)
   return(albedo)
 }
 
@@ -391,7 +391,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   }
   LAI[LAI<0]  <- 0
   LAI <- saveLoadClean(imagestack = LAI, stack.names = "LAI", 
-                         file = paste0(result.folder, "LAI.tif"), overwrite=TRUE)
+                         file = "LAI.tif", overwrite=TRUE)
   return(LAI)
 }
 
@@ -423,7 +423,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)/R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
-                        file = paste0(result.folder, "Ts.tif"), overwrite=TRUE)
+                        file = "Ts.tif", overwrite=TRUE)
   return(Ts)
 }
 
@@ -437,7 +437,7 @@ outLWradiation <- function(LAI, Ts){
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- saveLoadClean(imagestack = Rl.out, 
-                            file = paste0(result.folder, "Rs.out.tif"), overwrite=TRUE)
+                            file = "Rs.out.tif", overwrite=TRUE)
   return(Rl.out)
 }
 
@@ -447,7 +447,7 @@ outLWradiation <- function(LAI, Ts){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incLWradiation <- function(WeatherStation, DEM, solarAngles){
+incLWradiation <- function(WeatherStation, DEM, solar.angles){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/
                                              (WeatherStation$Ta+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
@@ -457,7 +457,7 @@ incLWradiation <- function(WeatherStation, DEM, solarAngles){
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
-                           file = paste0(result.folder, "Rl.in.tif"), overwrite=TRUE)
+                           file = "Rl.in.tif", overwrite=TRUE)
   return(Rl.in)
 }
 
@@ -480,7 +480,7 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
-  G <- saveLoadClean(imagestack = G, file = paste0(result.folder, "G.tif"), overwrite=TRUE)
+  G <- saveLoadClean(imagestack = G, file = "G.tif", overwrite=TRUE)
   return(G)
 }
 
@@ -510,7 +510,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
   }
   Z.om <- saveLoadClean(imagestack = Z.om, 
-                          file = paste0(result.folder, "Z.om.tif"), overwrite=TRUE)
+                          file = "Z.om.tif", overwrite=TRUE)
   return(Z.om)
 }
 
