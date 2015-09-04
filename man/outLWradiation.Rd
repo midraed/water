@@ -4,7 +4,7 @@
 \alias{outLWradiation}
 \title{Calculates Long wave outgoing radiation}
 \usage{
-outLWradiation(LAI, Ts, result.folder = NULL)
+outLWradiation(LAI, Ts)
 }
 \description{
 Calculates Long wave outgoing radiation

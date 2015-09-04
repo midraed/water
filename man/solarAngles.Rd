@@ -4,7 +4,7 @@
 \alias{solarAngles}
 \title{Calculates solar angles}
 \usage{
-solarAngles(path = getwd(), surface.model, MTL, result.folder = NULL)
+solarAngles(path = getwd(), surface.model, MTL)
 }
 \description{
 Calculates solar angles

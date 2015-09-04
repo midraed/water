@@ -4,8 +4,7 @@
 \alias{surfaceTemperature}
 \title{Estimates Land Surface Temperature from Landsat Data}
 \usage{
-surfaceTemperature(path = getwd(), sat = "auto", LAI, aoi,
-  result.folder = NULL)
+surfaceTemperature(path = getwd(), sat = "auto", LAI, aoi)
 }
 \description{
 Estimates Land Surface Temperature from Landsat Data

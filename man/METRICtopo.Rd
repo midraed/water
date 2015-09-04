@@ -4,7 +4,7 @@
 \alias{METRICtopo}
 \title{Calculates surface model used in METRIC}
 \usage{
-METRICtopo(DEM, result.folder = NULL)
+METRICtopo(DEM)
 }
 \description{
 Calculates surface model used in METRIC

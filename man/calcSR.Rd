@@ -5,8 +5,7 @@
 \title{Calculates surface reflectance for L7}
 \usage{
 calcSR(path = getwd(), image.TOAr, sat = "auto", ESPA = FALSE,
-  format = "tif", aoi, result.folder = NULL, incidence.hor, WeatherStation,
-  surface.model)
+  format = "tif", aoi, incidence.hor, WeatherStation, surface.model)
 }
 \description{
 Calculates surface reflectance for L7

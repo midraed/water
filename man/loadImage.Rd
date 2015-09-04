@@ -4,7 +4,7 @@
 \alias{loadImage}
 \title{Load Landsat data from folder}
 \usage{
-loadImage(path = getwd(), sat = "auto", result.folder = NULL, aoi)
+loadImage(path = getwd(), sat = "auto", aoi)
 }
 \description{
 Load Landsat data from folder

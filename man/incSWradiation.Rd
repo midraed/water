@@ -4,8 +4,7 @@
 \alias{incSWradiation}
 \title{Calculates Incoming Solar Radiation}
 \usage{
-incSWradiation(surface.model, solar.angles, WeatherStation,
-  result.folder = NULL)
+incSWradiation(surface.model, solar.angles, WeatherStation)
 }
 \description{
 Calculates Incoming Solar Radiation

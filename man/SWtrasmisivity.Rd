@@ -4,7 +4,7 @@
 \alias{SWtrasmisivity}
 \title{Calculates short wave transmisivity}
 \usage{
-SWtrasmisivity(Kt = 1, ea, dem, incidence.hor, result.folder = NULL)
+SWtrasmisivity(Kt = 1, ea, dem, incidence.hor)
 }
 \description{
 Calculates short wave transmisivity

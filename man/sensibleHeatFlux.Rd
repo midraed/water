@@ -6,8 +6,7 @@
 \usage{
 sensibleHeatFlux(anchors, Ts, LAI, albedo, Z.om, n = 1,
   anchors.method = "random", WeatherStation, ETp.coef = 1.05,
-  Z.om.ws = 0.0018, mountainous = FALSE, DEM, Rn, G, plots = TRUE,
-  result.folder = NULL)
+  Z.om.ws = 0.0018, mountainous = FALSE, DEM, Rn, G, plots = TRUE)
 }
 \description{
 Iterative function to estimate H and R.ah

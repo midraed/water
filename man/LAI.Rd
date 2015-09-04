@@ -5,7 +5,7 @@
 \title{Estimate LAI from Landsat Data}
 \usage{
 LAI(method = "metric2010", path = getwd(), aoi, L = 0.1, ESPA = F,
-  image, sat = "auto", result.folder = NULL)
+  image, sat = "auto")
 }
 \description{
 Estimate LAI from Landsat Data

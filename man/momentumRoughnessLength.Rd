@@ -5,8 +5,7 @@
 \title{Calculates Momentum Roughness Length}
 \usage{
 momentumRoughnessLength(method = "short.crops", LAI, NDVI, albedo, a, b,
-  fLAI.Perrier, h.Perrier, mountainous = FALSE, surface.model,
-  result.folder = NULL)
+  fLAI.Perrier, h.Perrier, mountainous = FALSE, surface.model)
 }
 \description{
 Calculates Momentum Roughness Length
