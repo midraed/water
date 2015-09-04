@@ -48,7 +48,7 @@ createAoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-loadImage <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
+loadImage <-  function(path=getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -75,7 +75,7 @@ loadImage <-  function(path=getwd(), sat="auto", result.folder=NULL, aoi){
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
 #' @export
 calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
-                      ESPA=FALSE, aoi, result.folder=NULL, incidence.rel){
+                      ESPA=FALSE, aoi, incidence.rel){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -122,7 +122,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 #' @export
 # incidence hor from TML?? 
 calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                     aoi, result.folder=NULL, incidence.hor, 
+                     aoi, incidence.hor, 
                     WeatherStation, surface.model){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
@@ -212,7 +212,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
-prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.folder=NULL){
+prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN){
   files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
                                                  format, "$", sep=""), full.names = T) 
   stack1 <- list()
@@ -233,7 +233,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, result.
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRICtopo <- function(DEM, result.folder=NULL){
+METRICtopo <- function(DEM){
   aspect <- terrain(DEM, opt="aspect") 
   slope <- terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
@@ -251,9 +251,9 @@ METRICtopo <- function(DEM, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-  solarAngles <- function(path=getwd(), surface.model, MTL, result.folder=NULL){
+  solarAngles <- function(path=getwd(), surface.model, MTL){
   if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(Landsat.MTL)
+  MTL <- readLines(Landsat.MTL, warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- as.numeric(regmatches(Elev.line, 
                                          regexec(text=Elev.line ,
@@ -301,7 +301,7 @@ METRICtopo <- function(DEM, result.folder=NULL){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-incSWradiation <- function(surface.model, solar.angles, WeatherStation, result.folder=NULL){
+incSWradiation <- function(surface.model, solar.angles, WeatherStation){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
@@ -317,7 +317,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, result.f
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE, result.folder=NULL){
+albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -357,7 +357,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sat="auto", result.folder=NULL){
+LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sat="auto"){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8" & ESPA==T){
     if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
@@ -421,7 +421,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder=NULL){
+surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
@@ -451,7 +451,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, result.folder
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-outLWradiation <- function(LAI, Ts, result.folder=NULL){
+outLWradiation <- function(LAI, Ts){
   surf.emissivity <- 0.95 + 0.01 * LAI
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
@@ -466,7 +466,7 @@ outLWradiation <- function(LAI, Ts, result.folder=NULL){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incLWradiation <- function(WeatherStation, DEM, solarAngles, result.folder=NULL){
+incLWradiation <- function(WeatherStation, DEM, solarAngles){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/
                                              (WeatherStation$Ta+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
@@ -485,7 +485,7 @@ incLWradiation <- function(WeatherStation, DEM, solarAngles, result.folder=NULL)
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, result.folder=NULL){
+soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F){
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
       removeTmpFiles(h=0)
@@ -513,7 +513,7 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
 ## Perrier by Santos 2012 and Pocas 2014.
 momentumRoughnessLength <- function(method="short.crops", LAI, NDVI, 
                                       albedo, a, b, fLAI.Perrier, h.Perrier, 
-                                      mountainous=FALSE, surface.model, result.folder=NULL){
+                                      mountainous=FALSE, surface.model){
   if(method=="short.crops"){
     Z.om <- (0.018*LAI)
   }
