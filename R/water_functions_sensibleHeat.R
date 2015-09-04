@@ -5,7 +5,7 @@
 #' @export
 sensibleHeatFlux <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method= "random", 
               WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
-              mountainous=FALSE, DEM, Rn, G, plots=TRUE, result.folder=NULL){
+              mountainous=FALSE, DEM, Rn, G, plots=TRUE){
   ### Some values used later
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000

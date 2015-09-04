@@ -3,12 +3,15 @@
   op <- options()
   op.water <- list(
     water.overwrite = "TRUE",
-    water.inmemory = "FALSE",
+    water.autoWrite = "TRUE",
+    water.destfolder = ".",
     water.SRTMrepo = "NULL",
     water.autoAoi = "TRUE"
   )
   toset <- !(names(op.water) %in% names(op))
   if(any(toset)) options(op.water[toset])
-  
+  packageStartupMessage("This package writes functions results to working directory. You can change")
+  packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
+
   invisible()
 }

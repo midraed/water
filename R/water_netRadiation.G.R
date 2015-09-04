@@ -306,7 +306,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, result.f
   tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
-  Rs.inc <- 1367 * cos(solarAngles$incidence.rel) * tau.sw / d^2
+  Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
                             file = paste0(result.folder, "Rs.inc.tif"), overwrite=TRUE)
   return(Rs.inc)
@@ -467,9 +467,11 @@ outLWradiation <- function(LAI, Ts, result.folder=NULL){
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solarAngles, result.folder=NULL){
-  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
-  tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solarAngles$incidence.hor)
-  Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 ## Temperature in Kelvin
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/
+                                             (WeatherStation$Ta+237.3))
+  tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
+  Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
+  ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
