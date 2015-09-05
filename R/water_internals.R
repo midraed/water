@@ -13,8 +13,15 @@ getSat <- function(path){
 
 
 saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
-  if(missing(file)){file <- paste(deparse(substitute(raw.image)),".tif", sep="")}
-  writeRaster(imagestack, filename = file, ...)
+  if(!getOption("waterWriteResults")){
+    names(imagestack) <- stack.names
+    return(imagestack)
+  }
+  tstamp <- NULL
+  if(!getOption("waterOverwrite")){
+    tstamp <- paste0("_", strftime(Sys.time(), format = "%Y%m%d%H%M%S"))}
+  if(missing(file)){file <- paste0(deparse(substitute(imagestack)),".tif")}
+  writeRaster(imagestack, filename = paste0(file, tstamp, ".tif"), ...)
   stack <- stack(file)
   names(stack) <- stack.names
   removeTmpFiles(h=0)
