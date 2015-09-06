@@ -12,8 +12,10 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
   if(sat=="auto"){sat <- getSat(getwd())}
   if(sat=="L8" & ESPA==T){
     removeTmpFiles(h=0)
-    sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
-    sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+    sr.red <- raster(list.files(path = path, 
+                                pattern = "_sr_band4.tif", full.names = T))
+    sr.nir <- raster(list.files(path = path, 
+                                pattern = "_sr_band5.tif", full.names = T))
     sr.4.5 <- stack(sr.red, sr.nir)
     sr.4.5 <- aoiCrop(sr.4.5, aoi)
   }
@@ -26,7 +28,9 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
-  ### We create anchors points if they dont exist
+
+  
+### We create anchors points if they dont exist---------------------------------
   if(missing(anchors)){
     if(anchors.method=="CITRA-MCB"){
       minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&Z.om<=0.08], 0.25)
@@ -46,10 +50,15 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
     }
   print("Cold pixels")
-  print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
+  print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], 
+                         "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
   print("Hot pixels")
-  print(data.frame(cbind("LAI"=LAI[hot], "NDVI"=NDVI[hot], "albedo"=albedo[hot], "Z.om"=Z.om[hot])))
-    ### We can plot anchor points
+  print(data.frame(cbind("LAI"=LAI[hot], "NDVI"=NDVI[hot], 
+                         "albedo"=albedo[hot], "Z.om"=Z.om[hot])))
+
+
+### End anchors selection ------------------------------------------------------
+      ### We can plot anchor points
     if(plots==TRUE){
       plot(LAI, main="LAI and hot and cold pixels")
       points(xyFromCell(LAI, hot), col="red", pch=3)
@@ -77,6 +86,9 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
                            "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                            "u*"=friction.velocity[hot])))
+    
+    
+### Start of iterative process -------------------------------------------------    
     for(i in 1:5){
       print(paste("iteraction #", i))
       ### We calculate dT and H 
@@ -117,7 +129,10 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       ## And finally, r.ah and friction velocity
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
-    } # End interactive process
+    } 
+    
+    
+### End interactive process ----------------------------------------------------
     dT <- saveLoadClean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
     H <- saveLoadClean(imagestack = H, file = "H.tif", overwrite=TRUE)
     result$a <- a
