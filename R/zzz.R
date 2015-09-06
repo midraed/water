@@ -26,134 +26,115 @@
 #' package version 2.4-18. http://CRAN.R-project.org/package=raster
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
-waterOptions <- function (format, overwrite, writeResults, destinationFolder,
+waterOptions <- function (overwrite, writeResults, destinationFolder,
                           SRTMrepo, autoAoi, default = FALSE) 
 {
-  setFiletype <- function(format) {
-    if (.isSupportedFormat(format)) {
-      options(rasterFiletype = format)
-    }
-    else {
-      warning(paste("Cannot set filetype to unknown or unsupported file format:", 
-                    format, ". See writeFormats()"))
-    }
-  }
+#   setFiletype <- function(format) {
+#     if (.isSupportedFormat(format)) {
+#       options(rasterFiletype = format)
+#     }
+#     else {
+#       warning(paste("Cannot set filetype to unknown or unsupported file format:", 
+#                     format, ". See writeFormats()"))
+#     }
+#   }
   setOverwrite <- function(overwrite) {
     if (is.logical(overwrite)) {
-      options(rasterOverwrite = overwrite)
+      options(waterOverwrite = overwrite)
     }
     else {
       warning(paste("Could not set overwrite. It must be a logical value"))
+    }
+  }
+  setWriteResults <- function(write) {
+    if (is.logical(write)) {
+      options(waterWriteResults = write)
+    }
+    else {
+      warning(paste("Could not set writeResults. It must be a logical value"))
     }
   }
   setDestFolder <- function(tmpdir) {
     if (!missing(tmpdir)) {
       tmpdir <- trim(tmpdir)
       if (tmpdir != "") {
-        lastchar = substr(tmpdir, .nchar(tmpdir), .nchar(tmpdir))
+        lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
         if (lastchar != "/" & lastchar != "\\") {
-          tmpdir <- paste(tmpdir, "/", sep = "")
+          tmpdir <- paste0(tmpdir, "/")
         }
-        options(rasterTmpDir = tmpdir)
+        options(waterDestFolder = tmpdir)
       }
     }
   }
-  setToDisk <- function(todisk) {
-    if (is.logical(todisk)) {
-      options(rasterToDisk = todisk)
+  setSRTMrepo <- function(srtmDir) {
+    if (!missing(srtmDir)) {
+      srtmDir <- trim(srtmDir)
+      if (srtmDir != "") {
+        lastchar = substr(srtmDir, nchar(srtmDir), nchar(srtmDir))
+        if (lastchar != "/" & lastchar != "\\") {
+          srtmDir <- paste0(srtmDir, "/")
+        }
+        options(waterSRTMrepo = srtmDir)
+      }
+    }
+  }
+  setAutoAoi <- function(autoAoi) {
+    if (is.logical(autoAoi)) {
+      options(waterAutoAoi = autoAoi)
     }
     else {
-      warning(paste("todisk argument must be a logical value"))
+      warning(paste("Could not set autoAoi. It must be a logical value"))
     }
   }
-  depracatedWarnings <- function(x) {
-    if (is.logical(x)) {
-      if (is.na(x)) {
-        x <- TRUE
-      }
-      options(rasterDepracatedWarnings = x)
-    }
-  }
+#   setToDisk <- function(todisk) {
+#     if (is.logical(todisk)) {
+#       options(rasterToDisk = todisk)
+#     }
+#     else {
+#       warning(paste("todisk argument must be a logical value"))
+#     }
+#   }
+#   depracatedWarnings <- function(x) {
+#     if (is.logical(x)) {
+#       if (is.na(x)) {
+#         x <- TRUE
+#       }
+#       options(rasterDepracatedWarnings = x)
+#     }
+#   }
   cnt <- 0
   if (default) {
     cnt <- 1
-    options(rasterFiletype = "raster")
-    options(rasterOverwrite = FALSE)
-    options(rasterDatatype = "FLT8S")
-    options(rasterProgress = "none")
-    options(rasterTimer = FALSE)
-    options(rasterTmpDir = tmpDir(create = FALSE))
-    options(rasterTmpTime = 24 * 7)
-    options(rasterToDisk = FALSE)
-    options(rasterSetFileExt = TRUE)
-    options(rasterChunkSize = 1e+06)
-    options(rasterMaxMemory = 1e+07)
-    options(rasterTolerance = 0.1)
-    options(rasterStandardNames = TRUE)
-    options(rasterDepracatedWarnings = TRUE)
-    options(rasterAddHeader = "")
-    v <- utils::packageDescription("raster")[["Version"]]
-  }
-  if (!missing(format)) {
-    setFiletype(format)
-    cnt <- cnt + 1
+    options(waterOverwrite = TRUE)
+    options(waterWriteResults = TRUE)
+    options(waterDestFolder = ".")
+    options(waterSRTMrepo = NULL)
+    options(waterAutoAoi = TRUE)
+    v <- utils::packageDescription("water")[["Version"]]
   }
   if (!missing(overwrite)) {
     setOverwrite(overwrite)
     cnt <- cnt + 1
   }
-  if (!missing(datatype)) {
-    setDataType(datatype)
+  if (!missing(writeResults)) {
+    setWriteResults(writeResults)
     cnt <- cnt + 1
   }
-  if (!missing(progress)) {
-    setProgress(progress)
+  if (!missing(destinationFolder)) {
+    setDestFolder(destinationFolder)
     cnt <- cnt + 1
   }
-  if (!missing(timer)) {
-    setTimer(timer)
+  if (!missing(SRTMrepo)) {
+    setSRTMrepo(SRTMrepo)
     cnt <- cnt + 1
   }
-  if (!missing(tmpdir)) {
-    setTmpdir(tmpdir)
+  if (!missing(autoAoi)) {
+    setAutoAoi(autoAoi)
     cnt <- cnt + 1
   }
-  if (!missing(tmptime)) {
-    setTmpTime(tmptime)
-    cnt <- cnt + 1
-  }
-  if (!missing(todisk)) {
-    setToDisk(todisk)
-    cnt <- cnt + 1
-  }
-  if (!missing(setfileext)) {
-    setFileExt(setfileext)
-    cnt <- cnt + 1
-  }
-  if (!missing(maxmemory)) {
-    setMaxMemorySize(maxmemory)
-    cnt <- cnt + 1
-  }
-  if (!missing(chunksize)) {
-    setChunksize(chunksize)
-    cnt <- cnt + 1
-  }
-  if (!missing(tolerance)) {
-    setTolerance(tolerance)
-    cnt <- cnt + 1
-  }
-  if (!missing(standardnames)) {
-    setStandardNames(standardnames)
-    cnt <- cnt + 1
-  }
-  if (!missing(depracatedwarnings)) {
-    depracatedWarnings(depracatedwarnings)
-    cnt <- cnt + 1
-  }
-  if (!missing(addheader)) {
-    addHeader(addheader)
-    cnt <- cnt + 1
-  }
+  
+  ## Continue here:
+  
   lst <- list(format = .filetype(), overwrite = .overwrite(), 
               datatype = .datatype(), tmpdir = tmpDir(create = FALSE), 
               tmptime = .tmptime(), progress = .progress(), timer = .timer(), 
@@ -163,7 +144,7 @@ waterOptions <- function (format, overwrite, writeResults, destinationFolder,
               addheader = .addHeader())
   save <- FALSE
   if (save) {
-    v <- utils::packageDescription("raster")[["Version"]]
+    v <- utils::packageDescription("water")[["Version"]]
     fn <- paste(options("startup.working.directory"), "/rasterOptions_", 
                 v, sep = "")
     oplst <- NULL
@@ -177,49 +158,16 @@ waterOptions <- function (format, overwrite, writeResults, destinationFolder,
                             "'", sep = ""))
     oplst <- c(oplst, paste("rasterTmpTime='", lst$tmptime, 
                             "'", sep = ""))
-    oplst <- c(oplst, paste("rasterProgress='", lst$progress, 
-                            "'", sep = ""))
-    oplst <- c(oplst, paste("rasterTimer=", lst$timer, sep = ""))
-    oplst <- c(oplst, paste("rasterChunkSize=", lst$chunksize, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterMaxMemory=", lst$maxmemory, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterSetFileExt=", lst$setfileext, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterTolerance=", lst$tolerance, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterStandardNames=", lst$standardnames, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterDepracatedWarnings=", 
-                            lst$depwarning, sep = ""))
-    oplst <- c(oplst, paste("rasterAddHeader=", lst$addheader, 
-                            sep = ""))
     r <- try(write(unlist(oplst), fn), silent = TRUE)
     cnt <- 1
   }
+  #overwrite, writeResults, destinationFolder, SRTMrepo, autoAoi
   if (cnt == 0) {
-    cat("format        :", lst$format, "\n")
-    cat("datatype      :", lst$datatype, "\n")
     cat("overwrite     :", lst$overwrite, "\n")
-    cat("progress      :", lst$progress, "\n")
-    cat("timer         :", lst$timer, "\n")
-    cat("chunksize     :", lst$chunksize, "\n")
-    cat("maxmemory     :", lst$maxmemory, "\n")
-    cat("tmpdir        :", lst$tmpdir, "\n")
-    cat("tmptime       :", lst$tmptime, "\n")
-    cat("setfileext    :", lst$setfileext, "\n")
-    cat("tolerance     :", lst$tolerance, "\n")
-    cat("standardnames :", lst$standardnames, "\n")
-    cat("warn depracat.:", lst$depwarning, "\n")
-    if (lst$addheader == "") {
-      cat("header        : none\n")
-    }
-    else {
-      cat("header        :", lst$addheader, "\n")
-    }
-    if (lst$todisk) {
-      cat("todisk        : TRUE\n")
-    }
+    cat("writeResults  :", lst$writeResults, "\n")
+    cat("destFolder    :", lst$destinationFolder, "\n")
+    cat("SRTMrepo      :", lst$SRTMrepo, "\n")
+    cat("autoAoi       :", lst$autoAoi, "\n")
   }
   invisible(lst)
 }
