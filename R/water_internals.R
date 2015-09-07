@@ -20,7 +20,7 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   tstamp <- NULL
   if(!getOption("waterOverwrite")){
     tstamp <- paste0("_", strftime(Sys.time(), format = "%Y%m%d%H%M%S"))}
-  tmpdir <- getOption("waterDestFolder")
+  tmpdir <- getOption("waterOutputFolder")
   lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
   if (lastchar != "/" & lastchar != "\\") {
     tmpdir <- paste0(tmpdir, "/")
