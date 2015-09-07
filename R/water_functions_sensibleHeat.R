@@ -77,7 +77,7 @@ sensibleHeatFlux <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method
   print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
                          "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                          "u*"=friction.velocity[hot])))
-  for(i in 1:5){
+  for(i in 1:15){
     print(paste("iteraction #", i))
     ### We calculate dT and H 
     dT.cold <- H.cold * r.ah[cold] / (air.density[cold]*1004)
@@ -118,8 +118,8 @@ sensibleHeatFlux <- function(anchors, Ts, LAI, albedo, Z.om, n=1, anchors.method
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
   } # End interactive process
-  dT <- saveLoadClean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
-  H <- saveLoadClean(imagestack = H, file = "H.tif", overwrite=TRUE)
+  dT <- saveLoadClean(imagestack = dT, file = "dT", overwrite=TRUE)
+  H <- saveLoadClean(imagestack = H, file = "H", overwrite=TRUE)
   result$a <- a
   result$b <- b
   result$dT <- dT

@@ -71,7 +71,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
   saveLoadClean(imagestack = ET.24, 
-                file = "ET24.tif", overwrite=TRUE)
+                file = "ET24", overwrite=TRUE)
 }
 
 

@@ -44,7 +44,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = "image_DN.tif", 
+                               file = "image_DN", 
                                overwrite=TRUE)
   return(raw.image) 
 }  
@@ -99,8 +99,6 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 #' Calculates surface reflectance for L7
 #' @description
 #' Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @author David Fonseca Luengo 
 #' @param path            folder with input data
 #' @param image.TOAr      raster stack. top of atmosphere radiance image
 #' @param sat             sensor type (auto, L7, L8)
@@ -110,6 +108,8 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 #' @param incidence.hor  solar incidence angle for horizontal surface
 #' @param WeatherStation 
 #' @param surface.model 
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author David Fonseca Luengo 
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
@@ -164,7 +164,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
   }
   image_SR <- saveLoadClean(imagestack = image_SR, 
                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                              file = "image_SR.tif", 
+                              file = "image_SR", 
                               overwrite=TRUE)
   return(image_SR)
 }  
@@ -217,7 +217,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN){
   destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
-                             file = "DEM.tif", overwrite=TRUE)
+                             file = "DEM", overwrite=TRUE)
   return(mosaicp)
 }
 
@@ -233,7 +233,7 @@ METRICtopo <- function(DEM){
   surface.model <- stack(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
                                    stack.names = c("DEM", "Slope", "Aspect"), 
-                                   file = "surface.model.tif", 
+                                   file = "surface.model", 
                                    overwrite=TRUE)
   return(surface.model)
 }
@@ -285,7 +285,7 @@ METRICtopo <- function(DEM){
   solarAngles <- saveLoadClean(imagestack = solarAngles, 
                                   stack.names = c("latitude", "declination", 
                                                   "hour.angle", "incidence.hor", "incidence.rel"), 
-                                  file = "solarAngles.tif", overwrite=TRUE)
+                                  file = "solarAngles", overwrite=TRUE)
   return(solarAngles)
 }
 
@@ -301,7 +301,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
   d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
   Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
-                            file = "Rs.inc.tif", overwrite=TRUE)
+                            file = "Rs.inc", overwrite=TRUE)
   return(Rs.inc)
 }
 
@@ -340,7 +340,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
     albedo <- albedo - 0.0018
   }
   albedo <- saveLoadClean(imagestack = albedo, 
-                            file = "albedo.tif", overwrite=TRUE)
+                            file = "albedo", overwrite=TRUE)
   return(albedo)
 }
 
@@ -403,7 +403,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   }
   LAI[LAI<0]  <- 0
   LAI <- saveLoadClean(imagestack = LAI, stack.names = "LAI", 
-                         file = "LAI.tif", overwrite=TRUE)
+                         file = "LAI", overwrite=TRUE)
   return(LAI)
 }
 
@@ -435,7 +435,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)/R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
-                        file = "Ts.tif", overwrite=TRUE)
+                        file = "Ts", overwrite=TRUE)
   return(Ts)
 }
 
@@ -449,7 +449,7 @@ outLWradiation <- function(LAI, Ts){
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- saveLoadClean(imagestack = Rl.out, 
-                            file = "Rs.out.tif", overwrite=TRUE)
+                            file = "Rs.out", overwrite=TRUE)
   return(Rl.out)
 }
 
@@ -469,7 +469,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles){
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
-                           file = "Rl.in.tif", overwrite=TRUE)
+                           file = "Rl.in", overwrite=TRUE)
   return(Rl.in)
 }
 
@@ -492,7 +492,7 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
-  G <- saveLoadClean(imagestack = G, file = "G.tif", overwrite=TRUE)
+  G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
   return(G)
 }
 
@@ -522,7 +522,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
   }
   Z.om <- saveLoadClean(imagestack = Z.om, 
-                          file = "Z.om.tif", overwrite=TRUE)
+                          file = "Z.om", overwrite=TRUE)
   return(Z.om)
 }
 
