@@ -87,9 +87,12 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
                            "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                            "u*"=friction.velocity[hot])))
     
-    
+    converge <- FALSE
+    last.loop <- FALSE 
+    i <- 1
 ### Start of iterative process -------------------------------------------------    
-    for(i in 1:5){
+    while(!converge){
+      i <-  i + 1 
       print(paste("iteraction #", i))
       ### We calculate dT and H 
       dT.cold <- H.cold * r.ah[cold] / (air.density[cold]*1004)
@@ -128,13 +131,28 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       print("##############")
       ## And finally, r.ah and friction velocity
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+      # converge condition
+      r.ah.hot.previous <- r.ah[hot]
+      r.ah.cold.previous <- r.ah[cold]
+      ### -----------
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
+      # Check convergence
+      if(last.loop == TRUE){
+        converge <- TRUE
+        print (paste0("convergence reached at iteration #", i))
+        }
+      delta.r.ah.hot <- (r.ah[hot] - r.ah.hot.previous) / r.ah[hot] * 100
+      delta.r.ah.cold <- (r.ah[cold] - r.ah.cold.previous) / r.ah[cold] * 100
+      print (paste("delta rah hot", delta.r.ah.hot))
+      print (paste("delta rah cold", delta.r.ah.cold))
+      print ("### -------")
+      if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
     } 
     
     
 ### End interactive process ----------------------------------------------------
-    dT <- saveLoadClean(imagestack = dT, file = "dT.tif", overwrite=TRUE)
-    H <- saveLoadClean(imagestack = H, file = "H.tif", overwrite=TRUE)
+    dT <- saveLoadClean(imagestack = dT, file = "dT", overwrite=TRUE)
+    H <- saveLoadClean(imagestack = H, file = "H", overwrite=TRUE)
     result$a <- a
     result$b <- b
     result$dT <- dT
