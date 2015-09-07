@@ -20,8 +20,15 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   tstamp <- NULL
   if(!getOption("waterOverwrite")){
     tstamp <- paste0("_", strftime(Sys.time(), format = "%Y%m%d%H%M%S"))}
+  tmpdir <- getOption("waterDestFolder")
+  lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
+  if (lastchar != "/" & lastchar != "\\") {
+    tmpdir <- paste0(tmpdir, "/")
+  }
   if(missing(file)){file <- paste0(deparse(substitute(imagestack)),".tif")}
-  writeRaster(imagestack, filename = paste0(file, tstamp, ".tif"), ...)
+  resultfile <- paste0(tmpdir, file, tstamp, ".tif")
+  writeRaster(imagestack, filename = resultfile, ...)
+  message(paste("Result saved as", paste0(tmpdir, file, tstamp, ".tif"), "    OK"))
   stack <- stack(file)
   names(stack) <- stack.names
   removeTmpFiles(h=0)
