@@ -1,6 +1,6 @@
 
 #' Create aoi polygon from topleft and bottomright coordinates
-#' @param topleft a vector with topleft x,y coordinates 
+#' @param topleft     a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
 #' @param EPSG Coordinate reference system EPSG code
 #' @return object of class SpatialPolygons
@@ -97,7 +97,19 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 }  
 
 #' Calculates surface reflectance for L7
+#' @description
+#' Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author David Fonseca Luengo 
+#' @param path            folder with input data
+#' @param image.TOAr      raster stack. top of atmosphere radiance image
+#' @param sat             sensor type (auto, L7, L8)
+#' @param ESPA            logical. Data from ESPA.usgs.gov
+#' @param format          
+#' @param aoi
+#' @param incidence.hor  solar incidence angle for horizontal surface
+#' @param WeatherStation 
+#' @param surface.model 
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
