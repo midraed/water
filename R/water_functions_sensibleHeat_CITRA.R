@@ -86,7 +86,8 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
                            "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                            "u*"=friction.velocity[hot])))
-    
+    plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), col="red", ylab="r ah", xlab="iteration")
+    points(1, r.ah[cold], col="blue")
     converge <- FALSE
     last.loop <- FALSE 
     i <- 1
@@ -136,6 +137,9 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       r.ah.cold.previous <- r.ah[cold]
       ### -----------
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
+      ## Update plot
+      points(i, r.ah[hot], col="red")
+      points(i, r.ah[cold], col="blue")
       # Check convergence
       if(last.loop == TRUE){
         converge <- TRUE
