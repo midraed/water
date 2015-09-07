@@ -4,8 +4,8 @@
 \alias{waterOptions}
 \title{Global options for water package}
 \usage{
-waterOptions(format, overwrite, writeResults, destinationFolder, SRTMrepo,
-  autoAoi, default = FALSE)
+waterOptions(overwrite, writeResults, outputFolder, SRTMrepo, autoAoi,
+  default = FALSE)
 }
 \value{
 list of the current options (invisibly). If no arguments are provided the options are printed.
