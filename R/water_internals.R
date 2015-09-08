@@ -29,7 +29,7 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   resultfile <- paste0(tmpdir, file, tstamp, ".tif")
   writeRaster(imagestack, filename = resultfile, ...)
   message(paste("Result saved as", paste0(tmpdir, file, tstamp, ".tif"), "    OK"))
-  stack <- stack(file)
+  stack <- stack(resultfile)
   names(stack) <- stack.names
   removeTmpFiles(h=0)
   return(stack)
