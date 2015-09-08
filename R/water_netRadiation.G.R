@@ -2,7 +2,7 @@
 #' Create aoi polygon from topleft and bottomright coordinates
 #' @param topleft     a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
-#' @param EPSG Coordinate reference system EPSG code
+#' @param EPSG        Coordinate reference system EPSG code
 #' @return object of class SpatialPolygons
 #' @author Guillermo F Olmedo
 #' @examples 
@@ -290,7 +290,13 @@ METRICtopo <- function(DEM){
 }
 
 #' Calculates Incoming Solar Radiation
+#' @description 
+#' This function calculates incoming solar radiation from surface model and solar angles.
+#' @param surface.model   surface.model with dem aspect and slope
+#' @param solar.angles    ...
+#' @param WeatherStation  ...
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Daniel de la Fuente Saiz
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
