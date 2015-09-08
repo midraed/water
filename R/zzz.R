@@ -4,7 +4,7 @@
   op.water <- list(
     waterOverwrite = TRUE,
     waterWriteResults = TRUE,
-    waterDestFolder = ".",
+    waterOutputFolder = ".",
     waterSRTMrepo = NULL,
     waterAutoAoi = TRUE
   )
@@ -26,7 +26,7 @@
 #' package version 2.4-18. http://CRAN.R-project.org/package=raster
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
-waterOptions <- function (overwrite, writeResults, destinationFolder,
+waterOptions <- function (overwrite, writeResults, outputFolder,
                           SRTMrepo, autoAoi, default = FALSE) 
 {
 #   setFiletype <- function(format) {
@@ -54,7 +54,7 @@ waterOptions <- function (overwrite, writeResults, destinationFolder,
       warning(paste("Could not set writeResults. It must be a logical value"))
     }
   }
-  setDestFolder <- function(tmpdir) {
+  setOutputFolder <- function(tmpdir) {
     if (!missing(tmpdir)) {
       tmpdir <- trim(tmpdir)
       if (tmpdir != "") {
@@ -62,7 +62,7 @@ waterOptions <- function (overwrite, writeResults, destinationFolder,
         if (lastchar != "/" & lastchar != "\\") {
           tmpdir <- paste0(tmpdir, "/")
         }
-        options(waterDestFolder = tmpdir)
+        options(waterOutputFolder = tmpdir)
       }
     }
   }
@@ -107,7 +107,7 @@ waterOptions <- function (overwrite, writeResults, destinationFolder,
     cnt <- 1
     options(waterOverwrite = TRUE)
     options(waterWriteResults = TRUE)
-    options(waterDestFolder = ".")
+    options(waterOutputFolder = ".")
     options(waterSRTMrepo = NULL)
     options(waterAutoAoi = TRUE)
     v <- utils::packageDescription("water")[["Version"]]
@@ -115,33 +115,26 @@ waterOptions <- function (overwrite, writeResults, destinationFolder,
   if (!missing(overwrite)) {
     setOverwrite(overwrite)
     cnt <- cnt + 1
-  }
+  } else {overwrite <- getOption("waterOverwrite")}
   if (!missing(writeResults)) {
     setWriteResults(writeResults)
     cnt <- cnt + 1
-  }
-  if (!missing(destinationFolder)) {
-    setDestFolder(destinationFolder)
+  } else {writeResults <- getOption("waterWriteResults")}
+  if (!missing(outputFolder)) {
+    setOutputFolder(outputFolder)
     cnt <- cnt + 1
-  }
+  } else {outputFolder <- getOption("waterOutputFolder")}
   if (!missing(SRTMrepo)) {
     setSRTMrepo(SRTMrepo)
     cnt <- cnt + 1
-  }
+  } else {SRTMrepo <- getOption("waterSRTMrepo")}
   if (!missing(autoAoi)) {
     setAutoAoi(autoAoi)
     cnt <- cnt + 1
-  }
-  
-  ## Continue here:
-  
-  lst <- list(format = .filetype(), overwrite = .overwrite(), 
-              datatype = .datatype(), tmpdir = tmpDir(create = FALSE), 
-              tmptime = .tmptime(), progress = .progress(), timer = .timer(), 
-              chunksize = .chunksize(), maxmemory = .maxmemory(), 
-              todisk = .toDisk(), setfileext = .setfileext(), tolerance = .tolerance(), 
-              standardnames = .standardnames(), depwarning = .depracatedwarnings(), 
-              addheader = .addHeader())
+  } else {autoAoi <- getOption("waterAutoAoi")}
+  lst <- list(overwrite = overwrite, writeResults = writeResults,
+              outputFolder = outputFolder, SRTMrepo= SRTMrepo,
+              autoAOI = autoAoi)
   save <- FALSE
   if (save) {
     v <- utils::packageDescription("water")[["Version"]]
@@ -161,13 +154,14 @@ waterOptions <- function (overwrite, writeResults, destinationFolder,
     r <- try(write(unlist(oplst), fn), silent = TRUE)
     cnt <- 1
   }
-  #overwrite, writeResults, destinationFolder, SRTMrepo, autoAoi
   if (cnt == 0) {
     cat("overwrite     :", lst$overwrite, "\n")
     cat("writeResults  :", lst$writeResults, "\n")
-    cat("destFolder    :", lst$destinationFolder, "\n")
+    cat("outputFolder  :", lst$outputFolder, "\n")
     cat("SRTMrepo      :", lst$SRTMrepo, "\n")
     cat("autoAoi       :", lst$autoAoi, "\n")
   }
   invisible(lst)
 }
+
+
