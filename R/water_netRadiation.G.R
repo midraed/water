@@ -44,7 +44,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = "image_DN", 
+                               file = "imageDN", 
                                overwrite=TRUE)
   return(raw.image) 
 }  
@@ -91,7 +91,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   #### 
   image_TOA <- saveLoadClean(imagestack = image_TOA, 
                                stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = "image_TOAr.tif", 
+                               file = "image_TOAr", 
                                overwrite=TRUE)
   return(image_TOA)
 }  
