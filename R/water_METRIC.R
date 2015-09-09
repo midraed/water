@@ -17,8 +17,7 @@ METRIC.Rn <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi){
   Ts <- surfaceTemperature(sat = "auto", LAI=LAI)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, solar.angles = solar.angles.r)
-  surf.emissivity <- 0.95 + 0.01 * LAI 
-  Rn <- Rs.inc - albedo*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
+  Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
   plot(Rn, main="METRIC Net Radiation")
   return(Rn)
 }

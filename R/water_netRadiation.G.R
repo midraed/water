@@ -479,6 +479,20 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles){
   return(Rl.in)
 }
 
+#' Estimates net radiation
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
+  surf.emissivity <- 0.95 + 0.01 * LAI 
+  Rn <- Rs.inc - albedo*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
+  Rn <- saveLoadClean(imagestack = Rl.in, 
+                         file = "Rn", overwrite=TRUE)
+  return(Rn)
+}
+
+
 #' Estimates Soil Heat Flux
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
