@@ -33,16 +33,19 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
 ### We create anchors points if they dont exist---------------------------------
   if(missing(anchors)){
     if(anchors.method=="CITRA-MCB"){
-      minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&Z.om<=0.08], 0.25)
+      minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
+                            Z.om<=0.08], 0.25)
       if(minT+deltaTemp<288){minT = 288 + deltaTemp}
       cold <- sample(which(values(LAI>=3) & values(LAI<=6) &  
                              values(albedo>=0.18) & values(albedo<=0.25) &
                              values(Z.om>=0.03) & values(Z.om<=0.08) &
                              values(Ts<(minT+deltaTemp)) & values(Ts>288)),n)
-      maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&Z.om<=0.005])
+      maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
+                       Z.om<=0.005])
       hot <- sample(which(values(albedo>=0.13) & values(albedo<=0.15) &
                             values(NDVI>=0.1) & values(NDVI<=0.28) &
-                            values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))),n)
+                            values(Z.om<=0.005) & 
+                            values(Ts>(maxT-deltaTemp))),n)
       }
     }
     else{
@@ -73,21 +76,23 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     friction.velocity <- 0.41 * u200 / log(200/Z.om) 
     r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
     ### Iteractive process start here:
-    LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*(1e6)/3600 
+    LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*
+      (1e6)/3600 
     # here uses latent.heat.vapo
     H.cold <- Rn[cold] - G[cold] - LE.cold #ok
     result <- list()
     print("starting conditions")
     print("Cold")
-    print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], "Rn"=Rn[cold], 
-                           "G"=G[cold], "Z.om"=Z.om[cold], "u200"=u200[cold], 
-                           "u*"=friction.velocity[cold])))
+    print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
+                           "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
+                           "u200"=u200[cold], "u*"=friction.velocity[cold])))
     print("Hot")
     print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
                            "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                            "u*"=friction.velocity[hot])))
-    plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), col="red", ylab="r ah", xlab="iteration")
-    points(1, r.ah[cold], col="blue")
+    plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
+         col="red", ylab="r ah", xlab="iteration", pch=20)
+    points(1, r.ah[cold], col="blue", pch=20)
     converge <- FALSE
     last.loop <- FALSE 
     i <- 1
@@ -121,7 +126,8 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
       x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
       x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
-      phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + log((1 + x.200^2) /2) - 
+      phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                         log((1 + x.200^2) /2) - 
                                          2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
       phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
       phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
@@ -138,8 +144,10 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
       ### -----------
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
       ## Update plot
-      points(i, r.ah[hot], col="red")
-      points(i, r.ah[cold], col="blue")
+      points(i, r.ah[hot], col="red", pch=20)
+      points(i, r.ah[cold], col="blue", pch=20)
+      lines(c(i, i-1), c(r.ah[hot], r.ah.hot.previous), col="red")
+      lines(c(i, i-1), c(r.ah[cold], r.ah.cold.previous), col="blue")
       # Check convergence
       if(last.loop == TRUE){
         converge <- TRUE
@@ -161,11 +169,15 @@ sensibleHeatFlux.CITRA <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     result$b <- b
     result$dT <- dT
     result$H <- H
-    result$hot.and.cold <- data.frame(pixel=integer(),  X=integer(), Y=integer(), Ts=double(), 
-                                      LAI=double(), type=factor(levels = c("hot", "cold")))
+    result$hot.and.cold <- data.frame(pixel=integer(),  X=integer(), 
+                                      Y=integer(), Ts=double(), LAI=double(), 
+                                      type=factor(levels = c("hot", "cold")))
     for(i in 1:n){result$hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
-                                                Ts[hot][i], round(LAI[hot][i],2), "hot")}
-    for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, hot[i]), 
-                                                  Ts[cold][i], round(LAI[cold][i],2), "cold")}
+                                                Ts[hot][i], 
+                                                round(LAI[hot][i],2), "hot")}
+    for(i in 1:n){result$hot.and.cold[i+n, ] <- c(cold[i], 
+                                                  xyFromCell(LAI, hot[i]), 
+                                                  Ts[cold][i], 
+                                                  round(LAI[cold][i],2), "cold")}
     return(result)
   }
