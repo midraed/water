@@ -74,9 +74,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
     L5_ESUN <- c(1957, 1826, 1554, 1036, 215.0, 80.67) #Chandler & Markham 2003
     L7_ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06)
     ESUN <- L7_ESUN 
-    #L5_Gain <- c(0.762824, 1.442510, 1.039880, 0.872588, 0.119882, 0.055158, 0.065294) # Chandler 2003
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
-    #L5_Bias <- c(-1.52, -2.84, -1.17, -1.51, -0.37, 1.2387, -0.15)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
     if(missing(image.DN)){image.DN <- loadImage(path = path)}
     DOY <- as.integer(substr(list.files(path = path, 
@@ -248,9 +246,9 @@ METRICtopo <- function(DEM){
   if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
   MTL <- readLines(Landsat.MTL, warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
-  sun.elevation <- as.numeric(regmatches(Elev.line, 
+  sun.elevation <- (90 - as.numeric(regmatches(Elev.line, 
                                          regexec(text=Elev.line ,
-                                                 pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
+                                                 pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1]))*pi/180
   Azim.line <- grep("SUN_AZIMUTH",MTL,value=TRUE)
   sun.azimuth <- as.numeric(regmatches(Azim.line, 
                                        regexec(text=Azim.line ,
@@ -266,12 +264,21 @@ METRICtopo <- function(DEM){
                                       pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],
                            14,16))
   declination <- surface.model[[1]]
-  values(declination) <- 23.45*pi/180*sin(2*pi*((284+DOY)/36.25))
+  values(declination) <- 0.409*sin((2*pi/365*DOY)-1.39)
   # hour angle
-  hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination)))
+  hour.angle <- surface.model[[1]]
+  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+  time.hours <-regmatches(time.line,regexec(text=time.line,
+           pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+  time.hours <- strptime(time.hours, format = "%H:%M:%S", tz="GMT")
+  Sc <- (0.1645*sin(4*pi*(DOY-81)/364)-0.1255*cos(2*pi*(DOY-81)/364)-0.025*sin(2*pi*(DOY-81)/364))*60
+  time.hours <- (time.hours$hour*3600+time.hours$min*60+time.hours$sec+WeatherStation$long/15*3600)/60 + Sc
+  values(hour.angle) <- abs((12-as.numeric(time.hours)/60)*15/180*pi)
+  #hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination))) first
+  
   ## solar incidence angle, for horizontal surface
-  incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)
-                        *cos(latitude)*cos(hour.angle))
+  incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)*
+                        cos(latitude)*cos(hour.angle))
   slope <- surface.model$Slope
   aspect <- surface.model$Aspect
   ##solar incidence angle, for sloping surface
@@ -420,7 +427,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
+surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStation){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
@@ -432,12 +439,16 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
     epsilon_NB <- raster(LAI)
     epsilon_NB <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
-    L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) + 3.1628
+    L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) - 0.06709
     L7_K1 <- 666.09 
     L7_K2 <- 1282.71 
-    Rp <- 0           #Allen estimo en Idaho que el valor medio era 0.91
-    tau_NB <- 1       #Allen estimo en Idaho que el valor medio era 0.866
-    R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
+    Rp <- 0.91             #Allen estimo en Idaho que el valor medio era 0.91
+    #tau_NB <- 1       #Allen estimo en Idaho que el valor medio era 0.866
+    ## There is a equation on excel to calculate from DEM
+    tau_NB <- 0.75+2e-5*WeatherStation$elev
+    #R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
+    ## There is a equation for R_sky on Metric Manual:
+    R_sky <- (1.807e-10)*(WeatherStation$Ta+273.15)^4*(1-0.26*exp(-7.77e-4*WeatherStation$Ta^2))
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
