@@ -7,11 +7,32 @@
 calcSR(path = getwd(), image.TOAr, sat = "auto", ESPA = FALSE,
   format = "tif", aoi, incidence.hor, WeatherStation, surface.model)
 }
+\arguments{
+\item{path}{folder with input data}
+
+\item{image.TOAr}{raster stack. top of atmosphere radiance image}
+
+\item{sat}{sensor type (auto, L7, L8)}
+
+\item{ESPA}{logical. Data from ESPA.usgs.gov}
+
+\item{format}{}
+
+\item{aoi}{}
+
+\item{incidence.hor}{solar incidence angle for horizontal surface}
+
+\item{WeatherStation}{}
+
+\item{surface.model}{}
+}
 \description{
-Calculates surface reflectance for L7
+Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+
+David Fonseca Luengo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
