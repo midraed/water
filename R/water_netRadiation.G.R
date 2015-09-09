@@ -438,7 +438,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi){
     Rp <- 0           #Allen estimo en Idaho que el valor medio era 0.91
     tau_NB <- 1       #Allen estimo en Idaho que el valor medio era 0.866
     R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
-    Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)/R_sky
+    Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
                         file = "Ts", overwrite=TRUE)
