@@ -1,3 +1,33 @@
+#' Calculates Momentum Roughness Length
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
+## using some points and tabulated z.om for their covers.
+## Perrier by Santos 2012 and Pocas 2014.
+momentumRoughnessLength <- function(method="short.crops", LAI, NDVI, 
+                                    albedo, a, b, fLAI.Perrier, h.Perrier, 
+                                    mountainous=FALSE, surface.model){
+  if(method=="short.crops"){
+    Z.om <- (0.018*LAI)
+  }
+  if(method=="custom"){
+    Z.om <- exp((a*NDVI/albedo)+b)
+  }
+  if(method=="Perrier"){
+    if(fLAI.Perrier >=0.5){ a <- (2*(1-fLAI.Perrier))^-1 }
+    if(fLAI.Perrier <0.5){ a <- 2*fLAI.Perrier }
+    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h.Perrier
+  }
+  if(mountainous==TRUE){
+    Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
+  }
+  Z.om <- saveLoadClean(imagestack = Z.om, 
+                        file = "Z.om", overwrite=TRUE)
+  return(Z.om)
+}
+
 #' Select anchors pixels for H function 
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
@@ -112,7 +142,7 @@ calcH  <- function(anchors, Ts, Z.om, weatherStation, ETp.coef= 1.05,
                          "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
                          "u*"=friction.velocity[hot])))
   plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
-       col="red", ylab="r ah", xlab="iteration", pch=20)
+       col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
   points(1, r.ah[cold], col="blue", pch=20)
   converge <- FALSE
   last.loop <- FALSE 
