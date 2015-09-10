@@ -1,13 +1,11 @@
-#' Iterative function to estimate H and R.ah - CITRA method
+#' Select anchors pixels for H function 
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
-calcAnchors  <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
-                         anchors.method= "CITRA-MCB", WeatherStation, 
-                         ETp.coef= 1.05, Z.om.ws=0.0018, sat="auto", 
-                         ESPA=F, mountainous=FALSE, DEM, Rn, G, 
-                         plots=TRUE, deltaTemp=5) {
+calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
+                         anchors.method= "CITRA-MCB", sat="auto", 
+                         ESPA=F, plots=TRUE, deltaTemp=5) {
   ### Some values used later
   if(sat=="auto"){sat <- getSat(getwd())}
   if(sat=="L8" & ESPA==T){
@@ -23,34 +21,23 @@ calcAnchors  <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     sr.4.5 <- stack(image[[3]], image[[4]])
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
-  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
-  Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
-  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
-  air.density <- 1000 * P / (1.01*(Ts)*287)
-  latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
-  
-  
   ### We create anchors points if they dont exist---------------------------------
-  if(missing(anchors)){
-    if(anchors.method=="CITRA-MCB"){
-      minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
-                            Z.om<=0.08], 0.25, na.rm=TRUE)
-      if(minT+deltaTemp<288){minT = 288 + deltaTemp}
-      cold <- sample(which(values(LAI>=3) & values(LAI<=6) &  
-                             values(albedo>=0.18) & values(albedo<=0.25) &
-                             values(Z.om>=0.03) & values(Z.om<=0.08) &
-                             values(Ts<(minT+deltaTemp)) & values(Ts>288)),n)
-      maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
-                       Z.om<=0.005], na.rm=TRUE)
-      hot <- sample(which(values(albedo>=0.13) & values(albedo<=0.15) &
-                            values(NDVI>=0.1) & values(NDVI<=0.28) &
-                            values(Z.om<=0.005) & 
-                            values(Ts>(maxT-deltaTemp))),n)
-    }
-  }
-  else{
-    hot <- as.numeric(hc.data$pixel[hc.data$type =="hot"])
-    cold <- as.numeric(hc.data$pixel[hc.data$type =="cold"])
+  if(anchors.method=="CITRA-MCB"){
+    minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
+                          Z.om<=0.08], 0.25, na.rm=TRUE)
+    if(minT+deltaTemp<288){minT = 288 + deltaTemp}
+    ## NDVI used in cold isn't the same as CITRA!
+    cold <- sample(which(values(LAI>=3) & values(LAI<=6) &  
+                           values(albedo>=0.18) & values(albedo<=0.25) &
+                           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+                           values(Z.om>=0.03) & values(Z.om<=0.08) &
+                           values(Ts<(minT+deltaTemp)) & values(Ts>288)),n)
+    maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
+                     Z.om<=0.005], na.rm=TRUE)
+    hot <- sample(which(values(albedo>=0.13) & values(albedo<=0.15) &
+                          values(NDVI>=0.1) & values(NDVI<=0.28) &
+                          values(Z.om<=0.005) & 
+                          values(Ts>(maxT-deltaTemp))),n)
   }
   print("Cold pixels")
   print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], 
@@ -66,15 +53,15 @@ calcAnchors  <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
     points(xyFromCell(LAI, cold), col="blue", pch=4)
   }
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(), 
-                                    Y=integer(), Ts=double(), LAI=double(), 
-                                    type=factor(levels = c("hot", "cold")))
+                             Y=integer(), Ts=double(), LAI=double(), 
+                             type=factor(levels = c("hot", "cold")))
   for(i in 1:n){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
-                                              Ts[hot][i], 
-                                              round(LAI[hot][i],2), "hot")}
-  for(i in 1:n){hot.and.cold[i+n, ] <- c(cold[i], 
-                                                xyFromCell(LAI, cold[i]), 
-                                                Ts[cold][i], 
-                                                round(LAI[cold][i],2), "cold")}
+                                      Ts[hot][i], round(LAI[hot][i],2), "hot")}
+  for(i in 1:n){hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
+                                      Ts[cold][i], round(LAI[cold][i],2), "cold")}
+  for(i in 1:5){
+    hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
+  }
   return(hot.and.cold)
 }
 
@@ -85,14 +72,22 @@ calcAnchors  <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-sensibleHeatFlux  <- function(anchors, image, Ts, LAI, albedo, Z.om, n=1,
-                              WeatherStation, ETp.coef= 1.05, Z.om.ws=0.0018, 
-                              sat="auto", ESPA=F, mountainous=FALSE, DEM, Rn, G, 
-                              plots=TRUE, deltaTemp=5) {
-  anchors$X  <- as.numeric(anchors$X)
-  anchors$Y  <- as.numeric(anchors$Y)
-  hot <- as.numeric(anchors$pixel[anchors$type =="hot"])
-  cold <- as.numeric(anchors$pixel[anchors$type =="cold"])
+calcH  <- function(anchors, Ts, Z.om, weatherStation, ETp.coef= 1.05, 
+                   Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
+                   DEM, Rn, G) {
+  if(class(anchors) != "SpatialPointsDataFrame"){
+    coordinates(anchors) <- ~ X + Y  
+  }
+  hot <- as.numeric(extract(Ts, anchors[anchors@data$type=="hot",], 
+                            cellnumbers=T)[,1])
+  cold <- as.numeric(extract(Ts, anchors[anchors@data$type=="cold",], 
+                             cellnumbers=T)[,1])
+  ###
+  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
+  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
   ### We calculate the initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
