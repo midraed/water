@@ -1,0 +1,13 @@
+water: 
+change log. From 09/09/2015. Most recent changes first / on top.
+Guillermo OLMEDO
+-----------------------------------------------------------------
+
+VERSION 0.0.2.3
+
+* Rename sensibleHEatFlux() to sensibleHEatFlux_old()
+* Remove sensibleHEatFlux.CITRA()
+* Split sensibleHeatFlux in 2 new functions:
+  - calcAnchors() for anchors points
+  - sensibleHeatFlux() for the iterative process to calculate H and dT
+* Added function to estimate Net Radiation
