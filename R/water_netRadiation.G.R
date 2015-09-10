@@ -73,7 +73,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   if(sat=="L7"){
     ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
-    ## O using DN - QCALMIN in METRIC 2010 formula.
+    ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
     if(missing(image.DN)){image.DN <- loadImage(path = path)}
@@ -327,27 +327,27 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036) * 10000} 
+  if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
   # Tasumi 2008
-  if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008) * 10000 }
+  if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)}
   # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
-  if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072) * 10000} 
+  if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} 
   # Liang 2001
   if(ESPA==TRUE & sat=="L8"){
   files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
-  albedo <- calc(raster(files[1]), fun=function(x){x *wb[1]})
+  albedo <- calc(raster(files[1]), fun=function(x){x / 10000 *wb[1]})
   for(i in 2:6){
     albedo <- albedo + calc(raster(files[i]), fun=function(x){x *wb[i]})
     removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
   }
   albedo <-  albedo/1e+08}
   if(sat=="L7"){
-    albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]/10})
+    albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
     for(i in 2:6){
-      albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]/10})
+      albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]})
       removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
     }
-  albedo <-  albedo/1e+06}
+  }
   albedo <- aoiCrop(albedo, aoi) 
   if(coeff=="Liang"){
     albedo <- albedo - 0.0018
@@ -527,34 +527,6 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
   return(G)
 }
 
-#' Calculates Momentum Roughness Length
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
-## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
-## using some points and tabulated z.om for their covers.
-## Perrier by Santos 2012 and Pocas 2014.
-momentumRoughnessLength <- function(method="short.crops", LAI, NDVI, 
-                                      albedo, a, b, fLAI.Perrier, h.Perrier, 
-                                      mountainous=FALSE, surface.model){
-  if(method=="short.crops"){
-    Z.om <- (0.018*LAI)
-  }
-  if(method=="custom"){
-    Z.om <- exp((a*NDVI/albedo)+b)
-  }
-  if(method=="Perrier"){
-    if(fLAI.Perrier >=0.5){ a <- (2*(1-fLAI.Perrier))^-1 }
-    if(fLAI.Perrier <0.5){ a <- 2*fLAI.Perrier }
-    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h.Perrier
-  }
-  if(mountainous==TRUE){
-    Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
-  }
-  Z.om <- saveLoadClean(imagestack = Z.om, 
-                          file = "Z.om", overwrite=TRUE)
-  return(Z.om)
-}
+
 
 
