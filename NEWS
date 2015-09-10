@@ -5,9 +5,9 @@ Guillermo OLMEDO
 
 VERSION 0.0.2.3
 
-* Rename sensibleHEatFlux() to sensibleHEatFlux_old()
-* Remove sensibleHEatFlux.CITRA()
+* Rename sensibleHeatFlux() to sensibleHeatFlux_old()
+* Remove sensibleHeatFlux.CITRA()
 * Split sensibleHeatFlux in 2 new functions:
   - calcAnchors() for anchors points
-  - sensibleHeatFlux() for the iterative process to calculate H and dT
+  - calcH() for the iterative process to calculate H and dT
 * Added function to estimate Net Radiation

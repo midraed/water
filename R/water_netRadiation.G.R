@@ -53,10 +53,10 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://ltpwww.gsfc.nasa.gov/IAS/handbook/handbook_toc.html) (Feb. 5, 2007)
+#' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) 
 #' @export
 calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
-                      ESPA=FALSE, aoi, incidence.rel){
+                      ESPA=FALSE, aoi, incidence.rel, MTL){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -71,9 +71,9 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   }
   ### Ro TOA L7
   if(sat=="L7"){
-    L5_ESUN <- c(1957, 1826, 1554, 1036, 215.0, 80.67) #Chandler & Markham 2003
-    L7_ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06)
-    ESUN <- L7_ESUN 
+    ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06) # Landsat 7 Handbook
+    ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
+    ## O using DN - QCALMIN in METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
     if(missing(image.DN)){image.DN <- loadImage(path = path)}
@@ -82,7 +82,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
     d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
     Ro.TOAr <- list()
     for(i in 1:6){
-      Ro.TOAr[i] <- pi * Gain[i] * image.DN[[i]] + Bias[i] * d^2 / ESUN[i] * cos(incidence.rel)
+      Ro.TOAr[i] <- pi * (Gain[i] * image.DN[[i]] + Bias[i]) * d^2 / ESUN[i] * cos(incidence.rel)
     }
     image_TOA <- do.call(stack, Ro.TOAr)
   }
