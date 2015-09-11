@@ -4,7 +4,7 @@
 \alias{incLWradiation}
 \title{Calculates long wave incoming radiation}
 \usage{
-incLWradiation(WeatherStation, DEM, solar.angles)
+incLWradiation(WeatherStation, DEM, solar.angles, Ts)
 }
 \description{
 Calculates long wave incoming radiation

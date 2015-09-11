@@ -312,7 +312,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
-  d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
+  d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
   Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
                             file = "Rs.inc", overwrite=TRUE)
@@ -469,7 +469,7 @@ outLWradiation <- function(LAI, Ts){
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- saveLoadClean(imagestack = Rl.out, 
-                            file = "Rs.out", overwrite=TRUE)
+                            file = "Rl.out", overwrite=TRUE)
   return(Rl.out)
 }
 
@@ -487,6 +487,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles){
   ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
+  #Rl.in <- ef.atm.emissivity * 5.67e-8 * Ts^4
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
                            file = "Rl.in", overwrite=TRUE)
