@@ -43,9 +43,16 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
 SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
-  sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
-                                cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
-  return(sw.t)
+  tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
+                        cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
+  tauD <- raster(tauB)
+  tauD[tauB >= 0.15] <- 0.35 - 0.36 * tauB 
+  tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB  
+  tau.sw <- tauB + tauD
+  # Next one it's from METRIC 2007, previous from METRIC 2010
+  #sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
+  #                              cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
+  return(tau.sw)
 }
 
 aoiCrop <- function(raster, aoi){
