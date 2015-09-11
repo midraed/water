@@ -71,7 +71,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   }
   ### Ro TOA L7
   if(sat=="L7"){
-    ESUN <- c(1970, 1842, 1547, 1044, 225.7, 82.06) # Landsat 7 Handbook
+    ESUN <- c(1997, 1812, 1533, 1039, 230.8, 84.90) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
     ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
@@ -79,10 +79,11 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
     if(missing(image.DN)){image.DN <- loadImage(path = path)}
     DOY <- as.integer(substr(list.files(path = path, 
                                         pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
-    d <- sqrt(1/(1+0.033*cos(DOY * 2 * pi/365)))
+    d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))
+    dr <- 1 + 0.033 * cos(DOY * (2 * pi / 365))
     Ro.TOAr <- list()
     for(i in 1:6){
-      Ro.TOAr[i] <- pi * (Gain[i] * image.DN[[i]] + Bias[i]) * d^2 / ESUN[i] * cos(incidence.rel)
+      Ro.TOAr[i] <- (pi * (Gain[i] * image.DN[[i]] + Bias[i])) / (ESUN[i] * cos(incidence.rel) * dr)
     }
     image_TOA <- do.call(stack, Ro.TOAr)
   }
@@ -142,17 +143,17 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
     tau_in <- list()
     tau_out <- list()
     for(i in 1:6){
-      tau_in[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/Kt*cos(incidence.hor))-
+      tau_in[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(incidence.hor)))-
                                     ((Cnb[3,i]*W+Cnb[4,i])/cos(incidence.hor)))+Cnb[5,i]
     }
     eta = 0 # eta it's the satellite nadir angle
     for(i in 1:6){
-      tau_out[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/Kt*cos(eta))-
+      tau_out[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(eta)))-
                                     ((Cnb[3,i]*W+Cnb[4,i])/cos(eta)))+Cnb[5,i]
     }
     path_refl <- list()
     for(i in 1:6){
-      path_refl[i] <- Cnb[6,1] * (1 - tau_in[[i]])
+      path_refl[i] <- Cnb[6,i] * (1 - tau_in[[i]])
     }
     stack_SR <- list()
     for(i in 1:6){
@@ -325,8 +326,6 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @export
 albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE){
   if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L8"){bands <- 2:7}
-  if(sat=="L7"){bands <- c(1:5,7)}
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
   # Tasumi 2008
   if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)}
@@ -345,7 +344,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
     albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
     for(i in 2:6){
       albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]})
-      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
+      #removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
     }
   }
   albedo <- aoiCrop(albedo, aoi) 
@@ -393,7 +392,11 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   }
   if(method=="metric2010"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
-    LAI <- 11 * SAVI_ID ^3 # for SAVI <= 0.817
+    SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
+                         file = "SAVI_ID", overwrite=TRUE)
+    LAI <- raster(SAVI_ID)
+    LAI[SAVI_ID <= 0] <- 0
+    LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="Bastiaanssen"){
