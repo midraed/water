@@ -25,7 +25,7 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
   psi <- 0.000665*P
   Delta <- 2503 * exp((17.27*WeatherStation$Ta)/
                         (WeatherStation$Ta+237.3))/((WeatherStation$Ta+237.3)^2)
-  ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  ea.sat <- 0.61078*exp((17.269*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
   ea <- (WeatherStation$RH/100)*ea.sat
   DPV <- ea.sat - ea
   dr <- 1 + 0.033*(cos(2*pi*DOY/365))
@@ -67,6 +67,8 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
+  ET.24[ET.24 < 0]  <- 0
+  ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
   rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
