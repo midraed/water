@@ -423,6 +423,26 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   return(LAI)
 }
 
+#' Calculates short wave transmisivity
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 
+#' @export
+SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
+  P <- 101.3*((293-0.0065 * dem)/293)^5.26
+  W <- 0.14 * ea * P + 2.1
+  tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
+                                          cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
+  tauD <- raster(tauB)
+  tauD[tauB >= 0.15] <- 0.35 - 0.36 * tauB 
+  tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB  
+  tau.sw <- tauB + tauD
+  # Next one it's from METRIC 2007, previous from METRIC 2010
+  #sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
+  #                              cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
+  return(tau.sw)
+}
+
 #' Estimates Land Surface Temperature from Landsat Data
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
@@ -443,6 +463,10 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStatio
     epsilon_NB <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
     L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) - 0.06709
+    if(missing(aoi) & exists(x = "aoi", envir=.GlobalEnv)){
+      aoi <- get(x = "aoi", envir=.GlobalEnv)
+      L_t_6 <- crop(L_t_6,aoi)
+    }
     L7_K1 <- 666.09 
     L7_K2 <- 1282.71 
     Rp <- 0.91             #Allen estimo en Idaho que el valor medio era 0.91
@@ -479,16 +503,16 @@ outLWradiation <- function(LAI, Ts){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incLWradiation <- function(WeatherStation, DEM, solar.angles){
+incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/
                                              (WeatherStation$Ta+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
-  Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
+  #Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
   ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
-  #Rl.in <- ef.atm.emissivity * 5.67e-8 * Ts^4
-  Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
+  Rl.in <- ef.atm.emissivity * 5.67e-8 * Ts^4
+  #Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
                            file = "Rl.in", overwrite=TRUE)
   return(Rl.in)
@@ -501,7 +525,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles){
 #' @export
 netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
   surf.emissivity <- 0.95 + 0.01 * LAI 
-  Rn <- Rs.inc - albedo*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
+  Rn <- (1- albedo)*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
   Rn <- saveLoadClean(imagestack = Rn, 
                          file = "Rn", overwrite=TRUE)
   return(Rn)
@@ -513,7 +537,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F){
+soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, LAI){
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
       removeTmpFiles(h=0)
@@ -528,6 +552,10 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
+  G <- raster(NDVI)
+  e <- 2.71828
+  G <- (0.05 + 0.18 * e^(-0.521*LAI)) * Rn
+  G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * Rn[LAI < 0.5]
   return(G)
 }
 
