@@ -1,3 +1,66 @@
+read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
+                          columns = c("date", "time", "radiation", "wind", NA,
+                                      "RH", "temp", "pp"),
+                        date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
+                        datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
+                        cf = c(1, 1, 1, 1), MTL){
+  result <- list()
+  WSdata <- read.csv(WSdata, ...)
+  if("date" %in% columns & "time" %in% columns){
+    datetime  <- paste(WSdata[, which(columns == "date")], 
+                       WSdata[, which(columns == "time")])
+    datetime <- strptime(datetime, format = paste(date.format, time.format), 
+                         tz = tz)
+  } else {
+    if("datetime" %in% columns){
+      datetime  <- WSdata[, which(columns == "datetime")]
+      datetime <- strptime(datetime, format = datetime.format, tz = tz)
+    } else {message("ERROR: date and time or datetime are needed")}
+  }
+  radiation = WSdata[, which(columns == "radiation")] * cf[1]
+  wind =  WSdata[, which(columns == "wind")] * cf[2]
+  RH =  WSdata[, which(columns == "RH")] * cf[3]
+  temp =  WSdata[, which(columns == "temp")] * cf[4]
+  ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
+  WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
+                       RH=RH, ea=ea, temp=temp)
+  result$alldata <- WSdata
+  result$hourly <- WSdata[datetime$min==0,] 
+  ## Join with satellite data
+  if(missing(MTL)){Landsat.MTL <- list.files(pattern = "MTL.txt", full.names = T)}
+  MTL <- readLines(Landsat.MTL, warn=FALSE)
+  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+  date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+  sat.time <-regmatches(time.line,regexec(text=time.line,
+          pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+  sat.date <-regmatches(date.line,regexec(text=date.line,
+          pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+  sat.datetime <- strptime(paste(sat.date, sat.time), 
+                           format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+  WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < sat.datetime],1),]
+  WS.after <- WSdata[WSdata$datetime == datetime[datetime > sat.datetime][1],]
+  delta1 <- as.numeric(difftime(WS.after$datetime, WS.prev$datetime, units="secs"))
+  delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
+  sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
+  result$at.sat <- sat.data
+  return(result)
+}
+
+read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
+                          columns = c("date", "time", "radiation", "wind", NA,
+                                      "RH", "temp", "pp"),
+                          date.format = "%d/%m/%Y", time.format = "%H:%M:%S", 
+                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
+                          cf = c(1, 3.6, 1, 1), MTL){
+  read.WSdata(WSdata, ..., height = 2.2, lat = lat, long = long, elev = elev,
+              columns = columns, date.format = date.format, 
+              time.format = time.format, datetime.format = datetime.format,
+              tz = tz, cf = cf, MTL)
+}
+  
+
+
+
 #' Calculates ET using Penman Monteith hourly formula
 #' @param WeatherStation a data frame with all the needed fields (see example)
 #' @param hours time of the day in hours in 24hs format
