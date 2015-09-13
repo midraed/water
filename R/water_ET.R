@@ -1,3 +1,6 @@
+#' Prepares weather station data
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                           columns = c("date", "time", "radiation", "wind", NA,
                                       "RH", "temp", "pp"),
@@ -46,6 +49,10 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   return(result)
 }
 
+
+#' Prepares weather station data
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                           columns = c("date", "time", "radiation", "wind", NA,
                                       "RH", "temp", "pp"),
