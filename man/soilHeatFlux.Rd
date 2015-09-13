@@ -5,7 +5,7 @@
 \title{Estimates Soil Heat Flux}
 \usage{
 soilHeatFlux(path = getwd(), image, Ts, albedo, Rn, aoi, sat = "auto",
-  ESPA = F)
+  ESPA = F, LAI)
 }
 \description{
 Estimates Soil Heat Flux
