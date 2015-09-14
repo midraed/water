@@ -1,4 +1,13 @@
 #' Prepares weather station data
+#' @examples 
+#' csvfile <- system.file("extdata", "apples.csv", package="water")
+#' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
+#' WS <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
+#'                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+#'                   MTL = MTLfile)
+#' print(WS)
+#' plot(WS, alldata=FALSE)
+#' plot(WS, alldata=TRUE)
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
@@ -31,8 +40,8 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   result$alldata <- WSdata
   result$hourly <- WSdata[datetime$min==0,] 
   ## Join with satellite data
-  if(missing(MTL)){Landsat.MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(Landsat.MTL, warn=FALSE)
+  if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
+  MTL <- readLines(MTL, warn=FALSE)
   time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
   date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
   sat.time <-regmatches(time.line,regexec(text=time.line,

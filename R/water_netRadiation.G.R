@@ -250,8 +250,8 @@ solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(Landsat.MTL, warn=FALSE)
+  if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
+  MTL <- readLines(MTL, warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- (90 - as.numeric(regmatches(Elev.line, 
                                                regexec(text=Elev.line ,
