@@ -39,3 +39,46 @@ METRIC.G <- function(path=getwd(), Rn, DEM, image.DN, WeatherStation=WeatherStat
   Ts <- surfaceTemperature(sat = "auto", image.TOAr = image.TOAr)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn)
 }
+
+
+#' Estimates Energy Balance using METRIC2010 Model
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi, 
+                      plain=TRUE){
+  start.func <- Sys.time ()
+  if(plain==TRUE){
+    DEM <- raster(image.DN[[1]])
+    values(DEM) <- WeatherStation$location$elev
+  } else {DEM <- prepareSRTMdata(extent = image.DN)}
+  surface.model <-METRICtopo(DEM)
+  solar.angles.r <- solarAngles(surface.model = surface.model, WeatherStation = WeatherStation)
+  Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles.r, WeatherStation = WeatherStation)
+  image.TOAr <- calcTOAr(image.DN = image.DN, incidence.rel = solar.angles.r$incidence.rel)
+  image.SR <- calcSR(path=getwd(), image.TOAr=image.TOAr, 
+                     surface.model=surface.model, 
+                     incidence.hor = solar.angles.r$incidence.hor, 
+                     WeatherStation=WeatherStation, sat="auto", ESPA = F)
+  albedo <- albedo(image.SR = image.SR, sat="L7", coeff="Liang")
+  LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
+  Ts <- surfaceTemperature(sat = "auto", LAI=LAI, path = getwd(), WeatherStation = WeatherStation)
+  Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
+  Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, solar.angles = solar.angles.r, Ts= Ts)
+  Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+  G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn=Rn, image.SR, LAI=LAI)
+  Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+                                  surface.model = surface.model)
+  hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
+                              albedo = albedo, Z.om = Z.om, n = 1, deltaTemp = 5)
+  H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
+             WeatherStation = WeatherStation, ETp.coef = 1.2, 
+             DEM = DEM, Rn = Rn, G = G, verbose = FALSE )
+  print (Sys.time () - start.func)
+  result <- list()
+  result$Rn <- Rn
+  result$G <- G
+  result$H <- H$H
+}
+  
