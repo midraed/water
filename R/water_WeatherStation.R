@@ -65,7 +65,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 }
 
 
-#' Prepares weather station data
+#' Prepares weather station data 2
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
@@ -133,9 +133,13 @@ print.waterWeatherStation <- function(WS){
   print(WS$at.sat)
 }
 
+
+#' Export data.frame from waterWeatherStation Object
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 getDataWS <- function(WeatherStation){
   date <- as.POSIXlt(WeatherStation$at.sat$datetime, format="%Y-%m-%d %H:%M:%S")
-  WeatherStation <- data.frame(wind=WeatherStation$at.sat$wind, 
+  WeatherStation2 <- data.frame(wind=WeatherStation$at.sat$wind, 
                                RH=WeatherStation$at.sat$RH, 
                                temp=WeatherStation$at.sat$temp, 
                                radiation=WeatherStation$at.sat$radiation, 
@@ -145,7 +149,7 @@ getDataWS <- function(WeatherStation){
                                elev=WeatherStation$location$elev, 
                                DOY=date$yday+1, hours=date$hour + date$min/60 + 
                                  date$sec/3600)
-  return(WeatherStation)
+  return(WeatherStation2)
 }
 
 

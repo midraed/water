@@ -26,4 +26,8 @@ plot(WS, alldata=TRUE)
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
+\references{
+Landsat 7 Metadata example file available from the U.S. Geological Survey.
+Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
+}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_WeatherStation.R
 \name{read.WSdata2}
 \alias{read.WSdata2}
-\title{Prepares weather station data}
+\title{Prepares weather station data 2}
 \usage{
 read.WSdata2(WSdata, ..., height = 2.2, lat, long, elev, columns = c("date",
   "time", "radiation", "wind", NA, "RH", "temp", "pp"),
@@ -11,7 +11,7 @@ read.WSdata2(WSdata, ..., height = 2.2, lat, long, elev, columns = c("date",
   1), MTL)
 }
 \description{
-Prepares weather station data
+Prepares weather station data 2
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
