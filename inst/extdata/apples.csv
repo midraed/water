@@ -1,4 +1,4 @@
-Fecha,Hora,SEN Pyranometer SP-Lite (W/m2),SEN Wind Speed (km/h),SEN Wind Direction (?),SEN Relative Humidity (%),SEN Temperature (?C),SEN Precipitation (mm)
+Date,Time,Rad,wind_speed,wind_dir,RH,temp,pp
 15/02/2013,00:00:00,0,0.44,220.92,63.69,21.49,0
 15/02/2013,00:15:00,0,1.17,227.25,63.39,21.64,0
 15/02/2013,00:30:00,0,2.1,234.55,63.69,21.66,0
