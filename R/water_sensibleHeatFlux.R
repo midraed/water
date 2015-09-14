@@ -102,9 +102,12 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-calcH  <- function(anchors, Ts, Z.om, weatherStation, ETp.coef= 1.05, 
+calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
                    DEM, Rn, G) {
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   if(class(anchors) != "SpatialPointsDataFrame"){
     coordinates(anchors) <- ~ X + Y  
   }

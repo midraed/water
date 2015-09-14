@@ -46,6 +46,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   delta1 <- as.numeric(difftime(WS.after$datetime, WS.prev$datetime, units="secs"))
   delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
   sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
+  sat.data[,2:6] <- round(sat.data[,2:6],2)
   result$at.sat <- sat.data
   class(result) <- "waterWeatherStation"
   return(result)
@@ -80,7 +81,7 @@ plot.waterWeatherStation <- function(WS, alldata=TRUE){
   par(mar=c(5, 7, 4, 7) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", main="",xlim=range(time))
-  abline(v=atsat, lwd=3, col="gray")
+  abline(v=atsat, lwd=5, col="gray")
   graphics::text(atsat, max(WSp$radiation)*0.85, "Satellite Flyby", cex=0.7, 
                  adj=c(NA, -0.5), srt=90, col="gray")
   points(time,WSp$radiation,pch=20,col="red")
@@ -120,5 +121,19 @@ print.waterWeatherStation <- function(WS){
   print(WS$at.sat)
 }
 
+getDataWS <- function(WeatherStation){
+  date <- as.POSIXlt(WeatherStation$at.sat$datetime, format="%Y-%m-%d %H:%M:%S")
+  WeatherStation <- data.frame(wind=WeatherStation$at.sat$wind, 
+                               RH=WeatherStation$at.sat$RH, 
+                               temp=WeatherStation$at.sat$temp, 
+                               radiation=WeatherStation$at.sat$radiation, 
+                               height=WeatherStation$location$height,
+                               lat=WeatherStation$location$lat, 
+                               long=WeatherStation$location$long, 
+                               elev=WeatherStation$location$elev, 
+                               DOY=date$yday+1, hours=date$hour + date$min/60 + 
+                                 date$sec/3600)
+  return(WeatherStation)
+}
 
 

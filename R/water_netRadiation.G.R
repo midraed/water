@@ -34,7 +34,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$", 
-                   full.names = T)
+                      full.names = T)
   files <- substr(files,1,nchar(files)-5)
   stack1 <- list()
   for(i in 1:6){
@@ -43,9 +43,9 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
   raw.image <- do.call(stack, stack1)
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
-                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = "imageDN", 
-                               overwrite=TRUE)
+                             stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                             file = "imageDN", 
+                             overwrite=TRUE)
   return(raw.image) 
 }  
 
@@ -56,7 +56,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) 
 #' @export
 calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
-                      ESPA=FALSE, aoi, incidence.rel, MTL){
+                     ESPA=FALSE, aoi, incidence.rel, MTL){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -89,9 +89,9 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
   }
   #### 
   image_TOA <- saveLoadClean(imagestack = image_TOA, 
-                               stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                               file = "image_TOAr", 
-                               overwrite=TRUE)
+                             stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                             file = "image_TOAr", 
+                             overwrite=TRUE)
   return(image_TOA)
 }  
 
@@ -114,8 +114,11 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 #' @export
 # incidence hor from TML?? 
 calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                     aoi, incidence.hor, 
-                    WeatherStation, surface.model){
+                   aoi, incidence.hor, 
+                   WeatherStation, surface.model){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -127,7 +130,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
     }
     image_SR <- do.call(stack, stack1)
     image_SR <- aoiCrop(image_SR, aoi) 
-    }
+  }
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calcTOAr(path = path)}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
@@ -135,11 +138,11 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
     W <- 0.14 * ea * P + 2.1
     Kt <- 1
     Cnb <- matrix(data=c(0.987, 2.319, 0.951, 0.375, 0.234, 0.365,
-                           -0.00071, -0.00016, -0.00033, -0.00048, -0.00101, -0.00097,
-                           0.000036, 0.000105, 0.00028, 0.005018, 0.004336, 0.004296,
-                           0.0880, 0.0437, 0.0875, 0.1355, 0.056, 0.0155,
-                           0.0789, -1.2697, 0.1014, 0.6621, 0.7757, 0.639,
-                           0.64, 0.31, 0.286, 0.189, 0.274, -0.186), byrow = T, nrow=6, ncol=6)
+                         -0.00071, -0.00016, -0.00033, -0.00048, -0.00101, -0.00097,
+                         0.000036, 0.000105, 0.00028, 0.005018, 0.004336, 0.004296,
+                         0.0880, 0.0437, 0.0875, 0.1355, 0.056, 0.0155,
+                         0.0789, -1.2697, 0.1014, 0.6621, 0.7757, 0.639,
+                         0.64, 0.31, 0.286, 0.189, 0.274, -0.186), byrow = T, nrow=6, ncol=6)
     tau_in <- list()
     tau_out <- list()
     for(i in 1:6){
@@ -149,7 +152,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
     eta = 0 # eta it's the satellite nadir angle
     for(i in 1:6){
       tau_out[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(eta)))-
-                                    ((Cnb[3,i]*W+Cnb[4,i])/cos(eta)))+Cnb[5,i]
+                                     ((Cnb[3,i]*W+Cnb[4,i])/cos(eta)))+Cnb[5,i]
     }
     path_refl <- list()
     for(i in 1:6){
@@ -162,9 +165,9 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
     image_SR <- do.call(stack, stack_SR)
   }
   image_SR <- saveLoadClean(imagestack = image_SR, 
-                              stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                              file = "image_SR", 
-                              overwrite=TRUE)
+                            stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                            file = "image_SR", 
+                            overwrite=TRUE)
   return(image_SR)
 }  
 
@@ -183,7 +186,7 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
   polyaoi@proj4string <- raw.image@crs
   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
-                    inverse = TRUE)
+                           inverse = TRUE)
   # I have to improve this. It should work ONLY for west and south coordinates.. maybe
   lat_needed <- seq(trunc(limits[3])-1, trunc(limits[4])-1, by=1)
   long_needed <- seq(trunc(limits[1])-1, trunc(limits[2])-1, by = 1)
@@ -216,7 +219,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN){
   destino  <-  projectExtent(extent, extent@crs)
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
-                             file = "DEM", overwrite=TRUE)
+                           file = "DEM", overwrite=TRUE)
   return(mosaicp)
 }
 
@@ -231,9 +234,9 @@ METRICtopo <- function(DEM){
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
-                                   stack.names = c("DEM", "Slope", "Aspect"), 
-                                   file = "surface.model", 
-                                   overwrite=TRUE)
+                                 stack.names = c("DEM", "Slope", "Aspect"), 
+                                 file = "surface.model", 
+                                 overwrite=TRUE)
   return(surface.model)
 }
 
@@ -243,13 +246,16 @@ METRICtopo <- function(DEM){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-  solarAngles <- function(path=getwd(), surface.model, MTL){
+solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   if(missing(MTL)){Landsat.MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
   MTL <- readLines(Landsat.MTL, warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- (90 - as.numeric(regmatches(Elev.line, 
-                                         regexec(text=Elev.line ,
-                                                 pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1]))*pi/180
+                                               regexec(text=Elev.line ,
+                                                       pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1]))*pi/180
   Azim.line <- grep("SUN_AZIMUTH",MTL,value=TRUE)
   sun.azimuth <- as.numeric(regmatches(Azim.line, 
                                        regexec(text=Azim.line ,
@@ -270,7 +276,7 @@ METRICtopo <- function(DEM){
   hour.angle <- surface.model[[1]]
   time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
   time.hours <-regmatches(time.line,regexec(text=time.line,
-           pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+                                            pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
   time.hours <- strptime(time.hours, format = "%H:%M:%S", tz="GMT")
   Sc <- (0.1645*sin(4*pi*(DOY-81)/364)-0.1255*cos(2*pi*(DOY-81)/364)-0.025*sin(2*pi*(DOY-81)/364))*60
   time.hours <- (time.hours$hour*3600+time.hours$min*60+time.hours$sec+WeatherStation$long/15*3600)/60 + Sc
@@ -279,7 +285,7 @@ METRICtopo <- function(DEM){
   
   ## solar incidence angle, for horizontal surface
   incidence.hor <- acos(sin(declination) * sin(latitude) + cos(declination)*
-                        cos(latitude)*cos(hour.angle))
+                          cos(latitude)*cos(hour.angle))
   slope <- surface.model$Slope
   aspect <- surface.model$Aspect
   ##solar incidence angle, for sloping surface
@@ -291,9 +297,9 @@ METRICtopo <- function(DEM){
   ## End
   solarAngles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
   solarAngles <- saveLoadClean(imagestack = solarAngles, 
-                                  stack.names = c("latitude", "declination", 
-                                                  "hour.angle", "incidence.hor", "incidence.rel"), 
-                                  file = "solarAngles", overwrite=TRUE)
+                               stack.names = c("latitude", "declination", 
+                                               "hour.angle", "incidence.hor", "incidence.rel"), 
+                               file = "solarAngles", overwrite=TRUE)
   return(solarAngles)
 }
 
@@ -309,13 +315,16 @@ METRICtopo <- function(DEM){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 incSWradiation <- function(surface.model, solar.angles, WeatherStation){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
   Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
-                            file = "Rs.inc", overwrite=TRUE)
+                          file = "Rs.inc", overwrite=TRUE)
   return(Rs.inc)
 }
 
@@ -333,13 +342,13 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
   if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} 
   # Liang 2001
   if(ESPA==TRUE & sat=="L8"){
-  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
-  albedo <- calc(raster(files[1]), fun=function(x){x / 10000 *wb[1]})
-  for(i in 2:6){
-    albedo <- albedo + calc(raster(files[i]), fun=function(x){x *wb[i]})
-    removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
-  }
-  albedo <-  albedo/1e+08}
+    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
+    albedo <- calc(raster(files[1]), fun=function(x){x / 10000 *wb[1]})
+    for(i in 2:6){
+      albedo <- albedo + calc(raster(files[i]), fun=function(x){x *wb[i]})
+      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
+    }
+    albedo <-  albedo/1e+08}
   if(sat=="L7"){
     albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
     for(i in 2:6){
@@ -352,7 +361,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
     albedo <- albedo - 0.0018
   }
   albedo <- saveLoadClean(imagestack = albedo, 
-                            file = "albedo", overwrite=TRUE)
+                          file = "albedo", overwrite=TRUE)
   return(albedo)
 }
 
@@ -372,7 +381,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
       toa.4.5 <- stack(toa.red, toa.nir)
       toa.4.5 <- aoiCrop(toa.4.5, aoi)
       toa.4.5 <- toa.4.5 * 0.0001
-      }
+    }
     if(method=="turner"){
       removeTmpFiles(h=0)
       sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
@@ -393,7 +402,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   if(method=="metric2010"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
     SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
-                         file = "SAVI_ID", overwrite=TRUE)
+                             file = "SAVI_ID", overwrite=TRUE)
     LAI <- raster(SAVI_ID)
     LAI[SAVI_ID <= 0] <- 0
     LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
@@ -419,7 +428,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
   }
   LAI[LAI<0]  <- 0
   LAI <- saveLoadClean(imagestack = LAI, stack.names = "LAI", 
-                         file = "LAI", overwrite=TRUE)
+                       file = "LAI", overwrite=TRUE)
   return(LAI)
 }
 
@@ -451,10 +460,13 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
 surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStation){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
     bright.temp.b10 <- raster(list.files(path = path, 
-                                                     pattern = "_toa_band10.tif"))
+                                         pattern = "_toa_band10.tif"))
     bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
     Ts <- bright.temp.b10*0.1
   }
@@ -479,7 +491,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStatio
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
-                        file = "Ts", overwrite=TRUE)
+                      file = "Ts", overwrite=TRUE)
   return(Ts)
 }
 
@@ -493,7 +505,7 @@ outLWradiation <- function(LAI, Ts){
   surf.emissivity[LAI>3] <- 0.98
   Rl.out <- surf.emissivity * 5.67e-8 * Ts^4
   Rl.out <- saveLoadClean(imagestack = Rl.out, 
-                            file = "Rl.out", overwrite=TRUE)
+                          file = "Rl.out", overwrite=TRUE)
   return(Rl.out)
 }
 
@@ -504,6 +516,9 @@ outLWradiation <- function(LAI, Ts){
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
                                              (WeatherStation$temp+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
@@ -514,7 +529,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ts^4
   #Rl.in <- ef.atm.emissivity * 5.67e-8 * temp^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
-                           file = "Rl.in", overwrite=TRUE)
+                         file = "Rl.in", overwrite=TRUE)
   return(Rl.in)
 }
 
@@ -527,7 +542,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
   surf.emissivity <- 0.95 + 0.01 * LAI 
   Rn <- (1- albedo)*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
   Rn <- saveLoadClean(imagestack = Rn, 
-                         file = "Rn", overwrite=TRUE)
+                      file = "Rn", overwrite=TRUE)
   return(Rn)
 }
 
@@ -540,14 +555,14 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, LAI){
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
-      removeTmpFiles(h=0)
-      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
-      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
-      sr.4.5 <- stack(sr.red, sr.nir)
-      sr.4.5 <- aoiCrop(sr.4.5, aoi)
+    removeTmpFiles(h=0)
+    sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
+    sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+    sr.4.5 <- stack(sr.red, sr.nir)
+    sr.4.5 <- aoiCrop(sr.4.5, aoi)
   }
   if(sat=="L7"){
-      sr.4.5 <- stack(image[[3]], image[[4]])
+    sr.4.5 <- stack(image[[3]], image[[4]])
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn

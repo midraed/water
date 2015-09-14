@@ -19,6 +19,9 @@
 #' @references 
 #' Allen 2005 ASCE
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   tempK <- WeatherStation$temp + 273.16
   Rs <- WeatherStation$radiation * 3600 / 1e6
   P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
@@ -62,6 +65,9 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   LE = Rn - G - H
   ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
@@ -87,6 +93,9 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @references 
 #' Allen 2005 ASCE
 dailyEToPM <- function(WeatherStation, DOY, long.z=WeatherStation$long){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   print("not yet")
   return()
 }
