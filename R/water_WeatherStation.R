@@ -108,6 +108,9 @@ plot.waterWeatherStation <- function(WS, alldata=TRUE){
   mtext("Time",side=1,col="black",line=2)
 }
 
+#' Print method for waterWeatherStation S3 class
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @export
 print.waterWeatherStation <- function(WS){
   cat("Weather Station at lat:", round(WS$location$lat, 2), "long:", 
       round(WS$location$lat, 2), "elev:", round(WS$location$elev, 2), "\n")
