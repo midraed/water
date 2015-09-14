@@ -131,7 +131,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calcTOAr(path = path)}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
-    ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+    ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
     W <- 0.14 * ea * P + 2.1
     Kt <- 1
     Cnb <- matrix(data=c(0.987, 2.319, 0.951, 0.375, 0.234, 0.365,
@@ -309,7 +309,7 @@ METRICtopo <- function(DEM){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 incSWradiation <- function(surface.model, solar.angles, WeatherStation){
-  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
@@ -475,7 +475,7 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStatio
     tau_NB <- 0.75+2e-5*WeatherStation$elev
     #R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
     ## There is a equation for R_sky on Metric Manual:
-    R_sky <- (1.807e-10)*(WeatherStation$Ta+273.15)^4*(1-0.26*exp(-7.77e-4*WeatherStation$Ta^2))
+    R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*exp(-7.77e-4*WeatherStation$temp^2))
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
@@ -504,15 +504,15 @@ outLWradiation <- function(LAI, Ts){
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
-  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$Ta)/
-                                             (WeatherStation$Ta+237.3))
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
+                                             (WeatherStation$temp+237.3))
   tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
-  #Ta <-  WeatherStation$Ta+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
+  #temp <-  WeatherStation$temp+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
   ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
   ef.atm.emissivity  <- 0.85*(-1*log(tau.sw))^0.09
   Rl.in <- ef.atm.emissivity * 5.67e-8 * Ts^4
-  #Rl.in <- ef.atm.emissivity * 5.67e-8 * Ta^4
+  #Rl.in <- ef.atm.emissivity * 5.67e-8 * temp^4
   Rl.in <- saveLoadClean(imagestack = Rl.in, 
                            file = "Rl.in", overwrite=TRUE)
   return(Rl.in)
