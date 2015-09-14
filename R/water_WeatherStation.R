@@ -108,7 +108,14 @@ plot.waterWeatherStation <- function(WS, alldata=TRUE){
   mtext("Time",side=1,col="black",line=2)
 }
 
-
+print.waterWeatherStation <- function(WS){
+  cat("Weather Station at lat:", round(WS$location$lat, 2), "long:", 
+      round(WS$location$lat, 2), "elev:", round(WS$location$elev, 2), "\n")
+  cat("Summary:\n")
+  print(summary(WS$alldata[,2:6]))
+  cat("\n Conditions at satellite flyby:\n")
+  print(WS$at.sat)
+}
 
 
 
