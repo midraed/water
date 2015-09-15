@@ -4,7 +4,8 @@
 \alias{METRIC.EB}
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
-METRIC.EB(path = getwd(), image.DN, DEM, WeatherStation, aoi, plain = TRUE)
+METRIC.EB(path = getwd(), image.DN, DEM, WeatherStation, aoi, plain = TRUE,
+  ...)
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model
