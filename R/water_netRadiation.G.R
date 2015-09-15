@@ -468,24 +468,30 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, 
+surfaceTemperature <- function(path=getwd(), thermalband, sat="auto", LAI, aoi, 
                                WeatherStation, ...){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
-    bright.temp.b10 <- raster(list.files(path = path, 
+    if(missing(thermalband)){
+      bright.temp.b10 <- raster(list.files(path = path, 
                                          pattern = "_toa_band10.tif"))
-    bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
-    Ts <- bright.temp.b10*0.1
+      bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
+      Ts <- bright.temp.b10*0.1
+    }
   }
   if(sat=="L7"){
     epsilon_NB <- raster(LAI)
     epsilon_NB <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
-    L_t_6 <-  0.067 * raster(list.files(path = path, 
-      pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) - 0.06709
+    if(missing(thermalband)){
+      B6 <- raster(list.files(path = path, 
+                pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T))
+    }
+    if(!missing(thermalband)){B6 <- thermalband}
+    L_t_6 <-  0.067 * B6 - 0.06709
     if(missing(aoi) & exists(x = "aoi", envir=.GlobalEnv)){
       aoi <- get(x = "aoi", envir=.GlobalEnv)
       L_t_6 <- crop(L_t_6,aoi)
