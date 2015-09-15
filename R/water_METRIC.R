@@ -71,14 +71,15 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   surface.model = surface.model)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
-                              albedo = albedo, Z.om = Z.om, n = 1, deltaTemp = 5)
+                              albedo = albedo, Z.om = Z.om, n = 1, 
+                              deltaTemp = 5, verbose = FALSE)
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
              WeatherStation = WeatherStation, ETp.coef = 1.2, 
              DEM = DEM, Rn = Rn, G = G, verbose = FALSE )
   print (Sys.time () - start.func)
   result <- list()
   LE <- Rn - G - H$H
-  EB <- stack(Rn, G, H, LE)
+  EB <- stack(Rn, G, H$H, LE)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat, 
                                 LatentHeat"), file = "EB", overwrite=TRUE)
