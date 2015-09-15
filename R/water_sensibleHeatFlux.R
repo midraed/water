@@ -156,6 +156,12 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   i <- 1
   ### Start of iterative process -------------------------------------------------    
   while(!converge){
+#     ## For meta functions like METRIC.EB
+#     if(exists(x = "on.meta", envir=METRIC.EB)){
+#       if(i == 3){setTxtProgressBar(pb, 52)}
+#       if(i == 5){setTxtProgressBar(pb, 65)}
+#       if(i == 9){setTxtProgressBar(pb, 85)}
+#     }
     i <-  i + 1 
     if(verbose==TRUE){
       print(paste("iteraction #", i))
