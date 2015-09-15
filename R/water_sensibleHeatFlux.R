@@ -35,7 +35,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                          anchors.method= "CITRA-MCB", sat="auto", 
-                         ESPA=F, plots=TRUE, deltaTemp=5) {
+                         ESPA=F, plots=TRUE, deltaTemp=5, verbose=FALSE) {
   ### Some values used later
   if(sat=="auto"){sat <- getSat(getwd())}
   if(sat=="L8" & ESPA==T){
@@ -69,12 +69,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                           values(Z.om<=0.005) & 
                           values(Ts>(maxT-deltaTemp))),n)
   }
-  print("Cold pixels")
-  print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], 
-                         "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
-  print("Hot pixels")
-  print(data.frame(cbind("LAI"=LAI[hot], "NDVI"=NDVI[hot], 
-                         "albedo"=albedo[hot], "Z.om"=Z.om[hot])))
+  if(verbose==TRUE){
+    print("Cold pixels")
+    print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], 
+                           "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
+    print("Hot pixels")
+    print(data.frame(cbind("LAI"=LAI[hot], "NDVI"=NDVI[hot], 
+                           "albedo"=albedo[hot], "Z.om"=Z.om[hot])))    
+  }
   ### End anchors selection ------------------------------------------------------
   ### We can plot anchor points
   if(plots==TRUE){
@@ -104,7 +106,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
-                   DEM, Rn, G) {
+                   DEM, Rn, G, verbose=FALSE) {
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -135,15 +137,17 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   # here uses latent.heat.vapo
   H.cold <- Rn[cold] - G[cold] - LE.cold #ok
   result <- list()
-  print("starting conditions")
-  print("Cold")
-  print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
-                         "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
-                         "u200"=u200[cold], "u*"=friction.velocity[cold])))
-  print("Hot")
-  print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
-                         "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
-                         "u*"=friction.velocity[hot])))
+  if(verbose==TRUE){
+    print("starting conditions")
+    print("Cold")
+    print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
+                           "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
+                           "u200"=u200[cold], "u*"=friction.velocity[cold])))
+    print("Hot")
+    print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
+                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
+                           "u*"=friction.velocity[hot])))
+  }
   plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
        col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
   points(1, r.ah[cold], col="blue", pch=20)
@@ -153,14 +157,18 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   ### Start of iterative process -------------------------------------------------    
   while(!converge){
     i <-  i + 1 
-    print(paste("iteraction #", i))
+    if(verbose==TRUE){
+      print(paste("iteraction #", i))
+    }
     ### We calculate dT and H 
     dT.cold <- H.cold * r.ah[cold] / (air.density[cold]*1004)
     dT.hot <- (Rn[hot] - G[hot]) * r.ah[hot] / (air.density[hot]*1004)
     a <- (dT.hot - dT.cold) / (Ts.datum[hot] - Ts.datum[cold])
     b <- -a * Ts.datum[cold] + dT.cold
+    if(verbose==TRUE){
     print(paste("a",a))
     print(paste("b",b))
+    }
     dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
     rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
     H <- rho * 1004 * dT / r.ah
@@ -185,11 +193,13 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                                        2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
     phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
     phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+    if(verbose==TRUE){
     print(paste("r.ah cold", r.ah[cold]))
     print(paste("r.ah hot", r.ah[hot]))
     print(paste("dT cold", dT[cold]))
     print(paste("dT hot", dT[hot]))
     print("##############")
+    }
     ## And finally, r.ah and friction velocity
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
     # converge condition
@@ -209,9 +219,11 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     }
     delta.r.ah.hot <- (r.ah[hot] - r.ah.hot.previous) / r.ah[hot] * 100
     delta.r.ah.cold <- (r.ah[cold] - r.ah.cold.previous) / r.ah[cold] * 100
-    print (paste("delta rah hot", delta.r.ah.hot))
-    print (paste("delta rah cold", delta.r.ah.cold))
-    print ("### -------")
+    if(verbose==TRUE){
+      print (paste("delta rah hot", delta.r.ah.hot))
+      print (paste("delta rah cold", delta.r.ah.cold))
+      print ("### -------")
+    }
     if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
   } 
   ### End interactive process ----------------------------------------------------
