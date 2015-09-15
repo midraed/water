@@ -77,8 +77,11 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
              DEM = DEM, Rn = Rn, G = G, verbose = FALSE )
   print (Sys.time () - start.func)
   result <- list()
-  result$Rn <- Rn
-  result$G <- G
-  result$H <- H$H
+  LE <- Rn - G - H$H
+  EB <- stack(Rn, G, H, LE)
+  EB <- saveLoadClean(imagestack = EB,
+                stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat, 
+                                LatentHeat"), file = "EB", overwrite=TRUE)
+  return(EB)
 }
   
