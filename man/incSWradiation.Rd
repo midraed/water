@@ -4,7 +4,7 @@
 \alias{incSWradiation}
 \title{Calculates Incoming Solar Radiation}
 \usage{
-incSWradiation(surface.model, solar.angles, WeatherStation)
+incSWradiation(surface.model, solar.angles, WeatherStation, ...)
 }
 \arguments{
 \item{surface.model}{surface.model with dem aspect and slope}

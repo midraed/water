@@ -5,7 +5,7 @@
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
 albedo(path = getwd(), image.SR, aoi, coeff = "Tasumi", sat = "auto",
-  ESPA = FALSE)
+  ESPA = FALSE, ...)
 }
 \description{
 Calculates Broadband Albedo from Landsat data

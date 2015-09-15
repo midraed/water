@@ -5,7 +5,7 @@
 \title{Calculates Top of atmosphere reflectance}
 \usage{
 calcTOAr(path = getwd(), image.DN, sat = "auto", ESPA = FALSE, aoi,
-  incidence.rel, MTL)
+  incidence.rel, MTL, ...)
 }
 \description{
 Calculates Top of atmosphere reflectance
