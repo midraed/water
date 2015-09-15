@@ -65,12 +65,12 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
   image.SR <- calcSR(path=getwd(), image.TOAr=image.TOAr, 
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation, sat="auto", ESPA = F, ...)
-  albedo <- albedo(image.SR = image.SR, sat="L7", coeff="Liang")
+                     WeatherStation=WeatherStation, ESPA = F, ...)
+  albedo <- albedo(image.SR = image.SR,  coeff="Liang", ...)
   setTxtProgressBar(pb, 6)
-  LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
-  Ts <- surfaceTemperature(sat = "auto", LAI=LAI, path = getwd(), 
-                           WeatherStation = WeatherStation)
+  LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, ...)
+  Ts <- surfaceTemperature(LAI=LAI, path = getwd(), 
+                           WeatherStation = WeatherStation, ...)
   setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
@@ -78,12 +78,12 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
   Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
   setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                    Rn=Rn, image.SR, LAI=LAI)
+                    Rn=Rn, image.SR, LAI=LAI, ...)
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   surface.model = surface.model)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                               albedo = albedo, Z.om = Z.om, n = 1, 
-                              deltaTemp = 5, verbose = FALSE)
+                              deltaTemp = 5, verbose = FALSE, ...)
   setTxtProgressBar(pb, 45)
   on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
