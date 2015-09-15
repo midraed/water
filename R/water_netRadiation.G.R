@@ -56,7 +56,7 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) 
 #' @export
 calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
-                     ESPA=FALSE, aoi, incidence.rel, MTL){
+                     ESPA=FALSE, aoi, incidence.rel, MTL, ...){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -115,7 +115,7 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 # incidence hor from TML?? 
 calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
                    aoi, incidence.hor, 
-                   WeatherStation, surface.model){
+                   WeatherStation, surface.model, ...){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -177,7 +177,7 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
 #' @export
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
-checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
+checkSRTMgrids <-function(raw.image, path = getwd(), format="tif", ...){
   polyaoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(xmin(raw.image), xmax(raw.image), xmax(raw.image),
@@ -207,9 +207,10 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif"){
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
-prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN){
-  files <- list.files(path= path,  pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
-                                                 format, "$", sep=""), full.names = T) 
+prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, ...){
+  files <- list.files(path= path,  
+                      pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
+                              format, "$", sep=""), full.names = T) 
   stack1 <- list()
   for(i in 1:length(files)){
     stack1[[i]] <- raster(files[i])}
@@ -246,7 +247,7 @@ METRICtopo <- function(DEM){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation){
+solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation, ...){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -314,7 +315,7 @@ solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-incSWradiation <- function(surface.model, solar.angles, WeatherStation){
+incSWradiation <- function(surface.model, solar.angles, WeatherStation, ...){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -333,7 +334,8 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA=FALSE){
+albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto",
+                   ESPA=FALSE, ...){
   if(sat=="auto"){sat = getSat(path)}
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
   # Tasumi 2008
@@ -371,21 +373,26 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto", ESPA
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sat="auto"){
+LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, 
+                sat="auto", ...){
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8" & ESPA==T){
     if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       removeTmpFiles(h=0)
-      toa.red <- raster(list.files(path = path, pattern = "_toa_band4.tif", full.names = T))
-      toa.nir <- raster(list.files(path = path, pattern = "_toa_band5.tif", full.names = T))
+      toa.red <- raster(list.files(path = path, 
+                                   pattern = "_toa_band4.tif", full.names = T))
+      toa.nir <- raster(list.files(path = path, 
+                                   pattern = "_toa_band5.tif", full.names = T))
       toa.4.5 <- stack(toa.red, toa.nir)
       toa.4.5 <- aoiCrop(toa.4.5, aoi)
       toa.4.5 <- toa.4.5 * 0.0001
     }
     if(method=="turner"){
       removeTmpFiles(h=0)
-      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
-      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", 
+                                  full.names = T))
+      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", 
+                                  full.names = T))
       sr.4.5 <- stack(sr.red, sr.nir)
       sr.4.5 <- aoiCrop(sr.4.5, aoi)}
   }
@@ -400,12 +407,14 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, sa
     sr.4.5 <- sr.4.5 * 0.0001
   }
   if(method=="metric2010"){
-    SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
+    SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + 
+                                                        toa.4.5[[2]])
     SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
                              file = "SAVI_ID", overwrite=TRUE)
     LAI <- raster(SAVI_ID)
     LAI[SAVI_ID <= 0] <- 0
-    LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
+    LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & 
+                                                          SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="Bastiaanssen"){
@@ -441,7 +450,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
   tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
-                                          cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
+                      cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
   tauD <- raster(tauB)
   tauD[tauB >= 0.15] <- 0.35 - 0.36 * tauB 
   tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB  
@@ -459,7 +468,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStation){
+surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, 
+                               WeatherStation, ...){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -474,7 +484,8 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStatio
     epsilon_NB <- raster(LAI)
     epsilon_NB <- 0.97 + 0.0033 * LAI  
     epsilon_NB[LAI > 3] <- 0.98
-    L_t_6 <-  0.067 * raster(list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) - 0.06709
+    L_t_6 <-  0.067 * raster(list.files(path = path, 
+      pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T)) - 0.06709
     if(missing(aoi) & exists(x = "aoi", envir=.GlobalEnv)){
       aoi <- get(x = "aoi", envir=.GlobalEnv)
       L_t_6 <- crop(L_t_6,aoi)
@@ -487,7 +498,8 @@ surfaceTemperature <- function(path=getwd(), sat="auto", LAI, aoi, WeatherStatio
     tau_NB <- 0.75+2e-5*WeatherStation$elev
     #R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
     ## There is a equation for R_sky on Metric Manual:
-    R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*exp(-7.77e-4*WeatherStation$temp^2))
+    R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*
+                                            exp(-7.77e-4*WeatherStation$temp^2))
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
@@ -552,12 +564,15 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", ESPA=F, LAI){
+soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, 
+                         sat="auto", ESPA=F, LAI, ...){
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
     removeTmpFiles(h=0)
-    sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", full.names = T))
-    sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", full.names = T))
+    sr.red <- raster(list.files(path = path, 
+                                pattern = "_sr_band4.tif", full.names = T))
+    sr.nir <- raster(list.files(path = path, 
+                                pattern = "_sr_band5.tif", full.names = T))
     sr.4.5 <- stack(sr.red, sr.nir)
     sr.4.5 <- aoiCrop(sr.4.5, aoi)
   }
@@ -570,7 +585,8 @@ soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, sat="auto", E
   G <- raster(NDVI)
   e <- 2.71828
   G <- (0.05 + 0.18 * e^(-0.521*LAI)) * Rn
-  G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * Rn[LAI < 0.5]
+  G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * 
+    Rn[LAI < 0.5]
   return(G)
 }
 
