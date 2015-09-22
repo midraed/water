@@ -35,7 +35,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                          anchors.method= "CITRA-MCB", sat="auto", 
-                         ESPA=F, plots=TRUE, deltaTemp=5, verbose=FALSE) {
+                         ESPA=F, plots=TRUE, deltaTemp=5, verbose=FALSE, ...) {
+  path=getwd()
   ### Some values used later
   if(sat=="auto"){sat <- getSat(getwd())}
   if(sat=="L8" & ESPA==T){
@@ -106,7 +107,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
-                   DEM, Rn, G, verbose=FALSE) {
+                   DEM, Rn, G, verbose=FALSE, ...) {
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }

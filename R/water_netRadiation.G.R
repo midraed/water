@@ -29,7 +29,8 @@ createAoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-loadImage <-  function(path=getwd(), sat="auto", aoi){
+loadImage <-  function(sat="auto", aoi){
+  path = getwd()
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -55,8 +56,9 @@ loadImage <-  function(path=getwd(), sat="auto", aoi){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) 
 #' @export
-calcTOAr <- function(path=getwd(), image.DN, sat="auto", 
+calcTOAr <- function(image.DN, sat="auto", 
                      ESPA=FALSE, aoi, incidence.rel, MTL, ...){
+  path = getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -113,9 +115,10 @@ calcTOAr <- function(path=getwd(), image.DN, sat="auto",
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # incidence hor from TML?? 
-calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
+calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
                    aoi, incidence.hor, 
                    WeatherStation, surface.model, ...){
+  path = getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -177,7 +180,8 @@ calcSR <- function(path=getwd(), image.TOAr, sat="auto", ESPA=FALSE, format="tif
 #' @export
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
-checkSRTMgrids <-function(raw.image, path = getwd(), format="tif", ...){
+checkSRTMgrids <-function(raw.image, format="tif", ...){
+  path = getwd()
   polyaoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(xmin(raw.image), xmax(raw.image), xmax(raw.image),
@@ -207,7 +211,8 @@ checkSRTMgrids <-function(raw.image, path = getwd(), format="tif", ...){
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
-prepareSRTMdata <- function(path=getwd(), format="tif", extent=image.DN, ...){
+prepareSRTMdata <- function(format="tif", extent=image.DN, ...){
+  path = getwd()
   files <- list.files(path= path,  
                       pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
                               format, "$", sep=""), full.names = T) 
@@ -247,7 +252,8 @@ METRICtopo <- function(DEM){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ### Change to look in metadata for keyword instead of using line #
-solarAngles <- function(path=getwd(), surface.model, MTL, WeatherStation, ...){
+solarAngles <- function(surface.model, MTL, WeatherStation, ...){
+  path = getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -334,8 +340,9 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, ...){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto",
+albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
                    ESPA=FALSE, ...){
+  path = getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
   # Tasumi 2008
@@ -375,6 +382,7 @@ albedo <- function(path=getwd(), image.SR, aoi, coeff="Tasumi", sat="auto",
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, 
                 sat="auto", ...){
+  path = getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8" & ESPA==T){
     if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
@@ -468,8 +476,9 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
-surfaceTemperature <- function(path=getwd(), thermalband, sat="auto", LAI, aoi, 
+surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi, 
                                WeatherStation, ...){
+  path=getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -570,8 +579,9 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soilHeatFlux <- function(path=getwd(), image, Ts, albedo, Rn, aoi, 
+soilHeatFlux <- function(image, Ts, albedo, Rn, aoi, 
                          sat="auto", ESPA=F, LAI, ...){
+  path=getwd()
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){
     removeTmpFiles(h=0)

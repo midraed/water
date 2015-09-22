@@ -3,7 +3,8 @@
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.Rn <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi){
+METRIC.Rn <- function(image.DN, DEM, WeatherStation, aoi){
+  path=getwd()
   surface.model <-METRICtopo(DEM)
   solar.angles.r <- solarAngles(surface.model = surface.model)
   Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles.r, WeatherStation = WeatherStation)
@@ -27,7 +28,8 @@ METRIC.Rn <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.G <- function(path=getwd(), Rn, DEM, image.DN, WeatherStation=WeatherStation){
+METRIC.G <- function(Rn, DEM, image.DN, WeatherStation=WeatherStation){
+  path=getwd()
   surface.model <-METRICtopo(DEM)
   solar.angles.r <- solarAngles(surface.model = surface.model)
   image.TOAr <- calcTOAr(image.DN = image.DN, incidence.rel = solar.angles.r$incidence.rel)
@@ -46,8 +48,9 @@ METRIC.G <- function(path=getwd(), Rn, DEM, image.DN, WeatherStation=WeatherStat
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi, 
+METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, 
                       plain=TRUE, ...){
+  path=getwd()
   pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
     DEM <- raster(image.DN[[1]])
@@ -81,6 +84,9 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
                     Rn=Rn, image.SR, LAI=LAI, ...)
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   surface.model = surface.model)
+  print(LAI)
+  print(albedo)
+  print(Z.om)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                               albedo = albedo, Z.om = Z.om, n = 1, 
                               deltaTemp = 5, verbose = FALSE, ...)
@@ -88,7 +94,7 @@ METRIC.EB <- function(path=getwd(), image.DN, DEM, WeatherStation, aoi,
   on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
              WeatherStation = WeatherStation, ETp.coef = 1.2, 
-             DEM = DEM, Rn = Rn, G = G, verbose = FALSE )
+             DEM = DEM, Rn = Rn, G = G, verbose = FALSE, ... )
   setTxtProgressBar(pb, 99)
   H <-  H$H
   LE <- Rn - G - H
