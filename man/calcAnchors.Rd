@@ -6,7 +6,7 @@
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1,
   anchors.method = "CITRA-MCB", sat = "auto", ESPA = F, plots = TRUE,
-  deltaTemp = 5, verbose = FALSE)
+  deltaTemp = 5, verbose = FALSE, ...)
 }
 \description{
 Select anchors pixels for H function

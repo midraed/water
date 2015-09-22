@@ -4,7 +4,7 @@
 \alias{METRIC.Rn}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.Rn(path = getwd(), image.DN, DEM, WeatherStation, aoi)
+METRIC.Rn(image.DN, DEM, WeatherStation, aoi)
 }
 \description{
 Estimates Net Radiation as in METRIC Model

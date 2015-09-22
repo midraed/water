@@ -4,7 +4,7 @@
 \alias{METRIC.G}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.G(path = getwd(), Rn, DEM, image.DN, WeatherStation = WeatherStation)
+METRIC.G(Rn, DEM, image.DN, WeatherStation = WeatherStation)
 }
 \description{
 Estimates Net Radiation as in METRIC Model

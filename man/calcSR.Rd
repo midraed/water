@@ -4,12 +4,10 @@
 \alias{calcSR}
 \title{Calculates surface reflectance for L7}
 \usage{
-calcSR(path = getwd(), image.TOAr, sat = "auto", ESPA = FALSE,
-  format = "tif", aoi, incidence.hor, WeatherStation, surface.model, ...)
+calcSR(image.TOAr, sat = "auto", ESPA = FALSE, format = "tif", aoi,
+  incidence.hor, WeatherStation, surface.model, ...)
 }
 \arguments{
-\item{path}{folder with input data}
-
 \item{image.TOAr}{raster stack. top of atmosphere radiance image}
 
 \item{sat}{sensor type (auto, L7, L8)}
@@ -25,6 +23,8 @@ calcSR(path = getwd(), image.TOAr, sat = "auto", ESPA = FALSE,
 \item{WeatherStation}{}
 
 \item{surface.model}{}
+
+\item{path}{folder with input data}
 }
 \description{
 Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
