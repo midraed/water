@@ -115,8 +115,7 @@ calcTOAr <- function(image.DN, sat="auto",
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # incidence hor from TML?? 
-calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, format="tif", 
-                   aoi, incidence.hor, 
+calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor, 
                    WeatherStation, surface.model){
   path = getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
@@ -180,7 +179,7 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, format="tif",
 #' @export
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
-checkSRTMgrids <-function(raw.image, format="tif"){
+checkSRTMgrids <-function(raw.image){
   path = getwd()
   polyaoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(

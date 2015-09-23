@@ -4,7 +4,7 @@
 \alias{checkSRTMgrids}
 \title{Check needed SRTM grids from image extent}
 \usage{
-checkSRTMgrids(raw.image, format = "tif")
+checkSRTMgrids(raw.image)
 }
 \description{
 Check needed SRTM grids from image extent
