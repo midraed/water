@@ -4,7 +4,7 @@
 \alias{albedo}
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
-albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE, ...)
+albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE)
 }
 \description{
 Calculates Broadband Albedo from Landsat data

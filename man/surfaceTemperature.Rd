@@ -4,7 +4,7 @@
 \alias{surfaceTemperature}
 \title{Estimates Land Surface Temperature from Landsat Data}
 \usage{
-surfaceTemperature(thermalband, sat = "auto", LAI, aoi, WeatherStation, ...)
+surfaceTemperature(thermalband, sat = "auto", LAI, aoi, WeatherStation)
 }
 \description{
 Estimates Land Surface Temperature from Landsat Data

@@ -5,7 +5,7 @@
 \title{Calculates surface reflectance for L7}
 \usage{
 calcSR(image.TOAr, sat = "auto", ESPA = FALSE, format = "tif", aoi,
-  incidence.hor, WeatherStation, surface.model, ...)
+  incidence.hor, WeatherStation, surface.model)
 }
 \arguments{
 \item{image.TOAr}{raster stack. top of atmosphere radiance image}

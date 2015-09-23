@@ -4,7 +4,7 @@
 \alias{calcTOAr}
 \title{Calculates Top of atmosphere reflectance}
 \usage{
-calcTOAr(image.DN, sat = "auto", ESPA = FALSE, aoi, incidence.rel, MTL, ...)
+calcTOAr(image.DN, sat = "auto", ESPA = FALSE, aoi, incidence.rel, MTL)
 }
 \description{
 Calculates Top of atmosphere reflectance

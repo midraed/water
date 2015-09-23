@@ -6,7 +6,7 @@
 \usage{
 calcH(anchors, Ts, Z.om, WeatherStation, ETp.coef = 1.05, Z.om.ws = 0.0018,
   sat = "auto", ESPA = F, mountainous = FALSE, DEM, Rn, G,
-  verbose = FALSE, ...)
+  verbose = FALSE)
 }
 \description{
 Iterative function to estimate H and R.ah

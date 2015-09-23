@@ -4,7 +4,7 @@
 \alias{prepareSRTMdata}
 \title{Create a mosaic with SRTM grid from image extent}
 \usage{
-prepareSRTMdata(format = "tif", extent = image.DN, ...)
+prepareSRTMdata(format = "tif", extent = image.DN)
 }
 \description{
 Create a mosaic with SRTM grid from image extent
