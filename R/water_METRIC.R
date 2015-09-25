@@ -49,6 +49,7 @@ METRIC.G <- function(Rn, DEM, image.DN, WeatherStation=WeatherStation){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain=TRUE,
+                      thermalband,
                       alb.coeff = "Tasumi", LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
                       ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE){
@@ -65,16 +66,16 @@ METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain=TRUE,
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  image.TOAr <- calcTOAr(image.DN = image.DN, 
+  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat,
                          incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(path=getwd(), image.TOAr=image.TOAr, 
+  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
                      WeatherStation=WeatherStation, ESPA = F)
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat)
   setTxtProgressBar(pb, 6)
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
-  Ts <- surfaceTemperature(LAI=LAI, path = getwd(), 
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat)
+  Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
                            WeatherStation = WeatherStation)
   setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
@@ -83,29 +84,27 @@ METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain=TRUE,
   Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
   setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                    Rn=Rn, image.SR, LAI=LAI)
+                    Rn=Rn, image.SR, LAI=LAI, sat = sat)
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   method = Zom.method, 
                                   surface.model = surface.model)
-  print(LAI)
-  print(albedo)
-  print(Z.om)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                               albedo = albedo, Z.om = Z.om, n = 1, 
-                              anchors.method = anchors.method, 
+                              anchors.method = anchors.method, sat = sat, 
                               deltaTemp = 5, verbose = FALSE)
   setTxtProgressBar(pb, 45)
   on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
-             WeatherStation = WeatherStation, ETp.coef = ETp.coef, 
+             WeatherStation = WeatherStation, ETp.coef = ETp.coef, sat = sat, 
              Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
   setTxtProgressBar(pb, 99)
   H <-  H$H
   LE <- Rn - G - H
-  EB <- stack(Rn, G, H, LE)
+  EB <- stack(Rn, G, H, LE, Ts)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
-                                "LatentHeat"), file = "EB", overwrite=TRUE)
+                                "LatentHeat", "surfaceTemperature"), 
+                file = "EB", overwrite=TRUE)
   return(EB)
 }
   

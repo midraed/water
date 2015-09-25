@@ -4,7 +4,10 @@
 \alias{METRIC.EB}
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
-METRIC.EB(image.DN, DEM, WeatherStation, aoi, plain = TRUE, ...)
+METRIC.EB(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain = TRUE,
+  thermalband, alb.coeff = "Tasumi", LAI.method = "metric2010",
+  Zom.method = "short.crops", anchors.method = "CITRA-MCB",
+  ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE)
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model

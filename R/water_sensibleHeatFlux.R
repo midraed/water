@@ -52,6 +52,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
     sr.4.5 <- stack(image[[3]], image[[4]])
   }
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
+  NDVI[NDVI < -1]  <- -1
   ### We create anchors points if they dont exist---------------------------------
   if(anchors.method=="CITRA-MCB"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&

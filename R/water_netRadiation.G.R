@@ -117,10 +117,10 @@ calcTOAr <- function(image.DN, sat="auto",
 # incidence hor from TML?? 
 calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor, 
                    WeatherStation, surface.model){
-  path = getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
+  path <- getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
