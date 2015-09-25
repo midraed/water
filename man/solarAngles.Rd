@@ -6,6 +6,13 @@
 \usage{
 solarAngles(surface.model, MTL, WeatherStation)
 }
+\arguments{
+\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
+
+\item{MTL}{Landsat Metadata File}
+
+\item{WeatherStation}{Weather Station data}
+}
 \description{
 Calculates solar angles
 }

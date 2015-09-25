@@ -25,12 +25,14 @@ createAoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
 }
 
 #' Load Landsat data from folder
+#' @param path  folder where band files are stored
+#' @param sat   "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames
+#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-loadImage <-  function(sat="auto", aoi){
-  path = getwd()
+loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
@@ -51,6 +53,12 @@ loadImage <-  function(sat="auto", aoi){
 }  
 
 #' Calculates Top of atmosphere reflectance
+#' @param image.DN
+#' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param ESPA          Logical. If TRUE will look for espa.usgs.gov related products on working folder
+#' @param aoi           area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param incidence.rel solar incidence angle, considering the relief
+#' @param MTL           Landsat Metadata File
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -109,15 +117,13 @@ calcTOAr <- function(image.DN, sat="auto",
 #' Calculates surface reflectance for L7
 #' @description
 #' Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
-#' @param path            folder with input data
-#' @param image.TOAr      raster stack. top of atmosphere radiance image
-#' @param sat             sensor type (auto, L7, L8)
-#' @param ESPA            logical. Data from ESPA.usgs.gov
-#' @param format          
-#' @param aoi
-#' @param incidence.hor  solar incidence angle for horizontal surface
-#' @param WeatherStation 
-#' @param surface.model 
+#' @param image.TOAr      raster stack. top of atmosphere reflectance image
+#' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param ESPA            Logical. If TRUE will look for espa.usgs.gov related products on working folder
+#' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param incidence.hor   solar incidence angle, considering plain surface
+#' @param WeatherStation  Weather Station data
+#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @author David Fonseca Luengo 
 #' @references 
@@ -184,6 +190,7 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor,
 
 
 #' Check needed SRTM grids from image extent
+#' @param raw.image  image to calculate extent
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 # Get links or optionally open web pages... 
@@ -215,6 +222,8 @@ checkSRTMgrids <-function(raw.image){
 }
 
 #' Create a mosaic with SRTM grid from image extent
+#' @param format  format of SRTM grid files
+#' @param extent  minimal extent of mosaic
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
@@ -238,6 +247,7 @@ prepareSRTMdata <- function(format="tif", extent=image.DN){
 }
 
 #' Calculates surface model used in METRIC
+#' @param DEM  raster with Digital elevation model 
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -255,6 +265,9 @@ METRICtopo <- function(DEM){
 }
 
 #' Calculates solar angles
+#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
+#' @param MTL             Landsat Metadata File
+#' @param WeatherStation  Weather Station data
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -327,9 +340,9 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' Calculates Incoming Solar Radiation
 #' @description 
 #' This function calculates incoming solar radiation from surface model and solar angles.
-#' @param surface.model   surface.model with dem aspect and slope
-#' @param solar.angles    ...
-#' @param WeatherStation  ...
+#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
+#' @param solar.angles    rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()
+#' @param WeatherStation  Weather Station data
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @author Daniel de la Fuente Saiz
 #' @references 
@@ -350,9 +363,17 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 }
 
 #' Calculates Broadband Albedo from Landsat data
+#' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, SWIR2
+#' @param aoi        area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param coeff      coefficient to transform narrow to broad band albedo. See Details.
+#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param ESPA       Logical. If TRUE will look for espa.usgs.gov related products on working folder
+#' @details 
+#' There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients and "Olmedo" to use Olmedo coefficients for Landsat 8.
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213–238. http://doi.org/10.1016/S0034-4257(02)00068-8
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
                    ESPA=FALSE){
@@ -389,13 +410,18 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 }
 
 #' Estimate LAI from Landsat Data
+#' @param method   Method used to estimate LAI from spectral data. See Details.
+#' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
+#' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov realted products on working folder
+#' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image, 
-                sat="auto"){
+LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
   path = getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8" & ESPA==T){
@@ -439,7 +465,7 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image,
                                                           SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
     LAI[SAVI_ID > 0.817] <- 6
   }
-  if(method=="Bastiaanssen"){
+  if(method=="metric"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
     LAI[SAVI_ID > 0.817] <- 6
@@ -464,6 +490,10 @@ LAI <- function(method="metric2010", path=getwd(), aoi, L=0.1, ESPA=F, image,
 }
 
 #' Calculates short wave transmisivity
+#' @param Kt            unitless turbidity coefficient 0<Kt<=1.0, where Kt=1.0 for clean air and Kt=0.5 for extremely turbid, dusty, or polluted air
+#' @param ea            near-surface vapor pressure (kPa)
+#' @param dem           digital elevation model 
+#' @param incidence.hor solar incidence angle, considering plain surface
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 
@@ -484,6 +514,11 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 }
 
 #' Estimates Land Surface Temperature from Landsat Data
+#' @param thermalband     Satellite thermal band
+#' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param LAI             raster layer with leaf area index. See LAI()
+#' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param WeatherStation  Weather Station data
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -537,6 +572,8 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
 }
 
 #' Calculates Long wave outgoing radiation
+#' @param LAI  raster layer with leaf area index. See LAI()
+#' @param Ts   Land surface temperature. See surfaceTemperature()
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -551,6 +588,10 @@ outLWradiation <- function(LAI, Ts){
 }
 
 #' Calculates long wave incoming radiation
+#' @param WeatherStation   Weather Station data
+#' @param DEM              digital elevation model in meters.
+#' @param solar.angles     rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()
+#' @param Ts               Land surface temperature. See surfaceTemperature()
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -575,6 +616,11 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
 }
 
 #' Estimates net radiation
+#' @param LAI     raster layer with leaf area index. See LAI()
+#' @param albedo  broadband surface albedo. See albedo()
+#' @param Rs.inc  incoming short-wave radiation
+#' @param Rl.inc  incomin long-wave radiation
+#' @param Rl.out  outgoing long-wave radiation
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -589,12 +635,20 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 
 
 #' Estimates Soil Heat Flux
+#' @param image    surface reflectance image
+#' @param Ts       Land surface temperature. See surfaceTemperature()
+#' @param albedo   broadband surface albedo. See albedo()
+#' @param LAI      raster layer with leaf area index. See LAI()
+#' @param Rn       Net radiation. See netRadiation()
+#' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-soilHeatFlux <- function(image, Ts, albedo, Rn, aoi, 
-                         sat="auto", ESPA=F, LAI){
+soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, 
+                         sat="auto", ESPA=F){
   path=getwd()
   if(sat=="auto"){sat = getSat(getwd())}
   if(sat=="L8" & ESPA==T){

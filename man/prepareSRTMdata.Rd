@@ -6,6 +6,11 @@
 \usage{
 prepareSRTMdata(format = "tif", extent = image.DN)
 }
+\arguments{
+\item{format}{format of SRTM grid files}
+
+\item{extent}{minimal extent of mosaic}
+}
 \description{
 Create a mosaic with SRTM grid from image extent
 }

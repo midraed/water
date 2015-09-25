@@ -6,6 +6,17 @@
 \usage{
 netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 }
+\arguments{
+\item{LAI}{raster layer with leaf area index. See LAI()}
+
+\item{albedo}{broadband surface albedo. See albedo()}
+
+\item{Rs.inc}{incoming short-wave radiation}
+
+\item{Rl.inc}{incomin long-wave radiation}
+
+\item{Rl.out}{outgoing long-wave radiation}
+}
 \description{
 Estimates net radiation
 }

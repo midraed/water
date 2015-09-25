@@ -6,6 +6,9 @@
 \usage{
 checkSRTMgrids(raw.image)
 }
+\arguments{
+\item{raw.image}{image to calculate extent}
+}
 \description{
 Check needed SRTM grids from image extent
 }

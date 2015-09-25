@@ -6,6 +6,9 @@
 \usage{
 METRICtopo(DEM)
 }
+\arguments{
+\item{DEM}{raster with Digital elevation model}
+}
 \description{
 Calculates surface model used in METRIC
 }

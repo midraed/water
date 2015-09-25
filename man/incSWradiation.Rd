@@ -7,11 +7,11 @@
 incSWradiation(surface.model, solar.angles, WeatherStation)
 }
 \arguments{
-\item{surface.model}{surface.model with dem aspect and slope}
+\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
 
-\item{solar.angles}{...}
+\item{solar.angles}{rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()}
 
-\item{WeatherStation}{...}
+\item{WeatherStation}{Weather Station data}
 }
 \description{
 This function calculates incoming solar radiation from surface model and solar angles.

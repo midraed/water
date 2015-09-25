@@ -6,6 +6,15 @@
 \usage{
 SWtrasmisivity(Kt = 1, ea, dem, incidence.hor)
 }
+\arguments{
+\item{Kt}{unitless turbidity coefficient 0<Kt<=1.0, where Kt=1.0 for clean air and Kt=0.5 for extremely turbid, dusty, or polluted air}
+
+\item{ea}{near-surface vapor pressure (kPa)}
+
+\item{dem}{digital elevation model}
+
+\item{incidence.hor}{solar incidence angle, considering plain surface}
+}
 \description{
 Calculates short wave transmisivity
 }
