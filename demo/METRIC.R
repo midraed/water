@@ -24,13 +24,13 @@ B6 <- L7_Talca[[6]]
 plot(image.DN)
 
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
-                            WeatherStation = WeatherStation, 
+                            WeatherStation = WeatherStation, ETp.coef = 1.2,
                             MTL=MTLfile, sat="L7", thermalband=B6)
 
 
 plot(Energy.Balance)
 
-ET.24 <- ET24h(Rn = Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat,
-               H = Energy.Balance$LatentHeat,
+ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 
+               H=Energy.Balance$SensibleHeat, 
                Ts=Energy.Balance$surfaceTemperature, WeatherStation, 
                ETr.daily=6.57)

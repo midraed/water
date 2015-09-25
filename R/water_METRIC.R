@@ -59,14 +59,14 @@ METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain=TRUE,
     DEM <- raster(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   } else {DEM <- prepareSRTMdata(extent = image.DN)}
-  setTxtProgressBar(pb, 3)
   surface.model <-METRICtopo(DEM)
+  setTxtProgressBar(pb, 3)
   solar.angles.r <- solarAngles(surface.model = surface.model, 
                                 WeatherStation = WeatherStation, MTL = MTL)
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat,
+  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
                          incidence.rel = solar.angles.r$incidence.rel)
   image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                      surface.model=surface.model, 
@@ -105,6 +105,7 @@ METRIC.EB <- function(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain=TRUE,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
                                 "LatentHeat", "surfaceTemperature"), 
                 file = "EB", overwrite=TRUE)
+  setTxtProgressBar(pb, 100)
   return(EB)
 }
   

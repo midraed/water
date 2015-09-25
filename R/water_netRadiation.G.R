@@ -73,14 +73,23 @@ calcTOAr <- function(image.DN, sat="auto",
   }
   ### Ro TOA L7
   if(sat=="L7"){
+    if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
+    MTL <- readLines(MTL, warn=FALSE)
     ESUN <- c(1997, 1812, 1533, 1039, 230.8, 84.90) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
     ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
     if(missing(image.DN)){image.DN <- loadImage(path = path)}
-    DOY <- as.integer(substr(list.files(path = path, 
-                                        pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],14,16))
+    time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+    date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+    sat.time <-regmatches(time.line,regexec(text=time.line,
+                                            pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+    sat.date <-regmatches(date.line,regexec(text=date.line,
+                                            pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+    sat.datetime <- strptime(paste(sat.date, sat.time), 
+                             format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+    DOY <-  sat.datetime$yday +1
     d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))
     dr <- 1 + 0.033 * cos(DOY * (2 * pi / 365))
     Ro.TOAr <- list()
@@ -273,9 +282,15 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
   lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
-  DOY <- as.integer(substr(list.files(path = path, 
-                                      pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$")[1],
-                           14,16))
+  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+  date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+  sat.time <-regmatches(time.line,regexec(text=time.line,
+                                          pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+  sat.date <-regmatches(date.line,regexec(text=date.line,
+                                          pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+  sat.datetime <- strptime(paste(sat.date, sat.time), 
+                           format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+  DOY <-  sat.datetime$yday +1
   declination <- surface.model[[1]]
   values(declination) <- 0.409*sin((2*pi/365*DOY)-1.39)
   # hour angle
