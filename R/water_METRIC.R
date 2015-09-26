@@ -9,7 +9,7 @@ METRIC.Rn <- function(image.DN, DEM, WeatherStation, aoi){
   solar.angles.r <- solarAngles(surface.model = surface.model)
   Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles.r, WeatherStation = WeatherStation)
   image.TOAr <- calcTOAr(image.DN = image.DN, incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(path=path, image.TOAr=image.TOAr, 
+  image.SR <- calcSR(image.TOAr=image.TOAr, 
                       surface.model=surface.model, 
                       incidence.hor = solar.angles.r$incidence.hor, 
                       WeatherStation=WeatherStation, sat="auto", ESPA = F)
@@ -33,12 +33,12 @@ METRIC.G <- function(Rn, DEM, image.DN, WeatherStation=WeatherStation){
   surface.model <-METRICtopo(DEM)
   solar.angles.r <- solarAngles(surface.model = surface.model)
   image.TOAr <- calcTOAr(image.DN = image.DN, incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(path=path, image.TOAr=image.TOAr, 
+  image.SR <- calcSR(image.TOAr=image.TOAr, 
                       surface.model=surface.model, 
                       incidence.hor = solar.angles.r$incidence.hor, 
                       WeatherStation=WeatherStation, sat="auto", ESPA = F)
   albedo <- albedo(image.SR = image.SR, sat="auto")
-  Ts <- surfaceTemperature(sat = "auto", image.TOAr = image.TOAr)
+  Ts <- surfaceTemperature(sat = "auto" )
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn)
 }
 

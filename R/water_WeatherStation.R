@@ -84,15 +84,16 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' Plot method for waterWeatherStation S3 class
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
-plot.waterWeatherStation <- function(WS, alldata=TRUE){
+#' @method plot waterWeatherStation
+plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
-  WSp <- WS$hourly
-  atsat  <- as.POSIXct(WS$at.sat$datetime)
-  if(alldata == TRUE) {WSp <- WS$alldata}
+  WSp <- x$hourly
+  atsat  <- as.POSIXct(x$at.sat$datetime)
+  if(alldata == TRUE) {WSp <- x$alldata}
   time <- WSp$datetime
   par(mar=c(5, 7, 4, 7) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
-       ylab="",type="l",col="red", main="",xlim=range(time))
+       ylab="",type="l",col="red", main="",xlim=range(time), ...)
   abline(v=atsat, lwd=5, col="gray")
   graphics::text(atsat, max(WSp$radiation)*0.85, "Satellite Flyby", cex=0.7, 
                  adj=c(NA, -0.5), srt=90, col="gray")
@@ -101,19 +102,19 @@ plot.waterWeatherStation <- function(WS, alldata=TRUE){
   mtext(2,text="Solar radiation (W.m-2)",line=1.7, cex=0.7)
   par(new=T)
   plot(time, WSp$wind, axes=F, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
-       type="l",col="green",lty=2, main="",xlim=range(time),lwd=2)
+       type="l",col="green",lty=2, main="",xlim=range(time),lwd=2,...)
   axis(2, ylim=c(0,max(WSp$wind)),col="green",lwd=1,line=3.5, cex.axis=0.5)
   points(time, WSp$wind,pch=20,col="green")
   mtext(2,text="Wind speed (m.s-1)",line=5.5, cex=0.7)
   par(new=T)
   plot(time, WSp$temp, axes=F, ylim=c(0,max(WSp$temp)), xlab="", ylab="", 
-       type="l",col="black",lty=2, main="",xlim=range(time),lwd=2)
+       type="l",col="black",lty=2, main="",xlim=range(time),lwd=2,...)
   axis(4, ylim=c(0,max(WSp$temp)),col="black",lwd=1, cex.axis=0.5)
   points(time, WSp$temp,pch=20,col="black")
-  mtext(4,text="Temperature (°C)",line=1.7, cex=0.7)
+  mtext(4,text="Temperature (C)",line=1.7, cex=0.7)
   par(new=T)
   plot(time, WSp$ea, axes=F, ylim=c(0,max(WSp$ea)), xlab="", ylab="", 
-       type="l",col="blue",lty=2, main="",xlim=range(time),lwd=2)
+       type="l",col="blue",lty=2, main="",xlim=range(time),lwd=2, ...)
   axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5)
   points(time, WSp$ea,pch=20,col="blue")
   mtext(4,text="vapor pressure (kPa)",line=5.5, cex=0.7)
@@ -124,13 +125,14 @@ plot.waterWeatherStation <- function(WS, alldata=TRUE){
 #' Print method for waterWeatherStation S3 class
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @export
-print.waterWeatherStation <- function(WS){
-  cat("Weather Station at lat:", round(WS$location$lat, 2), "long:", 
-      round(WS$location$lat, 2), "elev:", round(WS$location$elev, 2), "\n")
+#' @method print waterWeatherStation
+print.waterWeatherStation <- function(x, ...){
+  cat("Weather Station at lat:", round(x$location$lat, 2), "long:", 
+      round(x$location$lat, 2), "elev:", round(x$location$elev, 2), "\n")
   cat("Summary:\n")
-  print(summary(WS$alldata[,2:6]))
+  print(summary(x$alldata[,2:6]), ...)
   cat("\n Conditions at satellite flyby:\n")
-  print(WS$at.sat)
+  print(x$at.sat)
 }
 
 

@@ -4,7 +4,7 @@
 \alias{createAoi}
 \title{Create aoi polygon from topleft and bottomright coordinates}
 \usage{
-createAoi(topleft = c(x, y), bottomright = c(x, y), EPSG)
+createAoi(topleft, bottomright, EPSG)
 }
 \arguments{
 \item{topleft}{a vector with topleft x,y coordinates}

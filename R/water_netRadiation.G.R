@@ -10,11 +10,11 @@
 #' br <- c(557200, -3700000) 
 #' aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
-#' @import raster sp proj4 
+#' @import rgdal raster sp 
 #' @export
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
-createAoi <- function(topleft = c(x, y), bottomright= c(x, y), EPSG){
+createAoi <- function(topleft, bottomright, EPSG){
   aoi <- SpatialPolygons(
     list(Polygons(list(Polygon(coords = matrix(
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
@@ -53,7 +53,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 }  
 
 #' Calculates Top of atmosphere reflectance
-#' @param image.DN
+#' @param image.DN      raw image in digital numbers
 #' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param ESPA          Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi           area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
@@ -149,7 +149,7 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor,
     image_SR <- aoiCrop(image_SR, aoi) 
   }
   if(sat=="L7"){
-    if(missing(image.TOAr)){image.TOAr <- calcTOAr(path = path)}
+    if(missing(image.TOAr)){image.TOAr <- calcTOAr()}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
     ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
     W <- 0.14 * ea * P + 2.1
@@ -204,8 +204,9 @@ checkSRTMgrids <-function(raw.image){
         ymax(raw.image), ymin(raw.image), ymin(raw.image),
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
   polyaoi@proj4string <- raw.image@crs
-  limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
-                           inverse = TRUE)
+#   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
+#                            inverse = TRUE)
+  limits <- extent(sp::spTransform(polyaoi, CRS("+proj=longlat +ellps=WGS84")))
   # I have to improve this. It should work ONLY for west and south coordinates.. maybe
   lat_needed <- seq(trunc(limits[3])-1, trunc(limits[4])-1, by=1)
   long_needed <- seq(trunc(limits[1])-1, trunc(limits[2])-1, by = 1)
@@ -228,7 +229,7 @@ checkSRTMgrids <-function(raw.image){
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
-prepareSRTMdata <- function(format="tif", extent=image.DN){
+prepareSRTMdata <- function(format="tif", extent){
   path = getwd()
   files <- list.files(path= path,  
                       pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
@@ -369,11 +370,11 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param ESPA       Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @details 
-#' There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients and "Olmedo" to use Olmedo coefficients for Landsat 8.
+#' There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213–238. http://doi.org/10.1016/S0034-4257(02)00068-8
+#' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238.
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
                    ESPA=FALSE){
@@ -413,7 +414,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 #' @param method   Method used to estimate LAI from spectral data. See Details.
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
 #' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov realted products on working folder
+#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
@@ -642,7 +643,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @param Rn       Net radiation. See netRadiation()
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov realted products on working folder
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

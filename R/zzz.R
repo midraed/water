@@ -10,11 +10,14 @@
   )
   toset <- !(names(op.water) %in% names(op))
   if(any(toset)) options(op.water[toset])
-  packageStartupMessage("This package writes function's results to working directory. You can change")
-  packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
-
   invisible()
 }
+
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("This package writes function's results to working directory. You can change")
+  packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
+}
+
 
 #' Global options for water package
 #' @description 

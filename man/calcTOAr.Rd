@@ -7,7 +7,7 @@
 calcTOAr(image.DN, sat = "auto", ESPA = FALSE, aoi, incidence.rel, MTL)
 }
 \arguments{
-\item{image.DN}{}
+\item{image.DN}{raw image in digital numbers}
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
 

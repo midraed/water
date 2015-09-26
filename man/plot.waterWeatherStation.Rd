@@ -4,7 +4,7 @@
 \alias{plot.waterWeatherStation}
 \title{Plot method for waterWeatherStation S3 class}
 \usage{
-plot.waterWeatherStation(WS, alldata = TRUE)
+\method{plot}{waterWeatherStation}(x, alldata = TRUE, ...)
 }
 \description{
 Plot method for waterWeatherStation S3 class

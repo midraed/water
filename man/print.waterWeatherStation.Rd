@@ -4,7 +4,7 @@
 \alias{print.waterWeatherStation}
 \title{Print method for waterWeatherStation S3 class}
 \usage{
-print.waterWeatherStation(WS)
+\method{print}{waterWeatherStation}(x, ...)
 }
 \description{
 Print method for waterWeatherStation S3 class

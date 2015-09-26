@@ -21,13 +21,13 @@ albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE)
 Calculates Broadband Albedo from Landsat data
 }
 \details{
-There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients and "Olmedo" to use Olmedo coefficients for Landsat 8.
+There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213–238. http://doi.org/10.1016/S0034-4257(02)00068-8
+Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238.
 }
 

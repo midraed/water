@@ -21,7 +21,7 @@ soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi, sat = "auto", ESPA = F)
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov realted products on working folder}
 }
 \description{
 Estimates Soil Heat Flux
