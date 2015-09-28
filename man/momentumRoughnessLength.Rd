@@ -7,6 +7,12 @@
 momentumRoughnessLength(method = "short.crops", LAI, NDVI, albedo, a, b,
   fLAI.Perrier, h.Perrier, mountainous = FALSE, surface.model)
 }
+\arguments{
+\item{method}{method selected to calculate momentum roughness length. Use
+"short.crops" for short crops methods from Allen et al (2007); "custom" for custom
+method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in
+Santos et al (2012) and Pocas et al (2014).}
+}
 \description{
 Calculates Momentum Roughness Length
 }

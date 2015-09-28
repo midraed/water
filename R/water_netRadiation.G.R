@@ -27,7 +27,8 @@ createAoi <- function(topleft, bottomright, EPSG){
 #' Load Landsat data from folder
 #' @param path  folder where band files are stored
 #' @param sat   "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames
-#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
+#' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
