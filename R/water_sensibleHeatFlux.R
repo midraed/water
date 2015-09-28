@@ -132,6 +132,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   ### We calculate the initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
+  if(u200 < 1){u200 <- 4}
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
@@ -148,10 +149,10 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     print("Cold")
     print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
                            "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
-                           "u200"=u200[cold], "u*"=friction.velocity[cold])))
+                           "u200"=u200, "u*"=friction.velocity[cold])))
     print("Hot")
     print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
-                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
+                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200, 
                            "u*"=friction.velocity[hot])))
   }
   plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
