@@ -3,6 +3,8 @@
 #' @param topleft     a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
 #' @param EPSG        Coordinate reference system EPSG code
+#' @description
+#' test
 #' @return object of class SpatialPolygons
 #' @author Guillermo F Olmedo
 #' @examples 
@@ -364,6 +366,8 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 }
 
 #' Calculates Broadband Albedo from Landsat data
+#' @description 
+#' test
 #' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, SWIR2
 #' @param aoi        area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param coeff      coefficient to transform narrow to broad band albedo. See Details.
