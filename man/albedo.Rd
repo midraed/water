@@ -4,16 +4,30 @@
 \alias{albedo}
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
-albedo(path = getwd(), image.SR, aoi, coeff = "Tasumi", sat = "auto",
-  ESPA = FALSE)
+albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE)
+}
+\arguments{
+\item{image.SR}{surface reflectance image with bands B, R, G, NIR, SWIR1, SWIR2}
+
+\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+
+\item{coeff}{coefficient to transform narrow to broad band albedo. See Details.}
+
+\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
+
+\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related products on working folder}
 }
 \description{
 Calculates Broadband Albedo from Landsat data
+}
+\details{
+There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238.
 }
 

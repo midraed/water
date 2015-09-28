@@ -24,8 +24,8 @@ Calculates ET using Penman Monteith hourly formula
 \examples{
 WeatherStation  <- data.frame(wind=4.72,
                               RH=59,
-                              Ta=24.3,
-                              Gr.Rad=675,
+                              temp=24.3,
+                              radiation=675,
                               height=2.2,
                               lat=-35.37,
                               long=71.5946,

@@ -1,0 +1,18 @@
+water: 
+change log. From 09/09/2015. Most recent changes first / on top.
+Guillermo OLMEDO
+-----------------------------------------------------------------
+VERSION 0.0.2.4
+
+* Added function to prepare data from Weather Station and calc weather
+  conditions at satellite flyby.
+* Added function to calculate Surface Energy Balance using METRIC
+
+VERSION 0.0.2.3
+
+* Rename sensibleHeatFlux() to sensibleHeatFlux_old()
+* Remove sensibleHeatFlux.CITRA()
+* Split sensibleHeatFlux in 2 new functions:
+  - calcAnchors() for anchors points
+  - calcH() for the iterative process to calculate H and dT
+* Added function to estimate Net Radiation

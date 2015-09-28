@@ -6,6 +6,11 @@
 \usage{
 outLWradiation(LAI, Ts)
 }
+\arguments{
+\item{LAI}{raster layer with leaf area index. See LAI()}
+
+\item{Ts}{Land surface temperature. See surfaceTemperature()}
+}
 \description{
 Calculates Long wave outgoing radiation
 }

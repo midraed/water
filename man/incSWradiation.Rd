@@ -6,11 +6,20 @@
 \usage{
 incSWradiation(surface.model, solar.angles, WeatherStation)
 }
+\arguments{
+\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
+
+\item{solar.angles}{rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()}
+
+\item{WeatherStation}{Weather Station data}
+}
 \description{
-Calculates Incoming Solar Radiation
+This function calculates incoming solar radiation from surface model and solar angles.
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+
+Daniel de la Fuente Saiz
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

@@ -4,7 +4,16 @@
 \alias{incLWradiation}
 \title{Calculates long wave incoming radiation}
 \usage{
-incLWradiation(WeatherStation, DEM, solar.angles)
+incLWradiation(WeatherStation, DEM, solar.angles, Ts)
+}
+\arguments{
+\item{WeatherStation}{Weather Station data}
+
+\item{DEM}{digital elevation model in meters.}
+
+\item{solar.angles}{rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()}
+
+\item{Ts}{Land surface temperature. See surfaceTemperature()}
 }
 \description{
 Calculates long wave incoming radiation

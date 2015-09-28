@@ -1,14 +1,14 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance models
-Version: 0.0.2.2
-Date: 2015-08-26
+Version: 0.0.2.5
+Date: 2015-09-25
 Authors@R: c(person("Guillermo Federico", "Olmedo", role = c("aut", "cre"), email = "guillermo.olmedo@gmail.com"))
 Author: Guillermo Federico Olmedo [aut, cre]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 Description: Tools and functions to calculate actual evapotranspiration 
     using surface energy balance models. 
-Depends: R (>= 3.0), raster (>= 2.4-18), sp (>= 1.1-1)
-Imports: proj4
+Depends: R (>= 3.0), raster (>= 2.4-18), sp (>= 1.1-1), rgdal (>= 1.0-5)
+Imports: 
 License: GPL (>= 2)
 URL: https://github.com/midraed/METRICforR, https://cran.r-project.org/package=water
 LazyData: true

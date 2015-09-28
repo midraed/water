@@ -8,8 +8,8 @@
 #' @examples 
 #' WeatherStation  <- data.frame(wind=4.72,
 #'                               RH=59, 
-#'                               Ta=24.3,
-#'                               Gr.Rad=675, 
+#'                               temp=24.3,
+#'                               radiation=675, 
 #'                               height=2.2, 
 #'                               lat=-35.37, 
 #'                               long=71.5946, 
@@ -19,13 +19,16 @@
 #' @references 
 #' Allen 2005 ASCE
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
-  TaK <- WeatherStation$Ta + 273.16
-  Rs <- WeatherStation$Gr.Rad * 3600 / 1e6
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
+  tempK <- WeatherStation$temp + 273.16
+  Rs <- WeatherStation$radiation * 3600 / 1e6
   P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
   psi <- 0.000665*P
-  Delta <- 2503 * exp((17.27*WeatherStation$Ta)/
-                        (WeatherStation$Ta+237.3))/((WeatherStation$Ta+237.3)^2)
-  ea.sat <- 0.6108*exp((17.27*WeatherStation$Ta)/(WeatherStation$Ta+237.3))
+  Delta <- 2503 * exp((17.27*WeatherStation$temp)/
+                        (WeatherStation$temp+237.3))/((WeatherStation$temp+237.3)^2)
+  ea.sat <- 0.61078*exp((17.269*WeatherStation$temp)/(WeatherStation$temp+237.3))
   ea <- (WeatherStation$RH/100)*ea.sat
   DPV <- ea.sat - ea
   dr <- 1 + 0.033*(cos(2*pi*DOY/365))
@@ -48,10 +51,10 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
   Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
   fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, 
                 ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
-  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*TaK^4)
+  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*tempK^4)
   G.day <- Rn.a * 0.1
   wind.2 <- WeatherStation$wind *(4.87/(log(67.8*WeatherStation$height-5.42)))
-  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/TaK)*wind.2*(DPV)))/
+  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/tempK)*wind.2*(DPV)))/
     (Delta+(psi*(1+(0.24*wind.2))))
   return(ETo.hourly)
 }
@@ -62,11 +65,16 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   LE = Rn - G - H
   ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
+  ET.24[ET.24 < 0]  <- 0
+  ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
   rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
@@ -85,6 +93,9 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @references 
 #' Allen 2005 ASCE
 dailyEToPM <- function(WeatherStation, DOY, long.z=WeatherStation$long){
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
   print("not yet")
   return()
 }
