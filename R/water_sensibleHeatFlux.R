@@ -16,11 +16,11 @@
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Sáiz, Daniel
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' 
-#' Pôças, I., Paço, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santos, F.L., Pereira, L.S., Allen, R.G., 2014. Satellite-based evapotranspiration of a super-intensive olive orchard: Application of METRIC algorithms. Biosystems Engineering 128, 69–81. doi:10.1016/j.biosystemseng.2014.06.019
+#' Pôças, I., Paço, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santos, F.L., Pereira, L.S., Allen, R.G., 2014. Satellite-based evapotranspiration of a super-intensive olive orchard: Application of METRIC algorithms. Biosystems Engineering 128, 69–81. doi:10.1016/j.biosystemseng.2014.06.019 \cr
 #'
-#' Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267–3283. doi:10.1007/s11269-012-0071-8
+#' Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267–3283. doi:10.1007/s11269-012-0071-8 \cr
 #' @export
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
@@ -48,6 +48,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 }
 
 #' Select anchors pixels for H function 
+#' @description            automatically search end members within the satellite scene (extreme wet and dry conditions).
 #' @param image            top-of-atmosphere landsat reflectance image
 #' @param Ts               land surface temperature in K. See surfaceTemperature()
 #' @param LAI              rasterLayer with Leaf Area Index. See LAI()
@@ -65,6 +66,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param deltaTemp        deltaTemp for method "CITRA-MCB"
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
+#' @author de la Fuente-Sáiz, Daniel
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
@@ -137,6 +139,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
 
 #' Iterative function to estimate H and R.ah
+#' @description          generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
 #' @param anchors        anchors points. Can be the result from calcAnchors() or
 #' a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
 #' "cold" or "hot"
@@ -157,8 +160,11 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param G              Soil Heat Flux. See soilHeatFlux()
 #' @param verbose        Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
+#' @author de la Fuente-Sáiz, Daniel
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
+#' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011–4027. doi:10.1002/hyp.8408 \cr
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
