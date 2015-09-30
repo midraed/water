@@ -1,5 +1,7 @@
 
 #' Create aoi polygon from topleft and bottomright coordinates
+#' @description
+#' An AOI (Area of Interest) is created based on two points (topleft and bottomright) using a coordinate reference system.
 #' @param topleft     a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
 #' @param EPSG        Coordinate reference system EPSG code
@@ -27,6 +29,8 @@ createAoi <- function(topleft, bottomright, EPSG){
 }
 
 #' Load Landsat data from folder
+#' @description
+#' This function loads Landsat bands from a specific folder. 
 #' @param path  folder where band files are stored
 #' @param sat   "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames
 #' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
@@ -56,6 +60,8 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 }  
 
 #' Calculates Top of atmosphere reflectance
+#' @description
+#' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
 #' @param image.DN      raw image in digital numbers
 #' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param ESPA          Logical. If TRUE will look for espa.usgs.gov related products on working folder
@@ -119,7 +125,7 @@ calcTOAr <- function(image.DN, sat="auto",
 
 #' Calculates surface reflectance for L7
 #' @description
-#' Calculates surface reflectance from top of atmosphere radiance using the model proposed on Allen 2007
+#' Calculates surface reflectance from top of atmosphere radiance using the model developed by Tasumi et al. (2008) and Allen et al. (2007), which considers a band-by-band basis.
 #' @param image.TOAr      raster stack. top of atmosphere reflectance image
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param ESPA            Logical. If TRUE will look for espa.usgs.gov related products on working folder
@@ -130,6 +136,7 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @author David Fonseca Luengo 
 #' @references 
+#' Tasumi M.; Allen R.G. and Trezza, R. At-surface albedo from Landsat and MODIS satellites for use in energy balance studies of evapotranspiration Journal of Hydrolog. Eng., 2008, 13, (51-63)
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 # incidence hor from TML?? 
@@ -251,6 +258,8 @@ prepareSRTMdata <- function(format="tif", extent){
 }
 
 #' Calculates surface model used in METRIC
+#' @description
+#' DEM map is used to generate the surface representation of the image through of aspect and slope maps. This procedure helps to avoid differences in the surface temperature (and finally Evapotranspiration) caused by different incidence angles and/or elevations in mountainous areas.
 #' @param DEM  raster with Digital elevation model 
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
@@ -269,6 +278,8 @@ METRICtopo <- function(DEM){
 }
 
 #' Calculates solar angles
+#' @description
+#' Metadata, aspect and slope maps are combined to estimate solar angles for the entire image. 
 #' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
 #' @param MTL             Landsat Metadata File
 #' @param WeatherStation  Weather Station data
@@ -368,7 +379,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 
 #' Calculates Broadband Albedo from Landsat data
 #' @description 
-#' test
+#' Broadband surface Albedo is estimated considering the integration of all narrowband at-surface reflectances following a weighting function with empirical coefficients (Tasumi et al., 2007).
 #' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, SWIR2
 #' @param aoi        area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param coeff      coefficient to transform narrow to broad band albedo. See Details.
@@ -379,6 +390,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng.
 #' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238.
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
@@ -416,6 +428,8 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 }
 
 #' Estimate LAI from Landsat Data
+#' @description
+#' This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
 #' @param method   Method used to estimate LAI from spectral data. See Details.
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
 #' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
@@ -496,6 +510,8 @@ LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
 }
 
 #' Calculates short wave transmisivity
+#' @description
+#' Short wave transmisivity is estimated for broad-band considering an extended equation developed by Allen (1996), based from Majumdar et al.(1972), using coefficients developed by ASCE-EWRI (2005).
 #' @param Kt            unitless turbidity coefficient 0<Kt<=1.0, where Kt=1.0 for clean air and Kt=0.5 for extremely turbid, dusty, or polluted air
 #' @param ea            near-surface vapor pressure (kPa)
 #' @param dem           digital elevation model 
@@ -503,6 +519,8 @@ LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 
+#' Majumdar, N.; Mathur, B. & Kaushik, S. Prediction of direct solar radiation for low atmospheric turbidity Solar Energy, Elsevier, 1972, 13, 383-394
+#' ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005
 #' @export
 SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
@@ -520,6 +538,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 }
 
 #' Estimates Land Surface Temperature from Landsat Data
+#' @description
+#' Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
 #' @param thermalband     Satellite thermal band
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param LAI             raster layer with leaf area index. See LAI()
@@ -528,6 +548,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric calibration of Landsat thematic mapper thermal band Remote Sensing of Environment, 1989, 28, (339-347)
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
@@ -578,6 +599,8 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
 }
 
 #' Calculates Long wave outgoing radiation
+#' @description
+#' This function estimates the long wave outgoing radiation using the Stefan-Boltzmann equation.
 #' @param LAI  raster layer with leaf area index. See LAI()
 #' @param Ts   Land surface temperature. See surfaceTemperature()
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
@@ -594,6 +617,8 @@ outLWradiation <- function(LAI, Ts){
 }
 
 #' Calculates long wave incoming radiation
+#' @description
+#' This function estimates the long wave incoming radiation using the Stefan-Boltzmann equation. In addition, empirical equation of Bastiaanssen (1995) with coefficients developed by Allen (2000) are used to estimate the effective atmospheric emissivity.
 #' @param WeatherStation   Weather Station data
 #' @param DEM              digital elevation model in meters.
 #' @param solar.angles     rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()
@@ -601,6 +626,8 @@ outLWradiation <- function(LAI, Ts){
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' Bastiaanssen W. Regionalization of surface flux densities and moisture indicators in composite terrain: A remote sensing approach under clear skies in Mediterranean climates. Ph.D. dissertation, CIP Data Koninklijke Bibliotheek, Den Haag, The Netherlands, 1995, p273
+#' Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
@@ -622,6 +649,8 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
 }
 
 #' Estimates net radiation
+#' @description
+#' This function estimates net radiation considering a surface radiation balance. Equations use the information from image, in addition of measurements of actual vapor pressure and altitude.
 #' @param LAI     raster layer with leaf area index. See LAI()
 #' @param albedo  broadband surface albedo. See albedo()
 #' @param Rs.inc  incoming short-wave radiation
@@ -641,6 +670,8 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 
 
 #' Estimates Soil Heat Flux
+#' @description
+#' This function implements models to estimate soil heat flux for different surfaces and considering different inputs.
 #' @param image    surface reflectance image
 #' @param Ts       Land surface temperature. See surfaceTemperature()
 #' @param albedo   broadband surface albedo. See albedo()
