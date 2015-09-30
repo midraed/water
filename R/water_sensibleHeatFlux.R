@@ -124,7 +124,9 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   cold <- as.numeric(extract(Ts, anchors[anchors@data$type=="cold",], 
                              cellnumbers=T)[,1])
   ###
-  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours, 
+                         DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
+                         ET= "ETor")
   Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -132,7 +134,10 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   ### We calculate the initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
-  if(u200 < 1){u200 <- 4}
+  if(u200 < 1){warning(paste0("u200 less than threshold value = ", 
+                              round(u200,4), "m/s. using u200 = 4m/s"))
+    u200 <- 4
+  }
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
@@ -228,7 +233,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     # Check convergence
     if(last.loop == TRUE){
       converge <- TRUE
-      print (paste0("convergence reached at iteration #", i))
+      if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
     }
     delta.r.ah.hot <- (r.ah[hot] - r.ah.hot.previous) / r.ah[hot] * 100
     delta.r.ah.cold <- (r.ah[cold] - r.ah.cold.previous) / r.ah[cold] * 100
@@ -246,5 +251,292 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   result$b <- b
   result$dT <- dT
   result$H <- H
+  return(result)
+}
+
+
+
+#' Iterative function to estimate H and R.ah
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+calcH2  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
+                   Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
+                   DEM, Rn, G, verbose=FALSE) {
+  if(class(WeatherStation)== "waterWeatherStation"){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
+  if(class(anchors) != "SpatialPointsDataFrame"){
+    coordinates(anchors) <- ~ X + Y  
+  }
+  hot <- as.numeric(extract(Ts, anchors[anchors@data$type=="hot",], 
+                            cellnumbers=T)[,1])
+  cold <- as.numeric(extract(Ts, anchors[anchors@data$type=="cold",], 
+                             cellnumbers=T)[,1])
+  ###
+  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
+  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
+  ### We calculate the initial conditions assuming neutral stability
+  u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
+  u200 <- u.ws / 0.41 * log(200/Z.om.ws)
+  if(u200 < 1){warning(paste0("u200 less than threshold value = ", 
+                              round(u200,4), "m/s. using u200 = 4m/s"))
+    u200 <- 4
+  }
+  if(mountainous==TRUE){
+    u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
+  }
+  friction.velocity <- 0.41 * u200 / log(200/Z.om) 
+  r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
+  ### Iteractive process start here:
+  LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*
+    (1e6)/3600 
+  # here uses latent.heat.vapo
+  H.cold <- Rn[cold] - G[cold] - LE.cold #ok
+  result <- list()
+  if(verbose==TRUE){
+    print("starting conditions")
+    print("Cold")
+    print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
+                           "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
+                           "u200"=u200, "u*"=friction.velocity[cold])))
+    print("Hot")
+    print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
+                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200, 
+                           "u*"=friction.velocity[hot])))
+  }
+  plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
+       col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
+  points(1, r.ah[cold], col="blue", pch=20)
+  converge <- FALSE
+  last.loop <- FALSE 
+  i <- 1
+  erdas_hot <- c(Ts[hot], Ts.datum[hot], Rn[hot], G[hot], Z.om[hot], u200)
+  erdas_cold <-c(Ts[cold], Ts.datum[cold], Rn[cold], G[cold], Z.om[cold], u200)
+  ### Start of iterative process -----------------------------------------------
+  while(!converge){
+    #     ## For meta functions like METRIC.EB
+    #     if(exists(x = "on.meta", envir=METRIC.EB)){
+    #       if(i == 3){setTxtProgressBar(pb, 52)}
+    #       if(i == 5){setTxtProgressBar(pb, 65)}
+    #       if(i == 9){setTxtProgressBar(pb, 85)}
+    #     }
+    i <-  i + 1 
+    if(verbose==TRUE){
+      print(paste("iteraction #", i))
+    }
+    ### We calculate dT and H 
+    dT.cold <- H.cold * r.ah[cold] / (air.density[cold]*1004)
+    dT.hot <- (Rn[hot] - G[hot]) * r.ah[hot] / (air.density[hot]*1004)
+    a <- (dT.hot - dT.cold) / (Ts.datum[hot] - Ts.datum[cold])
+    b <- -a * Ts.datum[cold] + dT.cold
+    if(verbose==TRUE){
+      print(paste("a",a))
+      print(paste("b",b))
+    }
+    dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
+    rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
+    H <- rho * 1004 * dT / r.ah
+    Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) / 
+      (0.41 * 9.807 * H)
+    ### Then we calculate L and phi200, phi2, and phi0.1 
+    ## !!! This is very time consumig... maybe only for hot and cold pixels?
+    phi.200 <- raster(Monin.Obukhov.L) 
+    # copy raster extent and pixel size, not values!
+    phi.2 <- raster(Monin.Obukhov.L)
+    phi.01 <- raster(Monin.Obukhov.L)
+    ## stable condition = L > 0
+    phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+    phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+    phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+    ## unstable condition = L < 0
+    x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+    x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+    x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+    phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                       log((1 + x.200^2) /2) - 
+                                       2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+    phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+    phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+    if(verbose==TRUE){
+      print(paste("r.ah cold", r.ah[cold]))
+      print(paste("r.ah hot", r.ah[hot]))
+      print(paste("dT cold", dT[cold]))
+      print(paste("dT hot", dT[hot]))
+      print("##############")
+    }
+    ###  Erdas comparision
+    erdas_hot <- c(erdas_hot, friction.velocity[hot], r.ah[hot], dT[hot], rho[hot],
+                   H[hot], Monin.Obukhov.L[hot], phi.200[hot], phi.2[hot], 
+                   phi.01[hot])
+    erdas_cold <- c(erdas_cold, friction.velocity[cold], r.ah[cold], dT[cold], rho[cold],
+                    H[cold], Monin.Obukhov.L[cold], phi.200[cold], phi.2[cold], 
+                    phi.01[cold])
+    ### 
+    ## And finally, r.ah and friction velocity
+    friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+    # converge condition
+    r.ah.hot.previous <- r.ah[hot]
+    r.ah.cold.previous <- r.ah[cold]
+    ### -----------
+    r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
+    ## Update plot
+    points(i, r.ah[hot], col="red", pch=20)
+    points(i, r.ah[cold], col="blue", pch=20)
+    lines(c(i, i-1), c(r.ah[hot], r.ah.hot.previous), col="red")
+    lines(c(i, i-1), c(r.ah[cold], r.ah.cold.previous), col="blue")
+    # Check convergence
+    if(last.loop == TRUE){
+      converge <- TRUE
+      if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
+    }
+    delta.r.ah.hot <- (r.ah[hot] - r.ah.hot.previous) / r.ah[hot] * 100
+    delta.r.ah.cold <- (r.ah[cold] - r.ah.cold.previous) / r.ah[cold] * 100
+    if(verbose==TRUE){
+      print (paste("delta rah hot", delta.r.ah.hot))
+      print (paste("delta rah cold", delta.r.ah.cold))
+      print ("### -------")
+    }
+    if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
+  } 
+  ### End interactive process --------------------------------------------------
+  #u200 <- 0.644
+  dT <- as.numeric(a)*Ts.datum + as.numeric(b)
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om))
+  r.ah <- log(2/0.1)/(friction.velocity*0.41)
+  Monin.Obukhov.L <- -1*friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+#   Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) / 
+#     (0.41 * 9.807 * air.density * 1004 * dT / r.ah)
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) 
+  Monin.Obukhov.L <- -1* friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) 
+  Monin.Obukhov.L <- -1*friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) 
+  Monin.Obukhov.L <- -1*friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) 
+  Monin.Obukhov.L <- -1*friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) 
+  Monin.Obukhov.L <- -1*friction.velocity^3 * Ts * r.ah / 0.41 / 9.81 / dT
+  phi.200 <- raster(Monin.Obukhov.L) 
+  phi.2 <- raster(Monin.Obukhov.L)
+  phi.01 <- raster(Monin.Obukhov.L)
+  ## stable condition = L > 0
+  phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+  phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+  ## unstable condition = L < 0
+  x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+  x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+  x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+  phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                     log((1 + x.200^2) /2) - 
+                                     2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+  phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+  phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+  friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+  r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
+  #######
+  rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
+  P <- 101.3*((293-0.0065 * DEM)/293)^5.26
+  air.density <- 1000 * P / (1.01*(Ts)*287)
+  H <- air.density * 1004 * dT / r.ah
+  ### Results ------------------------------------------------------------------
+  dT <- saveLoadClean(imagestack = dT, file = "dT", overwrite=TRUE)
+  H <- saveLoadClean(imagestack = H, file = "H", overwrite=TRUE)
+  result$a <- a
+  result$b <- b
+  result$dT <- dT
+  result$H <- H
+  result$erdas_hot <- erdas_hot
+  result$erdas_cold <- erdas_cold
   return(result)
 }
