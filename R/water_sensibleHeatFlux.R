@@ -1,4 +1,5 @@
 #' Calculates Momentum Roughness Length
+#' @description 
 #' @param method          method selected to calculate momentum roughness length. Use 
 #' "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
 #' method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in 
