@@ -44,22 +44,27 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   result$hourly <- WSdata[datetime$min==0,] 
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(MTL, warn=FALSE)
-  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-  date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-  sat.time <-regmatches(time.line,regexec(text=time.line,
-                                          pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-  sat.date <-regmatches(date.line,regexec(text=date.line,
-                                          pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-  sat.datetime <- strptime(paste(sat.date, sat.time), 
-                           format = "%Y-%m-%d %H:%M:%S", tz="GMT")
-  WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < sat.datetime],1),]
-  WS.after <- WSdata[WSdata$datetime == datetime[datetime > sat.datetime][1],]
-  delta1 <- as.numeric(difftime(WS.after$datetime, WS.prev$datetime, units="secs"))
-  delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
-  sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
-  sat.data[,2:6] <- round(sat.data[,2:6],2)
-  result$at.sat <- sat.data
+  if(length(MTL)!=0){
+    MTL <- readLines(MTL, warn=FALSE)
+    time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+    date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+    sat.time <-regmatches(time.line,regexec(text=time.line,
+           pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+    sat.date <-regmatches(date.line,regexec(text=date.line,
+                        pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+    sat.datetime <- strptime(paste(sat.date, sat.time), 
+                             format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+    WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
+                                                       sat.datetime],1),]
+    WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
+                                                     sat.datetime][1],]
+    delta1 <- as.numeric(difftime(WS.after$datetime, 
+                                  WS.prev$datetime, units="secs"))
+    delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
+    sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
+    sat.data[,2:6] <- round(sat.data[,2:6],2)
+    result$at.sat <- sat.data
+  }
   class(result) <- "waterWeatherStation"
   return(result)
 }
@@ -131,8 +136,9 @@ print.waterWeatherStation <- function(x, ...){
       round(x$location$lat, 2), "elev:", round(x$location$elev, 2), "\n")
   cat("Summary:\n")
   print(summary(x$alldata[,2:6]), ...)
+  if(!is.null(WeatherStation$at.sat)){
   cat("\n Conditions at satellite flyby:\n")
-  print(x$at.sat)
+  print(x$at.sat)}
 }
 
 

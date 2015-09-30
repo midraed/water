@@ -18,17 +18,37 @@
 #' @export
 #' @references 
 #' Allen 2005 ASCE
-hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
+hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
+                     ET.instantaneous=FALSE, ET="ETo", height=2, lat, long, elev){
   if(class(WeatherStation)== "waterWeatherStation"){
-    WeatherStation <- getDataWS(WeatherStation)
+    if(!is.null(WeatherStation$at.sat)){
+      WeatherStation <- getDataWS(WeatherStation)
+      ET.instantaneous = TRUE
+      DOY <- WeatherStation$DOY
+      hours <-  WeatherStation$hours}
+  } else {
+    if("datetime" %in% names(WeatherStation)){
+      date <- as.POSIXlt(WeatherStation$datetime, format="%Y-%m-%d %H:%M:%S")
+      DOY=date$yday+1
+      hours=date$hour + date$min/60 + date$sec/3600}
+    if(!missing(lat)){WeatherStation$lat <- lat}
+    if(!missing(long)){WeatherStation$long <- long}
+    if(!missing(elev)){WeatherStation$elev <- elev}
+    if(!missing(height)){WeatherStation$height <- height}
+    if(length(WeatherStation$DOY) != 0 & length(WeatherStation$hours) != 0 &
+       missing(DOY) & missing(hours)){
+      DOY <- WeatherStation$DOY
+      hours <- WeatherStation$hours
+    } 
   }
   tempK <- WeatherStation$temp + 273.16
   Rs <- WeatherStation$radiation * 3600 / 1e6
   P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
   psi <- 0.000665*P
   Delta <- 2503 * exp((17.27*WeatherStation$temp)/
-                        (WeatherStation$temp+237.3))/((WeatherStation$temp+237.3)^2)
-  ea.sat <- 0.61078*exp((17.269*WeatherStation$temp)/(WeatherStation$temp+237.3))
+                  (WeatherStation$temp+237.3))/((WeatherStation$temp+237.3)^2)
+  ea.sat <- 0.61078*exp((17.269*WeatherStation$temp)/
+                          (WeatherStation$temp+237.3))
   ea <- (WeatherStation$RH/100)*ea.sat
   DPV <- ea.sat - ea
   dr <- 1 + 0.033*(cos(2*pi*DOY/365))
@@ -36,7 +56,9 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
   phi <- WeatherStation$lat*(pi/180)
   b <- 2*pi*(DOY-81)/364
   Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
-  hour.angle <- (pi/12)*((hours+0.06667*(WeatherStation$long*pi/180-long.z*pi/180)+Sc)-12)
+  if(ET.instantaneous==TRUE){hours <- hours +0.5}
+  hour.angle <- (pi/12)*((hours-0.5+0.06667*(WeatherStation$long*
+                                               pi/180-long.z*pi/180)+Sc)-12)
   w1 <- hour.angle-((pi)/24)
   w2 <- hour.angle+((pi)/24)
   hour.angle.s <- acos(-tan(phi)*tan(delta))
@@ -46,17 +68,27 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long){
                 ifelse(w2>hour.angle.s, hour.angle.s, w2))
   Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
   Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*
-                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*(sin(w2)-sin(w1)))))
+                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*
+                                                     (sin(w2)-sin(w1)))))
   Rso <- (0.75+2e-5*WeatherStation$elev)*Ra
   Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
   fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, 
                 ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
   Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*tempK^4)
-  G.day <- Rn.a * 0.1
+  Ghr <- c(0.1, 0.5)
+  if(ET=="ETr"){Ghr <- c(0.04, 0.2)}
+  G.day <- Rn.a * ifelse(Rn.a > 0, Ghr[1], Ghr[2])
   wind.2 <- WeatherStation$wind *(4.87/(log(67.8*WeatherStation$height-5.42)))
-  ETo.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/tempK)*wind.2*(DPV)))/
-    (Delta+(psi*(1+(0.24*wind.2))))
-  return(ETo.hourly)
+  windfactors <- c(0.24, 0.96)
+  if(ET=="ETr"){windfactors <-  c(0.25, 1.7)}
+  windf <- ifelse(WeatherStation$radiation > 0, windfactors[1], windfactors[2])
+  ET.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/tempK)*wind.2*(DPV)))/
+    (Delta+(psi*(1+(windf*wind.2))))
+  if(ET=="ETr"){
+    ET.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(66/tempK)*wind.2*(DPV)))/
+      (Delta+(psi*(1+(windf*wind.2))))
+  }
+  return(ET.hourly)
 }
 
 #' Calculates ET-24hs from energy balance and Weather Station 
@@ -73,8 +105,8 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
-  ET.24[ET.24 < 0]  <- 0
-  ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
+  #ET.24[ET.24 < 0]  <- 0
+  #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
   rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
@@ -92,10 +124,25 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @export
 #' @references 
 #' Allen 2005 ASCE
-dailyEToPM <- function(WeatherStation, DOY, long.z=WeatherStation$long){
+#' @examples 
+#' csvfile <- system.file("extdata", "apples.csv", package="water")
+#' 
+#' WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
+#' lat=-35.42222, long= -71.38639, elev=201, height= 2.2, cf=c(1,0.2777778,1,1))
+#' 
+#' dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124, 
+#' ET="ETo")
+#' 
+dailyET <- function(WeatherStation, DOY, lat, long, elev, ET="ETo", 
+                       long.z=WeatherStation$long){
   if(class(WeatherStation)== "waterWeatherStation"){
-    WeatherStation <- getDataWS(WeatherStation)
-  }
-  print("not yet")
-  return()
+    ET.daily <- vector()
+    for(i in 1:24){
+      date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
+      ET.daily <- c(ET.daily,hourlyET(WeatherStation$hourly[i,], lat=lat, 
+                                      long = long, elev=elev, ET=ET))
+      }
+  } else {
+  print("not yet")}
+  return(sum(ET.daily))
 }
