@@ -136,7 +136,7 @@ print.waterWeatherStation <- function(x, ...){
       round(x$location$lat, 2), "elev:", round(x$location$elev, 2), "\n")
   cat("Summary:\n")
   print(summary(x$alldata[,2:6]), ...)
-  if(!is.null(WeatherStation$at.sat)){
+  if(!is.null(x$at.sat)){
   cat("\n Conditions at satellite flyby:\n")
   print(x$at.sat)}
 }
