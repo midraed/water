@@ -42,19 +42,22 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 }
 
 #' Select anchors pixels for H function 
-#' @param image
-#' @param Ts
-#' @param LAI
-#' @param albedo
-#' @param Z.om
-#' @param n
-#' @param aoi
-#' @param anchors.method
-#' @param sat
-#' @param ESPA
-#' @param plots
-#' @param deltaTemp
-#' @param verbose
+#' @param image            top-of-atmosphere landsat reflectance image
+#' @param Ts               land surface temperature in K. See surfaceTemperature()
+#' @param LAI              rasterLayer with Leaf Area Index. See LAI()
+#' @param albedo           broandband surface albedo. See albedo()
+#' @param Z.om             momentum roughness lenght. See momentumRoughnessLength()
+#' @param n                number of pair of anchors pixels to calculate
+#' @param aoi              area of interest to limit the search. If 
+#' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
+#' @param anchors.method   method to select anchor pixels
+#' @param sat              satellite sensor used for NDVI. Can be "L7" or "L8"
+#' @param ESPA             Logical. If TRUE will look for espa.usgs.gov realted 
+#' products on working folder
+#' @param plots            Logical. If TRUE will plot position of anchors points
+#' selected
+#' @param deltaTemp        deltaTemp for method "CITRA-MCB"
+#' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @references 
 #' CITRA y MCB (com pers)
@@ -128,19 +131,23 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
 
 #' Iterative function to estimate H and R.ah
-#' @param anchors
-#' @param Ts
-#' @param Z.om
-#' @param WeatherStation
-#' @param ETp.coef
-#' @param Z.om.ws
-#' @param sat
-#' @param ESPA
-#' @param mountainous
-#' @param DEM
-#' @param Rn
-#' @param G
-#' @param verbose
+#' @param anchors        anchors points. Can be the result from calcAnchors() or
+#' a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
+#' "cold" or "hot"
+#' @param Ts             Land surface temperature in K. See surfaceTemperature()
+#' @param Z.om           momentum roughness lenght. See momentumRoughnessLength()
+#' @param WeatherStation WeatherStation data at the flyby from the satellite. 
+#' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
+#' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
+#' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
+#' 0.0018 or 0.03 for long grass
+#' @param sat            satellite sensor used for NDVI. Can be "L7" or "L8"
+#' @param ESPA           Logical. If TRUE will look for espa.usgs.gov realted 
+#' products on working folder#' @param mountainous
+#' @param DEM            Digital Elevation Model in meters.
+#' @param Rn             Net radiation. See netRadiation()
+#' @param G              Soil Heat Flux. See soilHeatFlux()
+#' @param verbose        Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
