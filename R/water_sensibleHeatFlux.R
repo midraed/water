@@ -1,9 +1,18 @@
 #' Calculates Momentum Roughness Length
-#' @param method    method selected to calculate momentum roughness length. Use 
+#' @param method          method selected to calculate momentum roughness length. Use 
 #' "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
 #' method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in 
 #' Santos et al (2012) and Pocas et al (2014).
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param LAI             rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"
+#' @param NDVI            rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"
+#' @param albedo          broadband surface albedo. See albedo()
+#' @param a               "a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
+#' @param b               "b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom" 
+#' @param fLAI.Perrier    proportion of LAI lying above h/2. Only needed for method = "Perrier"
+#' @param h.Perrier       crop height in meters. Only needed for method = "Perrier"
+#' @param montainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
+#' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
+#' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
@@ -33,7 +42,20 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 }
 
 #' Select anchors pixels for H function 
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param image
+#' @param Ts
+#' @param LAI
+#' @param albedo
+#' @param Z.om
+#' @param n
+#' @param aoi
+#' @param anchors.method
+#' @param sat
+#' @param ESPA
+#' @param plots
+#' @param deltaTemp
+#' @param verbose
+#' @author Guillermo Federico Olmedo
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
@@ -106,7 +128,20 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
 
 #' Iterative function to estimate H and R.ah
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param anchors
+#' @param Ts
+#' @param Z.om
+#' @param WeatherStation
+#' @param ETp.coef
+#' @param Z.om.ws
+#' @param sat
+#' @param ESPA
+#' @param mountainous
+#' @param DEM
+#' @param Rn
+#' @param G
+#' @param verbose
+#' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
