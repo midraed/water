@@ -1,5 +1,4 @@
 #' Calculates Momentum Roughness Length
-#' @description 
 #' @param method          method selected to calculate momentum roughness length. Use 
 #' "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
 #' method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in 
@@ -11,7 +10,7 @@
 #' @param b               "b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom" 
 #' @param fLAI.Perrier    proportion of LAI lying above h/2. Only needed for method = "Perrier"
 #' @param h.Perrier       crop height in meters. Only needed for method = "Perrier"
-#' @param montainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
+#' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
 #' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
 #' @author Guillermo Federico Olmedo
 #' @references 
@@ -144,7 +143,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' 0.0018 or 0.03 for long grass
 #' @param sat            satellite sensor used for NDVI. Can be "L7" or "L8"
 #' @param ESPA           Logical. If TRUE will look for espa.usgs.gov realted 
-#' products on working folder#' @param mountainous
+#' products on working folder
+#' @param mountainous    Logical. If TRUE heat transfer equation will be 
+#' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
 #' @param Rn             Net radiation. See netRadiation()
 #' @param G              Soil Heat Flux. See soilHeatFlux()
