@@ -4,7 +4,7 @@
 #' @param DOY day of year
 #' @param long.z longitude for local time
 #' @return ET hourly in mm.h-1
-#' @author Guillermo F Olmedo
+#' @author Guillermo Federico Olmedo
 #' @examples 
 #' WeatherStation  <- data.frame(wind=4.72,
 #'                               RH=59, 
@@ -92,7 +92,16 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
 }
 
 #' Calculates ET-24hs from energy balance and Weather Station 
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param Rn             Net radiation. See netRadiation()
+#' @param G              Soil Heat Flux. See soilHeatFlux()
+#' @param H              Sensible Heat Flux. See calcH()
+#' @param Ts             Land surface temperature. See surfaceTemperature()
+#' @param WeatherStation WeatherStation data at the flyby from the satellite. 
+#' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
+#' @param ETr.daily      hourly ETr for every hour of the day. See dailyET()
+#' @param C.rad          correction term used in sloping terrain to correct for 
+#' variation in 24 h versus instantaneous energy availability. See Allen (2007)
+#' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
@@ -117,10 +126,14 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 
 #' Calculates daily ET using Penman Monteith hourly formula for every hour
 #' @param WeatherStation a data frame with all the needed fields (see example)
-#' @param DOY day of year
-#' @param long.z longitude for local time
-#' @return ET daily in mm.h-1
-#' @author Guillermo F Olmedo
+#' @param DOY      day of year
+#' @param lat      latitude in decimal degrees of the weather station
+#' @param long     longitude in decimal degrees of the weather station
+#' @param elev     elevation in meters of the weather station
+#' @param ET       "ETo" or "ETr"
+#' @param long.z   longitude for local time
+#' @return ET      daily in mm.h-1
+#' @author Guillermo Federico Olmedo
 #' @export
 #' @references 
 #' Allen 2005 ASCE
