@@ -18,7 +18,7 @@ albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE)
 \item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related products on working folder}
 }
 \description{
-Calculates Broadband Albedo from Landsat data
+test
 }
 \details{
 There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.

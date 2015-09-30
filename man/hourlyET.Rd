@@ -4,7 +4,8 @@
 \alias{hourlyET}
 \title{Calculates ET using Penman Monteith hourly formula}
 \usage{
-hourlyET(WeatherStation, hours, DOY, long.z = WeatherStation$long)
+hourlyET(WeatherStation, hours, DOY, long.z = WeatherStation$long,
+  ET.instantaneous = FALSE, ET = "ETo", height = 2, lat, long, elev)
 }
 \arguments{
 \item{WeatherStation}{a data frame with all the needed fields (see example)}

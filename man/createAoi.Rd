@@ -17,7 +17,7 @@ createAoi(topleft, bottomright, EPSG)
 object of class SpatialPolygons
 }
 \description{
-Create aoi polygon from topleft and bottomright coordinates
+test
 }
 \examples{
 tl <- c(493300, -3592700)
