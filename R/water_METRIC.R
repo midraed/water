@@ -1,4 +1,8 @@
 #' Estimates Net Radiation as in METRIC Model
+#' @param image.DN
+#' @param DEM
+#' @param WeatherStation
+#' @param aoi
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -24,6 +28,10 @@ METRIC.Rn <- function(image.DN, DEM, WeatherStation, aoi){
 }
 
 #' Estimates Net Radiation as in METRIC Model
+#' @param Rn
+#' @param DEM
+#' @param image.DN
+#' @param WeatherStation
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -44,6 +52,21 @@ METRIC.G <- function(Rn, DEM, image.DN, WeatherStation=WeatherStation){
 
 
 #' Estimates Energy Balance using METRIC2010 Model
+#' @param image.DN
+#' @param DEM
+#' @param WeatherStation
+#' @param aoi
+#' @param MTL
+#' @param sat
+#' @param plain
+#' @param thermalband
+#' @param alb.coeff
+#' @param LAI.method
+#' @param Zom.method
+#' @param anchors.method
+#' @param ETp.coef
+#' @param Z.om.ws
+#' @param ESPA
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
