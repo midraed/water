@@ -44,7 +44,7 @@ automatically search end members within the satellite scene (extreme wet and dry
 \author{
 Guillermo Federico Olmedo
 
-de la Fuente-Sáiz, Daniel
+de la Fuente-Saiz, Daniel
 }
 \references{
 CITRA y MCB (com pers)
