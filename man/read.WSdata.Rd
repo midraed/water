@@ -7,11 +7,56 @@
 read.WSdata(WSdata, ..., height = 2.2, lat, long, elev, columns = c("date",
   "time", "radiation", "wind", NA, "RH", "temp", "pp"),
   date.format = "\%Y-\%m-\%d", time.format = "\%H:\%M:\%S",
-  datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 1, 1,
-  1), MTL)
+  datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 1, 1),
+  MTL)
+}
+\arguments{
+\item{WSdata}{csv file with weather station data}
+
+\item{...}{additional parameter to pass to read.csv()}
+
+\item{height}{weather station sensors height in meters}
+
+\item{lat}{latitude of weather station in decimal degrees.
+Negative values for south latitude}
+
+\item{long}{longitude of weather station in decimal degrees.
+Negative values for west longitude}
+
+\item{elev}{elevation of weather station in meters}
+
+\item{columns}{columns order of needed data. Vector containing
+"date", "time", "radiation", "wind", "RH" and "temp". Other values are
+ignored. If you have a column with date and time in the same column, you can
+include "datetime" and "date" and "time" are no longer needed.}
+
+\item{date.format}{date format. See strptime format argument.}
+
+\item{time.format}{time format. See strptime format argument.}
+
+\item{datetime.format}{datetime format. See strptime format argument.}
+
+\item{tz}{timezone of the weather station dates. If not
+present assumes the same timezone as the computer running the code. See
+strptime for details.}
+
+\item{cf}{conversion factor to convert radiation, wind, and
+temperature to W/m2; m/s and Celsius. See Details.}
+
+\item{MTL}{Metadata file. If not provided will look for one on
+working directory. If provided or present will calculate weather conditions
+on satellite flyby.}
+}
+\value{
+waterWeatherStation object, with data.frames with all data, hourly
+data and conditions at satellite flyby.
 }
 \description{
 Prepares weather station data
+}
+\details{
+For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
+temperature), cf should be: cf = c(1,0.2777778,1)
 }
 \examples{
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -24,7 +69,7 @@ plot(WS, alldata=FALSE)
 plot(WS, alldata=TRUE)
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \references{
 Landsat 7 Metadata example file available from the U.S. Geological Survey.

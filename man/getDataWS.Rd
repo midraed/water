@@ -6,10 +6,13 @@
 \usage{
 getDataWS(WeatherStation)
 }
+\arguments{
+\item{WeatherStation}{waterWeatherStation object. See read.WSdata()}
+}
 \description{
-Export data.frame from waterWeatherStation Object
+Export weather conditions at satellite flyby from waterWeatherStation object
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 

@@ -6,10 +6,18 @@
 \usage{
 \method{plot}{waterWeatherStation}(x, alldata = TRUE, ...)
 }
+\arguments{
+\item{x}{waterWeatherStation object. See read.WSdata()}
+
+\item{alldata}{plot all data on waterWeatherStation object. If false, will
+only plot hourly data.}
+
+\item{...}{additional parameters to pass to plot()}
+}
 \description{
 Plot method for waterWeatherStation S3 class
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 

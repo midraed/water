@@ -1,4 +1,30 @@
 #' Prepares weather station data
+#' @param WSdata             csv file with weather station data
+#' @param ...                additional parameter to pass to read.csv()
+#' @param height             weather station sensors height in meters
+#' @param lat                latitude of weather station in decimal degrees. 
+#' Negative values for south latitude
+#' @param long               longitude of weather station in decimal degrees. 
+#' Negative values for west longitude
+#' @param elev               elevation of weather station in meters
+#' @param columns            columns order of needed data. Vector containing 
+#' "date", "time", "radiation", "wind", "RH" and "temp". Other values are 
+#' ignored. If you have a column with date and time in the same column, you can
+#' include "datetime" and "date" and "time" are no longer needed.
+#' @param date.format        date format. See strptime format argument.
+#' @param time.format        time format. See strptime format argument.
+#' @param datetime.format    datetime format. See strptime format argument.
+#' @param tz                 timezone of the weather station dates. If not 
+#' present assumes the same timezone as the computer running the code. See 
+#' strptime for details. 
+#' @param cf                 conversion factor to convert radiation, wind, and 
+#' temperature to W/m2; m/s and Celsius. See Details.
+#' @param MTL                Metadata file. If not provided will look for one on
+#' working directory. If provided or present will calculate weather conditions
+#' on satellite flyby.
+#' @details 
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' temperature), cf should be: cf = c(1,0.2777778,1)
 #' @examples 
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
@@ -8,7 +34,9 @@
 #' print(WS)
 #' plot(WS, alldata=FALSE)
 #' plot(WS, alldata=TRUE)
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
+#' @return waterWeatherStation object, with data.frames with all data, hourly
+#' data and conditions at satellite flyby.
 #' @references 
 #' Landsat 7 Metadata example file available from the U.S. Geological Survey.
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
@@ -18,7 +46,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                     "RH", "temp", "pp"),
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
-                        cf = c(1, 1, 1, 1), MTL){
+                        cf = c(1, 1, 1), MTL){
   result <- list()
   result$location <- data.frame(lat=lat, long=long, elev=elev, height=height)
   WSdata <- read.csv(WSdata, ...)
@@ -31,12 +59,12 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     if("datetime" %in% columns){
       datetime  <- WSdata[, which(columns == "datetime")]
       datetime <- strptime(datetime, format = datetime.format, tz = tz)
-    } else {message("ERROR: date and time or datetime are needed")}
+    } else {message("ERROR: date and time or datetime are needed columns")}
   }
   radiation = WSdata[, which(columns == "radiation")] * cf[1]
   wind =  WSdata[, which(columns == "wind")] * cf[2]
-  RH =  WSdata[, which(columns == "RH")] * cf[3]
-  temp =  WSdata[, which(columns == "temp")] * cf[4]
+  RH =  WSdata[, which(columns == "RH")]
+  temp =  WSdata[, which(columns == "temp")] * cf[3]
   ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
   WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
                        RH=RH, ea=ea, temp=temp)
@@ -71,7 +99,33 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 
 
 #' Prepares weather station data 2
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param WSdata             csv file with weather station data
+#' @param ...                additional parameter to pass to read.csv()
+#' @param height             weather station sensors height in meters
+#' @param lat                latitude of weather station in decimal degrees. 
+#' Negative values for south latitude
+#' @param long               longitude of weather station in decimal degrees. 
+#' Negative values for west longitude
+#' @param elev               elevation of weather station in meters
+#' @param columns            columns order of needed data. Vector containing 
+#' "date", "time", "radiation", "wind", "RH" and "temp". Other values are 
+#' ignored. If you have a column with date and time in the same column, you can
+#' include "datetime" and "date" and "time" are no longer needed.
+#' @param date.format        date format. See strptime format argument.
+#' @param time.format        time format. See strptime format argument.
+#' @param datetime.format    datetime format. See strptime format argument.
+#' @param tz                 timezone of the weather station dates. If not 
+#' present assumes the same timezone as the computer running the code. See 
+#' strptime for details. 
+#' @param cf                 conversion factor to convert radiation, wind, and 
+#' temperature to W/m2; m/s and Celsius. See Details.
+#' @param MTL                Metadata file. If not provided will look for one on
+#' working directory. If provided or present will calculate weather conditions
+#' on satellite flyby.
+#' @details 
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' temperature), cf should be: cf = c(1,0.2777778,1)
+#' @author Guillermo Federico Olmedo
 #' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                          columns = c("date", "time", "radiation", "wind", NA,
@@ -87,7 +141,11 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 
 
 #' Plot method for waterWeatherStation S3 class
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param x        waterWeatherStation object. See read.WSdata()
+#' @param alldata  plot all data on waterWeatherStation object. If false, will
+#' only plot hourly data.
+#' @param ...      additional parameters to pass to plot()
+#' @author Guillermo Federico Olmedo
 #' @export
 #' @method plot waterWeatherStation
 plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
@@ -128,7 +186,9 @@ plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
 }
 
 #' Print method for waterWeatherStation S3 class
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param x        waterWeatherStation object. See read.WSdata()
+#' @param ...      additional parameters to pass to print()    
+#' @author Guillermo Federico Olmedo
 #' @export
 #' @method print waterWeatherStation
 print.waterWeatherStation <- function(x, ...){
@@ -143,7 +203,10 @@ print.waterWeatherStation <- function(x, ...){
 
 
 #' Export data.frame from waterWeatherStation Object
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @description 
+#' Export weather conditions at satellite flyby from waterWeatherStation object
+#' @param WeatherStation    waterWeatherStation object. See read.WSdata()
+#' @author Guillermo Federico Olmedo
 #' @export
 getDataWS <- function(WeatherStation){
   date <- as.POSIXlt(WeatherStation$at.sat$datetime, format="%Y-%m-%d %H:%M:%S")
