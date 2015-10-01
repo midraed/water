@@ -1,7 +1,8 @@
 #Package: water#
 Title: Actual Evapotranspiration with Surface Energy Balance models
 
-Author: Guillermo Federico Olmedo [aut, cre]
+Author: Guillermo Federico Olmedo, Samuel Ortega-Farías, David Fonseca-Luengo and
+  Daniel de la Fuente-Saiz
 
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 
@@ -27,6 +28,6 @@ I (try) to follow this [style guide](https://google-styleguide.googlecode.com/sv
 
 ## Contributing
 
-Contributing is accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
+Contributions are accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
 
 
