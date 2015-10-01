@@ -39,10 +39,12 @@ selected}
 \item{verbose}{Logical. If TRUE will print aditional data to console}
 }
 \description{
-Select anchors pixels for H function
+automatically search end members within the satellite scene (extreme wet and dry conditions).
 }
 \author{
 Guillermo Federico Olmedo
+
+de la Fuente-Sáiz, Daniel
 }
 \references{
 CITRA y MCB (com pers)

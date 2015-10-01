@@ -26,8 +26,8 @@ Guillermo Federico Olmedo
 Fonseca-Luengo, David
 }
 \references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 
-Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric calibration of Landsat thematic mapper thermal band Remote Sensing of Environment, 1989, 28, (339-347)
+Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric calibration of Landsat thematic mapper thermal band Remote Sensing of Environment, 1989, 28, (339-347) \cr
 }
 
