@@ -2,6 +2,19 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
+
+VERSION 0.2.9
+
+* Added dailyET function to calc and sum hourly ET for a complete day
+* Added new parameter to hourlyET and dailyET to choose between ETo or ETr
+* read.WSdata doesn't require a Landsat metadata anymore. Now you can process
+  weatherstation data without a landsat flyby. print method changed to reflect
+  this
+* function METRIC.EB now accepts many parameters for method of the included 
+  functions. For example, you can set with method you choose for LAI estimation
+* We're approaching CRAN launch date. Changed version numbering to reflect this. 
+  First CRAN version will be 0.3
+
 VERSION 0.0.2.4
 
 * Added function to prepare data from Weather Station and calc weather
