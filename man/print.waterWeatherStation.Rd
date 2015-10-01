@@ -6,10 +6,15 @@
 \usage{
 \method{print}{waterWeatherStation}(x, ...)
 }
+\arguments{
+\item{x}{waterWeatherStation object. See read.WSdata()}
+
+\item{...}{additional parameters to pass to print()}
+}
 \description{
 Print method for waterWeatherStation S3 class
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 

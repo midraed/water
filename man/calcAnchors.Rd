@@ -8,11 +8,43 @@ calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
   anchors.method = "CITRA-MCB", sat = "auto", ESPA = F, plots = TRUE,
   deltaTemp = 5, verbose = FALSE)
 }
+\arguments{
+\item{image}{top-of-atmosphere landsat reflectance image}
+
+\item{Ts}{land surface temperature in K. See surfaceTemperature()}
+
+\item{LAI}{rasterLayer with Leaf Area Index. See LAI()}
+
+\item{albedo}{broandband surface albedo. See albedo()}
+
+\item{Z.om}{momentum roughness lenght. See momentumRoughnessLength()}
+
+\item{n}{number of pair of anchors pixels to calculate}
+
+\item{aoi}{area of interest to limit the search. If
+waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
+
+\item{anchors.method}{method to select anchor pixels}
+
+\item{sat}{satellite sensor used for NDVI. Can be "L7" or "L8"}
+
+\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov realted
+products on working folder}
+
+\item{plots}{Logical. If TRUE will plot position of anchors points
+selected}
+
+\item{deltaTemp}{deltaTemp for method "CITRA-MCB"}
+
+\item{verbose}{Logical. If TRUE will print aditional data to console}
+}
 \description{
-Select anchors pixels for H function
+automatically search end members within the satellite scene (extreme wet and dry conditions).
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
+
+de la Fuente-Saiz, Daniel
 }
 \references{
 CITRA y MCB (com pers)

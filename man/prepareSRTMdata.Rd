@@ -15,6 +15,6 @@ prepareSRTMdata(format = "tif", extent)
 Create a mosaic with SRTM grid from image extent
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 

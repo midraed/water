@@ -18,12 +18,14 @@ netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 \item{Rl.out}{outgoing long-wave radiation}
 }
 \description{
-Estimates net radiation
+This function estimates net radiation considering a surface radiation balance. Equations use the information from the image, in addition of measurements of actual vapor pressure and altitude.
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
+
+Fonseca-Luengo, David
 }
 \references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 

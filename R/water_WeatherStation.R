@@ -1,4 +1,30 @@
 #' Prepares weather station data
+#' @param WSdata             csv file with weather station data
+#' @param ...                additional parameter to pass to read.csv()
+#' @param height             weather station sensors height in meters
+#' @param lat                latitude of weather station in decimal degrees. 
+#' Negative values for south latitude
+#' @param long               longitude of weather station in decimal degrees. 
+#' Negative values for west longitude
+#' @param elev               elevation of weather station in meters
+#' @param columns            columns order of needed data. Vector containing 
+#' "date", "time", "radiation", "wind", "RH" and "temp". Other values are 
+#' ignored. If you have a column with date and time in the same column, you can
+#' include "datetime" and "date" and "time" are no longer needed.
+#' @param date.format        date format. See strptime format argument.
+#' @param time.format        time format. See strptime format argument.
+#' @param datetime.format    datetime format. See strptime format argument.
+#' @param tz                 timezone of the weather station dates. If not 
+#' present assumes the same timezone as the computer running the code. See 
+#' strptime for details. 
+#' @param cf                 conversion factor to convert radiation, wind, and 
+#' temperature to W/m2; m/s and Celsius. See Details.
+#' @param MTL                Metadata file. If not provided will look for one on
+#' working directory. If provided or present will calculate weather conditions
+#' on satellite flyby.
+#' @details 
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' temperature), cf should be: cf = c(1,0.2777778,1)
 #' @examples 
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
@@ -8,7 +34,9 @@
 #' print(WS)
 #' plot(WS, alldata=FALSE)
 #' plot(WS, alldata=TRUE)
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
+#' @return waterWeatherStation object, with data.frames with all data, hourly
+#' data and conditions at satellite flyby.
 #' @references 
 #' Landsat 7 Metadata example file available from the U.S. Geological Survey.
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
@@ -18,7 +46,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                     "RH", "temp", "pp"),
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
-                        cf = c(1, 1, 1, 1), MTL){
+                        cf = c(1, 1, 1), MTL){
   result <- list()
   result$location <- data.frame(lat=lat, long=long, elev=elev, height=height)
   WSdata <- read.csv(WSdata, ...)
@@ -31,12 +59,12 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     if("datetime" %in% columns){
       datetime  <- WSdata[, which(columns == "datetime")]
       datetime <- strptime(datetime, format = datetime.format, tz = tz)
-    } else {message("ERROR: date and time or datetime are needed")}
+    } else {message("ERROR: date and time or datetime are needed columns")}
   }
   radiation = WSdata[, which(columns == "radiation")] * cf[1]
   wind =  WSdata[, which(columns == "wind")] * cf[2]
-  RH =  WSdata[, which(columns == "RH")] * cf[3]
-  temp =  WSdata[, which(columns == "temp")] * cf[4]
+  RH =  WSdata[, which(columns == "RH")]
+  temp =  WSdata[, which(columns == "temp")] * cf[3]
   ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
   WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
                        RH=RH, ea=ea, temp=temp)
@@ -44,29 +72,60 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   result$hourly <- WSdata[datetime$min==0,] 
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(MTL, warn=FALSE)
-  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-  date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-  sat.time <-regmatches(time.line,regexec(text=time.line,
-                                          pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-  sat.date <-regmatches(date.line,regexec(text=date.line,
-                                          pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-  sat.datetime <- strptime(paste(sat.date, sat.time), 
-                           format = "%Y-%m-%d %H:%M:%S", tz="GMT")
-  WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < sat.datetime],1),]
-  WS.after <- WSdata[WSdata$datetime == datetime[datetime > sat.datetime][1],]
-  delta1 <- as.numeric(difftime(WS.after$datetime, WS.prev$datetime, units="secs"))
-  delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
-  sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
-  sat.data[,2:6] <- round(sat.data[,2:6],2)
-  result$at.sat <- sat.data
+  if(length(MTL)!=0){
+    MTL <- readLines(MTL, warn=FALSE)
+    time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
+    date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+    sat.time <-regmatches(time.line,regexec(text=time.line,
+           pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+    sat.date <-regmatches(date.line,regexec(text=date.line,
+                        pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+    sat.datetime <- strptime(paste(sat.date, sat.time), 
+                             format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+    WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
+                                                       sat.datetime],1),]
+    WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
+                                                     sat.datetime][1],]
+    delta1 <- as.numeric(difftime(WS.after$datetime, 
+                                  WS.prev$datetime, units="secs"))
+    delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))
+    sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
+    sat.data[,2:6] <- round(sat.data[,2:6],2)
+    result$at.sat <- sat.data
+  }
   class(result) <- "waterWeatherStation"
   return(result)
 }
 
 
 #' Prepares weather station data 2
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param WSdata             csv file with weather station data
+#' @param ...                additional parameter to pass to read.csv()
+#' @param height             weather station sensors height in meters
+#' @param lat                latitude of weather station in decimal degrees. 
+#' Negative values for south latitude
+#' @param long               longitude of weather station in decimal degrees. 
+#' Negative values for west longitude
+#' @param elev               elevation of weather station in meters
+#' @param columns            columns order of needed data. Vector containing 
+#' "date", "time", "radiation", "wind", "RH" and "temp". Other values are 
+#' ignored. If you have a column with date and time in the same column, you can
+#' include "datetime" and "date" and "time" are no longer needed.
+#' @param date.format        date format. See strptime format argument.
+#' @param time.format        time format. See strptime format argument.
+#' @param datetime.format    datetime format. See strptime format argument.
+#' @param tz                 timezone of the weather station dates. If not 
+#' present assumes the same timezone as the computer running the code. See 
+#' strptime for details. 
+#' @param cf                 conversion factor to convert radiation, wind, and 
+#' temperature to W/m2; m/s and Celsius. See Details.
+#' @param MTL                Metadata file. If not provided will look for one on
+#' working directory. If provided or present will calculate weather conditions
+#' on satellite flyby.
+#' @details 
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' temperature), cf should be: cf = c(1,0.2777778,1)
+#' @author Guillermo Federico Olmedo
 #' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                          columns = c("date", "time", "radiation", "wind", NA,
@@ -82,7 +141,11 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 
 
 #' Plot method for waterWeatherStation S3 class
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param x        waterWeatherStation object. See read.WSdata()
+#' @param alldata  plot all data on waterWeatherStation object. If false, will
+#' only plot hourly data.
+#' @param ...      additional parameters to pass to plot()
+#' @author Guillermo Federico Olmedo
 #' @export
 #' @method plot waterWeatherStation
 plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
@@ -123,7 +186,9 @@ plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
 }
 
 #' Print method for waterWeatherStation S3 class
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @param x        waterWeatherStation object. See read.WSdata()
+#' @param ...      additional parameters to pass to print()    
+#' @author Guillermo Federico Olmedo
 #' @export
 #' @method print waterWeatherStation
 print.waterWeatherStation <- function(x, ...){
@@ -131,13 +196,17 @@ print.waterWeatherStation <- function(x, ...){
       round(x$location$lat, 2), "elev:", round(x$location$elev, 2), "\n")
   cat("Summary:\n")
   print(summary(x$alldata[,2:6]), ...)
+  if(!is.null(x$at.sat)){
   cat("\n Conditions at satellite flyby:\n")
-  print(x$at.sat)
+  print(x$at.sat)}
 }
 
 
 #' Export data.frame from waterWeatherStation Object
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @description 
+#' Export weather conditions at satellite flyby from waterWeatherStation object
+#' @param WeatherStation    waterWeatherStation object. See read.WSdata()
+#' @author Guillermo Federico Olmedo
 #' @export
 getDataWS <- function(WeatherStation){
   date <- as.POSIXlt(WeatherStation$at.sat$datetime, format="%Y-%m-%d %H:%M:%S")

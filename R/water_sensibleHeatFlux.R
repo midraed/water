@@ -1,7 +1,26 @@
 #' Calculates Momentum Roughness Length
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @description           this function estimates Momentum Roughness Length (Zom) from the average vegetation height around the weather station.
+#' @param method          method selected to calculate momentum roughness length. Use 
+#' "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
+#' method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in 
+#' Santos et al (2012) and Pocas et al (2014).
+#' @param LAI             rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"
+#' @param NDVI            rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"
+#' @param albedo          broadband surface albedo. See albedo()
+#' @param a               "a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
+#' @param b               "b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom" 
+#' @param fLAI.Perrier    proportion of LAI lying above h/2. Only needed for method = "Perrier"
+#' @param h.Perrier       crop height in meters. Only needed for method = "Perrier"
+#' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
+#' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
+#' @author Guillermo Federico Olmedo
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#' 
+#' Pocas, I., Paco, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santos, F.L., Pereira, L.S., Allen, R.G., 2014. Satellite-based evapotranspiration of a super-intensive olive orchard: Application of METRIC algorithms. Biosystems Engineering 128, 69-81. doi:10.1016/j.biosystemseng.2014.06.019 \cr
+#'
+#' Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267–3283. doi:10.1007/s11269-012-0071-8 \cr
 #' @export
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
@@ -29,7 +48,25 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 }
 
 #' Select anchors pixels for H function 
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @description            automatically search end members within the satellite scene (extreme wet and dry conditions).
+#' @param image            top-of-atmosphere landsat reflectance image
+#' @param Ts               land surface temperature in K. See surfaceTemperature()
+#' @param LAI              rasterLayer with Leaf Area Index. See LAI()
+#' @param albedo           broandband surface albedo. See albedo()
+#' @param Z.om             momentum roughness lenght. See momentumRoughnessLength()
+#' @param n                number of pair of anchors pixels to calculate
+#' @param aoi              area of interest to limit the search. If 
+#' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
+#' @param anchors.method   method to select anchor pixels
+#' @param sat              satellite sensor used for NDVI. Can be "L7" or "L8"
+#' @param ESPA             Logical. If TRUE will look for espa.usgs.gov realted 
+#' products on working folder
+#' @param plots            Logical. If TRUE will plot position of anchors points
+#' selected
+#' @param deltaTemp        deltaTemp for method "CITRA-MCB"
+#' @param verbose          Logical. If TRUE will print aditional data to console
+#' @author Guillermo Federico Olmedo
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
@@ -102,9 +139,32 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
 
 #' Iterative function to estimate H and R.ah
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @description          generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
+#' @param anchors        anchors points. Can be the result from calcAnchors() or
+#' a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
+#' "cold" or "hot"
+#' @param Ts             Land surface temperature in K. See surfaceTemperature()
+#' @param Z.om           momentum roughness lenght. See momentumRoughnessLength()
+#' @param WeatherStation WeatherStation data at the flyby from the satellite. 
+#' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
+#' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
+#' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
+#' 0.0018 or 0.03 for long grass
+#' @param sat            satellite sensor used for NDVI. Can be "L7" or "L8"
+#' @param ESPA           Logical. If TRUE will look for espa.usgs.gov realted 
+#' products on working folder
+#' @param mountainous    Logical. If TRUE heat transfer equation will be 
+#' adjusted for mountainous terrain
+#' @param DEM            Digital Elevation Model in meters.
+#' @param Rn             Net radiation. See netRadiation()
+#' @param G              Soil Heat Flux. See soilHeatFlux()
+#' @param verbose        Logical. If TRUE will print aditional data to console
+#' @author Guillermo Federico Olmedo
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
+#' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
@@ -120,7 +180,9 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   cold <- as.numeric(extract(Ts, anchors[anchors@data$type=="cold",], 
                              cellnumbers=T)[,1])
   ###
-  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
+  ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours, 
+                         DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
+                         ET= "ETor")
   Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
@@ -128,6 +190,10 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   ### We calculate the initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200 <- u.ws / 0.41 * log(200/Z.om.ws)
+  if(u200 < 1){warning(paste0("u200 less than threshold value = ", 
+                              round(u200,4), "m/s. using u200 = 4m/s"))
+    u200 <- 4
+  }
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
@@ -144,10 +210,10 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     print("Cold")
     print(data.frame(cbind("Ts"=Ts[cold], "Ts_datum"=Ts.datum[cold], 
                            "Rn"=Rn[cold], "G"=G[cold], "Z.om"=Z.om[cold], 
-                           "u200"=u200[cold], "u*"=friction.velocity[cold])))
+                           "u200"=u200, "u*"=friction.velocity[cold])))
     print("Hot")
     print(data.frame(cbind("Ts"=Ts[hot], "Ts_datum"=Ts.datum[hot], "Rn"=Rn[hot], 
-                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200[hot], 
+                           "G"=G[hot], "Z.om"=Z.om[hot], "u200"=u200, 
                            "u*"=friction.velocity[hot])))
   }
   plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
@@ -223,7 +289,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     # Check convergence
     if(last.loop == TRUE){
       converge <- TRUE
-      print (paste0("convergence reached at iteration #", i))
+      if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
     }
     delta.r.ah.hot <- (r.ah[hot] - r.ah.hot.previous) / r.ah[hot] * 100
     delta.r.ah.cold <- (r.ah[cold] - r.ah.cold.previous) / r.ah[cold] * 100

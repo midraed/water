@@ -11,15 +11,18 @@ loadImage(path = getwd(), sat = "auto", aoi)
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") ==
+TRUE will look for any object called aoi on .GlobalEnv}
 }
 \description{
-Load Landsat data from folder
+This function loads Landsat bands from a specific folder.
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
+
+Fonseca-Luengo, David
 }
 \references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 

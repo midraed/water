@@ -7,13 +7,43 @@
 momentumRoughnessLength(method = "short.crops", LAI, NDVI, albedo, a, b,
   fLAI.Perrier, h.Perrier, mountainous = FALSE, surface.model)
 }
+\arguments{
+\item{method}{method selected to calculate momentum roughness length. Use
+"short.crops" for short crops methods from Allen et al (2007); "custom" for custom
+method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in
+Santos et al (2012) and Pocas et al (2014).}
+
+\item{LAI}{rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"}
+
+\item{NDVI}{rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"}
+
+\item{albedo}{broadband surface albedo. See albedo()}
+
+\item{a}{"a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+
+\item{b}{"b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+
+\item{fLAI.Perrier}{proportion of LAI lying above h/2. Only needed for method = "Perrier"}
+
+\item{h.Perrier}{crop height in meters. Only needed for method = "Perrier"}
+
+\item{mountainous}{empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)}
+
+\item{surface.model}{surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()}
+}
 \description{
-Calculates Momentum Roughness Length
+this function estimates Momentum Roughness Length (Zom) from the average vegetation height around the weather station.
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
+
+de la Fuente-Saiz, Daniel
 }
 \references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+
+Pocas, I., Paco, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santos, F.L., Pereira, L.S., Allen, R.G., 2014. Satellite-based evapotranspiration of a super-intensive olive orchard: Application of METRIC algorithms. Biosystems Engineering 128, 69-81. doi:10.1016/j.biosystemseng.2014.06.019 \cr
+
+Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267–3283. doi:10.1007/s11269-012-0071-8 \cr
 }
 
