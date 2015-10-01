@@ -14,7 +14,7 @@
 #' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
 #' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Sáiz, Daniel
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' 
@@ -66,7 +66,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param deltaTemp        deltaTemp for method "CITRA-MCB"
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Sáiz, Daniel
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
@@ -160,7 +160,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param G              Soil Heat Flux. See soilHeatFlux()
 #' @param verbose        Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Sáiz, Daniel
+#' @author de la Fuente-Saiz, Daniel
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
