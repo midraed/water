@@ -8,11 +8,44 @@ calcH(anchors, Ts, Z.om, WeatherStation, ETp.coef = 1.05, Z.om.ws = 0.0018,
   sat = "auto", ESPA = F, mountainous = FALSE, DEM, Rn, G,
   verbose = FALSE)
 }
+\arguments{
+\item{anchors}{anchors points. Can be the result from calcAnchors() or
+a spatialPointDataframe o Dataframe with X, Y, and type. type should be
+"cold" or "hot"}
+
+\item{Ts}{Land surface temperature in K. See surfaceTemperature()}
+
+\item{Z.om}{momentum roughness lenght. See momentumRoughnessLength()}
+
+\item{WeatherStation}{WeatherStation data at the flyby from the satellite.
+Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
+
+\item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
+
+\item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
+0.0018 or 0.03 for long grass}
+
+\item{sat}{satellite sensor used for NDVI. Can be "L7" or "L8"}
+
+\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov realted
+products on working folder}
+
+\item{mountainous}{Logical. If TRUE heat transfer equation will be
+adjusted for mountainous terrain}
+
+\item{DEM}{Digital Elevation Model in meters.}
+
+\item{Rn}{Net radiation. See netRadiation()}
+
+\item{G}{Soil Heat Flux. See soilHeatFlux()}
+
+\item{verbose}{Logical. If TRUE will print aditional data to console}
+}
 \description{
 Iterative function to estimate H and R.ah
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

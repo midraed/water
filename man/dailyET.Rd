@@ -12,10 +12,18 @@ dailyET(WeatherStation, DOY, lat, long, elev, ET = "ETo",
 
 \item{DOY}{day of year}
 
+\item{lat}{latitude in decimal degrees of the weather station}
+
+\item{long}{longitude in decimal degrees of the weather station}
+
+\item{elev}{elevation in meters of the weather station}
+
+\item{ET}{"ETo" or "ETr"}
+
 \item{long.z}{longitude for local time}
 }
 \value{
-ET daily in mm.h-1
+ET      daily in mm.h-1
 }
 \description{
 Calculates daily ET using Penman Monteith hourly formula for every hour
@@ -30,7 +38,7 @@ dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124,
 ET="ETo")
 }
 \author{
-Guillermo F Olmedo
+Guillermo Federico Olmedo
 }
 \references{
 Allen 2005 ASCE

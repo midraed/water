@@ -6,6 +6,15 @@
 \usage{
 METRIC.G(Rn, DEM, image.DN, WeatherStation = WeatherStation)
 }
+\arguments{
+\item{Rn}{}
+
+\item{DEM}{}
+
+\item{image.DN}{}
+
+\item{WeatherStation}{}
+}
 \description{
 Estimates Net Radiation as in METRIC Model
 }

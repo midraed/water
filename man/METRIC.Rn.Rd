@@ -6,6 +6,15 @@
 \usage{
 METRIC.Rn(image.DN, DEM, WeatherStation, aoi)
 }
+\arguments{
+\item{image.DN}{}
+
+\item{DEM}{}
+
+\item{WeatherStation}{}
+
+\item{aoi}{}
+}
 \description{
 Estimates Net Radiation as in METRIC Model
 }

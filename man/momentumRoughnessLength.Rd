@@ -12,12 +12,30 @@ momentumRoughnessLength(method = "short.crops", LAI, NDVI, albedo, a, b,
 "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
 method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in
 Santos et al (2012) and Pocas et al (2014).}
+
+\item{LAI}{rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"}
+
+\item{NDVI}{rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"}
+
+\item{albedo}{broadband surface albedo. See albedo()}
+
+\item{a}{"a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+
+\item{b}{"b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+
+\item{fLAI.Perrier}{proportion of LAI lying above h/2. Only needed for method = "Perrier"}
+
+\item{h.Perrier}{crop height in meters. Only needed for method = "Perrier"}
+
+\item{mountainous}{empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)}
+
+\item{surface.model}{surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()}
 }
 \description{
 Calculates Momentum Roughness Length
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

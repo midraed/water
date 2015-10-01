@@ -20,10 +20,12 @@ LAI(method = "metric2010", image, sat = "auto", ESPA = F, aoi, L = 0.1)
 \item{L}{L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1}
 }
 \description{
-Estimate LAI from Landsat Data
+This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
+
+Fonseca-Luengo, David
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

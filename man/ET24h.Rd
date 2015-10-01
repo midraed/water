@@ -6,11 +6,28 @@
 \usage{
 ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 }
+\arguments{
+\item{Rn}{Net radiation. See netRadiation()}
+
+\item{G}{Soil Heat Flux. See soilHeatFlux()}
+
+\item{H}{Sensible Heat Flux. See calcH()}
+
+\item{Ts}{Land surface temperature. See surfaceTemperature()}
+
+\item{WeatherStation}{WeatherStation data at the flyby from the satellite.
+Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
+
+\item{ETr.daily}{hourly ETr for every hour of the day. See dailyET()}
+
+\item{C.rad}{correction term used in sloping terrain to correct for
+variation in 24 h versus instantaneous energy availability. See Allen (2007)}
+}
 \description{
 Calculates ET-24hs from energy balance and Weather Station
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

@@ -9,6 +9,37 @@ METRIC.EB(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain = TRUE,
   Zom.method = "short.crops", anchors.method = "CITRA-MCB",
   ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE)
 }
+\arguments{
+\item{image.DN}{}
+
+\item{DEM}{}
+
+\item{WeatherStation}{}
+
+\item{aoi}{}
+
+\item{MTL}{}
+
+\item{sat}{}
+
+\item{plain}{}
+
+\item{thermalband}{}
+
+\item{alb.coeff}{}
+
+\item{LAI.method}{}
+
+\item{Zom.method}{}
+
+\item{anchors.method}{}
+
+\item{ETp.coef}{}
+
+\item{Z.om.ws}{}
+
+\item{ESPA}{}
+}
 \description{
 Estimates Energy Balance using METRIC2010 Model
 }

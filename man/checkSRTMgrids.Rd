@@ -13,6 +13,6 @@ checkSRTMgrids(raw.image)
 Check needed SRTM grids from image extent
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 
