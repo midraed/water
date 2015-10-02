@@ -1,8 +1,22 @@
 #' Calculates ET using Penman Monteith hourly formula
-#' @param WeatherStation a data frame with all the needed fields (see example)
-#' @param hours time of the day in hours in 24hs format
-#' @param DOY day of year
-#' @param long.z longitude for local time
+#' @param WeatherStation     a data frame with all the needed fields (see 
+#' example)
+#' @param hours              time of the day in hours in 24hs format
+#' @param DOY                day of year
+#' @param long.z             longitude for local time
+#' @param ET.instantaneous   Logical. True if you want to calculate 
+#' instantaneous ET instead of hourly ET. See Details.
+#' @param ET                 "ETo" or "ETr"
+#' @param height             weather station sensors height in meters
+#' @param lat                latitude of weather station in decimal degrees. 
+#' Negative values for south latitude
+#' @param long               longitude of weather station in decimal degrees. 
+#' Negative values for west longitude
+#' @param elev               elevation of weather station in meters
+#' @details 
+#' The only difference on instantaneous ET is how the hour is interpreted. On 
+#' FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00, 
+#' on TRUE Et is calculated at 11:00 hs.
 #' @return ET hourly in mm.h-1
 #' @author Guillermo Federico Olmedo
 #' @examples 

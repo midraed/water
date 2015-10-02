@@ -22,6 +22,18 @@
 #' Global options for water package
 #' @description 
 #' This function is based on raster::rasterOptions by Robert Hijmans. 
+#' @param overwrite     Logical. If TRUE and writeResults is TRUE it will 
+#' overwrite results. If FALSE, results are save with a name with name_datetime.
+#' @param writeResults  Logical. If TRUE it'll write result to disk. This is 
+#' slower but if FALSE you can have out-of-memory problems.
+#' @param outputFolder  Name of a folder to save files, relative to workind
+#' folder. 
+#' @param SRTMrepo      A folder where SRTM grids are stored, to create DEM. See
+#' prepareSRTMdata()
+#' @param autoAoi       Logical. If TRUE it'll look for a object called aoi on 
+#' .GlobalEnv and use it as aoi. See createAoi()
+#' @param default       Logical. If TRUE will revert all options to defaults 
+#' values
 #' @return 
 #' list of the current options (invisibly). If no arguments are provided the options are printed.
 #' @references 
