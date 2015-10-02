@@ -4,44 +4,60 @@
 \alias{METRIC.EB}
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
-METRIC.EB(image.DN, DEM, WeatherStation, aoi, MTL, sat, plain = TRUE,
-  thermalband, alb.coeff = "Tasumi", LAI.method = "metric2010",
+METRIC.EB(image.DN, WeatherStation, MTL, sat, thermalband, plain = TRUE, DEM,
+  aoi, alb.coeff = "Tasumi", LAI.method = "metric2010",
   Zom.method = "short.crops", anchors.method = "CITRA-MCB",
   ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE)
 }
 \arguments{
-\item{image.DN}{}
+\item{image.DN}{raw imagen in digital counts to evaluate}
 
-\item{DEM}{}
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
+object}
 
-\item{WeatherStation}{}
+\item{MTL}{Landsat metadata file}
 
-\item{aoi}{}
+\item{sat}{Landsat satellite version. "L7" or "L8"}
 
-\item{MTL}{}
+\item{thermalband}{Landsat low gain thermalband}
 
-\item{sat}{}
+\item{plain}{Logical. If TRUE surface is assumed plain}
 
-\item{plain}{}
+\item{DEM}{Digital Elevation Model of the study area. Not needed
+if plain = TRUE}
 
-\item{thermalband}{}
+\item{aoi}{SpatialPolygon object with limits of Area of interest}
 
-\item{alb.coeff}{}
+\item{alb.coeff}{coefficient to transform narrow to broad band albedo.
+See Details.}
 
-\item{LAI.method}{}
+\item{LAI.method}{Method used to estimate LAI from spectral data.
+See Details.}
 
-\item{Zom.method}{}
+\item{Zom.method}{method selected to calculate momentum roughness
+length. Use "short.crops" for short crops methods from Allen et al (2007);
+"custom" for custom method also in Allen et al (2007); Or "Perrier" to use
+Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
-\item{anchors.method}{}
+\item{anchors.method}{method to select anchor pixels. Currently only
+"CITRA-MCB" automatic method available.}
 
-\item{ETp.coef}{}
+\item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
 
-\item{Z.om.ws}{}
+\item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
+0.0018 or 0.03 for long grass}
 
-\item{ESPA}{}
+\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related
+products on working folder}
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model
+}
+\details{
+There are differents models to convert narrowband data to broadband albedo.
+You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients,
+calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7
+coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}

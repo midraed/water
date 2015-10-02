@@ -24,7 +24,8 @@ calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
 \item{aoi}{area of interest to limit the search. If
 waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
 
-\item{anchors.method}{method to select anchor pixels}
+\item{anchors.method}{method to select anchor pixels. Currently only
+"CITRA-MCB" automatic method available.}
 
 \item{sat}{satellite sensor used for NDVI. Can be "L7" or "L8"}
 

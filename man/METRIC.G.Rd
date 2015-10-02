@@ -4,16 +4,23 @@
 \alias{METRIC.G}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.G(Rn, DEM, image.DN, WeatherStation = WeatherStation)
+METRIC.G(image.DN, WeatherStation = WeatherStation, Rn, plain = TRUE, DEM,
+  aoi)
 }
 \arguments{
-\item{Rn}{}
+\item{image.DN}{raw imagen in digital counts to evaluate}
 
-\item{DEM}{}
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
+object}
 
-\item{image.DN}{}
+\item{Rn}{RasterLayer with Net Radiation data in W/m2}
 
-\item{WeatherStation}{}
+\item{plain}{Logical. If TRUE surface is assumed plain}
+
+\item{DEM}{Digital Elevation Model of the study area. Not needed
+if plain = TRUE}
+
+\item{aoi}{SpatialPolygon object with limits of Area of interest}
 }
 \description{
 Estimates Net Radiation as in METRIC Model

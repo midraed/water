@@ -57,7 +57,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param n                number of pair of anchors pixels to calculate
 #' @param aoi              area of interest to limit the search. If 
 #' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
-#' @param anchors.method   method to select anchor pixels
+#' @param anchors.method   method to select anchor pixels. Currently only 
+#' "CITRA-MCB" automatic method available.
 #' @param sat              satellite sensor used for NDVI. Can be "L7" or "L8"
 #' @param ESPA             Logical. If TRUE will look for espa.usgs.gov realted 
 #' products on working folder
