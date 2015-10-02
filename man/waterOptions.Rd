@@ -7,6 +7,25 @@
 waterOptions(overwrite, writeResults, outputFolder, SRTMrepo, autoAoi,
   default = FALSE)
 }
+\arguments{
+\item{overwrite}{Logical. If TRUE and writeResults is TRUE it will
+overwrite results. If FALSE, results are save with a name with name_datetime.}
+
+\item{writeResults}{Logical. If TRUE it'll write result to disk. This is
+slower but if FALSE you can have out-of-memory problems.}
+
+\item{outputFolder}{Name of a folder to save files, relative to workind
+folder.}
+
+\item{SRTMrepo}{A folder where SRTM grids are stored, to create DEM. See
+prepareSRTMdata()}
+
+\item{autoAoi}{Logical. If TRUE it'll look for a object called aoi on
+.GlobalEnv and use it as aoi. See createAoi()}
+
+\item{default}{Logical. If TRUE will revert all options to defaults
+values}
+}
 \value{
 list of the current options (invisibly). If no arguments are provided the options are printed.
 }

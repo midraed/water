@@ -4,16 +4,33 @@
 \alias{METRIC.Rn}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.Rn(image.DN, DEM, WeatherStation, aoi)
+METRIC.Rn(image.DN, WeatherStation, MTL, sat, thermalband,
+  alb.coeff = "Tasumi", LAI.method = "metric2010", plain = TRUE, DEM, aoi)
 }
 \arguments{
-\item{image.DN}{}
+\item{image.DN}{raw imagen in digital counts to evaluate}
 
-\item{DEM}{}
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
+object}
 
-\item{WeatherStation}{}
+\item{MTL}{Landsat metadata file}
 
-\item{aoi}{}
+\item{sat}{Landsat satellite version. "L7" or "L8"}
+
+\item{thermalband}{Landsat low gain thermalband}
+
+\item{alb.coeff}{coefficient to transform narrow to broad band albedo.
+See Details.}
+
+\item{LAI.method}{Method used to estimate LAI from spectral data.
+See Details.}
+
+\item{plain}{Logical. If TRUE surface is assumed plain}
+
+\item{DEM}{Digital Elevation Model of the study area. Not needed
+if plain = TRUE}
+
+\item{aoi}{SpatialPolygon object with limits of Area of interest}
 }
 \description{
 Estimates Net Radiation as in METRIC Model

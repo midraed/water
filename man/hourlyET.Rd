@@ -8,19 +8,40 @@ hourlyET(WeatherStation, hours, DOY, long.z = WeatherStation$long,
   ET.instantaneous = FALSE, ET = "ETo", height = 2, lat, long, elev)
 }
 \arguments{
-\item{WeatherStation}{a data frame with all the needed fields (see example)}
+\item{WeatherStation}{a data frame with all the needed fields (see
+example)}
 
 \item{hours}{time of the day in hours in 24hs format}
 
 \item{DOY}{day of year}
 
 \item{long.z}{longitude for local time}
+
+\item{ET.instantaneous}{Logical. True if you want to calculate
+instantaneous ET instead of hourly ET. See Details.}
+
+\item{ET}{"ETo" or "ETr"}
+
+\item{height}{weather station sensors height in meters}
+
+\item{lat}{latitude of weather station in decimal degrees.
+Negative values for south latitude}
+
+\item{long}{longitude of weather station in decimal degrees.
+Negative values for west longitude}
+
+\item{elev}{elevation of weather station in meters}
 }
 \value{
 ET hourly in mm.h-1
 }
 \description{
 Calculates ET using Penman Monteith hourly formula
+}
+\details{
+The only difference on instantaneous ET is how the hour is interpreted. On
+FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00,
+on TRUE Et is calculated at 11:00 hs.
 }
 \examples{
 WeatherStation  <- data.frame(wind=4.72,

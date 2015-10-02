@@ -384,14 +384,24 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 
 #' Calculates Broadband Albedo from Landsat data
 #' @description 
-#' Broadband surface Albedo is estimated considering the integration of all narrowband at-surface reflectances following a weighting function with empirical coefficients (Tasumi et al., 2007).
-#' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, SWIR2
-#' @param aoi        area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
-#' @param coeff      coefficient to transform narrow to broad band albedo. See Details.
-#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA       Logical. If TRUE will look for espa.usgs.gov related products on working folder
+#' Broadband surface Albedo is estimated considering the integration of all 
+#' narrowband at-surface reflectances following a weighting function with 
+#' empirical coefficients (Tasumi et al., 2007).
+#' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, 
+#' SWIR2
+#' @param aoi        area of interest to crop images, if waterOptions("autoAoi")
+#'  == TRUE will look for any object called aoi on .GlobalEnv
+#' @param coeff      coefficient to transform narrow to broad band albedo. 
+#' See Details.
+#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
+#' from filenames 
+#' @param ESPA       Logical. If TRUE will look for espa.usgs.gov related 
+#' products on working folder
 #' @details 
-#' There are differente model to convert narrowband data to broadband albedo. You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
+#' There are differents models to convert narrowband data to broadband albedo. 
+#' You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, 
+#' calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients 
+#' or "Olmedo" to use Olmedo coefficients for Landsat 8.
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
