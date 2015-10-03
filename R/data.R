@@ -10,3 +10,13 @@
 #'
 #' @source \url{http://www.usgs.gov/}
 "L7_Talca"
+
+
+#' SRTM DEM from east of Talca, Chile
+#'
+#' A RasterLayer object with a a Digital Elevation Model. 
+#' 
+#' Data available from the U.S. Geological Survey.
+#'
+#' @source \url{http://www.usgs.gov/}
+"DEM_Talca"
