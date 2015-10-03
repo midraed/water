@@ -3,7 +3,7 @@
   op <- options()
   op.water <- list(
     waterOverwrite = TRUE,
-    waterWriteResults = TRUE,
+    waterWriteResults = FALSE,
     waterOutputFolder = ".",
     waterSRTMrepo = NULL,
     waterAutoAoi = TRUE
@@ -121,7 +121,7 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
   if (default) {
     cnt <- 1
     options(waterOverwrite = TRUE)
-    options(waterWriteResults = TRUE)
+    options(waterWriteResults = FALSE)
     options(waterOutputFolder = ".")
     options(waterSRTMrepo = NULL)
     options(waterAutoAoi = TRUE)
@@ -149,7 +149,7 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
   } else {autoAoi <- getOption("waterAutoAoi")}
   lst <- list(overwrite = overwrite, writeResults = writeResults,
               outputFolder = outputFolder, SRTMrepo= SRTMrepo,
-              autoAOI = autoAoi)
+              autoAoi = autoAoi)
   save <- FALSE
   if (save) {
     v <- utils::packageDescription("water")[["Version"]]
