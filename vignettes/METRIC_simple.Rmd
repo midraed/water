@@ -1,0 +1,94 @@
+---
+title: "METRIC simple"
+author: "Guillermo Federico Olmedo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{METRIC simple}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+abstract
+
+## Introduction
+
+A brief introduction to water and METRIC
+
+First we have to load water package: 
+
+```{r}
+library(water)
+
+```
+
+
+## Base data preparation
+
+To calculate METRIC Evapotranspiration using water in the simple way, you need 
+two sources:
+
+- A raw Landsat image
+- A Weather Station 
+- A polygon with our Area-of-interset SpatialPolygon object, in case we don't 
+want to calc ET for all the landsat scene.
+
+First we create a polygon from bottomright and topleft point: 
+```{r}
+aoi <- createAoi(topleft = c(273110, -3914450), 
+                 bottomright = c( 288050, -3926650), EPSG = 32619)
+```
+
+Then, we load the weather station data. We are going to use function `read.WSdata`. This function converts our csv file into a `waterWeatherStation` object. And, if we provide a Landsat metadata file, will calculate the weather conditions at the 
+satellite flyby.
+
+```{r}
+csvfile <- system.file("extdata", "apples.csv", package="water")
+MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
+WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
+                  lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+                  MTL = MTLfile)
+```
+
+We can visualize our weather station data: 
+```{r, fig.width = 5}
+print(WeatherStation)
+
+plot(WeatherStation, alldata=FALSE)
+```
+
+
+And after that, we load the image. Usually, when using `water` we can use the 
+function `loadImage` to load a Landsat image from `TIF files` download direclty
+from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
+going to use some Landsat 7 example data wich comes with `water`.
+```{r, fig.width = 5}
+image.DN <- L7_Talca[[c(1:5,7)]]
+B6 <- L7_Talca[[6]]
+plot(image.DN)
+```
+
+
+## Energy Balance estimation
+
+```{r, fig.width = 5}
+Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
+                            WeatherStation = WeatherStation, ETp.coef = 1.2,
+                            MTL=MTLfile, sat="L7", thermalband=B6)
+```
+
+We can plot the results
+
+```{r, fig.width = 5}
+plot(Energy.Balance)
+```
+
+## Daily Evapotranspiration estimation
+
+```{r, fig.width = 5}
+ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 
+               H=Energy.Balance$SensibleHeat, 
+               Ts=Energy.Balance$surfaceTemperature, WeatherStation, 
+               ETr.daily=6.57)
+```
+

@@ -1,0 +1,148 @@
+---
+title: "METRIC advanced"
+author: "Guillermo Federico Olmedo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{METRIC advanced}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+abstract
+
+## Introduction
+
+A brief introduction to water and METRIC
+
+First we have to load water package: 
+
+```{r}
+library(water)
+
+```
+
+## Base data preparation
+
+To calculate METRIC Evapotranspiration using water in the adavanced way, you need 
+four sources:
+
+- A raw Landsat image
+- A Weather Station 
+- A polygon with our Area-of-interset SpatialPolygon object, in case we don't 
+want to calc ET for all the landsat scene.
+- A Digital Elevation model
+
+First we create a polygon from bottomright and topleft point: 
+```{r}
+aoi <- createAoi(topleft = c(273110, -3914450), 
+                 bottomright = c( 288050, -3926650), EPSG = 32619)
+```
+
+Then, we load the weather station data. We are going to use function `read.WSdata`. This function converts our csv file into a `waterWeatherStation` object. And, if we provide a Landsat metadata file, will calculate the weather conditions at the 
+satellite flyby.
+
+```{r}
+csvfile <- system.file("extdata", "apples.csv", package="water")
+MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
+WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
+                  lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+                  MTL = MTLfile)
+```
+
+We can visualize our weather station data: 
+```{r, fig.width = 5}
+print(WeatherStation)
+
+plot(WeatherStation, alldata=FALSE)
+```
+
+
+And after that, we load the image. Usually, when using `water` we can use the 
+function `loadImage` to load a Landsat image from `TIF files` download direclty
+from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
+going to use some Landsat 7 example data wich comes with **water** package.
+```{r, fig.width = 5}
+image.DN <- L7_Talca[[c(1:5,7)]]
+B6 <- L7_Talca[[6]]
+```
+
+Finally we are going to create the Digital Elevation Model from the needed grid
+files from [Earth Explorer](http://earthexplorer.usgs.gov/). First we check wich
+grid files we are going to need:
+
+```{r}
+checkSRTMgrids(image.DN)
+```
+
+You should download all the needed grid files, and then, you can use `prepareSRTMdata(extent = image.DN)` to create the DEM. In this vignette we are going to load the example data provided with **water** package.
+
+```{r}
+DEM <- DEM_Talca
+```
+
+## Net Radiation
+
+```{r}
+surface.model <-METRICtopo(DEM)
+
+solar.angles.r <- solarAngles(surface.model = surface.model, 
+                              WeatherStation = WeatherStation, MTL = MTLfile)
+
+Rs.inc <- incSWradiation(surface.model = surface.model, 
+                         solar.angles = solar.angles.r, 
+                         WeatherStation = WeatherStation)
+
+image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile, 
+                       incidence.rel = solar.angles.r$incidence.rel)
+
+image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7", 
+                   surface.model=surface.model, 
+                   incidence.hor = solar.angles.r$incidence.hor, 
+                   WeatherStation=WeatherStation, ESPA = F)
+
+albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat = "L7")
+
+LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
+
+Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = B6,
+                         WeatherStation = WeatherStation)
+
+Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
+
+Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
+                         solar.angles = solar.angles.r, Ts= Ts)
+
+Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+```
+
+## Soil Heat Flux
+
+```{r}
+G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
+                  Rn=Rn, image.SR, LAI=LAI, sat = "L7")
+```
+
+## Sensible Heat Flux
+
+```{r, fig.width = 5}
+Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+                                method = "short.crops", 
+                                surface.model = surface.model)
+
+hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
+                            albedo = albedo, Z.om = Z.om, n = 1, 
+                            anchors.method = "CITRA-MCB", sat = "L7", 
+                            deltaTemp = 5, verbose = FALSE)
+
+H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
+           WeatherStation = WeatherStation, ETp.coef = 1.05, sat = "L7", 
+           Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
+```
+
+# Daily Evapotranspiration estimation
+
+```{r, fig.width = 5}
+ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation, ETr.daily=6.57)
+```
+
