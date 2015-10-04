@@ -17,7 +17,7 @@
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat, thermalband, 
+METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
                       alb.coeff = "Tasumi", LAI.method = "metric2010", 
                       plain = TRUE, DEM, aoi){
   path=getwd()
@@ -122,7 +122,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.EB <- function(image.DN, WeatherStation, MTL, sat,
+METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
                       alb.coeff = "Tasumi", LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
@@ -166,6 +166,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat,
                               albedo = albedo, Z.om = Z.om, n = 1, 
                               anchors.method = anchors.method, sat = sat, 
                               deltaTemp = 5, verbose = FALSE)
+  print(hot.and.cold)
   #setTxtProgressBar(pb, 45)
   on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
