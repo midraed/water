@@ -40,7 +40,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat, thermalband,
                      incidence.hor = solar.angles.r$incidence.hor, 
                      WeatherStation=WeatherStation, ESPA = F)
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat)
-  setTxtProgressBar(pb, 6)
+  #setTxtProgressBar(pb, 6)
   LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat)
   Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
                            WeatherStation = WeatherStation)
