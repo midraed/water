@@ -113,6 +113,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' 0.0018 or 0.03 for long grass
 #' @param ESPA             Logical. If TRUE will look for espa.usgs.gov related 
 #' products on working folder
+#' @param verbose          Logical. If TRUE will print aditional data to console
 #' @details 
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
@@ -126,7 +127,8 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
                       alb.coeff = "Tasumi", LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
-                      ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE){
+                      ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE, 
+                      verbose = FALSE){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
@@ -165,13 +167,13 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                               albedo = albedo, Z.om = Z.om, n = 1, 
                               anchors.method = anchors.method, sat = sat, 
-                              deltaTemp = 5, verbose = FALSE)
+                              deltaTemp = 5, verbose = verbose)
   print(hot.and.cold)
   #setTxtProgressBar(pb, 45)
   on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
              WeatherStation = WeatherStation, ETp.coef = ETp.coef, sat = sat, 
-             Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
+             Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
   #setTxtProgressBar(pb, 99)
   H <-  H$H
   LE <- Rn - G - H
