@@ -1,5 +1,5 @@
 ---
-title: "METRIC advanced"
+title: "Surface Energy Balance using **METRIC** model and **water** package: 2.  *advanced procedure*"
 author: "Guillermo Federico Olmedo"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,31 +9,52 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-abstract
+This vignette presents the procedure to estimate the surface energy balance using
+**water** package. There are two version of this vignette: simple and advanced version. In the first one the procedure is simpler but most of the parameters are selected by the package. In the second one, the procedure is longer but the user has more control on all the parameters. Both vignettes follow METRIC model (Allen 2007), to estimate surface energy balance.
+
+Also, on the simple procedure we are going to assume flat terrain, and in the advanced procedure we are going to use a digital elevation model. However, is possible to use a digital elevation model in the simple procedure, changing the parameter `flat` to `FALSE` and providing a DEM.
 
 ## Introduction
 
-A brief introduction to water and METRIC
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et. al 2007 based on the well-known SEBAL model (Bastiaanssen, 1998). And has been applied all over the world to estimate crops evapotranspiration in different crops like wheat, corn, soybean and alfalfa, and also on woody crops like vineyards and olives, in plain and mountainous terrain. ET is estimated as a residual of the surface energy equation:
+\begin{equation}
+\label{eq:EB}
+LE = R_n - G - H
+\end{equation}
+where $LE$ = latent energy consumed by ET; $Rn$ = net radiation; $G$ = sensible heat flux conducted into the ground; and $H$ = sensible heat flux convected to the air.
 
-First we have to load water package: 
+We estimate $Rn$, $G$ and $H$ for a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ using previous equation, and after that, the instantaneous evapotranspiration as:
 
-```{r}
+\begin{equation}
+ET_{inst} = 3600 \cdot \frac{LE}{\lambda \rho_w}
+\end{equation}
+
+where $ET_{inst}$ is the instantaneous ET at the satellite flyby ($mm \cdot h^{-1}$); 3600 is to convert from seconds to hours; $\rho_w$ is density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the water latent heat of vaporization ($J\cdot kg^{-1}$).
+
+Finally the daily ET is calculated as:
+\begin{equation}
+ET_{24} = \frac{ET_{inst}}{ET_r} ET_{r\_24}
+\label{eq:et24}
+\end{equation}
+
+To begin this procedure, first we have to load **water** package: 
+
+```{r, message=FALSE}
 library(water)
 
 ```
 
 ## Base data preparation
 
-To calculate METRIC Evapotranspiration using water in the adavanced way, you need 
-four sources:
+To calculate METRIC Evapotranspiration using **water** and the advanced procedure, we're going to use four sources:
 
 - A raw Landsat image
 - A Weather Station 
-- A polygon with our Area-of-interset SpatialPolygon object, in case we don't 
-want to calc ET for all the landsat scene.
+- A polygon with our Area-of-interest SpatialPolygon object  (in case we don't 
+want to calculate ET for all the landsat scene).
 - A Digital Elevation model
 
-First we create a polygon from bottomright and topleft point: 
+First we create the AOI as a polygon using bottomright and topleft points: 
 ```{r}
 aoi <- createAoi(topleft = c(273110, -3914450), 
                  bottomright = c( 288050, -3926650), EPSG = 32619)
@@ -59,7 +80,7 @@ plot(WeatherStation, alldata=FALSE)
 
 
 And after that, we load the image. Usually, when using `water` we can use the 
-function `loadImage` to load a Landsat image from `TIF files` download direclty
+function `loadImage` to load a Landsat image from `TIF files` downloaded directly
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 example data wich comes with **water** package.
 ```{r, fig.width = 5}
@@ -69,7 +90,7 @@ B6 <- L7_Talca[[6]]
 
 Finally we are going to create the Digital Elevation Model from the needed grid
 files from [Earth Explorer](http://earthexplorer.usgs.gov/). First we check wich
-grid files we are going to need:
+grid files we are going to need, considering the scene and the AOI polygon:
 
 ```{r}
 checkSRTMgrids(image.DN)
@@ -83,16 +104,25 @@ DEM <- DEM_Talca
 
 ## Net Radiation
 
-```{r}
+We calculate a surface model (*slope + aspect*) from the DEM, and then we calculate the solar angles (*latitude, declination, hour angle and solar incidence angle*),
+and we plot tha last one. Then we use this to calculate *incoming solar radiation*.
+
+```{r, fig.width = 5}
 surface.model <-METRICtopo(DEM)
 
 solar.angles.r <- solarAngles(surface.model = surface.model, 
                               WeatherStation = WeatherStation, MTL = MTLfile)
 
+plot(solar.angles.r)
+
 Rs.inc <- incSWradiation(surface.model = surface.model, 
                          solar.angles = solar.angles.r, 
                          WeatherStation = WeatherStation)
+```
 
+Then we calculate reflectance at top-of-atmosphere, and surface reflectance from *Landsat image*. And use the last one to calculate broadband albedo:
+
+```{r, fig.width = 5}
 image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile, 
                        incidence.rel = solar.angles.r$incidence.rel)
 
@@ -102,9 +132,19 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
                    WeatherStation=WeatherStation, ESPA = F)
 
 albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat = "L7")
+```
 
+We calculate Leaf Area Index from the satellite data, and we plot it. We can choose diferents methods to estimate LAI from Landsat data, in this vignette we are going to use *METRIC 2010* method:
+
+```{r, fig.width = 5}
 LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
 
+plot(LAI)
+```
+
+Then we estimate land surface temperature, using LAI to estimate surface emissivity, and brightness temperature from landsat thermal sensor. Then we use this to estimate incoming and outgoing long-wave radiation:
+
+```{r, warning=FALSE, fig.width = 5}
 Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = B6,
                          WeatherStation = WeatherStation)
 
@@ -112,15 +152,26 @@ Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
 
 Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
                          solar.angles = solar.angles.r, Ts= Ts)
-
-Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 ```
+
+And finally, we estimate Net Radiation:
+
+```{r, fig.width = 5}
+Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+
+plot(Rn)
+```
+
 
 ## Soil Heat Flux
 
-```{r}
+We estimate soil heat flux, using Net radiation, surface reflectance, surface temperature, leaf area index and albedo:
+
+```{r, fig.width = 5}
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                  Rn=Rn, image.SR, LAI=LAI, sat = "L7")
+                  Rn=Rn, LAI=LAI, sat = "L7")
+
+plot(G)
 ```
 
 ## Sensible Heat Flux
@@ -140,9 +191,24 @@ H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om,
            Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 ```
 
-# Daily Evapotranspiration estimation
+## Daily Evapotranspiration estimation
 
-```{r, fig.width = 5}
-ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation, ETr.daily=6.57)
+To estimate the daily evapotranspiration for the *Landsat scene* we need the daily 
+ETr for our weather station, we can calculate this with:
+
+```{r}
+ET_WS <- dailyET(WeatherStation = WeatherStation)
 ```
 
+And finally, we can estimate daily ET:
+
+```{r, fig.width = 5}
+ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation = WeatherStation, ETr.daily=ET_WS)
+```
+
+
+## References
+
+Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC)-Model. Journal of Irrigation and Drainage Engineering, 133, 380.
+
+Bastiaanssen, W. G. M., Menenti, M., Feddes, R. a., & Holtslag, A. a. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. http://doi.org/10.1016/S0022-1694(98)00253-4

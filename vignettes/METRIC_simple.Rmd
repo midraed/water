@@ -1,5 +1,5 @@
 ---
-title: "METRIC simple"
+title: "Surface Energy Balance using **METRIC** model and **water** package: 1. *simple procedure*"
 author: "Guillermo Federico Olmedo"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,31 +9,51 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-abstract
+This vignette presents the procedure to estimate the surface energy balance using
+**water** package. There are two version of this vignette: simple and advanced version. In the first one the procedure is simpler but most of the parameters are selected by the package. In the second one, the procedure is longer but the user has more control on all the parameters. Both vignettes follow METRIC model (Allen 2007), to estimate surface energy balance.
+
+Also, on the simple procedure we are going to assume flat terrain, but in the advanced procedure we are going to use a digital elevation model. However, is possible to use a digital elevation model in the simple procedure, changing the parameter `flat` to `FALSE` and providing a DEM.
 
 ## Introduction
 
-A brief introduction to water and METRIC
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et. al 2007 based on the well-known SEBAL model (Bastiaanssen, 1998). And has been applied all over the world to estimate crops evapotranspiration in different crops like wheat, corn, soybean and alfalfa, and also on woody crops like vineyards and olives, in plain and mountainous terrain. ET is estimated as a residual of the surface energy equation:
+\begin{equation}
+\label{eq:EB}
+LE = R_n - G - H
+\end{equation}
+where $LE$ = latent energy consumed by ET; $Rn$ = net radiation; $G$ = sensible heat flux conducted into the ground; and $H$ = sensible heat flux convected to the air.
 
-First we have to load water package: 
+We estimate $Rn$, $G$ and $H$ for a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ using previous equation, and after that, the instantaneous evapotranspiration as:
 
-```{r}
+\begin{equation}
+ET_{inst} = 3600 \cdot \frac{LE}{\lambda \rho_w}
+\end{equation}
+
+where $ET_{inst}$ is the instantaneous ET at the satellite flyby ($mm \cdot h^{-1}$); 3600 is to convert from seconds to hours; $\rho_w$ is density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the water latent heat of vaporization ($J\cdot kg^{-1}$).
+
+Finally the daily ET is calculated as:
+\begin{equation}
+ET_{24} = \frac{ET_{inst}}{ET_r} ET_{r\_24}
+\label{eq:et24}
+\end{equation}
+
+To begin this procedure, first we have to load **water** package: 
+
+```{r, message=FALSE}
 library(water)
 
 ```
 
-
 ## Base data preparation
 
-To calculate METRIC Evapotranspiration using water in the simple way, you need 
-two sources:
+To calculate METRIC Evapotranspiration using **water** and the simple procedure, we're going to use three sources:
 
 - A raw Landsat image
 - A Weather Station 
-- A polygon with our Area-of-interset SpatialPolygon object, in case we don't 
-want to calc ET for all the landsat scene.
+- A polygon with our Area-of-interest SpatialPolygon object  (in case we don't 
+want to calculate ET for all the landsat scene).
 
-First we create a polygon from bottomright and topleft point: 
+First we create the AOI as a polygon using bottomright and topleft points:
 ```{r}
 aoi <- createAoi(topleft = c(273110, -3914450), 
                  bottomright = c( 288050, -3926650), EPSG = 32619)
@@ -59,9 +79,9 @@ plot(WeatherStation, alldata=FALSE)
 
 
 And after that, we load the image. Usually, when using `water` we can use the 
-function `loadImage` to load a Landsat image from `TIF files` download direclty
+function `loadImage` to load a Landsat image from `TIF files` downloaded directly
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
-going to use some Landsat 7 example data wich comes with `water`.
+going to use some Landsat 7 example data wich comes with **water** package.
 ```{r, fig.width = 5}
 image.DN <- L7_Talca[[c(1:5,7)]]
 B6 <- L7_Talca[[6]]
@@ -71,10 +91,21 @@ plot(image.DN)
 
 ## Energy Balance estimation
 
-```{r, fig.width = 5}
+We are going to use the function `METRIC.EB` to estimate the surface energy balance. This function has many parameters to choose from different equations from METRIC model. You can change:
+
+- coefficients used to estimate broadband albedo
+- Model to estimate Leaf Area Index from satellite data
+- Model to estimate momentum roughness lenght
+- Automatic method to select anchors pixels
+- ETp coefficient and momentum roughness lenght for the weather station
+
+When we run this function, the energy balance and the surface temperature used are assigned to `Energy.Balance` object. Also the function prints the position and some other data from the anchors pixels, and plots the values of the aerodinamic resistance during the iterative process. There is a parameter `verbose` to control how much information we want in the output.
+
+```{r, fig.width = 5, warning=FALSE}
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
-                            WeatherStation = WeatherStation, ETp.coef = 1.2,
-                            MTL=MTLfile, sat="L7", thermalband=B6)
+                            WeatherStation = WeatherStation, 
+                            ETp.coef = 1.2, MTL=MTLfile, 
+                            sat="L7", thermalband=B6)
 ```
 
 We can plot the results
@@ -85,10 +116,23 @@ plot(Energy.Balance)
 
 ## Daily Evapotranspiration estimation
 
-```{r, fig.width = 5}
-ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 
-               H=Energy.Balance$SensibleHeat, 
-               Ts=Energy.Balance$surfaceTemperature, WeatherStation, 
-               ETr.daily=6.57)
+To estimate the daily evapotranspiration for the *Landsat scene* we need the daily ETr for our weather station, we can calculate this with:
+
+```{r}
+ET_WS <- dailyET(WeatherStation = WeatherStation)
 ```
 
+And finally, we can estimate daily ET:
+
+```{r, fig.width = 5, warning=FALSE}
+ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 
+               H=Energy.Balance$SensibleHeat, 
+               Ts=Energy.Balance$surfaceTemperature, 
+               WeatherStation = WeatherStation, ETr.daily=ET_WS)
+```
+
+## References
+
+Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC)-Model. Journal of Irrigation and Drainage Engineering, 133, 380.
+
+Bastiaanssen, W. G. M., Menenti, M., Feddes, R. a., & Holtslag, A. a. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. http://doi.org/10.1016/S0022-1694(98)00253-4
