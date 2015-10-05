@@ -4,7 +4,7 @@
 \alias{dailyET}
 \title{Calculates daily ET using Penman Monteith hourly formula for every hour}
 \usage{
-dailyET(WeatherStation, DOY, lat, long, elev, ET = "ETo",
+dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
   long.z = WeatherStation$long)
 }
 \arguments{

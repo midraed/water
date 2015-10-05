@@ -4,7 +4,7 @@
 \alias{METRIC.Rn}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.Rn(image.DN, WeatherStation, MTL, sat, thermalband,
+METRIC.Rn(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   alb.coeff = "Tasumi", LAI.method = "metric2010", plain = TRUE, DEM, aoi)
 }
 \arguments{

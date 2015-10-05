@@ -160,14 +160,19 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124, 
 #' ET="ETo")
 #' 
-dailyET <- function(WeatherStation, DOY, lat, long, elev, ET="ETo", 
+dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETo", 
                        long.z=WeatherStation$long){
   if(class(WeatherStation)== "waterWeatherStation"){
+    if(missing(height)){height <- WeatherStation$location$height}
+    if(missing(lat)){lat <- WeatherStation$location$lat}
+    if(missing(long)){long <- WeatherStation$location$long}
+    if(missing(elev)){elev <- WeatherStation$location$elev}
     ET.daily <- vector()
     for(i in 1:24){
       date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
-      ET.daily <- c(ET.daily,hourlyET(WeatherStation$hourly[i,], lat=lat, 
-                                      long = long, elev=elev, ET=ET))
+      ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat, 
+                                      long = long, elev=elev, ET=ET, 
+                                      height = height))
       }
   } else {
   print("not yet")}
