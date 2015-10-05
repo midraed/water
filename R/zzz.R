@@ -13,10 +13,10 @@
   invisible()
 }
 
-.onAttach <- function(libname, pkgname) {
-  packageStartupMessage("This package writes function's results to working directory. You can change")
-  packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
-}
+# .onAttach <- function(libname, pkgname) {
+#   packageStartupMessage("This package writes function's results to working directory. You can change")
+#   packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
+# }
 
 
 #' Global options for water package
