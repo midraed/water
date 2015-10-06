@@ -1,6 +1,6 @@
 ---
 title: "Surface Energy Balance using **METRIC** model and **water** package: 2.  *advanced procedure*"
-author: "Guillermo Federico Olmedo"
+author: "Guillermo Federico Olmedo and Daniel de la Fuente-Saiz"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,29 +9,30 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette presents the procedure to estimate the surface energy balance using
-**water** package. There are two version of this vignette: simple and advanced version. In the first one the procedure is simpler but most of the parameters are selected by the package. In the second one, the procedure is longer but the user has more control on all the parameters. Both vignettes follow METRIC model (Allen 2007), to estimate surface energy balance.
+This vignette presents the procedure to estimate the Land Surface Energy Balance (LSEB) using lansat imagery and The
+**water** package. There are two version of this vignette: simple and advanced version. In the first one the procedure is simpler but most of the parameters are selected automatically by the package. In the second aproach, the procedure is longer because the user has more control on all input parameters and coefficent. Both vignettes follow the METRIC model methodology (Allen et la., 2007) in order to estimate the LSEB using landasat 7 and 8 satellite images. 
 
-Also, on the simple procedure we are going to assume flat terrain, and in the advanced procedure we are going to use a digital elevation model. However, is possible to use a digital elevation model in the simple procedure, changing the parameter `flat` to `FALSE` and providing a DEM.
+Also, on the simple procedure we are going to assume flat terrain, but in the advanced procedure we are going to use a digital elevation model (DEM). However, is possible to use a digital elevation model in the simple procedure, changing the parameter `flat` to `FALSE` and providing a DEM.
+
 
 ## Introduction
 
-One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et. al 2007 based on the well-known SEBAL model (Bastiaanssen, 1998). And has been applied all over the world to estimate crops evapotranspiration in different crops like wheat, corn, soybean and alfalfa, and also on woody crops like vineyards and olives, in plain and mountainous terrain. ET is estimated as a residual of the surface energy equation:
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries in the world to estimate crops evapotranspiration (ET) at field scales and large areas using satellite images. The model it has been apply in different vegetation and crops types such us wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
 \begin{equation}
 \label{eq:EB}
 LE = R_n - G - H
 \end{equation}
-where $LE$ = latent energy consumed by ET; $Rn$ = net radiation; $G$ = sensible heat flux conducted into the ground; and $H$ = sensible heat flux convected to the air.
+where $LE$ is latent energy consumed by ET ($W \cdot m^{-2}$); $Rn$ is net radiation ($W \cdot m^{-2}$); $G$ is sensible heat flux conducted into the ground ($W \cdot m^{-2}$); and $H$ = sensible heat flux convected to the air ($W \cdot m^{-2}$).
 
-We estimate $Rn$, $G$ and $H$ for a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ using previous equation, and after that, the instantaneous evapotranspiration as:
+We estimate $Rn$, $G$ and $H$ for each pixel into a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ fluxes using previous equation, and after that, the instantaneous evapotranspiration values as:
 
 \begin{equation}
 ET_{inst} = 3600 \cdot \frac{LE}{\lambda \rho_w}
 \end{equation}
 
-where $ET_{inst}$ is the instantaneous ET at the satellite flyby ($mm \cdot h^{-1}$); 3600 is to convert from seconds to hours; $\rho_w$ is density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the water latent heat of vaporization ($J\cdot kg^{-1}$).
+where $ET_{inst}$ is the instantaneous ET at the satellite flyby ($mm \cdot h^{-1}$); 3600 is the convert factor from seconds to hours; $\rho_w$ is density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the water latent heat of vaporization ($J\cdot kg^{-1}$).
 
-Finally the daily ET is calculated as:
+Finally the daily ET is computed pixel by pixel (30 x 30 m) as:
 \begin{equation}
 ET_{24} = \frac{ET_{inst}}{ET_r} ET_{r\_24}
 \label{eq:et24}
@@ -46,21 +47,19 @@ library(water)
 
 ## Base data preparation
 
-To calculate METRIC Evapotranspiration using **water** and the advanced procedure, we're going to use four sources:
+To calculate METRIC crops Evapotranspiration using **water** package and the simple procedure, we're going to use three sources:
 
-- A raw Landsat image
-- A Weather Station 
-- A polygon with our Area-of-interest SpatialPolygon object  (in case we don't 
-want to calculate ET for all the landsat scene).
-- A Digital Elevation model
+- A raw Landsat 7-8 satellite image (original .TIF data from glovis USGS).
+- A Weather Station data (.CSV file).
+- A polygon with our Area-of-interest (AOI) Spatial-Polygon object  (if we won`t estimate corp ET for the entire landsat scene).
 
-First we create the AOI as a polygon using bottomright and topleft points: 
+First, we create the AOI as a polygon using bottomright and topleft points:
 ```{r}
 aoi <- createAoi(topleft = c(273110, -3914450), 
                  bottomright = c( 288050, -3926650), EPSG = 32619)
 ```
 
-Then, we load the weather station data. We are going to use function `read.WSdata`. This function converts our csv file into a `waterWeatherStation` object. And, if we provide a Landsat metadata file, will calculate the weather conditions at the 
+Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of
 satellite flyby.
 
 ```{r}
@@ -71,7 +70,7 @@ WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
                   MTL = MTLfile)
 ```
 
-We can visualize our weather station data: 
+We can visualize our weather station data as: 
 ```{r, fig.width = 5}
 print(WeatherStation)
 
@@ -79,33 +78,32 @@ plot(WeatherStation, alldata=FALSE)
 ```
 
 
-And after that, we load the image. Usually, when using `water` we can use the 
-function `loadImage` to load a Landsat image from `TIF files` downloaded directly
+After that, we load the Landast satellite image. Usually, using `water` we can use the 
+function called `loadImage` to load a Landsat image from `.TIF files` downloaded directly
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
-going to use some Landsat 7 example data wich comes with **water** package.
+going to use some Landsat 7 as example data wich, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
 image.DN <- L7_Talca[[c(1:5,7)]]
 B6 <- L7_Talca[[6]]
 ```
 
-Finally we are going to create the Digital Elevation Model from the needed grid
-files from [Earth Explorer](http://earthexplorer.usgs.gov/). First we check wich
-grid files we are going to need, considering the scene and the AOI polygon:
+Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](http://earthexplorer.usgs.gov/). Therefore, check wich grid files we are going to need considering the satellite scene location and the AOI polygon, using:
 
 ```{r}
 checkSRTMgrids(image.DN)
 ```
 
-You should download all the needed grid files, and then, you can use `prepareSRTMdata(extent = image.DN)` to create the DEM. In this vignette we are going to load the example data provided with **water** package.
+You should download all needed grid files, and then you can use the function `prepareSRTMdata(extent = image.DN)` to create the DEM. In this vignette we are going to load the example data provided with **water** package.
+
+ARREGLAR EXAMPLE DATASED DEM_Talca
 
 ```{r}
 DEM <- DEM_Talca
 ```
 
-## Net Radiation
+## Net Radiation (R_n) estimation
 
-We calculate a surface model (*slope + aspect*) from the DEM, and then we calculate the solar angles (*latitude, declination, hour angle and solar incidence angle*),
-and we plot tha last one. Then we use this to calculate *incoming solar radiation*.
+In order to calculate the Net Radiation from loaded *landsat satellite* data, first we calculate a surface model (*slope + aspect*) from the DEM, then we calulate the solar angles (*latitude, declination, hour angle and solar incidence angle*), and finally we plot the last one. Then we use this function to calculate *incoming solar radiation*.
 
 ```{r, fig.width = 5}
 surface.model <-METRICtopo(DEM)
@@ -120,7 +118,7 @@ Rs.inc <- incSWradiation(surface.model = surface.model,
                          WeatherStation = WeatherStation)
 ```
 
-Then we calculate reflectance at top-of-atmosphere, and surface reflectance from *Landsat image*. And use the last one to calculate broadband albedo:
+Then we calculate reflectances at the top-of-atmosphere (TOA), and surface reflectance derived from *Landsat image*, and use the last one to calculate the *broadband albedo* as:
 
 ```{r, fig.width = 5}
 image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile, 
@@ -134,7 +132,7 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
 albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat = "L7")
 ```
 
-We calculate Leaf Area Index from the satellite data, and we plot it. We can choose diferents methods to estimate LAI from Landsat data, in this vignette we are going to use *METRIC 2010* method:
+Later on, we calculate the *Leaf Area Index* (LAI) using the satellite data, and we plot it. In this step, we can choose diferents methods able in literature to estimate LAI from Landsat data (see package Help for more info.). In this vignette we are going to use the *METRIC 2010* method:
 
 ```{r, fig.width = 5}
 LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
@@ -142,7 +140,7 @@ LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
 plot(LAI)
 ```
 
-Then we estimate land surface temperature, using LAI to estimate surface emissivity, and brightness temperature from landsat thermal sensor. Then we use this to estimate incoming and outgoing long-wave radiation:
+Then we estimate land surface temperature (Ts), using computed LAI in order to estimate consequently the *surface emissivity*, and *brightness temperature* from landsat`s thermal band (TIR). Then we use this information to compute the *incoming and outgoing long-wave radiation* as:
 
 ```{r, warning=FALSE, fig.width = 5}
 Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = B6,
@@ -154,7 +152,7 @@ Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM,
                          solar.angles = solar.angles.r, Ts= Ts)
 ```
 
-And finally, we estimate Net Radiation:
+And finally, we can estimate Net Radiation (R_n) pixel by pixel as follows:
 
 ```{r, fig.width = 5}
 Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
@@ -163,9 +161,9 @@ plot(Rn)
 ```
 
 
-## Soil Heat Flux
+## Soil Heat Flux (G) estimation
 
-We estimate soil heat flux, using Net radiation, surface reflectance, surface temperature, leaf area index and albedo:
+We estimate the soil heat flux, using as input data the *Net radiation*, *surface reflectance*, *surface temperature*, *leaf area index* and *albedo*. in this vignette we are going to use the original METRIC (2007) baded-method, which is:
 
 ```{r, fig.width = 5}
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
@@ -174,7 +172,12 @@ G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo,
 plot(G)
 ```
 
-## Sensible Heat Flux
+## Sensible Heat Flux (H) estimation
+To estimate the sensible heat fluxes derived from the *landsat satellite* data, first we need to calculate the Momentum momentum roughness length (*Zom*). In this step, we are able to choose diferents methods able in literature to estimate *Zom* from Landsat data (see package Help for more information). In this vignette we are going to use the *short.crops* method.
+
+Then, we are going to use `calAnchors` function for automatically search end members within the satellite scene (extreme wet and dry conditions). In this vignette we are going to use the *CITRA-MCB* method.
+
+Finally we estimate the H values at pixel scales using `calcH` function. This function aplies the *CIMEC* self-calibration method in order generete an iteration process for the "hot" and "cald" pixels and abdorb all baises in the computation of H. This iteration procces it will be able to see as a dinamic-plot when the function `calcH` is running. There is a parameter called `verbose` to control how much information we want to see in the output about the "anchor pixels" and iteration process.
 
 ```{r, fig.width = 5}
 Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
@@ -191,16 +194,15 @@ H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om,
            Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 ```
 
-## Daily Evapotranspiration estimation
+## Daily Crop Evapotranspiration (ET_24) estimation
 
-To estimate the daily evapotranspiration for the *Landsat scene* we need the daily 
-ETr for our weather station, we can calculate this with:
+To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) for our weather station, so we can calculate the daily ETr with:
 
 ```{r}
 ET_WS <- dailyET(WeatherStation = WeatherStation)
 ```
 
-And finally, we can estimate daily ET:
+And finally, we can estimate daily crop ET pixel by pixel:
 
 ```{r, fig.width = 5}
 ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation = WeatherStation, ETr.daily=ET_WS)
