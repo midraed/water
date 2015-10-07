@@ -16,14 +16,14 @@ Also, on the simple procedure we are going to assume flat terrain, but in the ad
 
 ## Introduction
 
-One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries in the world to estimate crops evapotranspiration (ET) at field scales and large areas using satellite images. The model it has been apply in different vegetation and crops types such us wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries arround the world to estimate crops evapotranspiration (ET) at field scales and over large areas using satellite images. The model it has been apply in different vegetation and crops types such us, wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards, and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
 \begin{equation}
 \label{eq:EB}
 LE = R_n - G - H
 \end{equation}
 where $LE$ is latent energy consumed by ET ($W \cdot m^{-2}$); $Rn$ is net radiation ($W \cdot m^{-2}$); $G$ is sensible heat flux conducted into the ground ($W \cdot m^{-2}$); and $H$ = sensible heat flux convected to the air ($W \cdot m^{-2}$).
 
-We estimate $Rn$, $G$ and $H$ for each pixel into a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ fluxes using previous equation, and after that, the instantaneous evapotranspiration values as:
+We estimate $Rn$, $G$ and $H$ for each pixel into a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ fluxes using previous equation, and after that the instantaneous evapotranspiration values as:
 
 \begin{equation}
 ET_{inst} = 3600 \cdot \frac{LE}{\lambda \rho_w}
@@ -58,8 +58,7 @@ aoi <- createAoi(topleft = c(273110, -3914450),
                  bottomright = c( 288050, -3926650), EPSG = 32619)
 ```
 
-Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of
-satellite flyby.
+Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of satellite overpass.
 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -77,10 +76,10 @@ plot(WeatherStation, alldata=FALSE)
 ```
 
 
-After that, we load the Landast satellite image. Usually, using `water` we can be use the 
-function called `loadImage` to load a Landsat image from `.TIF files` downloaded directly
+After that, we need to load the Landast satellite image. Usually, using `water` we can use the 
+function called `loadImage` to load a Landsat image from `.TIF files` were downloaded directly
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
-going to use some Landsat 7 as example data wich, by the way comes with **water** package as a demo.
+going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
 image.DN <- L7_Talca[[c(1:5,7)]]
 B6 <- L7_Talca[[6]]
@@ -90,15 +89,15 @@ plot(image.DN)
 
 ## Surface Energy Balance estimation
 
-We are going to use the function `METRIC.EB` to estimate the lands surface energy balance. This function has many parameters to choose from the different METRIC model equations. e.g., you can change:
+We are going to use the function called `METRIC.EB` to estimate the land surface energy balance. This function has many parameters to choose from the different METRIC model equations. e.g., you can change:
 
 - coefficients used to estimate broadband albedo.
-- Model to estimate Leaf Area Index (LAI)from satellite data.
+- Model to estimate Leaf Area Index (LAI) from satellite data.
 - Model to estimate momentum roughness lenght (Zom)
 - Automatic method to select anchors pixels
-- ETp coefficient and momentum roughness lenght for the weather station
+- ETr coefficient and momentum roughness lenght for the weather station
 
-When we run this function, the energy balance and the surface temperature (Ts) used are assigned to `Energy.Balance` object. Also the function prints the position and some other data from the anchors pixels, and plots the values of the aerodinamic resistance during the iterative process. here is a parameter `verbose` to control how much information we want to see in the output.
+When we run `METRIC.EB`, the energy balance and the surface temperature (Ts) used are assigned to `Energy.Balance` object. Also the function prints the position and some other data from the anchors pixels, and finally plots the values of the aerodinamic resistance during the iterative process. Here is a parameter `verbose` to control how much information we want to see in the output.
 
 ```{r, fig.width = 5, warning=FALSE}
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
