@@ -17,7 +17,7 @@ Also, on the simple procedure we are going to assume flat terrain, but in the ad
 
 ## Introduction
 
-One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries in the world to estimate crops evapotranspiration (ET) at field scales and large areas using satellite images. The model it has been apply in different vegetation and crops types such us wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries arround the world to estimate crops evapotranspiration (ET) at field scales and over large areas using satellite images. The model it has been apply in different vegetation and crops types such us, wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards, and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
 \begin{equation}
 \label{eq:EB}
 LE = R_n - G - H
@@ -49,7 +49,7 @@ library(water)
 
 To calculate METRIC crops Evapotranspiration using **water** package and the simple procedure, we're going to use three sources:
 
-- A raw Landsat 7-8 satellite image (original .TIF data from glovis USGS).
+- A raw Landsat 7/8 satellite image (original .TIF data from glovis USGS).
 - A Weather Station data (.CSV file).
 - A polygon with our Area-of-interest (AOI) Spatial-Polygon object  (if we won`t estimate corp ET for the entire landsat scene).
 
@@ -59,8 +59,7 @@ aoi <- createAoi(topleft = c(273110, -3914450),
                  bottomright = c( 288050, -3926650), EPSG = 32619)
 ```
 
-Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of
-satellite flyby.
+Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of satellite overpass
 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -79,21 +78,21 @@ plot(WeatherStation, alldata=FALSE)
 
 
 After that, we load the Landast satellite image. Usually, using `water` we can use the 
-function called `loadImage` to load a Landsat image from `.TIF files` downloaded directly
+function called `loadImage` to load a Landsat image from `.TIF files` were downloaded directly
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
-going to use some Landsat 7 as example data wich, by the way comes with **water** package as a demo.
+going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
 image.DN <- L7_Talca[[c(1:5,7)]]
 B6 <- L7_Talca[[6]]
 ```
 
-Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](http://earthexplorer.usgs.gov/). Therefore, check wich grid files we are going to need considering the satellite scene location and the AOI polygon, using:
+Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image that we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](http://earthexplorer.usgs.gov/). Therefore, is needed to check wich grid files we are going to use considering the satellite scene location and the AOI polygon, using:
 
 ```{r}
 checkSRTMgrids(image.DN)
 ```
 
-You should download all needed grid files, and then you can use the function `prepareSRTMdata(extent = image.DN)` to create the DEM. In this vignette we are going to load the example data provided with **water** package.
+You should download all needed grid files, and then you can use the function `prepareSRTMdata(extent = image.DN)` to create our DEM. In this vignette we are going to load the example data provided with **water** package.
 
 ARREGLAR EXAMPLE DATASED DEM_Talca
 
@@ -163,7 +162,7 @@ plot(Rn)
 
 ## Soil Heat Flux (G) estimation
 
-We estimate the soil heat flux, using as input data the *Net radiation*, *surface reflectance*, *surface temperature*, *leaf area index* and *albedo*. in this vignette we are going to use the original METRIC (2007) baded-method, which is:
+We estimate the soil heat flux using as an input data the *Net radiation*, *surface reflectance*, *surface temperature*, *leaf area index* and *albedo*. In this vignette we are going to use the original METRIC (2007) baded-method, which is:
 
 ```{r, fig.width = 5}
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
@@ -173,11 +172,11 @@ plot(G)
 ```
 
 ## Sensible Heat Flux (H) estimation
-To estimate the sensible heat fluxes derived from the *landsat satellite* data, first we need to calculate the Momentum momentum roughness length (*Zom*). In this step, we are able to choose diferents methods able in literature to estimate *Zom* from Landsat data (see package Help for more information). In this vignette we are going to use the *short.crops* method.
+To estimate the sensible heat fluxes derived from the *landsat satellite* data, first we need to calculate the *Momentum roughness length* (Zom). In this step, we are able to choose diferents methods found in literature to estimate Zom from Landsat data (see package Help for more information). In this vignette we are going to use the *short.crops* method.
 
-Then, we are going to use `calAnchors` function for automatically search end members within the satellite scene (extreme wet and dry conditions). In this vignette we are going to use the *CITRA-MCB* method.
+Then, we are going to use `calAnchors` function for automatically search end members within the satellite scene (extreme wet and dry conditions). In this vignette we are going to use the *CITRA-MCB* method (see Help for mor information).
 
-Finally we estimate the H values at pixel scales using `calcH` function. This function aplies the *CIMEC* self-calibration method in order generete an iteration process for the "hot" and "cald" pixels and abdorb all baises in the computation of H. This iteration procces it will be able to see as a dinamic-plot when the function `calcH` is running. There is a parameter called `verbose` to control how much information we want to see in the output about the "anchor pixels" and iteration process.
+Finally we estimate the H values at pixel scales using `calcH` function. This function aplies the *CIMEC* self-calibration method in order generete an iteration process for the "hot" and "cald" pixels and to abdorb all baises in the computation of H. This iteration procces it will be able to see as a dinamic-plot when the function `calcH` is running. There is a parameter called `verbose` to control how much information we want to see in the output about the "anchor pixels" and iteration process.
 
 ```{r, fig.width = 5}
 Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
