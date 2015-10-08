@@ -13,6 +13,7 @@
 #' @param h.Perrier       crop height in meters. Only needed for method = "Perrier"
 #' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
 #' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
+#' @details According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
 #' @references 

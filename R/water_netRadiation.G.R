@@ -286,8 +286,13 @@ METRICtopo <- function(DEM){
 #' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
 #' @param MTL             Landsat Metadata File
 #' @param WeatherStation  Weather Station data
+#' @details Narrowband transmittances,are calculated considering some radiation transfer models operated 
+#' over a wide range of climates and locations across the world, this parameter vary with the cosine of 
+#' the solar angle, atmospheric pressure and precipitable water vapor in the atmosphere, so the author must 
+#' obtain accurate values of these three parameters.
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @author Fernando Fuentes Penailillo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -448,16 +453,23 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 #' Estimate LAI from Landsat Data
 #' @description
 #' This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
-#' @param method   Method used to estimate LAI from spectral data. See Details.
+#' @param method   Method used to estimate LAI from spectral data. 
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
 #' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param ESPA     Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
+#' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
+#' LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
+#' depending on preferences of the user.
+#' Available methods are: "metric", "metric2010", "MCB" and "vineyard". 
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @author Fernando Fuentes Penailillo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#' Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
+#' Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){

@@ -7,7 +7,7 @@
 LAI(method = "metric2010", image, sat = "auto", ESPA = F, aoi, L = 0.1)
 }
 \arguments{
-\item{method}{Method used to estimate LAI from spectral data. See Details.}
+\item{method}{Method used to estimate LAI from spectral data.}
 
 \item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE}
 
@@ -22,12 +22,22 @@ LAI(method = "metric2010", image, sat = "auto", ESPA = F, aoi, L = 0.1)
 \description{
 This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
 }
+\details{
+LAI is computed using the top-of atmosphere (at-satellite) reflectance value.
+LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation,
+depending on preferences of the user.
+Available methods are: "metric", "metric2010", "MCB" and "vineyard".
+}
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
+
+Fernando Fuentes Penailillo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
+Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
 }
 

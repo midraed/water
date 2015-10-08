@@ -16,10 +16,18 @@ solarAngles(surface.model, MTL, WeatherStation)
 \description{
 Metadata, aspect and slope maps are combined to estimate solar angles for the entire image.
 }
+\details{
+Narrowband transmittances,are calculated considering some radiation transfer models operated
+over a wide range of climates and locations across the world, this parameter vary with the cosine of
+the solar angle, atmospheric pressure and precipitable water vapor in the atmosphere, so the author must
+obtain accurate values of these three parameters.
+}
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
+
+Fernando Fuentes Penailillo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr

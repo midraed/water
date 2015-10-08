@@ -34,6 +34,9 @@ Santos et al (2012) and Pocas et al (2014).}
 \description{
 this function estimates Momentum Roughness Length (Zom) from the average vegetation height around the weather station.
 }
+\details{
+According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
+}
 \author{
 Guillermo Federico Olmedo
 
