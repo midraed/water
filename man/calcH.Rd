@@ -44,10 +44,22 @@ adjusted for mountainous terrain}
 \description{
 generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
 }
+\details{
+Sensible heat flux is the rate of heat loss to the air by convection
+and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
+aerodynamic,temperature gradient based equation for heat transport,this method is difficult to solve because
+there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two “anchor”
+pixels  and solve for dT that satisfies eq. given the aerodynamic roughness and wind speed at a given height.
+Aerodynamic resistance, and heat transfer is impacted by buoyancy of heated, light air at the surface,
+especially when H is large. Therefore, correction to rah is needed to account for buoyancy effects. However,
+H is needed to make this correction. An iterative solution for both H and rah is used.
+}
 \author{
 Guillermo Federico Olmedo
 
 de la Fuente-Saiz, Daniel
+
+Fernando Fuentes Penailillo
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr

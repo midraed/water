@@ -12,6 +12,8 @@ dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
 
 \item{DOY}{day of year}
 
+\item{height}{weather station sensors height in meters}
+
 \item{lat}{latitude in decimal degrees of the weather station}
 
 \item{long}{longitude in decimal degrees of the weather station}

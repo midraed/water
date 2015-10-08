@@ -141,6 +141,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' Calculates daily ET using Penman Monteith hourly formula for every hour
 #' @param WeatherStation a data frame with all the needed fields (see example)
 #' @param DOY      day of year
+#' @param height   weather station sensors height in meters
 #' @param lat      latitude in decimal degrees of the weather station
 #' @param long     longitude in decimal degrees of the weather station
 #' @param elev     elevation in meters of the weather station
