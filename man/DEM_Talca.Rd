@@ -4,60 +4,41 @@
 \name{DEM_Talca}
 \alias{DEM_Talca}
 \title{SRTM DEM from east of Talca, Chile}
-\format{\preformatted{Formal class 'RasterStack' [package "raster"] with 11 slots
-  ..@ filename: chr ""
-  ..@ layers  :List of 1
-  .. ..$ :Formal class 'RasterLayer' [package "raster"] with 12 slots
-  .. .. .. ..@ file    :Formal class '.RasterFile' [package "raster"] with 13 slots
-  .. .. .. .. .. ..@ name        : chr "/home/guillermo/Documentos/Doctorado/TallerMETRIC/DEM.tif"
-  .. .. .. .. .. ..@ datanotation: chr "FLT8S"
-  .. .. .. .. .. ..@ byteorder   : chr "little"
-  .. .. .. .. .. ..@ nodatavalue : num -Inf
-  .. .. .. .. .. ..@ NAchanged   : logi FALSE
-  .. .. .. .. .. ..@ nbands      : int 1
-  .. .. .. .. .. ..@ bandorder   : chr "BIL"
-  .. .. .. .. .. ..@ offset      : int 0
-  .. .. .. .. .. ..@ toptobottom : logi TRUE
-  .. .. .. .. .. ..@ blockrows   : int 2
-  .. .. .. .. .. ..@ blockcols   : int 498
-  .. .. .. .. .. ..@ driver      : chr "gdal"
-  .. .. .. .. .. ..@ open        : logi FALSE
-  .. .. .. ..@ data    :Formal class '.SingleLayerData' [package "raster"] with 13 slots
-  .. .. .. .. .. ..@ values    : logi(0) 
-  .. .. .. .. .. ..@ offset    : num 0
-  .. .. .. .. .. ..@ gain      : num 1
-  .. .. .. .. .. ..@ inmemory  : logi FALSE
-  .. .. .. .. .. ..@ fromdisk  : logi TRUE
-  .. .. .. .. .. ..@ isfactor  : logi FALSE
-  .. .. .. .. .. ..@ attributes: list()
-  .. .. .. .. .. ..@ haveminmax: logi TRUE
-  .. .. .. .. .. ..@ min       : num 131
-  .. .. .. .. .. ..@ max       : num 644
-  .. .. .. .. .. ..@ band      : int 1
-  .. .. .. .. .. ..@ unit      : chr ""
-  .. .. .. .. .. ..@ names     : chr "DEM"
-  .. .. .. ..@ legend  :Formal class '.RasterLegend' [package "raster"] with 5 slots
-  .. .. .. .. .. ..@ type      : chr(0) 
-  .. .. .. .. .. ..@ values    : logi(0) 
-  .. .. .. .. .. ..@ color     : logi(0) 
-  .. .. .. .. .. ..@ names     : logi(0) 
-  .. .. .. .. .. ..@ colortable: logi(0) 
-  .. .. .. ..@ title   : chr(0) 
-  .. .. .. ..@ extent  :Formal class 'Extent' [package "raster"] with 4 slots
-  .. .. .. .. .. ..@ xmin: num 273105
-  .. .. .. .. .. ..@ xmax: num 288045
-  .. .. .. .. .. ..@ ymin: num -3926655
-  .. .. .. .. .. ..@ ymax: num -3914445
-  .. .. .. ..@ rotated : logi FALSE
-  .. .. .. ..@ rotation:Formal class '.Rotation' [package "raster"] with 2 slots
-  .. .. .. .. .. ..@ geotrans: num(0) 
-  .. .. .. .. .. ..@ transfun:function ()  
-  .. .. .. ..@ ncols   : int 498
-  .. .. .. ..@ nrows   : int 407
-  .. .. .. ..@ crs     :Formal class 'CRS' [package "sp"] with 1 slot
-  .. .. .. .. .. ..@ projargs: chr "+proj=utm +zone=19 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  .. .. .. ..@ history : list()
-  .. .. .. ..@ z       : list()
+\format{\preformatted{Formal class 'RasterLayer' [package "raster"] with 12 slots
+  ..@ file    :Formal class '.RasterFile' [package "raster"] with 13 slots
+  .. .. ..@ name        : chr ""
+  .. .. ..@ datanotation: chr "FLT4S"
+  .. .. ..@ byteorder   : chr "little"
+  .. .. ..@ nodatavalue : num -Inf
+  .. .. ..@ NAchanged   : logi FALSE
+  .. .. ..@ nbands      : int 1
+  .. .. ..@ bandorder   : chr "BIL"
+  .. .. ..@ offset      : int 0
+  .. .. ..@ toptobottom : logi TRUE
+  .. .. ..@ blockrows   : int 0
+  .. .. ..@ blockcols   : int 0
+  .. .. ..@ driver      : chr ""
+  .. .. ..@ open        : logi FALSE
+  ..@ data    :Formal class '.SingleLayerData' [package "raster"] with 13 slots
+  .. .. ..@ values    : num [1:202686] 145 145 144 144 145 ...
+  .. .. ..@ offset    : num 0
+  .. .. ..@ gain      : num 1
+  .. .. ..@ inmemory  : logi TRUE
+  .. .. ..@ fromdisk  : logi FALSE
+  .. .. ..@ isfactor  : logi FALSE
+  .. .. ..@ attributes: list()
+  .. .. ..@ haveminmax: logi TRUE
+  .. .. ..@ min       : num 131
+  .. .. ..@ max       : num 643
+  .. .. ..@ band      : int 1
+  .. .. ..@ unit      : chr ""
+  .. .. ..@ names     : chr "DEM"
+  ..@ legend  :Formal class '.RasterLegend' [package "raster"] with 5 slots
+  .. .. ..@ type      : chr(0) 
+  .. .. ..@ values    : logi(0) 
+  .. .. ..@ color     : logi(0) 
+  .. .. ..@ names     : logi(0) 
+  .. .. ..@ colortable: logi(0) 
   ..@ title   : chr(0) 
   ..@ extent  :Formal class 'Extent' [package "raster"] with 4 slots
   .. .. ..@ xmin: num 273105
@@ -85,6 +66,8 @@ DEM_Talca
 A RasterLayer object with a a Digital Elevation Model.
 }
 \details{
+Original data is float. Example data is integer.
+
 Data available from the U.S. Geological Survey.
 }
 \keyword{datasets}
