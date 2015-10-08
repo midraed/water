@@ -1,8 +1,8 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance models
-Version: 0.2.9
-Date: 2015-10-01
-Authors@R: c(person("Guillermo Federico", "Olmedo", role = c("aut", "cre"), email = "guillermo.olmedo@gmail.com"), person("Samuel", "Ortega-Farías", role="aut"), person("David", "Fonseca-Luengo", role="aut"), person("Daniel", "de la Fuente-Saiz", role="aut"))
+Version: 0.3
+Date: 2015-10-8
+Authors@R: c(person("Guillermo Federico", "Olmedo", role = c("aut", "cre"), email = "guillermo.olmedo@gmail.com"), person("Samuel", "Ortega-Farias", role="aut"), person("David", "Fonseca-Luengo", role="aut"), person("Daniel", "de la Fuente-Saiz", role="aut"), person("Fernando", "Fuentes Peñailillo", role="ctb"))
 Author: Guillermo Federico Olmedo [aut, cre]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 Description: Tools and functions to calculate actual evapotranspiration 
