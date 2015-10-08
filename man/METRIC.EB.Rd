@@ -7,7 +7,7 @@
 METRIC.EB(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LAI.method = "metric2010",
   Zom.method = "short.crops", anchors.method = "CITRA-MCB",
-  ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE)
+  ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -49,6 +49,8 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related
 products on working folder}
+
+\item{verbose}{Logical. If TRUE will print aditional data to console}
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model
