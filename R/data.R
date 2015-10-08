@@ -16,6 +16,8 @@
 #'
 #' A RasterLayer object with a a Digital Elevation Model. 
 #' 
+#' Original data is float. Example data is integer.
+#' 
 #' Data available from the U.S. Geological Survey.
 #'
 #' @source \url{http://www.usgs.gov/}
