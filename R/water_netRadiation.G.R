@@ -703,6 +703,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
 #' @export
 netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
   surf.emissivity <- 0.95 + 0.01 * LAI 
+  surf.emissivity[LAI>3] <- 0.98
   Rn <- (1- albedo)*Rs.inc + Rl.inc - Rl.out - (1-surf.emissivity)*Rl.inc
   Rn <- saveLoadClean(imagestack = Rn, 
                       file = "Rn", overwrite=TRUE)
