@@ -292,7 +292,7 @@ METRICtopo <- function(DEM){
 #' obtain accurate values of these three parameters.
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
-#' @author Fernando Fuentes Penailillo
+#' @author Fernando Fuentes Peñailillo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -465,7 +465,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 #' Available methods are: "metric", "metric2010", "MCB" and "vineyard". 
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
-#' @author Fernando Fuentes Penailillo
+#' @author Fernando Fuentes Peñailillo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr

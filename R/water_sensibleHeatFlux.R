@@ -171,7 +171,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #'H is needed to make this correction. An iterative solution for both H and rah is used.
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
-#' @author Fernando Fuentes Penailillo
+#' @author Fernando Fuentes Peñailillo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
