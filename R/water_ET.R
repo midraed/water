@@ -118,6 +118,7 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
 #' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @importFrom grDevices colorRampPalette
 #' @export
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   if(class(WeatherStation)== "waterWeatherStation"){
@@ -130,7 +131,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ET.24 <- ETr.Fr * ETr.daily * C.rad
   #ET.24[ET.24 < 0]  <- 0
   #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
-  rgb.palette <- colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
+  rgb.palette <- grDevices::colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
   saveLoadClean(imagestack = ET.24, 

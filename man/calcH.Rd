@@ -47,8 +47,8 @@ generates an iterative solution to estimate r.ah and H because both are unknown 
 \details{
 Sensible heat flux is the rate of heat loss to the air by convection
 and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
-aerodynamic,temperature gradient based equation for heat transport,this method is difficult to solve because
-there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two “anchor”
+aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because
+there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two "anchor"
 pixels  and solve for dT that satisfies eq. given the aerodynamic roughness and wind speed at a given height.
 Aerodynamic resistance, and heat transfer is impacted by buoyancy of heated, light air at the surface,
 especially when H is large. Therefore, correction to rah is needed to account for buoyancy effects. However,

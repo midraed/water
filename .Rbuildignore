@@ -3,3 +3,5 @@
 ^test_*
 ^README\.md$       # An Rmarkdown file used to generate README.md
 ^Procedimiento\.md$
+^revdep$
+^cran-comments\.md$

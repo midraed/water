@@ -122,8 +122,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   ### We can plot anchor points
   if(plots==TRUE){
     plot(LAI, main="LAI and hot and cold pixels")
-    points(xyFromCell(LAI, hot), col="red", pch=3)
-    points(xyFromCell(LAI, cold), col="blue", pch=4)
+    graphics::points(xyFromCell(LAI, hot), col="red", pch=3)
+    graphics::points(xyFromCell(LAI, cold), col="blue", pch=4)
   }
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(), 
                              Y=integer(), Ts=double(), LAI=double(), 
@@ -163,8 +163,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param verbose        Logical. If TRUE will print aditional data to console
 #' @details Sensible heat flux is the rate of heat loss to the air by convection 
 #' and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
-#'aerodynamic,temperature gradient based equation for heat transport,this method is difficult to solve because 
-#'there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two “anchor” 
+#'aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because 
+#'there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two "anchor" 
 #'pixels  and solve for dT that satisfies eq. given the aerodynamic roughness and wind speed at a given height.
 #'Aerodynamic resistance, and heat transfer is impacted by buoyancy of heated, light air at the surface, 
 #'especially when H is large. Therefore, correction to rah is needed to account for buoyancy effects. However, 
@@ -229,7 +229,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   }
   plot(1, r.ah[hot], xlim=c(0,15), ylim=c(0, r.ah[hot]), 
        col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
-  points(1, r.ah[cold], col="blue", pch=20)
+  graphics::points(1, r.ah[cold], col="blue", pch=20)
   converge <- FALSE
   last.loop <- FALSE 
   i <- 1
@@ -293,8 +293,8 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     ### -----------
     r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
     ## Update plot
-    points(i, r.ah[hot], col="red", pch=20)
-    points(i, r.ah[cold], col="blue", pch=20)
+    graphics::points(i, r.ah[hot], col="red", pch=20)
+    graphics::points(i, r.ah[cold], col="blue", pch=20)
     lines(c(i, i-1), c(r.ah[hot], r.ah.hot.previous), col="red")
     lines(c(i, i-1), c(r.ah[cold], r.ah.cold.previous), col="blue")
     # Check convergence

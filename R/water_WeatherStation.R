@@ -49,7 +49,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         cf = c(1, 1, 1), MTL){
   result <- list()
   result$location <- data.frame(lat=lat, long=long, elev=elev, height=height)
-  WSdata <- read.csv(WSdata, ...)
+  WSdata <- utils::read.csv(WSdata, ...)
   if("date" %in% columns & "time" %in% columns){
     datetime  <- paste(WSdata[, which(columns == "date")], 
                        WSdata[, which(columns == "time")])
@@ -146,6 +146,8 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' only plot hourly data.
 #' @param ...      additional parameters to pass to plot()
 #' @author Guillermo Federico Olmedo
+#' @importFrom utils read.csv
+#' @importFrom graphics abline axis axis.POSIXct mtext par points
 #' @export
 #' @method plot waterWeatherStation
 plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
@@ -154,35 +156,35 @@ plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
   atsat  <- as.POSIXct(x$at.sat$datetime)
   if(alldata == TRUE) {WSp <- x$alldata}
   time <- WSp$datetime
-  par(mar=c(5, 7, 4, 7) + 0.1)
+  graphics::par(mar=c(5, 7, 4, 7) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", main="",xlim=range(time), ...)
-  abline(v=atsat, lwd=5, col="gray")
+  graphics::abline(v=atsat, lwd=5, col="gray")
   graphics::text(atsat, max(WSp$radiation)*0.85, "Satellite Flyby", cex=0.7, 
                  adj=c(NA, -0.5), srt=90, col="gray")
-  points(time,WSp$radiation,pch=20,col="red")
-  axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5)
-  mtext(2,text="Solar radiation (W.m-2)",line=1.7, cex=0.7)
-  par(new=T)
+  graphics::points(time,WSp$radiation,pch=20,col="red")
+  graphics::axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5)
+  graphics::mtext(2,text="Solar radiation (W.m-2)",line=1.7, cex=0.7)
+  graphics::par(new=T)
   plot(time, WSp$wind, axes=F, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
        type="l",col="green",lty=2, main="",xlim=range(time),lwd=2,...)
-  axis(2, ylim=c(0,max(WSp$wind)),col="green",lwd=1,line=3.5, cex.axis=0.5)
-  points(time, WSp$wind,pch=20,col="green")
-  mtext(2,text="Wind speed (m.s-1)",line=5.5, cex=0.7)
-  par(new=T)
+  graphics::axis(2, ylim=c(0,max(WSp$wind)),col="green",lwd=1,line=3.5, cex.axis=0.5)
+  graphics::points(time, WSp$wind,pch=20,col="green")
+  graphics::mtext(2,text="Wind speed (m.s-1)",line=5.5, cex=0.7)
+  graphics::par(new=T)
   plot(time, WSp$temp, axes=F, ylim=c(0,max(WSp$temp)), xlab="", ylab="", 
        type="l",col="black",lty=2, main="",xlim=range(time),lwd=2,...)
-  axis(4, ylim=c(0,max(WSp$temp)),col="black",lwd=1, cex.axis=0.5)
-  points(time, WSp$temp,pch=20,col="black")
-  mtext(4,text="Temperature (C)",line=1.7, cex=0.7)
-  par(new=T)
+  graphics::axis(4, ylim=c(0,max(WSp$temp)),col="black",lwd=1, cex.axis=0.5)
+  graphics::points(time, WSp$temp,pch=20,col="black")
+  graphics::mtext(4,text="Temperature (C)",line=1.7, cex=0.7)
+  graphics::par(new=T)
   plot(time, WSp$ea, axes=F, ylim=c(0,max(WSp$ea)), xlab="", ylab="", 
        type="l",col="blue",lty=2, main="",xlim=range(time),lwd=2, ...)
-  axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5)
-  points(time, WSp$ea,pch=20,col="blue")
-  mtext(4,text="vapor pressure (kPa)",line=5.5, cex=0.7)
-  axis.POSIXct(1, range(time))
-  mtext("Time",side=1,col="black",line=2)
+  graphics::axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5)
+  graphics::points(time, WSp$ea,pch=20,col="blue")
+  graphics::mtext(4,text="vapor pressure (kPa)",line=5.5, cex=0.7)
+  graphics::axis.POSIXct(1, range(time))
+  graphics::mtext("Time",side=1,col="black",line=2)
 }
 
 #' Print method for waterWeatherStation S3 class
