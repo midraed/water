@@ -195,7 +195,7 @@ plot.waterWeatherStation <- function(x, alldata=TRUE, ...){
 #' @method print waterWeatherStation
 print.waterWeatherStation <- function(x, ...){
   cat("Weather Station at lat:", round(x$location$lat, 2), "long:", 
-      round(x$location$lat, 2), "elev:", round(x$location$elev, 2), "\n")
+      round(x$location$long, 2), "elev:", round(x$location$elev, 2), "\n")
   cat("Summary:\n")
   print(summary(x$alldata[,2:6]), ...)
   if(!is.null(x$at.sat)){
