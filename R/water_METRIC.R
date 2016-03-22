@@ -143,14 +143,14 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
   image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
-                         incidence.rel = solar.angles.r$incidence.rel)
+                      incidence.rel = solar.angles.r$incidence.rel, ESPA = ESPA)
   image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation, ESPA = F)
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat)
+                     WeatherStation=WeatherStation, ESPA = ESPA)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat, ESPA= ESPA)
   #setTxtProgressBar(pb, 6)
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat)
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat, ESPA = ESPA)
   Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
                            WeatherStation = WeatherStation)
   #setTxtProgressBar(pb, 35)

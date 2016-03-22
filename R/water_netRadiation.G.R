@@ -601,7 +601,10 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
       bright.temp.b10 <- raster(list.files(path = path, 
                                          pattern = "_toa_band10.tif"))
       bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
-      Ts <- bright.temp.b10*0.1
+      Ts <- bright.temp.b10 * 0.1
+    } else {
+      bright.temp.b10 <- aoiCrop(thermalband, aoi) 
+      Ts <- bright.temp.b10 * 0.1
     }
   }
   if(sat=="L7"){
