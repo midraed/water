@@ -42,7 +42,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_B\\d{1}.TIF$", 
+  files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_(B|band)\\d{1}.(TIF|tif)$", 
                       full.names = T)
   files <- substr(files,1,nchar(files)-5)
   stack1 <- list()
