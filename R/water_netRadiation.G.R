@@ -42,19 +42,18 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  files <- list.files(path = path, pattern = "^L[EC]\\d+\\w+\\d+_(B|band)\\d{1}.(TIF|tif)$", 
-                      full.names = T)
-  files <- substr(files,1,nchar(files)-5)
+  
   stack1 <- list()
   for(i in 1:6){
-    stack1[i] <- raster(paste0(files[i], bands[i], ".TIF"))
+    stack1[i] <- raster(list.files(path=path, 
+      pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)", bands[i] ,".(TIF|tif)$")))
   }
   raw.image <- do.call(stack, stack1)
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
-                             stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
-                             file = "imageDN", 
-                             overwrite=TRUE)
+                       stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                       file = "imageDN", 
+                       overwrite=TRUE)
   return(raw.image) 
 }  
 

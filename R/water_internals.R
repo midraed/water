@@ -1,5 +1,5 @@
 getSat <- function(path){
-  band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_B2.TIF")), 0,3)
+  band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_(B|band)2.(TIF|tif)$")), 0,3)
   if(length(band)==0){
     print(paste("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF in ", path))
     return()
