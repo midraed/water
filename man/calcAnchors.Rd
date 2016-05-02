@@ -27,11 +27,6 @@ waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
 \item{anchors.method}{method to select anchor pixels. Currently only 
 "CITRA-MCB" automatic method available.}
 
-\item{sat}{satellite sensor used for NDVI. Can be "L7" or "L8"}
-
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov realted 
-products on working folder}
-
 \item{plots}{Logical. If TRUE will plot position of anchors points
 selected}
 

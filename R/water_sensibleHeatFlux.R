@@ -60,9 +60,6 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
 #' @param anchors.method   method to select anchor pixels. Currently only 
 #' "CITRA-MCB" automatic method available.
-#' @param sat              satellite sensor used for NDVI. Can be "L7" or "L8"
-#' @param ESPA             Logical. If TRUE will look for espa.usgs.gov realted 
-#' products on working folder
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected
 #' @param deltaTemp        deltaTemp for method "CITRA-MCB"
@@ -77,19 +74,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          ESPA=F, plots=TRUE, deltaTemp=5, verbose=FALSE) {
   path=getwd()
   ### Some values used later
-  if(sat=="auto"){sat <- getSat(getwd())}
-  if(sat=="L8" & ESPA==T){
-    removeTmpFiles(h=0)
-    sr.red <- raster(list.files(path = path, 
-                                pattern = "_sr_band4.tif", full.names = T))
-    sr.nir <- raster(list.files(path = path, 
-                                pattern = "_sr_band5.tif", full.names = T))
-    sr.4.5 <- stack(sr.red, sr.nir)
-    sr.4.5 <- aoiCrop(sr.4.5, aoi)
-  }
-  if(sat=="L7"){
-    sr.4.5 <- stack(image[[3]], image[[4]])
-  }
+  sr.4.5 <- stack(image[[3]], image[[4]])
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   NDVI[NDVI < -1]  <- -1
   ### We create anchors points if they dont exist---------------------------------
@@ -152,15 +137,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
 #' 0.0018 or 0.03 for long grass
-#' @param sat            satellite sensor used for NDVI. Can be "L7" or "L8"
-#' @param ESPA           Logical. If TRUE will look for espa.usgs.gov realted 
-#' products on working folder
 #' @param mountainous    Logical. If TRUE heat transfer equation will be 
 #' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
 #' @param Rn             Net radiation. See netRadiation()
 #' @param G              Soil Heat Flux. See soilHeatFlux()
-#' @param verbose        Logical. If TRUE will print aditional data to console
+#' @param verbose        Logical. If TRUE will print information about every 
+#' iteration to console
 #' @details Sensible heat flux is the rate of heat loss to the air by convection 
 #' and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
 #'aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because 
@@ -178,7 +161,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
-                   Z.om.ws=0.0018, sat="auto", ESPA=F, mountainous=FALSE, 
+                   Z.om.ws=0.0018, mountainous=FALSE, 
                    DEM, Rn, G, verbose=FALSE) {
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)

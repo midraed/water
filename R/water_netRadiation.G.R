@@ -87,6 +87,7 @@ calcTOAr <- function(image.DN, sat="auto",
     }
     image_TOA <- do.call(stack, stack1)
     image_TOA <- aoiCrop(image_TOA, aoi)
+    image_TOA <- image_TOA / 10000
   }
   ### Ro TOA L7
   if(sat=="L7"){
@@ -158,6 +159,7 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor,
     }
     image_SR <- do.call(stack, stack1)
     image_SR <- aoiCrop(image_SR, aoi) 
+    image_SR <- image_SR / 10000
   }
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calcTOAr()}
@@ -678,29 +680,13 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @param LAI      raster layer with leaf area index. See LAI()
 #' @param Rn       Net radiation. See netRadiation()
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
-#' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov realted products on working folder
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
-soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, 
-                         sat="auto", ESPA=F){
-  path=getwd()
-  if(sat=="auto"){sat = getSat(getwd())}
-  if(sat=="L8" & ESPA==T){
-    removeTmpFiles(h=0)
-    sr.red <- raster(list.files(path = path, 
-                                pattern = "_sr_band4.tif", full.names = T))
-    sr.nir <- raster(list.files(path = path, 
-                                pattern = "_sr_band5.tif", full.names = T))
-    sr.4.5 <- stack(sr.red, sr.nir)
-    sr.4.5 <- aoiCrop(sr.4.5, aoi)
-  }
-  if(sat=="L7"){
-    sr.4.5 <- stack(image[[3]], image[[4]])
-  }
+soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi){
+  sr.4.5 <- stack(image[[3]], image[[4]])
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)

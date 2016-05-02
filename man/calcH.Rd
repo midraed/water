@@ -5,8 +5,7 @@
 \title{Iterative function to estimate H and R.ah}
 \usage{
 calcH(anchors, Ts, Z.om, WeatherStation, ETp.coef = 1.05, Z.om.ws = 0.0018,
-  sat = "auto", ESPA = F, mountainous = FALSE, DEM, Rn, G,
-  verbose = FALSE)
+  mountainous = FALSE, DEM, Rn, G, verbose = FALSE)
 }
 \arguments{
 \item{anchors}{anchors points. Can be the result from calcAnchors() or
@@ -25,11 +24,6 @@ Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
 \item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
 0.0018 or 0.03 for long grass}
 
-\item{sat}{satellite sensor used for NDVI. Can be "L7" or "L8"}
-
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov realted 
-products on working folder}
-
 \item{mountainous}{Logical. If TRUE heat transfer equation will be 
 adjusted for mountainous terrain}
 
@@ -39,7 +33,8 @@ adjusted for mountainous terrain}
 
 \item{G}{Soil Heat Flux. See soilHeatFlux()}
 
-\item{verbose}{Logical. If TRUE will print aditional data to console}
+\item{verbose}{Logical. If TRUE will print information about every 
+iteration to console}
 }
 \description{
 generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
