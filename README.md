@@ -2,6 +2,13 @@ Repository for the development version of water package.
 
 water package is available at [CRAN network](https://cran.r-project.org/web/packages/water/)
 
+You can install development version with: 
+
+
+    install.packages("devtools")
+    library(devtools)
+    install_github("midraed/water")
+
 
 #Package: water#
 Title: Actual Evapotranspiration with Surface Energy Balance models
