@@ -39,9 +39,9 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
                      WeatherStation=WeatherStation, ESPA = F)
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
   #setTxtProgressBar(pb, 6)
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat)
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
   Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
                            WeatherStation = WeatherStation)
   #setTxtProgressBar(pb, 35)
@@ -81,7 +81,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
                       surface.model=surface.model, 
                       incidence.hor = solar.angles.r$incidence.hor, 
                       WeatherStation=WeatherStation, sat="auto", ESPA = F)
-  albedo <- albedo(image.SR = image.SR, sat="auto")
+  albedo <- albedo(image.SR = image.SR)
   Ts <- surfaceTemperature(sat = "auto" )
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn)
 }
@@ -142,15 +142,15 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
+  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, aoi=aoi,
                       incidence.rel = solar.angles.r$incidence.rel, ESPA = ESPA)
-  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
+  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, aoi=aoi,
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
                      WeatherStation=WeatherStation, ESPA = ESPA)
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat = sat, ESPA= ESPA)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
   #setTxtProgressBar(pb, 6)
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1, sat = sat, ESPA = ESPA)
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
   Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
                            WeatherStation = WeatherStation)
   #setTxtProgressBar(pb, 35)
@@ -160,19 +160,18 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                    Rn=Rn, image.SR, LAI=LAI, sat = sat)
+                    Rn=Rn, image.SR, LAI=LAI)
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   method = Zom.method, 
                                   surface.model = surface.model)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                               albedo = albedo, Z.om = Z.om, n = 1, 
-                              anchors.method = anchors.method, sat = sat, 
+                              anchors.method = anchors.method,
                               deltaTemp = 5, verbose = verbose)
   print(hot.and.cold)
   #setTxtProgressBar(pb, 45)
-  on.meta <-  TRUE
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
-             WeatherStation = WeatherStation, ETp.coef = ETp.coef, sat = sat, 
+             WeatherStation = WeatherStation, ETp.coef = ETp.coef, 
              Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
   #setTxtProgressBar(pb, 99)
   H <-  H$H
