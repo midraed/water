@@ -7,7 +7,6 @@ You can install development version with:
 
     install.packages("devtools")
     library(devtools)
-    dev_mode(on=T)
     install_github("midraed/water")
 
 
