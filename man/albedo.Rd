@@ -4,7 +4,7 @@
 \alias{albedo}
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
-albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto", ESPA = FALSE)
+albedo(image.SR, aoi, coeff = "Tasumi")
 }
 \arguments{
 \item{image.SR}{surface reflectance image with bands B, R, G, NIR, SWIR1, 
@@ -15,12 +15,6 @@ SWIR2}
 
 \item{coeff}{coefficient to transform narrow to broad band albedo. 
 See Details.}
-
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
-from filenames}
-
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related 
-products on working folder}
 }
 \description{
 Broadband surface Albedo is estimated considering the integration of all 

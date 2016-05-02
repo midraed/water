@@ -11,10 +11,6 @@ LAI(method = "metric2010", image, sat = "auto", ESPA = F, aoi, L = 0.1)
 
 \item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
-
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related products on working folder}
-
 \item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
 
 \item{L}{L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1}

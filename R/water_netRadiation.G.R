@@ -398,10 +398,6 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #'  == TRUE will look for any object called aoi on .GlobalEnv
 #' @param coeff      coefficient to transform narrow to broad band albedo. 
 #' See Details.
-#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
-#' from filenames 
-#' @param ESPA       Logical. If TRUE will look for espa.usgs.gov related 
-#' products on working folder
 #' @details 
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, 
@@ -416,30 +412,17 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #'
 #' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 #' @export
-albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
-                   ESPA=FALSE){
-  path = getwd()
-  if(sat=="auto"){sat = getSat(path)}
+albedo <- function(image.SR, aoi, coeff="Tasumi"){
   if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
   # Tasumi 2008
   if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)}
   # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
   if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} 
   # Liang 2001
-  if(ESPA==TRUE & sat=="L8"){
-    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
-    albedo <- calc(raster(files[1]), fun=function(x){x / 10000 *wb[1]})
-    for(i in 2:6){
-      albedo <- albedo + calc(raster(files[i]), fun=function(x){x *wb[i]})
-      removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
-    }
-    albedo <-  albedo/1e+08}
-  if(sat=="L7"){
-    albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
-    for(i in 2:6){
+  albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
+  for(i in 2:6){
       albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]})
       #removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
-    }
   }
   albedo <- aoiCrop(albedo, aoi) 
   if(coeff=="Liang"){
@@ -455,8 +438,6 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 #' This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
 #' @param method   Method used to estimate LAI from spectral data. 
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
-#' @param sat      "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA     Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
@@ -473,38 +454,12 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto",
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
-  path = getwd()
-  if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L8" & ESPA==T){
-    if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
-      removeTmpFiles(h=0)
-      toa.red <- raster(list.files(path = path, 
-                                   pattern = "_toa_band4.tif", full.names = T))
-      toa.nir <- raster(list.files(path = path, 
-                                   pattern = "_toa_band5.tif", full.names = T))
-      toa.4.5 <- stack(toa.red, toa.nir)
-      toa.4.5 <- aoiCrop(toa.4.5, aoi)
-      toa.4.5 <- toa.4.5 * 0.0001
-    }
-    if(method=="turner"){
-      removeTmpFiles(h=0)
-      sr.red <- raster(list.files(path = path, pattern = "_sr_band4.tif", 
-                                  full.names = T))
-      sr.nir <- raster(list.files(path = path, pattern = "_sr_band5.tif", 
-                                  full.names = T))
-      sr.4.5 <- stack(sr.red, sr.nir)
-      sr.4.5 <- aoiCrop(sr.4.5, aoi)}
-  }
-  if(sat=="L7"){
-    if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
+  if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
-    if(method=="turner"){
-      sr.4.5 <- stack(image[[3]], image[[4]])
-    }
-  }  
   if(method=="turner"){
-    sr.4.5 <- sr.4.5 * 0.0001
-  }
+      sr.4.5 <- stack(image[[3]], image[[4]])}
+  if(method=="turner"){
+    sr.4.5 <- sr.4.5 * 0.0001}
   if(method=="metric2010"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + 
                                                         toa.4.5[[2]])
@@ -531,7 +486,7 @@ LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
     LAI <- 1.2 - 3.08*exp(-2013.35*NDVI^6.41) 
   }
   if(method=="turner"){
-    NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
+    NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
     LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
   }
   LAI[LAI<0]  <- 0
