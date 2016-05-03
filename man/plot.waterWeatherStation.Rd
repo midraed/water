@@ -4,13 +4,17 @@
 \alias{plot.waterWeatherStation}
 \title{Plot method for waterWeatherStation S3 class}
 \usage{
-\method{plot}{waterWeatherStation}(x, alldata = TRUE, ...)
+\method{plot}{waterWeatherStation}(x, hourly = FALSE, sat = TRUE, ...)
 }
 \arguments{
 \item{x}{waterWeatherStation object. See read.WSdata()}
 
-\item{alldata}{plot all data on waterWeatherStation object. If false, will
-only plot hourly data.}
+\item{hourly}{If TRUE will plot only hourly data, instead of all data 
+from the waterWeatherStation object}
+
+\item{sat}{If TRUE, and if the waterWeatherStation object was created
+using a Landsat Metadata File, will plot only data from day of the satellite
+overpass}
 
 \item{...}{additional parameters to pass to plot()}
 }
