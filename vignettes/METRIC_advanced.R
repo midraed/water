@@ -14,9 +14,9 @@ WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
                   MTL = MTLfile)
 
 ## ---- fig.width = 5------------------------------------------------------
-print(WeatherStation)
+print(WeatherStation, hourly=FALSE)
 
-plot(WeatherStation, alldata=FALSE)
+plot(WeatherStation, hourly=TRUE)
 
 ## ---- fig.width = 5------------------------------------------------------
 image.DN <- L7_Talca[[c(1:5,7)]]
@@ -49,10 +49,10 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
                    incidence.hor = solar.angles.r$incidence.hor, 
                    WeatherStation=WeatherStation, ESPA = F)
 
-albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat = "L7")
+albedo <- albedo(image.SR = image.SR,  coeff="Tasumi")
 
 ## ---- fig.width = 5------------------------------------------------------
-LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
+LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
 
 plot(LAI)
 
@@ -72,7 +72,7 @@ plot(Rn)
 
 ## ---- fig.width = 5------------------------------------------------------
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                  Rn=Rn, LAI=LAI, sat = "L7")
+                  Rn=Rn, LAI=LAI)
 
 plot(G)
 
@@ -83,11 +83,11 @@ Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE,
 
 hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                             albedo = albedo, Z.om = Z.om, n = 1, 
-                            anchors.method = "CITRA-MCB", sat = "L7", 
+                            anchors.method = "CITRA-MCB", 
                             deltaTemp = 5, verbose = FALSE)
 
 H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
-           WeatherStation = WeatherStation, ETp.coef = 1.05, sat = "L7", 
+           WeatherStation = WeatherStation, ETp.coef = 1.05,
            Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 
 ## ------------------------------------------------------------------------

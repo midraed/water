@@ -5,8 +5,8 @@
 \title{Select anchors pixels for H function}
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
-  anchors.method = "CITRA-MCB", sat = "auto", ESPA = F, plots = TRUE,
-  deltaTemp = 5, verbose = FALSE)
+  anchors.method = "CITRA-MCB", plots = TRUE, deltaTemp = 5,
+  verbose = FALSE)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}

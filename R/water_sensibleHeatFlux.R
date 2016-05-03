@@ -70,8 +70,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "CITRA-MCB", sat="auto", 
-                         ESPA=F, plots=TRUE, deltaTemp=5, verbose=FALSE) {
+                         anchors.method= "CITRA-MCB",
+                         plots=TRUE, deltaTemp=5, verbose=FALSE) {
   path=getwd()
   ### Some values used later
   sr.4.5 <- stack(image[[3]], image[[4]])

@@ -71,9 +71,9 @@ WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
 
 We can visualize our weather station data as: 
 ```{r, fig.width = 5}
-print(WeatherStation)
+print(WeatherStation, hourly=FALSE)
 
-plot(WeatherStation, alldata=FALSE)
+plot(WeatherStation, hourly=TRUE)
 ```
 
 
@@ -128,13 +128,13 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
                    incidence.hor = solar.angles.r$incidence.hor, 
                    WeatherStation=WeatherStation, ESPA = F)
 
-albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat = "L7")
+albedo <- albedo(image.SR = image.SR,  coeff="Tasumi")
 ```
 
 Later on, we calculate the *Leaf Area Index* (LAI) using the satellite data, and we plot it. In this step, we can choose diferents methods able in literature to estimate LAI from Landsat data (see package Help for more info.). In this vignette we are going to use the *METRIC 2010* method:
 
 ```{r, fig.width = 5}
-LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1, sat = "L7")
+LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
 
 plot(LAI)
 ```
@@ -166,7 +166,7 @@ We estimate the soil heat flux using as an input data the *Net radiation*, *surf
 
 ```{r, fig.width = 5}
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                  Rn=Rn, LAI=LAI, sat = "L7")
+                  Rn=Rn, LAI=LAI)
 
 plot(G)
 ```
@@ -185,11 +185,11 @@ Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE,
 
 hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                             albedo = albedo, Z.om = Z.om, n = 1, 
-                            anchors.method = "CITRA-MCB", sat = "L7", 
+                            anchors.method = "CITRA-MCB", 
                             deltaTemp = 5, verbose = FALSE)
 
 H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
-           WeatherStation = WeatherStation, ETp.coef = 1.05, sat = "L7", 
+           WeatherStation = WeatherStation, ETp.coef = 1.05,
            Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 ```
 

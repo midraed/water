@@ -455,7 +455,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi"){
 #' Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, sat="auto", ESPA=F,aoi, L=0.1){
+LAI <- function(method="metric2010", image, aoi, L=0.1){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
   if(method=="turner"){
