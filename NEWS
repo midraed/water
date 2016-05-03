@@ -2,6 +2,15 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
+VERSION 0.3.2
+
+* Solved errors when using non ASCII characters
+* Fixes some bug who prevent using water with L8 data
+* More flexibility on band names and changes to reflect the changes on USGS's 
+  ESPA file naming
+* Improvement to plot.waterWeatherStation to plot only data from the sattelite
+  overpass when the object was created using a MTL file.
+
 VERSION 0.3
 
 * First release to CRAN!
