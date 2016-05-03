@@ -1,6 +1,6 @@
 Repository for the development version of water package.
 
-water package is available at [CRAN network](https://cran.r-project.org/web/packages/water/)
+water package is available at [CRAN network](https://cran.r-project.org/package=water)
 
 You can install development version with: 
 
