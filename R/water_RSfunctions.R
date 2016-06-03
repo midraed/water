@@ -14,11 +14,23 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  
   stack1 <- list()
+  
+  ## Check for more than 1 image on the same folder
+  image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)",
+                                         bands[1] ,".(TIF|tif)$"))
+  if(length(image_list) > 1) {
+    image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+    warning(paste("More than 1 image present on path. Using", 
+                  substr(image_pattern, 0, nchar(image_pattern)-2)))
+  } else {
+    image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+  }
+  
   for(i in 1:6){
     stack1[i] <- raster(list.files(path=path, 
-                                   pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)", bands[i] ,".(TIF|tif)$")))
+                                   pattern = paste0(image_pattern, bands[i] ,
+                                                    ".(TIF|tif)$"), full.names = T))
   }
   raw.image <- do.call(stack, stack1)
   raw.image <- aoiCrop(raw.image, aoi)                               
