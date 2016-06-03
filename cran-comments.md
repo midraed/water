@@ -1,4 +1,45 @@
-## Resubmission
+## Resubmission 0.3.2
+
+Previous submission had an error:
+Found the following (possibly) invalid URLs:
+  URL: https://cran.r-project.org/web/packages/water/
+    From: README.md
+    Status: 200
+    Message: OK
+    CRAN URL not in canonical form
+  The canonical URL of the CRAN page for a package is
+  https://cran.r-project.org/package=pkgname
+
+* URL was corrected.
+
+
+## Test environments
+* local linux install, 3.2.5
+* win-builder (devel and release)
+
+## R CMD check
+  results
+There were no ERRORs or WARNINGs.
+
+There
+  was 1 NOTE:
+
+* Possibly mis-spelled words in
+  DESCRIPTION:
+  Evapotranspiration (2:15)
+
+  evapotranspiration (9:54)
+
+Is not an error. The
+  first use is upper case because it's on the title.
+
+
+
+
+################################################################################
+
+
+## Resubmission 0.3
 This is a resubmission. In this version I have:
 
 * Found (possibly) invalid URLs
