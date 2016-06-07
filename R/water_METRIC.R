@@ -176,6 +176,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   #setTxtProgressBar(pb, 99)
   H <-  H$H
   LE <- Rn - G - H
+  LE[LE < 0]  <-  0
   EB <- stack(Rn, G, H, LE, Ts)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
