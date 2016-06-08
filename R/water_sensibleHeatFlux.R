@@ -74,33 +74,38 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          plots=TRUE, deltaTemp=5, verbose=FALSE) {
   path=getwd()
   ### Some values used later
-  sr.4.5 <- stack(image[[3]], image[[4]])
-  NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
-  NDVI[NDVI < -1]  <- -1
+  NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   ### We create anchors points if they dont exist---------------------------------
   if(anchors.method=="CITRA-MCB"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.25, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
     ## NDVI used in cold isn't the same as CITRA!
-    cold <- sample(which(values(LAI>=3) & values(LAI<=6) &  
-                           values(albedo>=0.18) & values(albedo<=0.25) &
-                           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-                           values(Z.om>=0.03) & values(Z.om<=0.08) &
-                           values(Ts<(minT+deltaTemp)) & values(Ts>288)),n)
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
-    hot <- sample(which(values(albedo>=0.13) & values(albedo<=0.15) &
-                          values(NDVI>=0.1) & values(NDVI<=0.28) &
-                          values(Z.om<=0.005) & 
-                          values(Ts>(maxT-deltaTemp))),n)
+    cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
+                       values(albedo>=0.18) & values(albedo<=0.25) &
+                       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+                       values(Z.om>=0.03) & values(Z.om<=0.08) &
+                       values(Ts<(minT+deltaTemp)) & values(Ts>288)
+    hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
+                      values(NDVI>=0.1) & values(NDVI<=0.28) &
+                      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+    ## Check if there are enough candidates
+    if(sum(hot.candidates, na.rm = T) < n | sum(cold.candidates, na.rm = T) < n){
+      n <- min(c(sum(hot.candidates, na.rm = T), sum(cold.candidates, na.rm = T)))
+      warning(paste("There are not enough candidates for anchor pixels, using n =",
+                    n, "instead."))
+    }
+    cold <- sample(which(cold.candidates),n)
+    hot <- sample(which(hot.candidates),n)
   }
   if(verbose==TRUE){
     print("Cold pixels")
-    print(data.frame(cbind("LAI"=LAI[cold], "NDVI"=NDVI[cold], 
+    print(data.frame(cbind(pixel=cold, "LAI"=LAI[cold], "NDVI"=NDVI[cold], 
                            "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
     print("Hot pixels")
-    print(data.frame(cbind("LAI"=LAI[hot], "NDVI"=NDVI[hot], 
+    print(data.frame(cbind(pixel=hot, "LAI"=LAI[hot], "NDVI"=NDVI[hot], 
                            "albedo"=albedo[hot], "Z.om"=Z.om[hot])))    
   }
   ### End anchors selection ------------------------------------------------------
