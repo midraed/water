@@ -103,10 +103,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   if(verbose==TRUE){
     print("Cold pixels")
     print(data.frame(cbind(pixel=cold, "LAI"=LAI[cold], "NDVI"=NDVI[cold], 
-                           "albedo"=albedo[cold], "Z.om"=Z.om[cold])))
+                           "albedo"=albedo[cold], "Z.om"=Z.om[cold]), Ts=Ts[cold]))
     print("Hot pixels")
     print(data.frame(cbind(pixel=hot, "LAI"=LAI[hot], "NDVI"=NDVI[hot], 
-                           "albedo"=albedo[hot], "Z.om"=Z.om[hot])))    
+                           "albedo"=albedo[hot], "Z.om"=Z.om[hot], Ts=Ts[hot])))    
   }
   ### End anchors selection ------------------------------------------------------
   ### We can plot anchor points
