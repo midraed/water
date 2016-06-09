@@ -78,7 +78,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   ### We create anchors points if they dont exist---------------------------------
   if(anchors.method=="CITRA-MCB"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
-                          Z.om<=0.08], 0.25, na.rm=TRUE)
+                          Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
     ## NDVI used in cold isn't the same as CITRA!
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
@@ -98,7 +98,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                     n, "instead."))
     }
     cold <- sample(which(cold.candidates),n)
-    hot <- sample(which(hot.candidates),n)
+    hot <- sample(which(hot.candidates & values(Ts>quantile(Ts[hot.candidates], 0.75))),n)
   }
   if(verbose==TRUE){
     print("Cold pixels")
