@@ -87,7 +87,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                        values(albedo>=0.18) & values(albedo<=0.25) &
                        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
                        values(Z.om>=0.03) & values(Z.om<=0.08) &
-                       values(Ts<(minT+deltaTemp)) & values(Ts>288)
+                       values(Ts<(minT+deltaTemp))
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
                       values(NDVI>=0.1) & values(NDVI<=0.28) &
                       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
@@ -198,7 +198,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
-  ### Iteractive process start here:
+  
   LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(Ts[cold]-273.15))*
     (1e6)/3600 
   # here uses latent.heat.vapo
