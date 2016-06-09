@@ -359,15 +359,25 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param LAI             raster layer with leaf area index. See LAI()
 #' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param WeatherStation  Weather Station data
+#' @param method          "SC" for single-channel or "SW" for split-window. "SW" is only available for Landsat 8 data
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
+#' mapping evapotranspiration with internalized calibration (METRIC) - 
+#' Model" Journal of Irrigation and Drainage Engineering, vol. 133, 
+#' p. 380, 2007 \cr
 #'
-#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric calibration of Landsat thematic mapper thermal band Remote Sensing of Environment, 1989, 28, (339-347) \cr
+#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric 
+#' calibration of Landsat thematic mapper thermal band Remote Sensing of 
+#' Environment, 1989, 28, (339-347) \cr
+#'
+#' Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
+#' J. (2014). Land surface temperature retrieval methods from landsat-8 thermal 
+#' infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
+#' 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr 
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
-## Add Rsky estimation from WeatherStation
 surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi, 
                                WeatherStation){
   path=getwd()
