@@ -108,6 +108,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method to select anchor pixels. Currently only 
 #' "CITRA-MCB" automatic method available.
+#' @param n                number of pair of anchors pixels to calculate
 #' @param ETp.coef         ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
 #' 0.0018 or 0.03 for long grass
@@ -127,7 +128,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
                       alb.coeff = "Tasumi", LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
-                      ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE, 
+                      n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE, 
                       verbose = FALSE){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
@@ -158,14 +159,16 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
                            solar.angles = solar.angles.r, Ts= Ts)
   Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+  Rn[Rn < 0]  <-  0
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
                     Rn=Rn, image.SR, LAI=LAI)
+  G[G < 0]  <-  0
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   method = Zom.method, 
                                   surface.model = surface.model)
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
-                              albedo = albedo, Z.om = Z.om, n = 1, 
+                              albedo = albedo, Z.om = Z.om, n = n, 
                               anchors.method = anchors.method,
                               deltaTemp = 5, verbose = verbose)
   print(hot.and.cold)
