@@ -357,39 +357,86 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param thermalband     Satellite thermal band
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param LAI             raster layer with leaf area index. See LAI()
-#' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param DEM             digital elevetion model in m, or "plain" if we 
+#'                        assume a flat terrain
+#' @param aoi             area of interest to crop images, if 
+#'                        waterOptions("autoAoi") == TRUE will look for any 
+#'                        object called aoi on .GlobalEnv
+#' @param method          "SC" for single channel or "SW" for split window 
+#'                        algorithm. "SW" is only available for L8
 #' @param WeatherStation  Weather Station data
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
+#' mapping evapotranspiration with internalized calibration (METRIC) - Model" 
+#' Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
-#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric calibration of Landsat thematic mapper thermal band Remote Sensing of Environment, 1989, 28, (339-347) \cr
+#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric 
+#' calibration of Landsat thematic mapper thermal band Remote Sensing of 
+#' Environment, 1989, 28, (339-347) \cr
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 ## Add Rsky estimation from WeatherStation
 surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi, 
-                               WeatherStation){
+                               method = "SC", WeatherStation){
   path=getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
+  epsilon_NB <- raster(LAI)
+  epsilon_NB <- 0.97 + 0.0033 * LAI  
+  epsilon_NB[LAI > 3] <- 0.98
+  # Downwelling atm radiance
+  
+  R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*
+                                            exp(-7.77e-4*WeatherStation$temp^2))
+  # path radiance
+  Rp <- 0.91     
+  # atm transmissivity
+  tau_NB <- 0.75+2e-5*WeatherStation$elev
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
     if(missing(thermalband)){
       bright.temp.b10 <- raster(list.files(path = path, 
                                          pattern = "_toa_band10.tif"))
-      bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
-      Ts <- bright.temp.b10 * 0.1
     } else {
-      bright.temp.b10 <- aoiCrop(thermalband, aoi) 
-      Ts <- bright.temp.b10 * 0.1
+      bright.temp.b10 <- thermalband
+    }
+    bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
+    bright.temp.b10 <- bright.temp.b10 * 0.1
+    L_b10 <-  aoiCrop(raster(list.files(path = path, 
+                                pattern = "band10.tif")[1]), aoi)
+    L_b10 <- L_b10* 3.3420E-04 + 0.1
+    if(method == "SC"){
+      #atm.coeff from Jimenez-Munoz, 2014
+      atm.coeff <- matrix(data=c(0.04019, 0.02916, 1.01523,
+                                 -0.38333, -1.50294, 0.20324,
+                                 0.00918, 1.36072, -0.27514),
+                          byrow= TRUE, nrow= 3, ncol=3)
+      ea = (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
+                                                (WeatherStation$temp+237.3))
+      atm.cond <- matrix(data=c(ea^2, ea, 1), nrow= 3, ncol=1) #not ea, vwc in g/cm2
+      AF.j <- atm.coeff %*% atm.cond
+      AF.m <- c(1/tau_NB, -R_sky - (Rp/tau_NB), R_sky)
+      delta <- (bright.temp.b10^2)/(1324*L_b10 )
+      gama <- bright.temp.b10 - (bright.temp.b10^2/1324)
+      Ts <- delta*((1/epsilon_NB)*(AF.m[1]*L_b10+AF.m[2])+AF.m[3])+gama
+    }
+    if(method=="SW"){
+      if(missing(thermalband2)){
+        bright.temp.b11 <- raster(list.files(path = path, 
+                                             pattern = "_toa_band11.tif"))
+      } else {
+        bright.temp.b11 <- thermalband2
+      }
+      bright.temp.b11 <- aoiCrop(bright.temp.b11, aoi) 
+      bright.temp.b11 <- bright.temp.b11 * 0.1
+      L_b11 <-  (raster(list.files(path = path, 
+                                   pattern = "band11.tif")[1]) * 3.3420E-04) + 0.1
     }
   }
   if(sat=="L7"){
-    epsilon_NB <- raster(LAI)
-    epsilon_NB <- 0.97 + 0.0033 * LAI  
-    epsilon_NB[LAI > 3] <- 0.98
     if(missing(thermalband)){
       B6 <- raster(list.files(path = path, 
                 pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T))
@@ -402,14 +449,6 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
     }
     L7_K1 <- 666.09 
     L7_K2 <- 1282.71 
-    Rp <- 0.91             #Allen estimo en Idaho que el valor medio era 0.91
-    #tau_NB <- 1       #Allen estimo en Idaho que el valor medio era 0.866
-    ## There is a equation on excel to calculate from DEM
-    tau_NB <- 0.75+2e-5*WeatherStation$elev
-    #R_sky <- 1        #Allen estimo en Idaho que el valor medio era 1.32
-    ## There is a equation for R_sky on Metric Manual:
-    R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*
-                                            exp(-7.77e-4*WeatherStation$temp^2))
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
     Ts <- L7_K2 / log((epsilon_NB*L7_K1/Rc)+1)}
   Ts <- saveLoadClean(imagestack = Ts, 
@@ -425,7 +464,9 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
+#' mapping evapotranspiration with internalized calibration (METRIC) - Model" 
+#' Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 outLWradiation <- function(LAI, Ts){
   surf.emissivity <- 0.95 + 0.01 * LAI
