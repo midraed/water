@@ -1,7 +1,7 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance Models
 Version: 0.3.2.999
-Date: 2016-05-03
+Date: 2016-06-10
 Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farias [aut],
     David Fonseca-Luengo [aut], Daniel de la Fuente-Saiz [aut], Fernando Fuentes
     Peñailillo [aut]
@@ -15,7 +15,7 @@ Depends:
     rgdal (>= 1.0-4)
 Imports:
 License: GPL (>= 2)
-URL: https://github.com/midraed/water
+URL: http://midraed.github.io/water
 BugReports: https://github.com/midraed/water/issues
 LazyData: true
 Suggests:
