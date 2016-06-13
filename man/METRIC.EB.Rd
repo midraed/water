@@ -6,7 +6,7 @@
 \usage{
 METRIC.EB(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LAI.method = "metric2010",
-  Zom.method = "short.crops", anchors.method = "CITRA-MCB",
+  Zom.method = "short.crops", anchors.method = "CITRA-MCB", n = 1,
   ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE, verbose = FALSE)
 }
 \arguments{
@@ -41,6 +41,8 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{anchors.method}{method to select anchor pixels. Currently only 
 "CITRA-MCB" automatic method available.}
+
+\item{n}{number of pair of anchors pixels to calculate}
 
 \item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
 
