@@ -8,7 +8,7 @@ surfaceTemperature(thermalband, sat = "auto", LAI, aoi, method = "SC",
   WeatherStation)
 }
 \arguments{
-\item{thermalband}{Satellite thermal band}
+\item{thermalband}{Satellite thermal band. For L8 this should be band 10.}
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
 
@@ -23,8 +23,12 @@ algorithm. "SW" is only available for L8}
 
 \item{WeatherStation}{Weather Station data}
 
+\item{thermalband2}{Second thermal band. Only needed for split window method. For L8 this should be band 11.}
+
 \item{DEM}{digital elevetion model in m, or "plain" if we 
 assume a flat terrain}
+
+\item{method}{"SC" for single-channel or "SW" for split-window. "SW" is only available for Landsat 8 data}
 }
 \description{
 Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
@@ -36,11 +40,17 @@ Fonseca-Luengo, David
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
-mapping evapotranspiration with internalized calibration (METRIC) - Model" 
-Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+mapping evapotranspiration with internalized calibration (METRIC) - 
+Model" Journal of Irrigation and Drainage Engineering, vol. 133, 
+p. 380, 2007 \cr
 
 Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric 
 calibration of Landsat thematic mapper thermal band Remote Sensing of 
 Environment, 1989, 28, (339-347) \cr
+
+Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
+J. (2014). Land surface temperature retrieval methods from landsat-8 thermal 
+infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
+1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
 

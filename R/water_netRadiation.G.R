@@ -354,7 +354,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' Estimates Land Surface Temperature from Landsat Data
 #' @description
 #' Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
-#' @param thermalband     Satellite thermal band
+#' @param thermalband     Satellite thermal band. For L8 this should be band 10.
+#' @param thermalband2    Second thermal band. Only needed for split window method. For L8 this should be band 11.
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param LAI             raster layer with leaf area index. See LAI()
 #' @param DEM             digital elevetion model in m, or "plain" if we 
@@ -437,9 +438,15 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
         bright.temp.b11 <- thermalband2
       }
       bright.temp.b11 <- aoiCrop(bright.temp.b11, aoi) 
-      bright.temp.b11 <- bright.temp.b11 * 0.1
-      L_b11 <-  (raster(list.files(path = path, 
-                                   pattern = "band11.tif")[1]) * 3.3420E-04) + 0.1
+      bright.temp.b11 <- bright.temp.b11 * 0.1 # L8 rescaling factor
+      SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238, -129.20, 16.40)
+      w <- 1.2 #Atm water vapor content in g cm-2
+      delta_e <- 0 # emissivity difference 
+      Ts <- bright.temp.b10 + SW.c[2] * (bright.temp.b10 - bright.temp.b11) +
+        SW.c[3] * (bright.temp.b10 - bright.temp.b11)^2 + SW.c[1] +
+        (SW.c[4] + SW.c[5] * w) * (1 - epsilon_NB) 
+      # If I had two different emissivity, I should change epsilon_NB parameter
+      # with the mean emissivity and add +(SW.c[6] + SW.c[7] * w) * delta_e
     }
   }
   if(sat=="L7"){
