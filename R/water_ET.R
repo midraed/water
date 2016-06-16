@@ -105,7 +105,7 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
   return(ET.hourly)
 }
 
-#' Calculates ET-24hs from energy balance and Weather Station 
+#' Calculates daily ET from a surface energy balance and Weather Station 
 #' @param Rn             Net radiation. See netRadiation()
 #' @param G              Soil Heat Flux. See soilHeatFlux()
 #' @param H              Sensible Heat Flux. See calcH()
@@ -129,7 +129,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
   ETr.Fr <- ET.inst/ETo.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
-  #ET.24[ET.24 < 0]  <- 0
+  ET.24[ET.24 < 0]  <- 0
   #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
   rgb.palette <- grDevices::colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
   print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
