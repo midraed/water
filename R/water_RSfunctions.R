@@ -12,8 +12,8 @@
 #' @export
 loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
-  if(sat=="L8"){bands <- 2:7}
-  if(sat=="L7"){bands <- c(1:5,7)}
+  if(sat=="L8"){bands <- c(2:7, 10, 11)}
+  if(sat=="L7"){bands <- c(1:5,7, 6)}
   stack1 <- list()
   
   ## Check for more than 1 image on the same folder
@@ -27,15 +27,17 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
   }
   
-  for(i in 1:6){
+  for(i in 1:length(bands)){
     stack1[i] <- raster(list.files(path=path, 
-                                   pattern = paste0(image_pattern, bands[i] ,
+                                   pattern = paste0(image_pattern, bands[i], "(_VCID_1)?",
                                                     ".(TIF|tif)$"), full.names = T))
   }
+  bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
+  if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
   raw.image <- do.call(stack, stack1)
   raw.image <- aoiCrop(raw.image, aoi)                               
   raw.image <- saveLoadClean(imagestack = raw.image, 
-                             stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
+                             stack.names = bandnames, 
                              file = "imageDN", 
                              overwrite=TRUE)
   return(raw.image) 
