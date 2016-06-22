@@ -100,6 +100,9 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param aoi              SpatialPolygon object with limits of Area of interest
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
+#' @param LST.method       Method for land surface temperature estimation. "SC" 
+#' for single channel or "SW" for split window algorithm. 
+#' "SW" is only available for L8. See \code{water::surfaceTemperature}
 #' @param LAI.method       Method used to estimate LAI from spectral data. 
 #' See Details.
 #' @param Zom.method       method selected to calculate momentum roughness 
@@ -126,7 +129,8 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @export
 METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
-                      alb.coeff = "Tasumi", LAI.method = "metric2010", 
+                      alb.coeff = "Tasumi", LST.method = "SC",
+                      LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
                       n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE, 
                       verbose = FALSE){

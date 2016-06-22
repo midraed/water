@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_ET.R
 \name{ET24h}
 \alias{ET24h}
-\title{Calculates ET-24hs from energy balance and Weather Station}
+\title{Calculates daily ET from a surface energy balance and Weather Station}
 \usage{
 ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 }
@@ -24,7 +24,7 @@ Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
 variation in 24 h versus instantaneous energy availability. See Allen (2007)}
 }
 \description{
-Calculates ET-24hs from energy balance and Weather Station
+Calculates daily ET from a surface energy balance and Weather Station
 }
 \author{
 Guillermo Federico Olmedo

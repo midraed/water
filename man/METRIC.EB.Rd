@@ -5,9 +5,10 @@
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
 METRIC.EB(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
-  plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LAI.method = "metric2010",
-  Zom.method = "short.crops", anchors.method = "CITRA-MCB", n = 1,
-  ETp.coef = 1.05, Z.om.ws = 0.0018, ESPA = FALSE, verbose = FALSE)
+  plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
+  LAI.method = "metric2010", Zom.method = "short.crops",
+  anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
+  Z.om.ws = 0.0018, ESPA = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -30,6 +31,10 @@ if plain = TRUE}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
+
+\item{LST.method}{Method for land surface temperature estimation. "SC" 
+for single channel or "SW" for split window algorithm. 
+"SW" is only available for L8. See \code{water::surfaceTemperature}}
 
 \item{LAI.method}{Method used to estimate LAI from spectral data. 
 See Details.}
