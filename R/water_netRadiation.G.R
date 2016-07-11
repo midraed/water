@@ -406,14 +406,14 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
   if(sat=="L8"){
     if(missing(thermalband)){
       bright.temp.b10 <- raster(list.files(path = path, 
-                                         pattern = "_toa_band10.tif"))
+                                         pattern = "_toa_band10.tif$"))
     } else {
       bright.temp.b10 <- thermalband
     }
     bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
     bright.temp.b10 <- bright.temp.b10 * 0.1
     L_b10 <-  aoiCrop(raster(list.files(path = path, 
-                                pattern = "band10.tif")[1]), aoi)
+                                pattern = "band10.tif$")), aoi)
     L_b10 <- L_b10* 3.3420E-04 + 0.1
     if(method == "SC"){
       #atm.coeff from Jimenez-Munoz, 2014
@@ -433,7 +433,7 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
     if(method=="SW"){
       if(missing(thermalband2)){
         bright.temp.b11 <- raster(list.files(path = path, 
-                                             pattern = "_toa_band11.tif"))
+                                             pattern = "_toa_band11.tif$"))
       } else {
         bright.temp.b11 <- thermalband2
       }
