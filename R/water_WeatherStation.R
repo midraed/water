@@ -21,7 +21,7 @@
 #' temperature to W/m2; m/s and Celsius. See Details.
 #' @param MTL                Metadata file. If not provided will look for one on
 #' working directory. If provided or present will calculate weather conditions
-#' on satellite flyby.
+#' on satellite overpass.
 #' @details 
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
 #' temperature), cf should be: cf = c(1,0.2777778,1)

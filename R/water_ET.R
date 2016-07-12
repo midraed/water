@@ -148,6 +148,11 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param elev     elevation in meters of the weather station
 #' @param ET       "ETo" or "ETr"
 #' @param long.z   longitude for local time
+#' @param MTL      Metadata file. If not provided will look for one on
+#' working directory. If provided or present will calculate weather conditions
+#' on satellite overpass.
+#' @param date     if date == "auto" will use a MTL file provided or present in 
+#' the working folder to select the date.
 #' @return ET      daily in mm.h-1
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -163,20 +168,36 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' ET="ETo")
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETo", 
-                       long.z=WeatherStation$long){
+                    long.z=WeatherStation$long, date = "auto", MTL){
   if(class(WeatherStation)== "waterWeatherStation"){
     if(missing(height)){height <- WeatherStation$location$height}
     if(missing(lat)){lat <- WeatherStation$location$lat}
     if(missing(long)){long <- WeatherStation$location$long}
     if(missing(elev)){elev <- WeatherStation$location$elev}
+    
+    ## Join with satellite data
+    if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
+    if(length(MTL)!=0){
+      MTL <- readLines(MTL, warn=FALSE)
+      date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+      sat.date <-regmatches(date.line,regexec(text=date.line,
+                                              pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+      sat.date <- strptime(sat.date,  
+                           format = "%Y-%m-%d", tz="GMT")}
+    if(date == "auto"){
+      data <- WeatherStation$hourly[as.character(trunc(WeatherStation$hourly$datetime, "days")) == 
+                                      as.character(as.Date(sat.date)),]
+    }  else {
+      data <- WeatherStation$hourly[as.Date(WeatherStation$hourly$datetime) == as.Date(date),]
+    }
     ET.daily <- vector()
     for(i in 1:24){
-      date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
-      ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat, 
-                                      long = long, elev=elev, ET=ET, 
-                                      height = height))
-      }
+      date <- as.POSIXlt(data[i,1], format="%Y-%m-%d %H:%M:%S")
+      ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat, 
+                                       long = long, elev=elev, ET=ET, 
+                                       height = height))
+    }
   } else {
-  print("not yet")}
+    print("not yet")}
   return(sum(ET.daily))
 }

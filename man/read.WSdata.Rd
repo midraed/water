@@ -45,7 +45,7 @@ temperature to W/m2; m/s and Celsius. See Details.}
 
 \item{MTL}{Metadata file. If not provided will look for one on
 working directory. If provided or present will calculate weather conditions
-on satellite flyby.}
+on satellite overpass.}
 }
 \value{
 waterWeatherStation object, with data.frames with all data, hourly

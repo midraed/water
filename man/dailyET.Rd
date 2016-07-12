@@ -5,7 +5,7 @@
 \title{Calculates daily ET using Penman Monteith hourly formula for every hour}
 \usage{
 dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
-  long.z = WeatherStation$long)
+  long.z = WeatherStation$long, date = "auto", MTL)
 }
 \arguments{
 \item{WeatherStation}{a data frame with all the needed fields (see example)}
@@ -23,6 +23,13 @@ dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
 \item{ET}{"ETo" or "ETr"}
 
 \item{long.z}{longitude for local time}
+
+\item{date}{if date == "auto" will use a MTL file provided or present in 
+the working folder to select the date.}
+
+\item{MTL}{Metadata file. If not provided will look for one on
+working directory. If provided or present will calculate weather conditions
+on satellite overpass.}
 }
 \value{
 ET      daily in mm.h-1
