@@ -171,7 +171,8 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   method = Zom.method, 
                                   surface.model = surface.model)
-  hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
+  par(mfrow=c(1,2))
+  hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
                               albedo = albedo, Z.om = Z.om, n = n, 
                               anchors.method = anchors.method,
                               deltaTemp = 5, verbose = verbose)
@@ -180,6 +181,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
              WeatherStation = WeatherStation, ETp.coef = ETp.coef, 
              Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
+  par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   H <-  H$H
   LE <- Rn - G - H

@@ -413,7 +413,7 @@ surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi,
     bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
     bright.temp.b10 <- bright.temp.b10 * 0.1
     L_b10 <-  aoiCrop(raster(list.files(path = path, 
-                                pattern = "band10.tif$")), aoi)
+                                pattern = "band10.tif$")[1]), aoi)
     L_b10 <- L_b10* 3.3420E-04 + 0.1
     if(method == "SC"){
       #atm.coeff from Jimenez-Munoz, 2014
