@@ -91,14 +91,53 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
                       values(NDVI>=0.1) & values(NDVI<=0.28) &
                       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
-    ## Check if there are enough candidates
-    if(sum(hot.candidates, na.rm = T) < n | sum(cold.candidates, na.rm = T) < n){
-      n <- min(c(sum(hot.candidates, na.rm = T), sum(cold.candidates, na.rm = T)))
-      warning(paste("There are not enough candidates for anchor pixels, using n =",
-                    n, "instead."))
+    # First cold sample
+    try(cold <- sample(which(cold.candidates),1), silent=TRUE)
+    if(!exists("cold")){
+      stop("There are no pixels that meet the conditions for cold pixels")
     }
-    cold <- sample(which(cold.candidates),n)
-    hot <- sample(which(hot.candidates & values(Ts>quantile(Ts[hot.candidates], 0.75))),n)
+    if(n>1){  ## Next samples...
+      for(nsample in 1:(n-1)){
+        distbuffer <- raster(Ts)
+        values(distbuffer)[cold] <- 1
+        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- is.na(distbuffer)
+        newAnchor <- NA
+        cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
+           values(albedo>=0.18) & values(albedo<=0.25) &
+           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+           values(Z.om>=0.03) & values(Z.om<=0.08) &
+           values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
+        if(length(which(cold.candidates))<2){
+          warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
+          break
+        }
+        try(newAnchor <- sample(which(cold.candidates),1), silent = FALSE)
+        if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
+      }}
+    
+    # First hot sample
+    try(hot <- sample(which(hot.candidates & values(Ts>quantile(Ts[hot.candidates], 0.75))),1), silent=TRUE)
+    if(!exists("hot")){
+      stop("There are no pixels that meet the conditions for hot pixels")
+    }
+    if(n>1){  ## Next samples...
+      for(nsample in 1:(n-1)){
+        distbuffer <- raster(Ts)
+        values(distbuffer)[hot] <- 1
+        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- is.na(distbuffer)
+        newAnchor <- NA
+        hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
+          values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+        if(length(which(hot.candidates))<2){
+          warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
+          break
+        }
+        try(newAnchor <- sample(which(hot.candidates),1), silent = FALSE)
+        if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
+      }}
   }
   if(verbose==TRUE){
     print("Cold pixels")
@@ -118,9 +157,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(), 
                              Y=integer(), Ts=double(), LAI=double(), 
                              type=factor(levels = c("hot", "cold")))
-  for(i in 1:n){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
+  for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
                                       Ts[hot][i], round(LAI[hot][i],2), "hot")}
-  for(i in 1:n){hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
+  for(i in 1:length(cold)){hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
                                       Ts[cold][i], round(LAI[cold][i],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
