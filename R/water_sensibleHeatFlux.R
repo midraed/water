@@ -159,7 +159,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                              type=factor(levels = c("hot", "cold")))
   for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
                                       Ts[hot][i], round(LAI[hot][i],2), "hot")}
-  for(i in 1:length(cold)){hot.and.cold[i+n, ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
+  for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
                                       Ts[cold][i], round(LAI[cold][i],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
