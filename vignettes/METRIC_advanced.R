@@ -19,8 +19,7 @@ print(WeatherStation, hourly=FALSE)
 plot(WeatherStation, hourly=TRUE)
 
 ## ---- fig.width = 5------------------------------------------------------
-image.DN <- L7_Talca[[c(1:5,7)]]
-B6 <- L7_Talca[[6]]
+image.DN <- L7_Talca
 
 ## ------------------------------------------------------------------------
 checkSRTMgrids(image.DN)
@@ -57,7 +56,7 @@ LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
 plot(LAI)
 
 ## ---- warning=FALSE, fig.width = 5---------------------------------------
-Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = B6,
+Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = image.DN$thermal.low,
                          WeatherStation = WeatherStation)
 
 Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
@@ -82,7 +81,7 @@ Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE,
                                 surface.model = surface.model)
 
 hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
-                            albedo = albedo, Z.om = Z.om, n = 1, 
+                            albedo = albedo, Z.om = Z.om, n = 5, 
                             anchors.method = "CITRA-MCB", 
                             deltaTemp = 5, verbose = FALSE)
 
@@ -91,7 +90,7 @@ H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om,
            Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 
 ## ------------------------------------------------------------------------
-ET_WS <- dailyET(WeatherStation = WeatherStation)
+ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 
 ## ---- fig.width = 5------------------------------------------------------
 ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation = WeatherStation, ETr.daily=ET_WS)
