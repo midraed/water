@@ -164,7 +164,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, ...){
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", main="",xlim=range(time), ...)
   graphics::abline(v=atsat, lwd=5, col="gray")
-  graphics::text(atsat, max(WSp$radiation)*0.85, "Satellite Flyby", cex=0.7, 
+  graphics::text(atsat, max(WSp$radiation)*0.85, "satellite overpass", cex=0.7, 
                  adj=c(NA, -0.5), srt=90, col="gray")
   graphics::points(time,WSp$radiation,pch=20,col="red")
   graphics::axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5)
