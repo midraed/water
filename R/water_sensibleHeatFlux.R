@@ -227,11 +227,13 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
   ### We calculate the initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
-  u200 <- u.ws / 0.41 * log(200/Z.om.ws)
-  if(u200 < 1){warning(paste0("u200 less than threshold value = ", 
-                              round(u200,4), "m/s. using u200 = 4m/s"))
-    u200 <- 4
+  u200.v <- u.ws / 0.41 * log(200/Z.om.ws)
+  if(u200.v < 1){warning(paste0("u200 less than threshold value = ", 
+                              round(u200.v,4), "m/s. using u200 = 4m/s"))
+    u200.v <- 4
   }
+  u200 <- raster(DEM)
+  values(u200) <- u200.v
   if(mountainous==TRUE){
     u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
@@ -248,10 +250,10 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     print("Cold")
     print(data.frame(cbind("Ts"=mean(Ts[cold]), "Ts_datum"=mean(Ts.datum[cold]), 
                            "Rn"=mean(Rn[cold]), "G"=mean(G[cold]), "Z.om"=mean(Z.om[cold]), 
-                           "u200"=u200, "u*"=mean(friction.velocity[cold]) )))
+                           "u200"=u200[cold], "u*"=mean(friction.velocity[cold]) )))
     print("Hot")
     print(data.frame(cbind("Ts"=mean(Ts[hot]), "Ts_datum"=mean(Ts.datum[hot]), "Rn"=mean(Rn[hot]), 
-                           "G"=mean(G[hot]), "Z.om"=mean(Z.om[hot]), "u200"=u200, 
+                           "G"=mean(G[hot]), "Z.om"=mean(Z.om[hot]), "u200"=u200[hot], 
                            "u*"=mean(friction.velocity[hot]))))
   }
   plot(1, mean(r.ah[hot]), xlim=c(0,15), ylim=c(0, mean(r.ah[hot])), 
