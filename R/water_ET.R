@@ -177,27 +177,38 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETo",
     
     ## Join with satellite data
     if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-    if(length(MTL)!=0){
+    if(length(MTL)!=0){  ## TODO: Check if MTL date is inside WS data
       MTL <- readLines(MTL, warn=FALSE)
       date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
       sat.date <-regmatches(date.line,regexec(text=date.line,
                                               pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
       sat.date <- strptime(sat.date,  
-                           format = "%Y-%m-%d", tz="GMT")}
-    if(date == "auto"){
-      data <- WeatherStation$hourly[as.character(trunc(WeatherStation$hourly$datetime, "days")) == 
-                                      as.character(as.Date(sat.date)),]
-    }  else {
-      data <- WeatherStation$hourly[as.Date(WeatherStation$hourly$datetime) == as.Date(date),]
+                           format = "%Y-%m-%d", tz="GMT")
+      if(date == "auto"){
+        data <- WeatherStation$hourly[as.character(trunc(WeatherStation$hourly$datetime, "days")) == 
+                                        as.character(as.Date(sat.date)),]
+      }  else {
+        data <- WeatherStation$hourly[as.Date(WeatherStation$hourly$datetime) == as.Date(date),]
+      }
+      ET.daily <- vector()
+      for(i in 1:24){
+        if(date == "auto"){
+          date <- as.POSIXlt(data[i,1], format="%Y-%m-%d %H:%M:%S")
+          ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat, 
+                                           long = long, elev=elev, ET=ET, 
+                                           height = height))
+        }
+      }
     }
-    ET.daily <- vector()
-    for(i in 1:24){
-      date <- as.POSIXlt(data[i,1], format="%Y-%m-%d %H:%M:%S")
-      ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat, 
-                                       long = long, elev=elev, ET=ET, 
-                                       height = height))
-    }
-  } else {
-    print("not yet")}
+    if(length(MTL)==0){
+      ET.daily <- vector()
+      for(i in 1:24){
+        date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
+        ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat, 
+                                         long = long, elev=elev, ET=ET, 
+                                         height = height))
+      }
+  }} else {
+    print("not implemented yet")}
   return(sum(ET.daily))
 }

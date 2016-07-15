@@ -358,15 +358,12 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param thermalband2    Second thermal band. Only needed for split window method. For L8 this should be band 11.
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param LAI             raster layer with leaf area index. See LAI()
-#' @param DEM             digital elevetion model in m, or "plain" if we 
-#'                        assume a flat terrain
 #' @param aoi             area of interest to crop images, if 
 #'                        waterOptions("autoAoi") == TRUE will look for any 
 #'                        object called aoi on .GlobalEnv
 #' @param method          "SC" for single channel or "SW" for split window 
 #'                        algorithm. "SW" is only available for L8
 #' @param WeatherStation  Weather Station data
-#' @param method          "SC" for single-channel or "SW" for split-window. "SW" is only available for Landsat 8 data
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
@@ -385,7 +382,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr 
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
-surfaceTemperature <- function(thermalband, sat="auto", LAI, aoi, 
+surfaceTemperature <- function(thermalband, thermalband2, sat="auto", LAI, aoi, 
                                method = "SC", WeatherStation){
   path=getwd()
   if(class(WeatherStation)== "waterWeatherStation"){

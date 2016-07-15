@@ -4,11 +4,13 @@
 \alias{surfaceTemperature}
 \title{Estimates Land Surface Temperature from Landsat Data}
 \usage{
-surfaceTemperature(thermalband, sat = "auto", LAI, aoi, method = "SC",
-  WeatherStation)
+surfaceTemperature(thermalband, thermalband2, sat = "auto", LAI, aoi,
+  method = "SC", WeatherStation)
 }
 \arguments{
 \item{thermalband}{Satellite thermal band. For L8 this should be band 10.}
+
+\item{thermalband2}{Second thermal band. Only needed for split window method. For L8 this should be band 11.}
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
 
@@ -22,13 +24,6 @@ object called aoi on .GlobalEnv}
 algorithm. "SW" is only available for L8}
 
 \item{WeatherStation}{Weather Station data}
-
-\item{thermalband2}{Second thermal band. Only needed for split window method. For L8 this should be band 11.}
-
-\item{DEM}{digital elevetion model in m, or "plain" if we 
-assume a flat terrain}
-
-\item{method}{"SC" for single-channel or "SW" for split-window. "SW" is only available for Landsat 8 data}
 }
 \description{
 Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
