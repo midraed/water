@@ -82,8 +82,7 @@ function called `loadImage` to load a Landsat image from `.TIF files` were downl
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
-image.DN <- L7_Talca[[c(1:5,7)]]
-B6 <- L7_Talca[[6]]
+image.DN <- L7_Talca
 ```
 
 Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image that we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](http://earthexplorer.usgs.gov/). Therefore, is needed to check wich grid files we are going to use considering the satellite scene location and the AOI polygon, using:
@@ -93,8 +92,6 @@ checkSRTMgrids(image.DN)
 ```
 
 You should download all needed grid files, and then you can use the function `prepareSRTMdata(extent = image.DN)` to create our DEM. In this vignette we are going to load the example data provided with **water** package.
-
-ARREGLAR EXAMPLE DATASED DEM_Talca
 
 ```{r}
 DEM <- DEM_Talca
@@ -142,7 +139,7 @@ plot(LAI)
 Then we estimate land surface temperature (Ts), using computed LAI in order to estimate consequently the *surface emissivity*, and *brightness temperature* from landsat`s thermal band (TIR). Then we use this information to compute the *incoming and outgoing long-wave radiation* as:
 
 ```{r, warning=FALSE, fig.width = 5}
-Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = B6,
+Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = image.DN$thermal.low,
                          WeatherStation = WeatherStation)
 
 Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
@@ -184,7 +181,7 @@ Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE,
                                 surface.model = surface.model)
 
 hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
-                            albedo = albedo, Z.om = Z.om, n = 1, 
+                            albedo = albedo, Z.om = Z.om, n = 5, 
                             anchors.method = "CITRA-MCB", 
                             deltaTemp = 5, verbose = FALSE)
 
@@ -198,7 +195,7 @@ H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om,
 To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) for our weather station, so we can calculate the daily ETr with:
 
 ```{r}
-ET_WS <- dailyET(WeatherStation = WeatherStation)
+ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 ```
 
 And finally, we can estimate daily crop ET pixel by pixel:
