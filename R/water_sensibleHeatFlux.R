@@ -58,11 +58,12 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param n                number of pair of anchors pixels to calculate
 #' @param aoi              area of interest to limit the search. If 
 #' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
-#' @param anchors.method   method to select anchor pixels. Currently only 
-#' "CITRA-MCB" automatic method available.
+#' @param anchors.method   method for the selection of anchor pixels. "CITRA-MCBr" for
+#' random selection of hot and cold candidates according to CITRA-MCB method, or 
+#' "CITRA-MCBbc" for selecting the best candidates
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected
-#' @param deltaTemp        deltaTemp for method "CITRA-MCB"
+#' @param deltaTemp        deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
@@ -70,13 +71,13 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "CITRA-MCB",
+                         anchors.method= "CITRA-MCBr",
                          plots=TRUE, deltaTemp=5, verbose=FALSE) {
   path=getwd()
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   ### We create anchors points if they dont exist---------------------------------
-  if(anchors.method=="CITRA-MCB"){
+  if(anchors.method=="CITRA-MCB" | anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
@@ -84,13 +85,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
     cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
-                       values(albedo>=0.18) & values(albedo<=0.25) &
-                       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-                       values(Z.om>=0.03) & values(Z.om<=0.08) &
-                       values(Ts<(minT+deltaTemp))
+      values(albedo>=0.18) & values(albedo<=0.25) &
+      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+      values(Z.om>=0.03) & values(Z.om<=0.08) &
+      values(Ts<(minT+deltaTemp))
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
-                      values(NDVI>=0.1) & values(NDVI<=0.28) &
-                      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+      values(NDVI>=0.1) & values(NDVI<=0.28) &
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
     # First cold sample
     try(cold <- sample(which(cold.candidates),1), silent=TRUE)
     if(!exists("cold")){
@@ -104,10 +105,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
-           values(albedo>=0.18) & values(albedo<=0.25) &
-           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-           values(Z.om>=0.03) & values(Z.om<=0.08) &
-           values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
+          values(albedo>=0.18) & values(albedo<=0.25) &
+          values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+          values(Z.om>=0.03) & values(Z.om<=0.08) &
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
@@ -139,6 +140,24 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
   }
+  if(anchors.method=="CITRA-MCBbc"){
+    minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
+                          Z.om<=0.08], 0.05, na.rm=TRUE)
+    if(minT+deltaTemp<288){minT = 288 + deltaTemp}
+    ## NDVI used in cold isn't the same as CITRA!
+    maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
+                     Z.om<=0.005], na.rm=TRUE)
+    cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
+      values(albedo>=0.18) & values(albedo<=0.25) &
+      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+      values(Z.om>=0.03) & values(Z.om<=0.08) &
+      values(Ts<(minT+deltaTemp))
+    hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
+      values(NDVI>=0.1) & values(NDVI<=0.28) &
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+    cold <- cold.candidates[1:n]
+    hot <- hot.candidates[1:n]
+  }
   if(verbose==TRUE){
     print("Cold pixels")
     print(data.frame(cbind(pixel=cold, "LAI"=LAI[cold], "NDVI"=NDVI[cold], 
@@ -158,9 +177,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                              Y=integer(), Ts=double(), LAI=double(), 
                              type=factor(levels = c("hot", "cold")))
   for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
-                                      Ts[hot][i], round(LAI[hot][i],2), "hot")}
+                                                 Ts[hot][i], round(LAI[hot][i],2), "hot")}
   for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], xyFromCell(LAI, cold[i]), 
-                                      Ts[cold][i], round(LAI[cold][i],2), "cold")}
+                                                              Ts[cold][i], round(LAI[cold][i],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
   }
@@ -229,7 +248,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200.v <- u.ws / 0.41 * log(200/Z.om.ws)
   if(u200.v < 1){warning(paste0("u200 less than threshold value = ", 
-                              round(u200.v,4), "m/s. using u200 = 4m/s"))
+                                round(u200.v,4), "m/s. using u200 = 4m/s"))
     u200.v <- 4
   }
   u200 <- raster(DEM)
@@ -264,12 +283,12 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   i <- 1
   ### Start of iterative process -------------------------------------------------    
   while(!converge){
-#     ## For meta functions like METRIC.EB
-#     if(exists(x = "on.meta", envir=METRIC.EB)){
-#       if(i == 3){setTxtProgressBar(pb, 52)}
-#       if(i == 5){setTxtProgressBar(pb, 65)}
-#       if(i == 9){setTxtProgressBar(pb, 85)}
-#     }
+    #     ## For meta functions like METRIC.EB
+    #     if(exists(x = "on.meta", envir=METRIC.EB)){
+    #       if(i == 3){setTxtProgressBar(pb, 52)}
+    #       if(i == 5){setTxtProgressBar(pb, 65)}
+    #       if(i == 9){setTxtProgressBar(pb, 85)}
+    #     }
     i <-  i + 1 
     if(verbose==TRUE){
       print(paste("iteraction #", i))
@@ -280,8 +299,8 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     a <- (dT.hot - dT.cold) / (mean(Ts.datum[hot]) - mean(Ts.datum[cold]))
     b <- -a * mean(Ts.datum[cold]) + dT.cold
     if(verbose==TRUE){
-    print(paste("a",a))
-    print(paste("b",b))
+      print(paste("a",a))
+      print(paste("b",b))
     }
     dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
     rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
@@ -308,11 +327,11 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
     phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
     if(verbose==TRUE){
-    print(paste("r.ah cold", mean(r.ah[cold])))
-    print(paste("r.ah hot", mean(r.ah[hot])))
-    print(paste("dT cold", mean(dT[cold])))
-    print(paste("dT hot", mean(dT[hot])))
-    print("##############")
+      print(paste("r.ah cold", mean(r.ah[cold])))
+      print(paste("r.ah hot", mean(r.ah[hot])))
+      print(paste("dT cold", mean(dT[cold])))
+      print(paste("dT hot", mean(dT[hot])))
+      print("##############")
     }
     ## And finally, r.ah and friction velocity
     friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)

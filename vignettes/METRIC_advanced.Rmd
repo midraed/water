@@ -116,7 +116,7 @@ Rs.inc <- incSWradiation(surface.model = surface.model,
 
 Then we calculate reflectances at the top-of-atmosphere (TOA), and surface reflectance derived from *Landsat image*, and use the last one to calculate the *broadband albedo* as:
 
-```{r, fig.width = 5}
+```{r, fig.width=5, warning=FALSE}
 image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile, 
                        incidence.rel = solar.angles.r$incidence.rel)
 
