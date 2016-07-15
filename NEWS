@@ -2,6 +2,18 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
+VERSION 0.3.2.999 (developement version)
+
+* General remote sensing functions moved to a separate file
+* loadImage detects when there is more than 1 image on the working folder
+* Rn, G, H, LE are restricted to values > 0
+* Improvements to anchors pixels selection: more releaxed hot 
+  temperature criterium, distance, mean of many pixels, etc
+* Added two methods for land surface estimation: single channel and split windows.
+  Split windows only works for Landsat 8.
+* loadImage now loads thermal data also: low gain for L7 and both bands for L8
+* Fixed big bug when estiamting ETo with a large weather station file
+
 VERSION 0.3.2
 
 * Solved errors when using non ASCII characters
