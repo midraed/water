@@ -192,13 +192,10 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETo",
       }
       ET.daily <- vector()
       for(i in 1:24){
-        if(date == "auto"){
-          date <- as.POSIXlt(data[i,1], format="%Y-%m-%d %H:%M:%S")
           ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat, 
                                            long = long, elev=elev, ET=ET, 
                                            height = height))
         }
-      }
     }
     if(length(MTL)==0){
       ET.daily <- vector()
