@@ -140,7 +140,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
   }
-  if(anchors.method=="CITRA-MCBbc"){
+  if(anchors.method=="CITRA-MCB" | "CITRA-MCBbc"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
@@ -155,8 +155,55 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
-    cold <- cold.candidates[1:n]
-    hot <- hot.candidates[1:n]
+    
+    # Cold samples
+    Ts.cold <- Ts
+    values(Ts.cold)[!cold.candidates] <- NA
+    cold <- which.min(Ts.cold)
+    if(n>1){  ## Next samples...
+      for(nsample in 1:(n-1)){
+        distbuffer <- raster(Ts)
+        values(distbuffer)[cold] <- 1
+        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- is.na(distbuffer)
+        newAnchor <- NA
+        cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
+          values(albedo>=0.18) & values(albedo<=0.25) &
+          values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+          values(Z.om>=0.03) & values(Z.om<=0.08) &
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
+        values(Ts.cold)[!cold.candidates] <- NA
+        if(length(which(cold.candidates))<2){
+          warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
+          break
+        }
+        try(newAnchor <- which.min(Ts.cold), silent = FALSE)
+        if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
+      }}
+    
+    # hot samples
+    Ts.hot <- Ts
+    values(Ts.hot)[!hot.candidates] <- NA
+    hot <- which.max(Ts.hot)
+    if(n>1){  ## Next samples...
+      for(nsample in 1:(n-1)){
+        distbuffer <- raster(Ts)
+        values(distbuffer)[hot] <- 1
+        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- is.na(distbuffer)
+        newAnchor <- NA
+        hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
+          values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+        values(Ts.hot)[!hot.candidates] <- NA
+        if(length(which(hot.candidates))<2){
+          warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
+          break
+        }
+        try(newAnchor <- which.max(Ts.hot), silent = FALSE)
+        if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
+      }}
+    
   }
   if(verbose==TRUE){
     print("Cold pixels")
