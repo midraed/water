@@ -4,6 +4,13 @@ Guillermo OLMEDO
 -----------------------------------------------------------------
 VERSION 0.3.2.999 (developement version)
 
+* Added a new parameter to calcAnchors, available for both methods: buffer.
+  buffer allow to set the minimun distance between two anchor pixels of the same
+  kind
+* Added a new method for calcAnchors = "CITRA-MCBbc". This method chooses the 
+  coldest and hottest anchors pixels availables. Previous method ("CITRA-MCBr")
+  chooses random pixel who meets the conditions. CITRA-MCBbc is now the default
+  method for calcAnchors
 * General remote sensing functions moved to a separate file
 * loadImage detects when there is more than 1 image on the working folder
 * Rn, G, H, LE are restricted to values > 0
@@ -12,7 +19,7 @@ VERSION 0.3.2.999 (developement version)
 * Added two methods for land surface estimation: single channel and split windows.
   Split windows only works for Landsat 8.
 * loadImage now loads thermal data also: low gain for L7 and both bands for L8
-* Fixed big bug when estiamting ETo with a large weather station file
+* Fixed big bug when estimating ETo with a large weather station file
 
 VERSION 0.3.2
 
