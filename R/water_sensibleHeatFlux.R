@@ -64,6 +64,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected
 #' @param deltaTemp        deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"
+#' @param buffer           minimun distance allowed for two anchor pixels of the same kind
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
@@ -72,12 +73,12 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "CITRA-MCBr",
-                         plots=TRUE, deltaTemp=5, verbose=FALSE) {
+                         plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
   path=getwd()
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   ### We create anchors points if they dont exist---------------------------------
-  if(anchors.method=="CITRA-MCB" | anchors.method=="CITRA-MCBr"){
+  if(anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
@@ -101,7 +102,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -126,7 +127,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
@@ -140,7 +141,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
   }
-  if(anchors.method=="CITRA-MCB" | "CITRA-MCBbc"){
+  if(anchors.method=="CITRA-MCB"  | anchors.method=="CITRA-MCBbc"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288){minT = 288 + deltaTemp}
@@ -164,7 +165,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -189,7 +190,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = 500) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
