@@ -247,7 +247,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
 #' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
-#' 0.0018 or 0.03 for long grass
+#' a value of 0.03 might be reasonable for a typical agricultural weather station 
+#' sited over vegetation that is about 0.3 m tall.  For clipped grass, use 0.015 m
 #' @param mountainous    Logical. If TRUE heat transfer equation will be 
 #' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
@@ -272,7 +273,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
-                   Z.om.ws=0.0018, mountainous=FALSE, 
+                   Z.om.ws=0.03, mountainous=FALSE, 
                    DEM, Rn, G, verbose=FALSE) {
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
