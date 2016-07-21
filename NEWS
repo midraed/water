@@ -4,6 +4,7 @@ Guillermo OLMEDO
 -----------------------------------------------------------------
 VERSION 0.3.2.999 (developement version)
 
+* Changed default value for Z.om.ws in calcH. (From 0.0018 to 0.03)
 * Added a new parameter to calcAnchors, available for both methods: buffer.
   buffer allow to set the minimun distance between two anchor pixels of the same
   kind

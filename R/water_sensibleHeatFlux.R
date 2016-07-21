@@ -178,7 +178,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
-        try(newAnchor <- which.min(Ts.cold), silent = FALSE)
+        try(newAnchor <- which.min(Ts.cold)[1], silent = FALSE)
         if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
       }}
     
@@ -201,7 +201,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
         }
-        try(newAnchor <- which.max(Ts.hot), silent = FALSE)
+        try(newAnchor <- which.max(Ts.hot)[1], silent = FALSE)
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
     

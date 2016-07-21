@@ -4,7 +4,7 @@
 \alias{calcH}
 \title{Iterative function to estimate H and R.ah}
 \usage{
-calcH(anchors, Ts, Z.om, WeatherStation, ETp.coef = 1.05, Z.om.ws = 0.0018,
+calcH(anchors, Ts, Z.om, WeatherStation, ETp.coef = 1.05, Z.om.ws = 0.03,
   mountainous = FALSE, DEM, Rn, G, verbose = FALSE)
 }
 \arguments{
@@ -22,7 +22,8 @@ Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
 \item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
 
 \item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
-0.0018 or 0.03 for long grass}
+a value of 0.03 might be reasonable for a typical agricultural weather station 
+sited over vegetation that is about 0.3 m tall.  For clipped grass, use 0.015 m}
 
 \item{mountainous}{Logical. If TRUE heat transfer equation will be 
 adjusted for mountainous terrain}
