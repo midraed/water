@@ -16,7 +16,7 @@ a spatialPointDataframe o Dataframe with X, Y, and type. type should be
 
 \item{Z.om}{momentum roughness lenght. See momentumRoughnessLength()}
 
-\item{WeatherStation}{WeatherStation data at the flyby from the satellite. 
+\item{WeatherStation}{WeatherStation data at the satellite overpass. 
 Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
 
 \item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}

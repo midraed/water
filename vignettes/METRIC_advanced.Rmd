@@ -181,8 +181,8 @@ Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE,
 
 hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
                             albedo = albedo, Z.om = Z.om, n = 5, 
-                            anchors.method = "CITRA-MCB", 
-                            deltaTemp = 5, verbose = FALSE)
+                            anchors.method = "CITRA-MCB", deltaTemp = 5, 
+                            WeatherStation = WeatherStation, verbose = FALSE)
 
 H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
            WeatherStation = WeatherStation, ETp.coef = 1.05,

@@ -5,8 +5,8 @@
 \title{Select anchors pixels for H function}
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
-  anchors.method = "CITRA-MCBr", plots = TRUE, deltaTemp = 5,
-  buffer = 500, verbose = FALSE)
+  anchors.method = "CITRA-MCBr", WeatherStation, plots = TRUE,
+  deltaTemp = 5, buffer = 500, verbose = FALSE)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}
@@ -28,8 +28,12 @@ waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
 random selection of hot and cold candidates according to CITRA-MCB method, or 
 "CITRA-MCBbc" for selecting the best candidates}
 
+\item{WeatherStation}{WeatherStation data at the satellite overpass. 
+Should be a waterWeatherStation object calculate using read.WSdata and MTL file}
+
 \item{plots}{Logical. If TRUE will plot position of anchors points
-selected}
+selected. Points in red are selected hot pixels, blue are the cold ones and the 
+black represents the position of the Weather Station}
 
 \item{deltaTemp}{deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"}
 

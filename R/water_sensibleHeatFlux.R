@@ -61,8 +61,11 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param anchors.method   method for the selection of anchor pixels. "CITRA-MCBr" for
 #' random selection of hot and cold candidates according to CITRA-MCB method, or 
 #' "CITRA-MCBbc" for selecting the best candidates
+#' @param WeatherStation WeatherStation data at the satellite overpass. 
+#' Should be a waterWeatherStation object calculate using read.WSdata and MTL file
 #' @param plots            Logical. If TRUE will plot position of anchors points
-#' selected
+#' selected. Points in red are selected hot pixels, blue are the cold ones and the 
+#' black represents the position of the Weather Station
 #' @param deltaTemp        deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"
 #' @param buffer           minimun distance allowed for two anchor pixels of the same kind
 #' @param verbose          Logical. If TRUE will print aditional data to console
@@ -72,11 +75,20 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "CITRA-MCBr",
+                         anchors.method= "CITRA-MCBr", WeatherStation,
                          plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
-  ### We create anchors points if they dont exist---------------------------------
+  ### We create anchors points if they dont exist-------------------------------
+  WSloc <- WeatherStation$location
+  coordinates(WSloc) <- ~ long + lat
+  WSloc@proj4string <- sp::CRS("+init=epsg:4326")
+  WSloc <- sp::spTransform(WSloc, Ts@crs)
+  ## Longer but avoids to use rgeos
+  WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
+  WSbuffer <- raster(Ts)
+  values(WSbuffer)[WScell] <- 1
+  WSbuffer <- buffer(WSbuffer, width = 30000)
   if(anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
@@ -88,10 +100,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       values(albedo>=0.18) & values(albedo<=0.25) &
       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp))
+      values(Ts<(minT+deltaTemp)) & values(WSbuffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
     # First cold sample
     try(cold <- sample(which(cold.candidates),1), silent=TRUE)
     if(!exists("cold")){
@@ -108,7 +120,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=0.18) & values(albedo<=0.25) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WSbuffer == 1)
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
@@ -131,7 +143,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
@@ -151,10 +163,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       values(albedo>=0.18) & values(albedo<=0.25) &
       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp))
+      values(Ts<(minT+deltaTemp)) & values(WSbuffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
@@ -170,7 +182,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=0.18) & values(albedo<=0.25) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1)
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WSbuffer == 1)
         values(Ts.cold)[!cold.candidates] <- NA
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
@@ -193,7 +205,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
         values(Ts.hot)[!hot.candidates] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
@@ -218,6 +230,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     plot(LAI, main="LAI and hot and cold pixels")
     graphics::points(xyFromCell(LAI, hot), col="red", pch=3)
     graphics::points(xyFromCell(LAI, cold), col="blue", pch=4)
+    graphics::points(WSloc, pch=13)
   }
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(), 
                              Y=integer(), Ts=double(), LAI=double(), 
@@ -241,7 +254,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' "cold" or "hot"
 #' @param Ts             Land surface temperature in K. See surfaceTemperature()
 #' @param Z.om           momentum roughness lenght. See momentumRoughnessLength()
-#' @param WeatherStation WeatherStation data at the flyby from the satellite. 
+#' @param WeatherStation WeatherStation data at the satellite overpass. 
 #' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
 #' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
