@@ -61,8 +61,10 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param anchors.method   method for the selection of anchor pixels. "CITRA-MCBr" for
 #' random selection of hot and cold candidates according to CITRA-MCB method, or 
 #' "CITRA-MCBbc" for selecting the best candidates
-#' @param WeatherStation WeatherStation data at the satellite overpass. 
-#' Should be a waterWeatherStation object calculate using read.WSdata and MTL file
+#' @param WeatherStation Optional. WeatherStation data at the satellite overpass. 
+#' Should be a waterWeatherStation object calculated using read.WSdata and MTL file.
+#' If you provide a WeatherStation object it will restrict the location of anchors
+#' pixels to less than 30 km away from it.
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected. Points in red are selected hot pixels, blue are the cold ones and the 
 #' black represents the position of the Weather Station
@@ -79,16 +81,20 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
-  ### We create anchors points if they dont exist-------------------------------
-  WSloc <- WeatherStation$location
-  coordinates(WSloc) <- ~ long + lat
-  WSloc@proj4string <- sp::CRS("+init=epsg:4326")
-  WSloc <- sp::spTransform(WSloc, Ts@crs)
-  ## Longer but avoids to use rgeos
-  WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
-  WSbuffer <- raster(Ts)
-  values(WSbuffer)[WScell] <- 1
-  WSbuffer <- buffer(WSbuffer, width = 30000)
+  if(!missing(WeatherStation)){
+    WSloc <- WeatherStation$location
+    coordinates(WSloc) <- ~ long + lat
+    WSloc@proj4string <- sp::CRS("+init=epsg:4326")
+    WSloc <- sp::spTransform(WSloc, Ts@crs)
+    ## Longer but avoids to use rgeos
+    WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
+    WSbuffer <- raster(Ts)
+    values(WSbuffer)[WScell] <- 1
+    WSbuffer <- buffer(WSbuffer, width = 30000)
+  } else {
+    WSbuffer <- raster(Ts)
+    values(WSbuffer)<- 1
+  }
   if(anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
@@ -255,7 +261,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param Ts             Land surface temperature in K. See surfaceTemperature()
 #' @param Z.om           momentum roughness lenght. See momentumRoughnessLength()
 #' @param WeatherStation WeatherStation data at the satellite overpass. 
-#' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
+#' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
 #' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
 #' a value of 0.03 might be reasonable for a typical agricultural weather station 
