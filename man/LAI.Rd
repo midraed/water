@@ -22,7 +22,7 @@ This function implements empirical models to estimate LAI (Leaf Area Index) for 
 LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
 LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
 depending on preferences of the user.
-Available methods are: "metric", "metric2010", "MCB" and "vineyard".
+Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner".
 }
 \author{
 Guillermo Federico Olmedo
@@ -35,5 +35,6 @@ Fernando Fuentes Peñailillo
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
 Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
+Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 }
 
