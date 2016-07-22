@@ -39,7 +39,7 @@ Rs.inc <- incSWradiation(surface.model = surface.model,
                          solar.angles = solar.angles.r, 
                          WeatherStation = WeatherStation)
 
-## ---- fig.width = 5------------------------------------------------------
+## ---- fig.width=5, warning=FALSE-----------------------------------------
 image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile, 
                        incidence.rel = solar.angles.r$incidence.rel)
 
@@ -69,13 +69,13 @@ Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 
 plot(Rn)
 
-## ---- fig.width = 5------------------------------------------------------
+## ----Soil Heat Flux, fig.width=5-----------------------------------------
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
                   Rn=Rn, LAI=LAI)
 
 plot(G)
 
-## ---- fig.width = 5------------------------------------------------------
+## ----Ts, fig.width=5-----------------------------------------------------
 Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                 method = "short.crops", 
                                 surface.model = surface.model)
@@ -87,7 +87,7 @@ hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
 
 H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
            WeatherStation = WeatherStation, ETp.coef = 1.05,
-           Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
+           Z.om.ws = 0.03, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 
 ## ------------------------------------------------------------------------
 ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)

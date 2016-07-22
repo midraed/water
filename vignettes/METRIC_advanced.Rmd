@@ -161,7 +161,7 @@ plot(Rn)
 
 We estimate the soil heat flux using as an input data the *Net radiation*, *surface reflectance*, *surface temperature*, *leaf area index* and *albedo*. In this vignette we are going to use the original METRIC (2007) baded-method, which is:
 
-```{r, fig.width = 5}
+```{r Soil Heat Flux, fig.width=5}
 G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
                   Rn=Rn, LAI=LAI)
 
@@ -174,8 +174,7 @@ To estimate the sensible heat fluxes derived from the *landsat satellite* data, 
 Then, we are going to use `calAnchors` function for automatically search end members within the satellite scene (extreme wet and dry conditions). In this vignette we are going to use the *CITRA-MCB* method (see Help for mor information).
 
 Finally we estimate the H values at pixel scales using `calcH` function. This function aplies the *CIMEC* self-calibration method in order generete an iteration process for the "hot" and "cald" pixels and to abdorb all baises in the computation of H. This iteration procces it will be able to see as a dinamic-plot when the function `calcH` is running. There is a parameter called `verbose` to control how much information we want to see in the output about the "anchor pixels" and iteration process.
-
-```{r, fig.width = 5}
+```{r Ts, fig.width=5}
 Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                 method = "short.crops", 
                                 surface.model = surface.model)
@@ -187,7 +186,7 @@ hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
 
 H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, 
            WeatherStation = WeatherStation, ETp.coef = 1.05,
-           Z.om.ws = 0.0018, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
+           Z.om.ws = 0.03, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 ```
 
 ## Daily Crop Evapotranspiration (ET_24) estimation

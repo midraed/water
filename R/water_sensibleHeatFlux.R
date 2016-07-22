@@ -74,7 +74,6 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "CITRA-MCBr",
                          plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
-  path=getwd()
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   ### We create anchors points if they dont exist---------------------------------
@@ -156,11 +155,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp))
-    
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
-    cold <- which.min(Ts.cold)
+    cold <- raster::which.min(Ts.cold)[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
@@ -178,14 +176,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
-        try(newAnchor <- which.min(Ts.cold)[1], silent = FALSE)
+        try(newAnchor <- raster::which.min(Ts.cold)[1], silent = FALSE)
         if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
       }}
     
     # hot samples
     Ts.hot <- Ts
     values(Ts.hot)[!hot.candidates] <- NA
-    hot <- which.max(Ts.hot)
+    hot <- raster::which.max(Ts.hot)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
@@ -201,7 +199,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
         }
-        try(newAnchor <- which.max(Ts.hot)[1], silent = FALSE)
+        try(newAnchor <- raster::which.max(Ts.hot)[1], silent = FALSE)
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
     
