@@ -75,7 +75,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "CITRA-MCBr", WeatherStation,
+                         anchors.method= "CITRA-MCBbc", WeatherStation,
                          plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
