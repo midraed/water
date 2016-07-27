@@ -6,7 +6,8 @@
 #' @param long.z             longitude for local time
 #' @param ET.instantaneous   Logical. True if you want to calculate 
 #' instantaneous ET instead of hourly ET. See Details.
-#' @param ET                 "ETo" or "ETr"
+#' @param ET       "ETo" for short crops, similar to clipped, cool-season
+#' grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.
 #' @param height             weather station sensors height in meters
 #' @param lat                latitude of weather station in decimal degrees. 
 #' Negative values for south latitude
@@ -33,7 +34,7 @@
 #' @references 
 #' Allen 2005 ASCE
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
-                     ET.instantaneous=FALSE, ET="ETo", height=2, lat, long, elev){
+                     ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
   if(class(WeatherStation)== "waterWeatherStation"){
     if(!is.null(WeatherStation$at.sat)){
       WeatherStation <- getDataWS(WeatherStation)
@@ -146,7 +147,8 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param lat      latitude in decimal degrees of the weather station
 #' @param long     longitude in decimal degrees of the weather station
 #' @param elev     elevation in meters of the weather station
-#' @param ET       "ETo" or "ETr"
+#' @param ET       "ETo" for short crops, similar to clipped, cool-season
+#' grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.
 #' @param long.z   longitude for local time
 #' @param MTL      Metadata file. If not provided will look for one on
 #' working directory. If provided or present will calculate weather conditions
@@ -167,7 +169,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124, 
 #' ET="ETo")
 #' 
-dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETo", 
+dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
                     long.z=WeatherStation$long, date = "auto", MTL){
   if(class(WeatherStation)== "waterWeatherStation"){
     if(missing(height)){height <- WeatherStation$location$height}
