@@ -4,7 +4,7 @@
 \name{DEM_Talca}
 \alias{DEM_Talca}
 \title{SRTM DEM from east of Talca, Chile}
-\format{An object of class \code{RasterLayer} of dimension 407 x 498 x 1.}
+\format{An object of class \code{RasterLayer} of dimension 417 x 508 x 1.}
 \source{
 \url{http://www.usgs.gov/}
 }

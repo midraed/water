@@ -4,7 +4,7 @@
 \name{L7_Talca}
 \alias{L7_Talca}
 \title{Landsat 7 scene from east of Talca, Chile}
-\format{An object of class \code{RasterStack} of dimension 407 x 498 x 7.}
+\format{An object of class \code{RasterBrick} of dimension 417 x 508 x 7.}
 \source{
 \url{http://www.usgs.gov/}
 }
