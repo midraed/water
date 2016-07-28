@@ -5,7 +5,7 @@
 \title{Calculates ET using Penman Monteith hourly formula}
 \usage{
 hourlyET(WeatherStation, hours, DOY, long.z = WeatherStation$long,
-  ET.instantaneous = FALSE, ET = "ETo", height = 2, lat, long, elev)
+  ET.instantaneous = FALSE, ET = "ETr", height = 2, lat, long, elev)
 }
 \arguments{
 \item{WeatherStation}{a data frame with all the needed fields (see 
@@ -20,7 +20,8 @@ example)}
 \item{ET.instantaneous}{Logical. True if you want to calculate 
 instantaneous ET instead of hourly ET. See Details.}
 
-\item{ET}{"ETo" or "ETr"}
+\item{ET}{"ETo" for short crops, similar to clipped, cool-season
+grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.}
 
 \item{height}{weather station sensors height in meters}
 

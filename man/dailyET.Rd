@@ -4,7 +4,7 @@
 \alias{dailyET}
 \title{Calculates daily ET using Penman Monteith hourly formula for every hour}
 \usage{
-dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
+dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETr",
   long.z = WeatherStation$long, date = "auto", MTL)
 }
 \arguments{
@@ -20,7 +20,8 @@ dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETo",
 
 \item{elev}{elevation in meters of the weather station}
 
-\item{ET}{"ETo" or "ETr"}
+\item{ET}{"ETo" for short crops, similar to clipped, cool-season
+grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.}
 
 \item{long.z}{longitude for local time}
 
