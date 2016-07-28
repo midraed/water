@@ -55,8 +55,8 @@ To calculate METRIC crops Evapotranspiration using **water** package and the sim
 
 First, we create the AOI as a polygon using bottomright and topleft points:
 ```{r}
-aoi <- createAoi(topleft = c(273110, -3914450), 
-                 bottomright = c( 288050, -3926650), EPSG = 32619)
+aoi <- createAoi(topleft = c(272955, 6085705), 
+                 bottomright = c( 288195, 6073195), EPSG = 32719)
 ```
 
 Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of satellite overpass

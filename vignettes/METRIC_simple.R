@@ -3,8 +3,8 @@ library(water)
 
 
 ## ------------------------------------------------------------------------
-aoi <- createAoi(topleft = c(273110, -3914450), 
-                 bottomright = c( 288050, -3926650), EPSG = 32619)
+aoi <- createAoi(topleft = c(272955, 6085705), 
+                 bottomright = c( 288195, 6073195), EPSG = 32719)
 
 ## ------------------------------------------------------------------------
 csvfile <- system.file("extdata", "apples.csv", package="water")
