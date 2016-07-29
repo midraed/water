@@ -133,7 +133,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ET.24[ET.24 < 0]  <- 0
   #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
   rgb.palette <- grDevices::colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
-  print(spplot(ET.24, col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
+  print(spplot(ET.24, scales=list(draw=TRUE), xlab="Easting", ylab="Northing", col.regions=rgb.palette, main= "24-Hour Evapotranspiration (mm/day)",
                colorkey=list(height=1), at=seq(0,ceiling(ETr.daily*1.5),length.out=50), maxpixels=ncell(ET.24) * 0.3))
   saveLoadClean(imagestack = ET.24, 
                 file = "ET24", overwrite=TRUE)
