@@ -2,7 +2,8 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
-VERSION 0.3.2.999 (developement version)
+
+VERSION 0.5
 
 * Added maxit parameter to calcH to control the maximun number of iterations.
 * Added an optional constrain to the selection of anchors pixels using the 
