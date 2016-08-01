@@ -4,6 +4,7 @@ Guillermo OLMEDO
 -----------------------------------------------------------------
 VERSION 0.3.2.999 (developement version)
 
+* Added maxit parameter to calcH to control the maximun number of iterations.
 * Added an optional constrain to the selection of anchors pixels using the 
   location of the weather station and a 30km buffer.
 * Changed default value for Z.om.ws in calcH. (From 0.0018 to 0.03)
