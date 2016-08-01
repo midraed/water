@@ -429,7 +429,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         print ("### -------")
       }
       if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-      if(i == maxit){warning(paste0("Not solution found at iterarion #", i))
+      if(i == maxit){warning(paste0("maxit reached. Not solution found at iterarion #", i))
         break}
     } 
     ### End interactive process --------------------------------------------------
