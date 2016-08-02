@@ -276,6 +276,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param G              Soil Heat Flux. See soilHeatFlux()
 #' @param verbose        Logical. If TRUE will print information about every 
 #' iteration to console
+#' @param maxit          Maximun number of iteration. Default 20.
 #' @details Sensible heat flux is the rate of heat loss to the air by convection 
 #' and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
 #'aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because 
@@ -294,7 +295,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @export
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05, 
                    Z.om.ws=0.03, mountainous=FALSE, 
-                   DEM, Rn, G, verbose=FALSE) {
+                   DEM, Rn, G, verbose=FALSE, maxit = 20) {
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -422,6 +423,8 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         print ("### -------")
       }
       if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
+      if(i == maxit){warning(paste0("maxit reached. Not solution found at iterarion #", i))
+        break}
     } 
     ### End interactive process --------------------------------------------------
   } else if(method=="lm"){
