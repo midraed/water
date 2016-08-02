@@ -258,7 +258,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param anchors        anchors points. Can be the result from calcAnchors() or
 #' a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
 #' "cold" or "hot"
-#' @param method         Method when using more than 1 pair of anchors pixels. 
+#' @param method         Method when using more than 1 pair of anchor pixels. 
 #' method = "mean" will use the mean value for the cold pixels vs the mean value
 #' for the hot pixels.
 #' @param Ts             Land surface temperature in K. See surfaceTemperature()
@@ -353,12 +353,6 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   if(method == "mean"){
     ### Start of iterative process -------------------------------------------------    
     while(!converge){
-      #     ## For meta functions like METRIC.EB
-      #     if(exists(x = "on.meta", envir=METRIC.EB)){
-      #       if(i == 3){setTxtProgressBar(pb, 52)}
-      #       if(i == 5){setTxtProgressBar(pb, 65)}
-      #       if(i == 9){setTxtProgressBar(pb, 85)}
-      #     }
       i <-  i + 1 
       if(verbose==TRUE){
         print(paste("iteraction #", i))
@@ -430,6 +424,85 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
     } 
     ### End interactive process --------------------------------------------------
+  } else if(method=="lm"){
+    ### Start of iterative process -------------------------------------------------    
+    npairs <- min(c(length(cold), length(hot)))
+    for(pair in 1:npairs){
+      while(!converge){
+        i <-  i + 1 
+        if(verbose==TRUE){
+          print(paste("iteraction #", i))
+        }
+        ### We calculate dT and H 
+        dT.cold <- H.cold * r.ah[cold[pair]] / (air.density[cold[pair]]*1004)
+        dT.hot <- (Rn[hot[pair]] - G[hot[pair]]) * r.ah[hot[pair]] / (air.density[hot[pair]]*1004)
+        a <- (dT.hot - dT.cold) / (Ts.datum[hot[pair]] - Ts.datum[cold[pair]])
+        b <- -a * Ts.datum[cold[pair]] + dT.cold
+        if(verbose==TRUE){
+          print(paste("a",a))
+          print(paste("b",b))
+        }
+        dT <- as.numeric(a) * Ts.datum + as.numeric(b)   #ok
+        rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts  
+        H <- rho * 1004 * dT / r.ah
+        Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) / 
+          (0.41 * 9.807 * H)
+        ### Then we calculate L and phi200, phi2, and phi0.1 
+        ## !!! This is very time consumig... maybe only for hot and cold pixels?
+        phi.200 <- raster(Monin.Obukhov.L) 
+        # copy raster extent and pixel size, not values!
+        phi.2 <- raster(Monin.Obukhov.L)
+        phi.01 <- raster(Monin.Obukhov.L)
+        ## stable condition = L > 0
+        phi.200[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+        phi.2[Monin.Obukhov.L > 0] <- -5*(2/Monin.Obukhov.L)[Monin.Obukhov.L > 0]  #ok
+        phi.01[Monin.Obukhov.L > 0] <-  -5*(0.1/Monin.Obukhov.L)[Monin.Obukhov.L > 0] #ok
+        ## unstable condition = L < 0
+        x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25 #ok
+        x.2 <- (1- 16*(2/Monin.Obukhov.L))^0.25 #ok
+        x.01 <- (1- 16*(0.1/Monin.Obukhov.L))^0.25 # ok
+        phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) + 
+                                           log((1 + x.200^2) /2) - 
+                                           2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0] #ok
+        phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
+        phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
+        if(verbose==TRUE){
+          print(paste("r.ah cold", r.ah[cold[pair]]))
+          print(paste("r.ah hot", r.ah[hot[pair]]))
+          print(paste("dT cold", dT[cold[pair]]))
+          print(paste("dT hot", dT[hot[pair]]))
+          print("##############")
+        }
+        ## And finally, r.ah and friction velocity
+        friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+        # converge condition
+        r.ah.hot.previous <- r.ah[hot[pair]]
+        r.ah.cold.previous <- r.ah[cold[pair]]
+        ### -----------
+        r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
+        ## Update plot
+        graphics::points(i, r.ah[hot[pair]], col="red", pch=20)
+        graphics::points(i, r.ah[cold[pair]], col="blue", pch=20)
+        lines(c(i, i-1), c(r.ah[hot[pair]], r.ah.hot.previous), col="red")
+        lines(c(i, i-1), c(r.ah[cold[pair]], r.ah.cold.previous), col="blue")
+        # Check convergence
+        if(last.loop == TRUE){
+          converge <- TRUE
+          if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
+        }
+        delta.r.ah.hot <- (r.ah[hot[pair]] - r.ah.hot.previous) / r.ah[hot[pair]] * 100
+        delta.r.ah.cold <- (r.ah[cold[pair]] - r.ah.cold.previous) / r.ah[cold[pair]] * 100
+        if(verbose==TRUE){
+          print (paste("delta rah hot", delta.r.ah.hot))
+          print (paste("delta rah cold", delta.r.ah.cold))
+          print ("### -------")
+        }
+        if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
+      } 
+      ### End interactive process --------------------------------------------------
+    }
+    #plot lm
+    #lm
   }
   dT <- saveLoadClean(imagestack = dT, file = "dT", overwrite=TRUE)
   H <- saveLoadClean(imagestack = H, file = "H", overwrite=TRUE)
