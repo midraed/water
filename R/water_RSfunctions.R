@@ -2,7 +2,8 @@
 #' @description
 #' This function loads Landsat bands from a specific folder. 
 #' @param path  folder where band files are stored
-#' @param sat   "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames
+#' @param sat   "L7" for Landsat 7, "L8" for Landsat 8, "MODIS" for MODIS or 
+#' "auto" to guess from filenames
 #' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
 #' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
@@ -14,22 +15,35 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
-  stack1 <- list()
-  
+  if(sat=="MODIS"){bands <- c(1:7)}
   ## Check for more than 1 image on the same folder
-  image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)",
-                                         bands[1] ,".(TIF|tif)$"))
-  if(length(image_list) > 1) {
-    image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
-    warning(paste("More than 1 image present on path. Using", 
-                  substr(image_pattern, 0, nchar(image_pattern)-2)))
-  } else {
-    image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+  if(sat=="L8" | sat=="L7"){
+    image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)",
+                                                         bands[1] ,".(TIF|tif)$"))
+    if(length(image_list) > 1) {
+      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+      warning(paste("More than 1 image present on path. Using", 
+                    substr(image_pattern, 0, nchar(image_pattern)-2)))
+    } else {
+      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+    }
+  }
+  if(sat=="MODIS"){
+    image_list <- list.files(path=path, pattern = paste0("^MOD09GA_A\\d+\\w+\\d+.sur_refl_b0",
+                                                         bands[1] ,"_1.(TIF|tif)$"))
+    if(length(image_list) > 1) {
+      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
+      warning(paste("More than 1 image present on path. Using", 
+                    substr(image_pattern, 0, nchar(image_pattern)-2)))
+    } else {
+      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
+    }
   }
   
+  stack1 <- list()
   for(i in 1:length(bands)){
     stack1[i] <- raster(list.files(path=path, 
-                                   pattern = paste0(image_pattern, bands[i], "(_VCID_1)?",
+                                   pattern = paste0(image_pattern, bands[i], "(_1)?", "(_VCID_1)?",
                                                     ".(TIF|tif)$"), full.names = T))
   }
   bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
