@@ -12,6 +12,7 @@
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 loadImage <-  function(path = getwd(), sat="auto", aoi){
+  ## TODO: For L8 i should load the sirfrefl directly, like in MODIS!
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
