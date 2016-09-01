@@ -33,17 +33,23 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
+  if(sat=="L7" | sat=="L8"){
   image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
                          incidence.rel = solar.angles.r$incidence.rel)
   image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation, ESPA = F)
+                     WeatherStation=WeatherStation, ESPA = F)}
+  if(sat=="MODIS"){image.SR <- image.DN}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
   #setTxtProgressBar(pb, 6)
+  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
+                                           # and some LAI models, use SR
   LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
+  if(sat=="L7" | sat=="L8"){
   Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
-                           WeatherStation = WeatherStation)
+                           WeatherStation = WeatherStation)}
+  if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
@@ -147,17 +153,23 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, aoi=aoi,
-                      incidence.rel = solar.angles.r$incidence.rel, ESPA = ESPA)
-  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, aoi=aoi,
-                     surface.model=surface.model, 
-                     incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation, ESPA = ESPA)
+  if(sat=="L7" | sat=="L8"){
+    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
+                           incidence.rel = solar.angles.r$incidence.rel)
+    image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
+                       surface.model=surface.model, 
+                       incidence.hor = solar.angles.r$incidence.hor, 
+                       WeatherStation=WeatherStation, ESPA = F)}
+  if(sat=="MODIS"){image.SR <- image.DN}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
   #setTxtProgressBar(pb, 6)
+  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
+  # and some LAI models, use SR
   LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
-  Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
-                           WeatherStation = WeatherStation)
+  if(sat=="L7" | sat=="L8"){
+    Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
+                             WeatherStation = WeatherStation)}
+  if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
