@@ -20,24 +20,27 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="L8" | sat=="L7"){
     image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)",
                                                          bands[1] ,".(TIF|tif)$"))
-    if(length(image_list) > 1) {
+    if(length(image_list) > 1) {  ## Check if there are more images present on folder
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
       warning(paste("More than 1 image present on path. Using", 
                     substr(image_pattern, 0, nchar(image_pattern)-2)))
     } else {
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
     }
+    bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
+    if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
   }
   if(sat=="MODIS"){
     image_list <- list.files(path=path, pattern = paste0("^MOD09GA_A\\d+\\w+\\d+.sur_refl_b0",
                                                          bands[1] ,"_1.(TIF|tif)$"))
-    if(length(image_list) > 1) {
+    if(length(image_list) > 1) { ## Check if there are more images present on folder
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
       warning(paste("More than 1 image present on path. Using", 
                     substr(image_pattern, 0, nchar(image_pattern)-2)))
     } else {
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
     }
+    bandnames <- c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3", "LST") # band names for MOD09GA
   }
   
   stack1 <- list()
@@ -46,10 +49,18 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
                                    pattern = paste0(image_pattern, bands[i], "(_1)?", "(_VCID_1)?",
                                                     ".(TIF|tif)$"), full.names = T))
   }
-  bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
-  if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
+  if(sat == "MODIS"){
+    thermal <- list.files(path=path, pattern = paste0("^MOD11A1_A\\d+\\w+\\d+.LST_Day_1km",
+                                                      ".(TIF|tif)$"), full.names = T)[1]
+    stack1[8] <- raster(thermal)
+  }
   raw.image <- do.call(stack, stack1)
-  raw.image <- aoiCrop(raw.image, aoi)                               
+  raw.image <- aoiCrop(raw.image, aoi)
+  if(sat=="MODIS"){for(i in 1:7){
+    raw.image[[i]] <- raw.image[[i]]*0.0001
+  }
+    raw.image[[8]] <- raw.image[[8]]*0.02
+  }
   raw.image <- saveLoadClean(imagestack = raw.image, 
                              stack.names = bandnames, 
                              file = "imageDN", 
