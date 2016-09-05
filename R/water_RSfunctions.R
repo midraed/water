@@ -41,7 +41,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     } else {
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
     }
-    bandnames <- c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3", "LST") # band names for MOD09GA
+    bandnames <- c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3", "LST", "Time") # band names for MOD09GA
   }
   
   stack1 <- list()
@@ -54,6 +54,9 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     thermal <- list.files(path=path, pattern = paste0(".LST_Day_1km",
                                                       ".(TIF|tif)$"), full.names = T)[1]
     stack1[8] <- raster(thermal)
+    time <- list.files(path=path, pattern = paste0(".Day_view_time",
+                                                      ".(TIF|tif)$"), full.names = T)[1]
+    stack1[9] <- raster(time)
   }
   raw.image <- do.call(stack, stack1)
   raw.image <- aoiCrop(raw.image, aoi)
@@ -61,6 +64,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     raw.image[[i]] <- raw.image[[i]]*0.0001
   }
     raw.image[[8]] <- raw.image[[8]]*0.02
+    raw.image[[9]] <- raw.image[[9]]*0.1
   }
   raw.image <- saveLoadClean(imagestack = raw.image, 
                              stack.names = bandnames, 
