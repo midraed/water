@@ -223,6 +223,8 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #'  == TRUE will look for any object called aoi on .GlobalEnv
 #' @param coeff      coefficient to transform narrow to broad band albedo. 
 #' See Details.
+#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
+#' from filenames 
 #' @details 
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, 
@@ -232,22 +234,20 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @author Fonseca-Luengo, David
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-#'
 #' M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
-#'
 #' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 #' @export
-albedo <- function(image.SR, aoi, coeff="Tasumi"){
-  if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)} 
-  # Tasumi 2008
-  if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)}
-  # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
-  if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} 
-  # Liang 2001
+albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
+  if(sat=="auto"){sat = getSat(path)}
+  if(sat=="L7" | sat=="L8"){
+    if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008
+    if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)} # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
+    if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} # Liang 2001
+  }
+  if(sat=="MODIS"){wb <- c(0.037, 0.479, -0.068, 0.0976, 0.266, 0.0757, 0.107)} # Liang 2001 direct-NIR coefficients
   albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
-  for(i in 2:6){
+    for(i in 2:6){
       albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]})
-      #removeTmpFiles(h=0.0008) # delete last one... maybe 3 seconds
   }
   albedo <- aoiCrop(albedo, aoi) 
   if(coeff=="Liang"){
