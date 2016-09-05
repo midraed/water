@@ -43,9 +43,10 @@ checkSRTMgrids <-function(raw.image){
 #   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
 #                            inverse = TRUE)
   limits <- extent(sp::spTransform(polyaoi, CRS("+proj=longlat +ellps=WGS84")))
-  # I have to improve this. It should work ONLY for west and south coordinates.. maybe
-  lat_needed <- seq(trunc(limits[3])-1, trunc(limits[4])-1, by=1)
-  long_needed <- seq(trunc(limits[1])-1, trunc(limits[2])-1, by = 1)
+  lat_needed <- seq(ifelse(trunc(limits[3])>0, trunc(limits[3]),trunc(limits[3])-1), 
+                    ifelse(trunc(limits[4])>0, trunc(limits[4]),trunc(limits[4])-1), by=1)
+  long_needed <- seq(ifelse(trunc(limits[1])>0, trunc(limits[1]),trunc(limits[1])-1), 
+                     ifelse(trunc(limits[2])>0, trunc(limits[2]),trunc(limits[2])-1), by = 1)
   grids <- expand.grid(lat_needed, long_needed)
   result <- list()
   link <- "http://earthexplorer.usgs.gov/download/options/8360/SRTM1"
