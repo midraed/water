@@ -32,7 +32,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
   }
   if(sat=="MODIS"){
-    image_list <- list.files(path=path, pattern = paste0("^MOD09GA_A\\d+\\w+\\d+.sur_refl_b0",
+    image_list <- list.files(path=path, pattern = paste0(".sur_refl_b0",
                                                          bands[1] ,"_1.(TIF|tif)$"))
     if(length(image_list) > 1) { ## Check if there are more images present on folder
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-7)
@@ -51,7 +51,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
                                                     ".(TIF|tif)$"), full.names = T))
   }
   if(sat == "MODIS"){
-    thermal <- list.files(path=path, pattern = paste0("^MOD11A1_A\\d+\\w+\\d+.LST_Day_1km",
+    thermal <- list.files(path=path, pattern = paste0(".LST_Day_1km",
                                                       ".(TIF|tif)$"), full.names = T)[1]
     stack1[8] <- raster(thermal)
   }
