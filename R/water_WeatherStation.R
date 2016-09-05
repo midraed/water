@@ -156,17 +156,20 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
   WSp <- x$hourly
-  atsat  <- as.POSIXlt(x$at.sat$datetime)
   if(hourly == FALSE) {WSp <- x$alldata}
-  if(sat == TRUE & atsat > 0){WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
-                                         & as.POSIXlt(WSp$datetime)$year == atsat$year,]}
+  if(sat == TRUE){atsat  <- as.POSIXlt(x$at.sat$datetime)
+  WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
+             & as.POSIXlt(WSp$datetime)$year == atsat$year,]
+  }
   time <- WSp$datetime
   graphics::par(mar=c(5, 7, 4, 7) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", main="",xlim=range(time), ...)
-  graphics::abline(v=as.POSIXct(atsat), lwd=5, col="gray")
-  graphics::text(atsat, max(WSp$radiation)*0.85, "satellite overpass", cex=0.7, 
-                 adj=c(NA, -0.5), srt=90, col="gray")
+  if(sat == TRUE){
+    graphics::abline(v=as.POSIXct(atsat), lwd=5, col="gray")
+    graphics::text(atsat, max(WSp$radiation)*0.85, "satellite overpass", cex=0.7, 
+                   adj=c(NA, -0.5), srt=90, col="gray")
+  }
   graphics::points(time,WSp$radiation,pch=20,col="red")
   graphics::axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5)
   graphics::mtext(2,text="Solar radiation (W.m-2)",line=1.7, cex=0.7)
