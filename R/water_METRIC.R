@@ -41,7 +41,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      incidence.hor = solar.angles.r$incidence.hor, 
                      WeatherStation=WeatherStation, ESPA = F)}
   if(sat=="MODIS"){image.SR <- image.DN}
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
   if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
                                            # and some LAI models, use SR
@@ -161,7 +161,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                        incidence.hor = solar.angles.r$incidence.hor, 
                        WeatherStation=WeatherStation, ESPA = F)}
   if(sat=="MODIS"){image.SR <- image.DN}
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff)
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
   if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
   # and some LAI models, use SR
