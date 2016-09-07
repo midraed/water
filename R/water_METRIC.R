@@ -160,7 +160,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
     image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                        surface.model=surface.model, 
                        incidence.hor = solar.angles.r$incidence.hor, 
-                       WeatherStation=WeatherStation, ESPA = F)}
+                       WeatherStation=WeatherStation, ESPA = ESPA)}
   if(sat=="MODIS"){image.SR <- image.DN}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
