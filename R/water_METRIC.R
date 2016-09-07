@@ -148,6 +148,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   }
   surface.model <-METRICtopo(DEM)
   #setTxtProgressBar(pb, 3)
+  if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
   solar.angles.r <- solarAngles(surface.model = surface.model, 
                                 WeatherStation = WeatherStation, MTL = MTL)
   Rs.inc <- incSWradiation(surface.model = surface.model, 
