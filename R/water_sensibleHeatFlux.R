@@ -332,22 +332,22 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(mean(Ts[cold])-273.15))*
     (1e6)/3600 
   # here uses latent.heat.vapo
-  H.cold <- mean(Rn[cold]) - mean(G[cold]) - LE.cold #ok
+  H.cold <- mean(Rn[cold], na.rm= T) - mean(G[cold], na.rm= T) - LE.cold #ok
   result <- list()
   if(verbose==TRUE){
     print("starting conditions")
     print("Cold")
-    print(data.frame(cbind("Ts"=mean(Ts[cold]), "Ts_datum"=mean(Ts.datum[cold]), 
-                           "Rn"=mean(Rn[cold]), "G"=mean(G[cold]), "Z.om"=mean(Z.om[cold]), 
-                           "u200"=u200[cold], "u*"=mean(friction.velocity[cold]) )))
+    print(data.frame(cbind("Ts"=mean(Ts[cold], na.rm= T), "Ts_datum"=mean(Ts.datum[cold], na.rm= T), 
+                           "Rn"=mean(Rn[cold], na.rm= T), "G"=mean(G[cold], na.rm= T), "Z.om"=mean(Z.om[cold], na.rm= T), 
+                           "u200"=u200[cold], "u*"=mean(friction.velocity[cold], na.rm= T) )))
     print("Hot")
-    print(data.frame(cbind("Ts"=mean(Ts[hot]), "Ts_datum"=mean(Ts.datum[hot]), "Rn"=mean(Rn[hot]), 
-                           "G"=mean(G[hot]), "Z.om"=mean(Z.om[hot]), "u200"=u200[hot], 
-                           "u*"=mean(friction.velocity[hot]))))
+    print(data.frame(cbind("Ts"=mean(Ts[hot], na.rm= T), "Ts_datum"=mean(Ts.datum[hot], na.rm= T), "Rn"=mean(Rn[hot], na.rm= T), 
+                           "G"=mean(G[hot], na.rm= T), "Z.om"=mean(Z.om[hot], na.rm= T), "u200"=u200[hot], 
+                           "u*"=mean(friction.velocity[hot], na.rm= T))))
   }
-  plot(1, mean(r.ah[hot]), xlim=c(0,15), ylim=c(0, mean(r.ah[hot])), 
+  plot(1, mean(r.ah[hot], na.rm= T), xlim=c(0,15), ylim=c(0, mean(r.ah[hot], na.rm= T)), 
        col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
-  graphics::points(1, mean(r.ah[cold]), col="blue", pch=20)
+  graphics::points(1, mean(r.ah[cold], na.rm= T), col="blue", pch=20)
   converge <- FALSE
   last.loop <- FALSE 
   i <- 1
@@ -359,10 +359,10 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         print(paste("iteraction #", i))
       }
       ### We calculate dT and H 
-      dT.cold <- H.cold * mean(r.ah[cold]) / (mean(air.density[cold])*1004)
-      dT.hot <- (mean(Rn[hot]) - mean(G[hot])) * mean(r.ah[hot]) / (mean(air.density[hot])*1004)
-      a <- (dT.hot - dT.cold) / (mean(Ts.datum[hot]) - mean(Ts.datum[cold]))
-      b <- -a * mean(Ts.datum[cold]) + dT.cold
+      dT.cold <- H.cold * mean(r.ah[cold], na.rm= T) / (mean(air.density[cold], na.rm= T)*1004)
+      dT.hot <- (mean(Rn[hot], na.rm= T) - mean(G[hot], na.rm= T)) * mean(r.ah[hot], na.rm= T) / (mean(air.density[hot], na.rm= T)*1004)
+      a <- (dT.hot - dT.cold) / (mean(Ts.datum[hot], na.rm= T) - mean(Ts.datum[cold], na.rm= T))
+      b <- -a * mean(Ts.datum[cold], na.rm= T) + dT.cold
       if(verbose==TRUE){
         print(paste("a",a))
         print(paste("b",b))
@@ -392,31 +392,31 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       phi.2[Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
       phi.01[Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
       if(verbose==TRUE){
-        print(paste("r.ah cold", mean(r.ah[cold])))
-        print(paste("r.ah hot", mean(r.ah[hot])))
-        print(paste("dT cold", mean(dT[cold])))
-        print(paste("dT hot", mean(dT[hot])))
+        print(paste("r.ah cold", mean(r.ah[cold], na.rm= T)))
+        print(paste("r.ah hot", mean(r.ah[hot], na.rm= T)))
+        print(paste("dT cold", mean(dT[cold], na.rm= T)))
+        print(paste("dT hot", mean(dT[hot], na.rm= T)))
         print("##############")
       }
       ## And finally, r.ah and friction velocity
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       # converge condition
-      r.ah.hot.previous <- mean(r.ah[hot])
-      r.ah.cold.previous <- mean(r.ah[cold])
+      r.ah.hot.previous <- mean(r.ah[hot], na.rm= T)
+      r.ah.cold.previous <- mean(r.ah[cold], na.rm= T)
       ### -----------
       r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41) # ok ok
       ## Update plot
-      graphics::points(i, mean(r.ah[hot]), col="red", pch=20)
-      graphics::points(i, mean(r.ah[cold]), col="blue", pch=20)
-      lines(c(i, i-1), c(mean(r.ah[hot]), r.ah.hot.previous), col="red")
-      lines(c(i, i-1), c(mean(r.ah[cold]), r.ah.cold.previous), col="blue")
+      graphics::points(i, mean(r.ah[hot], na.rm= T), col="red", pch=20)
+      graphics::points(i, mean(r.ah[cold], na.rm= T), col="blue", pch=20)
+      lines(c(i, i-1), c(mean(r.ah[hot], na.rm= T), r.ah.hot.previous), col="red")
+      lines(c(i, i-1), c(mean(r.ah[cold], na.rm= T), r.ah.cold.previous), col="blue")
       # Check convergence
       if(last.loop == TRUE){
         converge <- TRUE
         if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
       }
-      delta.r.ah.hot <- (mean(r.ah[hot]) - r.ah.hot.previous) / mean(r.ah[hot]) * 100
-      delta.r.ah.cold <- (mean(r.ah[cold]) - r.ah.cold.previous) / mean(r.ah[cold]) * 100
+      delta.r.ah.hot <- (mean(r.ah[hot], na.rm= T) - r.ah.hot.previous) / mean(r.ah[hot], na.rm= T) * 100
+      delta.r.ah.cold <- (mean(r.ah[cold], na.rm= T) - r.ah.cold.previous) / mean(r.ah[cold], na.rm= T) * 100
       if(verbose==TRUE){
         print (paste("delta rah hot", delta.r.ah.hot))
         print (paste("delta rah cold", delta.r.ah.cold))
