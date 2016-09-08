@@ -155,7 +155,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
   if(sat=="L7" | sat=="L8"){
-    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
+    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, ESPA=ESPA, 
                            incidence.rel = solar.angles.r$incidence.rel)
     image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                        surface.model=surface.model, 
@@ -169,7 +169,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
   if(sat=="L7" | sat=="L8"){
     Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
-                             WeatherStation = WeatherStation)}
+                             WeatherStation = WeatherStation, method = LST.method)}
   if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
