@@ -22,6 +22,7 @@
 #' @param MTL                Metadata file. If not provided will look for one on
 #' working directory. If provided or present will calculate weather conditions
 #' on satellite overpass.
+#' @param MODIS.time         Day_view_time layer from MOD11A1
 #' @details 
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
 #' temperature), cf should be: cf = c(1,0.2777778,1)
@@ -69,6 +70,17 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
                        RH=RH, ea=ea, temp=temp)
   result$alldata <- WSdata
+  ## Daily
+  WSdata$date <- as.Date(WSdata$datetime, tz = tz)
+  result$daily <- data.frame(date=unique(WSdata$date), 
+                             radiation_sum=tapply(WSdata$radiation, WSdata$date, sum),
+                             wind_mean=tapply(WSdata$wind, WSdata$date, mean),
+                             RH_mean=tapply(WSdata$RH, WSdata$date, mean),
+                             temp_mean=tapply(WSdata$temp, WSdata$date, mean),
+                             temp_max=tapply(WSdata$temp, WSdata$date, max),
+                             temp_min=tapply(WSdata$temp, WSdata$date, min),
+                             ea_mean=tapply(WSdata$ea, WSdata$date, mean))
+  ## Hourly
   result$hourly <- WSdata[datetime$min==0,] 
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
