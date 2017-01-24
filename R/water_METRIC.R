@@ -122,9 +122,14 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
 #' 0.0018 or 0.03 for long grass
 #' @param ESPA             Logical. If TRUE will look for espa.usgs.gov related 
-#' products on working folder
+#' products on working folder. Landsat 8 users please see Details.
 #' @param verbose          Logical. If TRUE will print aditional data to console
-#' @details 
+#' @details
+#' water package does not include a model to calculate surface reflectance for 
+#' Landsat 8 images. Landsat 8 users should download precalculated reflectances
+#' (TOA and surface) and brightness temperature from espa website 
+#' (espa.cr.usgs.gov). When ESPA = TRUE, water will load those files from the
+#' working folder.
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
 #' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 

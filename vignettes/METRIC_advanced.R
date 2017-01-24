@@ -48,7 +48,7 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
                    incidence.hor = solar.angles.r$incidence.hor, 
                    WeatherStation=WeatherStation, ESPA = F)
 
-albedo <- albedo(image.SR = image.SR,  coeff="Tasumi")
+albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat="L7")
 
 ## ---- fig.width = 5------------------------------------------------------
 LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
