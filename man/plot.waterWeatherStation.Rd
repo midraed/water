@@ -4,7 +4,7 @@
 \alias{plot.waterWeatherStation}
 \title{Plot method for waterWeatherStation S3 class}
 \usage{
-\method{plot}{waterWeatherStation}(x, hourly = FALSE, sat = TRUE, ...)
+\method{plot}{waterWeatherStation}(x, hourly = FALSE, sat = TRUE, date, ...)
 }
 \arguments{
 \item{x}{waterWeatherStation object. See read.WSdata()}

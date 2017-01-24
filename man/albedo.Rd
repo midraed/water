@@ -4,7 +4,7 @@
 \alias{albedo}
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
-albedo(image.SR, aoi, coeff = "Tasumi")
+albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
 }
 \arguments{
 \item{image.SR}{surface reflectance image with bands B, R, G, NIR, SWIR1, 
@@ -15,6 +15,9 @@ SWIR2}
 
 \item{coeff}{coefficient to transform narrow to broad band albedo. 
 See Details.}
+
+\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
+from filenames}
 }
 \description{
 Broadband surface Albedo is estimated considering the integration of all 
@@ -34,9 +37,7 @@ Fonseca-Luengo, David
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-
 M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
-
 Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 }
 
