@@ -48,8 +48,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
-  ## TODO: deprecated "pp"
-  if("pp" %in% columns){columns[columns == "pp"] <- "rain"}
+  if("pp" %in% columns){columns[columns == "pp"] <- "rain"}  ## TODO: deprecated "pp"
   if(class(WSdata) == "character"){WSdata <- utils::read.csv(WSdata, ...)}
   else if(class(WSdata) == "data.frame"){WSdata <- WSdata}
   else stop("WSdata should be a character string with the name of the csv file
@@ -86,9 +85,34 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                              temp_mean=tapply(WSdata$temp, WSdata$date, mean),
                              temp_max=tapply(WSdata$temp, WSdata$date, max),
                              temp_min=tapply(WSdata$temp, WSdata$date, min),
-                             ea_mean=tapply(WSdata$ea, WSdata$date, mean))
+                             ea_mean=tapply(WSdata$ea, WSdata$date, mean),
+                             rain_sum=tapply(WSdata$rain, WSdata$date, sum))
   ## Hourly
-  result$hourly <- WSdata[datetime$min==0,] 
+  if(length(WSdata[datetime$min==0 & datetime$sec==00,]) > 20){
+  result$hourly <- WSdata[datetime$min==0 & datetime$sec==00,] }
+  else {
+    result$hourly <- list()
+    Thours <- as.integer(difftime(tail(WSdata$datetime,1), head(WSdata$datetime, 1), units="hours"))
+    datetime <- as.POSIXlt(WSdata$datetime)
+    first <- datetime[1] + 3600 - datetime$min[1] * 60 - datetime$sec[1] 
+    sequence <- seq.POSIXt(from=first, by= "1 hour", length.out = Thours)
+    # Time interpolation
+    for(i in 1:Thours){
+      WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
+                                                         sequence[i]],1),]
+      WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
+                                                        sequence[i]][1],]
+      delta1 <- as.numeric(difftime(WS.after$datetime, 
+                                     WS.prev$datetime, units="secs"))
+      delta2 <- as.numeric(difftime(sequence[i], WS.prev$datetime, units="secs"))
+      interp <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
+      interp[,2:7] <- round(interp[,2:7],2) 
+      result$hourly[i] <- c(as.POSIXlt(sequence[i]),interp[,2:7])
+      
+      # Error in xpdrows.data.frame(x, rows, new.rows) : 
+      #   el atributo 'names' [12] debe tener la misma longitud que el vector [2]
+    }
+  }
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
   if(length(MTL)!=0){
