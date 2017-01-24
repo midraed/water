@@ -19,6 +19,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="MODIS"){bands <- c(1:7)}
   ## Check for more than 1 image on the same folder
   if(sat=="L8" | sat=="L7"){
+    path = getwd()
     image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(B|band)",
                                                          bands[1] ,".(TIF|tif)$"))
     if(length(image_list) > 1) {  ## Check if there are more images present on folder
