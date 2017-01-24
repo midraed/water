@@ -165,13 +165,18 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @importFrom graphics abline axis axis.POSIXct mtext par points
 #' @export
 #' @method plot waterWeatherStation
-plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, ...){
+plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
   WSp <- x$hourly
   if(hourly == FALSE) {WSp <- x$alldata}
   if(sat == TRUE){atsat  <- as.POSIXlt(x$at.sat$datetime)
   WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
              & as.POSIXlt(WSp$datetime)$year == atsat$year,]
+  }
+  if(!missing(date)){
+    date <- as.POSIXlt(date)
+    WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == date$yday 
+               & as.POSIXlt(WSp$datetime)$year == date$year,]
   }
   time <- WSp$datetime
   graphics::par(mar=c(5, 7, 4, 7) + 0.1)
