@@ -13,7 +13,7 @@ calcH(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef = 1.05,
 a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
 "cold" or "hot"}
 
-\item{method}{Method when using more than 1 pair of anchors pixels. 
+\item{method}{Method when using more than 1 pair of anchor pixels. 
 method = "mean" will use the mean value for the cold pixels vs the mean value
 for the hot pixels.}
 

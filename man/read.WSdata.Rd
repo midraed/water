@@ -46,6 +46,8 @@ temperature to W/m2; m/s and Celsius. See Details.}
 \item{MTL}{Metadata file. If not provided will look for one on
 working directory. If provided or present will calculate weather conditions
 on satellite overpass.}
+
+\item{MODIS.time}{Day_view_time layer from MOD11A1}
 }
 \value{
 waterWeatherStation object, with data.frames with all data, hourly

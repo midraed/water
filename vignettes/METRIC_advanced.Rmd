@@ -125,7 +125,7 @@ image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7",
                    incidence.hor = solar.angles.r$incidence.hor, 
                    WeatherStation=WeatherStation, ESPA = F)
 
-albedo <- albedo(image.SR = image.SR,  coeff="Tasumi")
+albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat="L7")
 ```
 
 Later on, we calculate the *Leaf Area Index* (LAI) using the satellite data, and we plot it. In this step, we can choose diferents methods able in literature to estimate LAI from Landsat data (see package Help for more info.). In this vignette we are going to use the *METRIC 2010* method:
