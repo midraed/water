@@ -107,11 +107,9 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
       delta2 <- as.numeric(difftime(sequence[i], WS.prev$datetime, units="secs"))
       interp <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
       interp[,2:7] <- round(interp[,2:7],2) 
-      result$hourly[i] <- c(as.POSIXlt(sequence[i]),interp[,2:7])
-      
-      # Error in xpdrows.data.frame(x, rows, new.rows) : 
-      #   el atributo 'names' [12] debe tener la misma longitud que el vector [2]
+      result$hourly[[i]] <- interp
     }
+    result$hourly <- do.call("rbind", result$hourly)
   }
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
