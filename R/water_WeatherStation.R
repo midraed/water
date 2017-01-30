@@ -88,29 +88,36 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                              ea_mean=tapply(WSdata$ea, WSdata$date, mean),
                              rain_sum=tapply(WSdata$rain, WSdata$date, sum))
   ## Hourly
-  if(length(WSdata[datetime$min==0 & datetime$sec==00,]) > 20){
-  result$hourly <- WSdata[datetime$min==0 & datetime$sec==00,] }
-  else {
-    result$hourly <- list()
-    Thours <- as.integer(difftime(tail(WSdata$datetime,1), head(WSdata$datetime, 1), units="hours"))
-    datetime <- as.POSIXlt(WSdata$datetime)
-    first <- datetime[1] + 3600 - datetime$min[1] * 60 - datetime$sec[1] 
-    sequence <- seq.POSIXt(from=first, by= "1 hour", length.out = Thours)
-    # Time interpolation
-    for(i in 1:Thours){
+
+  result$hourly <- list()
+  datetime <- as.POSIXlt(WSdata$datetime)
+  if(datetime[1]$min==0 & datetime[1]$sec==0){
+    first = datetime[1]
+  } else {
+    first <- datetime[1] + 3600 - datetime$min[1] * 60 - datetime$sec[1]
+  }
+    
+  sequence <- seq.POSIXt(from=first, to = tail(datetime,1),by= "1 hour")
+  # Time interpolation
+  for(i in 1:length(sequence)){
+    if(as.character(sequence[i]) %in% as.character(datetime) | 
+       sequence[i] == datetime[1]){
+      result$hourly[[i]] <- result$alldata[result$alldata$datetime == sequence[i],]
+    } else {
       WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
                                                          sequence[i]],1),]
       WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
-                                                        sequence[i]][1],]
+                                                       sequence[i]][1],]
       delta1 <- as.numeric(difftime(WS.after$datetime, 
-                                     WS.prev$datetime, units="secs"))
+                                    WS.prev$datetime, units="secs"))
       delta2 <- as.numeric(difftime(sequence[i], WS.prev$datetime, units="secs"))
       interp <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
       interp[,2:7] <- round(interp[,2:7],2) 
       result$hourly[[i]] <- interp
     }
-    result$hourly <- do.call("rbind", result$hourly)
   }
+  result$hourly <- do.call("rbind", result$hourly)
+
   ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
   if(length(MTL)!=0){
