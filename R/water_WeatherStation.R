@@ -100,8 +100,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   sequence <- seq.POSIXt(from=first, to = tail(datetime,1),by= "1 hour")
   # Time interpolation
   for(i in 1:length(sequence)){
-    if(as.character(sequence[i]) %in% as.character(datetime) | 
-       sequence[i] == datetime[1]){
+    if(sum(as.numeric(sequence[i] == datetime)) > 0) {
       result$hourly[[i]] <- result$alldata[result$alldata$datetime == sequence[i],]
     } else {
       WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
