@@ -5,6 +5,7 @@ Guillermo OLMEDO
 
 VERSION 0.5.1
 
+* Added a new vignette describing how to use Landsat 8 data in water package
 * Fixed checkSRTMgrids for positives values of lat/long.
 * Small improvement in waterWeatherStation plot. Now the time axis is always 
   complete.

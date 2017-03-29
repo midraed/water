@@ -1,0 +1,37 @@
+---
+title: "Using Landsat 8 data with METRIC and water package"
+author: "Guillermo Federico Olmedo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Landsat 8}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](usgs.gov) offers surface reflectance processed trought [ESPA](espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
+
+## Differences between Landsat 7 and 8
+
+Landsat 8 has two new spectral bands: a deep blue visible channel (band 1) specifically designed for water resources and coastal zone investigation, and a new infrared channel (band 9) for the detection of cirrus clouds. Also, the TIRS instrument collects two spectral bands for the wavelength covered by a single band on the previous TM and ETM+ sensors. The two bands from TIRS allows to use the `split windows` method for the estimation of land surface temperature. The estimation of surface reflectance is not included in water package. Nevertheless, water package reads the surface reflectance products obtained from  [ESPA](espa.cr.usgs.gov). Finally, as the band limits differ from the ones in Landsat 7, the estimation of albedo needs a new set of coefficients. In water we include coefficients estimated using [SMARTS](http://www.nrel.gov/rredc/smarts/). In the next section we show how to estimate METRIC model with Landsat 8 data using the simple procedure. In the following section we show the differences when using `albedo()` and `surfaceTemperature()` functions. 
+
+## Simple procedure 
+
+As Landsat scenes are almost 1Gb big, we do not recommend using one complete scene without cropping an area-of-interest first. We can define an area-of-interest using `createAoi()` function:
+
+```
+  aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
+````
+
+The we can load the scene using `loadImage()` function. 
+
+```
+  imagen <- loadImage(aoi=aoi)
+```
+
+To be able to run METRIC with Landsat 8 data, the ESPA surface reflectance products should be available in the working directory. If we list the contents of the L8 example files provided with water, we can see we have 38 files: 2 metadata files, the original and the one from ESPA; 14 tif files with the raw data; 
+
+## Differences in albedo and surface temperature estimation
+
+
+
