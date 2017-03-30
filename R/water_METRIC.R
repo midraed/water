@@ -173,7 +173,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   # and some LAI models, use SR
   LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
   if(sat=="L7" | sat=="L8"){
-    Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
+    Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=imagen.DN,
                              WeatherStation = WeatherStation, method = LST.method)}
   if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
