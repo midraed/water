@@ -356,8 +356,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' Estimates Land Surface Temperature from Landsat Data
 #' @description
 #' Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
-#' @param thermalband     Satellite thermal band. For L8 this should be band 10.
-#' @param thermalband2    Second thermal band. Only needed for split window method. For L8 this should be band 11.
+#' @param image.DN      raw image in digital numbers
+#' @param thermalband     Satellite thermal band. For L8 this should be band 10. Deprecated argument
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
 #' @param LAI             raster layer with leaf area index. See LAI()
 #' @param aoi             area of interest to crop images, if 
@@ -384,8 +384,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr 
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
-surfaceTemperature <- function(thermalband, thermalband2, sat="auto", LAI, aoi, 
-                               method = "SC", WeatherStation){
+surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi, 
+                               method = "SC", WeatherStation, thermalband){
   path=getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
@@ -403,17 +403,10 @@ surfaceTemperature <- function(thermalband, thermalband2, sat="auto", LAI, aoi,
   tau_NB <- 0.75+2e-5*WeatherStation$elev
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){
-    if(missing(thermalband)){
-      bright.temp.b10 <- raster(list.files(path = path, 
-                                         pattern = "_toa_band10.tif$"))
-    } else {
-      bright.temp.b10 <- thermalband
-    }
-    bright.temp.b10 <- aoiCrop(bright.temp.b10, aoi) 
-    bright.temp.b10 <- bright.temp.b10 * 0.1
-    L_b10 <-  aoiCrop(raster(list.files(path = path, 
-                                pattern = "band10.tif$")[1]), aoi)
-    L_b10 <- L_b10* 3.3420E-04 + 0.1
+    TIRS_THERMAL_CONSTANTS <- c(K1_CONSTANT_BAND_10 = 774.8853, K1_CONSTANT_BAND_11 = 480.8883, K2_CONSTANT_BAND_10 = 1321.0789,
+                                K2_CONSTANT_BAND_11 = 1201.1442)
+    L_b10 <- image.DN$Thermal1*3.3420E-04+0.1
+    bT_b10 <- TIRS_THERMAL_CONSTANTS[3] / log((TIRS_THERMAL_CONSTANTS[1]/L10)+1)
     if(method == "SC"){
       #atm.coeff from Jimenez-Munoz, 2014
       atm.coeff <- matrix(data=c(0.04019, 0.02916, 1.01523,
@@ -425,40 +418,30 @@ surfaceTemperature <- function(thermalband, thermalband2, sat="auto", LAI, aoi,
       atm.cond <- matrix(data=c(ea^2, ea, 1), nrow= 3, ncol=1) #not ea, vwc in g/cm2
       AF.j <- atm.coeff %*% atm.cond
       AF.m <- c(1/tau_NB, -R_sky - (Rp/tau_NB), R_sky)
-      delta <- (bright.temp.b10^2)/(1324*L_b10 )
-      gama <- bright.temp.b10 - (bright.temp.b10^2/1324)
+      delta <- (bT_b10^2)/(1324*L_b10 )
+      gama <- bT_b10 - (bT_b10^2/1324)
       Ts <- delta*((1/epsilon_NB)*(AF.m[1]*L_b10+AF.m[2])+AF.m[3])+gama
     }
     if(method=="SW"){
-      if(missing(thermalband2)){
-        bright.temp.b11 <- raster(list.files(path = path, 
-                                             pattern = "_toa_band11.tif$"))
-      } else {
-        bright.temp.b11 <- thermalband2
-      }
-      bright.temp.b11 <- aoiCrop(bright.temp.b11, aoi) 
-      bright.temp.b11 <- bright.temp.b11 * 0.1 # L8 rescaling factor
+      L_b11 <- image.DN$Thermal2*3.3420E-04+0.1
+      bT_b11 <- TIRS_THERMAL_CONSTANTS[4] / log((TIRS_THERMAL_CONSTANTS[2]/L10)+1)
       SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238, -129.20, 16.40)
       w <- 1.2 #Atm water vapor content in g cm-2
       delta_e <- 0 # emissivity difference 
-      Ts <- bright.temp.b10 + SW.c[2] * (bright.temp.b10 - bright.temp.b11) +
-        SW.c[3] * (bright.temp.b10 - bright.temp.b11)^2 + SW.c[1] +
+      Ts <- bT_b10 + SW.c[2] * (bT_b10 - bT_b11) +
+        SW.c[3] * (bT_b10 - bT_b11)^2 + SW.c[1] +
         (SW.c[4] + SW.c[5] * w) * (1 - epsilon_NB) 
       # If I had two different emissivity, I should change epsilon_NB parameter
       # with the mean emissivity and add +(SW.c[6] + SW.c[7] * w) * delta_e
     }
   }
   if(sat=="L7"){
-    if(missing(thermalband)){
-      B6 <- raster(list.files(path = path, 
-                pattern = "^L[EC]\\d+\\w+\\d+_B6_VCID_1.TIF$", full.names = T))
+    if(!missing(thermalband)){
+      B6 <- thermalband
+    } else {
+      B6 <- image.DN$Thermal1  
     }
-    if(!missing(thermalband)){B6 <- thermalband}
     L_t_6 <-  0.067 * B6 - 0.06709
-    if(missing(aoi) & exists(x = "aoi", envir=.GlobalEnv)){
-      aoi <- get(x = "aoi", envir=.GlobalEnv)
-      L_t_6 <- crop(L_t_6,aoi)
-    }
     L7_K1 <- 666.09 
     L7_K2 <- 1282.71 
     Rc <- ((L_t_6 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
