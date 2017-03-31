@@ -2,13 +2,13 @@
 library(water)
 aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
 
-## ---- warning=FALSE, fig.width = 5---------------------------------------
+## ---- warning=FALSE, fig.width = 7---------------------------------------
 raw_data_folder <- system.file("extdata", package="water")
 image <- loadImage(path=raw_data_folder, aoi=aoi, sat="L8")
 image.SR <- loadImageSR(path=raw_data_folder, aoi=aoi)
 plot(image)
 
-## ---- warning=FALSE, fig.width = 5---------------------------------------
+## ---- warning=FALSE, fig.width = 7---------------------------------------
 csvfile <- system.file("extdata", "INTA.csv", package="water")
 MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
 WeatherStation <- read.WSdata(WSdata = csvfile, 

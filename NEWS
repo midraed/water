@@ -3,9 +3,21 @@ change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
 
+VERSION 0.6
+
+* Added a new function loadImageSR to load surface reflectance from
+  Landsat 8 from ESPA files
+* calcSR only works for L7
+* calcTOAr() now estimates TOA reflectance for Landsat 8
+* surfaceTemperature() uses the scene in DN and estimates the brightness
+  temperature for Landsat 7 or 8. Argument thermalband is deprecated.
+* Added a new example of weather station for the new Landsat 8 example
+* Added a Landsa 8 scene as example dataset in raw format complete with the
+  surface reflectance estimated by ESPA
+* Added a new vignette describing how to use Landsat 8 data in water package
+
 VERSION 0.5.1
 
-* Added a new vignette describing how to use Landsat 8 data in water package
 * Fixed checkSRTMgrids for positives values of lat/long.
 * Small improvement in waterWeatherStation plot. Now the time axis is always 
   complete.

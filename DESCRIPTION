@@ -6,7 +6,7 @@ Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farias [aut],
     David Fonseca-Luengo [aut], Daniel de la Fuente-Saiz [aut], Fernando Fuentes
     Peñailillo [aut]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
-Description: Tools and functions to calculate actual evapotranspiration
+Description: Tools and functions to calculate actual Evapotranspiration
     using surface energy balance models.
 Depends:
     R (>= 3.0),
