@@ -123,7 +123,7 @@ image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile,
 image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7", 
                    surface.model=surface.model, 
                    incidence.hor = solar.angles.r$incidence.hor, 
-                   WeatherStation=WeatherStation, ESPA = F)
+                   WeatherStation=WeatherStation)
 
 albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat="L7")
 ```
@@ -139,7 +139,7 @@ plot(LAI)
 Then we estimate land surface temperature (Ts), using computed LAI in order to estimate consequently the *surface emissivity*, and *brightness temperature* from landsat`s thermal band (TIR). Then we use this information to compute the *incoming and outgoing long-wave radiation* as:
 
 ```{r, warning=FALSE, fig.width = 5}
-Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = image.DN$thermal.low,
+Ts <- surfaceTemperature(image.DN=image.DN, LAI=LAI, sat = "L7", 
                          WeatherStation = WeatherStation)
 
 Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)

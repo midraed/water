@@ -22,7 +22,6 @@
 #' @param MTL                Metadata file. If not provided will look for one on
 #' working directory. If provided or present will calculate weather conditions
 #' on satellite overpass.
-#' @param MODIS.time         Day_view_time layer from MOD11A1
 #' @details 
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
 #' temperature), cf should be: cf = c(1,0.2777778,1)
@@ -194,6 +193,7 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @param sat     If TRUE, and if the waterWeatherStation object was created
 #' using a Landsat Metadata File, will plot only data from day of the satellite
 #' overpass 
+#' @param date    When sat = FALSE, the date to plot in a multi-day object
 #' @param ...      additional parameters to pass to plot()
 #' @author Guillermo Federico Olmedo
 #' @importFrom utils read.csv

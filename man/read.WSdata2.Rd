@@ -26,7 +26,7 @@ Negative values for west longitude}
 \item{elev}{elevation of weather station in meters}
 
 \item{columns}{columns order of needed data. Vector containing 
-"date", "time", "radiation", "wind", "RH" and "temp". Other values are 
+"date", "time", "radiation", "wind", "RH", "temp" and "rain". Other values are 
 ignored. If you have a column with date and time in the same column, you can
 include "datetime" and "date" and "time" are no longer needed.}
 

@@ -239,6 +239,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
+  path <- getwd
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L7" | sat=="L8"){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008

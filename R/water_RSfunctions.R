@@ -176,7 +176,7 @@ calcTOAr <- function(image.DN, sat="auto",
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 # incidence hor from TML?? 
-calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor, 
+calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor, 
                    WeatherStation, surface.model){
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)

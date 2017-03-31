@@ -16,6 +16,8 @@ from the waterWeatherStation object}
 using a Landsat Metadata File, will plot only data from day of the satellite
 overpass}
 
+\item{date}{When sat = FALSE, the date to plot in a multi-day object}
+
 \item{...}{additional parameters to pass to plot()}
 }
 \description{

@@ -56,7 +56,7 @@ LAI <- LAI(method = "metric2010", image = image.TOAr, L=0.1)
 plot(LAI)
 
 ## ---- warning=FALSE, fig.width = 5---------------------------------------
-Ts <- surfaceTemperature(LAI=LAI, sat = "L7", thermalband = image.DN$thermal.low,
+Ts <- surfaceTemperature(image.DN=image.DN, LAI=LAI, sat = "L7", 
                          WeatherStation = WeatherStation)
 
 Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)

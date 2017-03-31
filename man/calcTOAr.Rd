@@ -4,14 +4,12 @@
 \alias{calcTOAr}
 \title{Calculates Top of atmosphere reflectance}
 \usage{
-calcTOAr(image.DN, sat = "auto", ESPA = FALSE, aoi, incidence.rel, MTL)
+calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
 }
 \arguments{
 \item{image.DN}{raw image in digital numbers}
 
 \item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
-
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related products on working folder}
 
 \item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
 

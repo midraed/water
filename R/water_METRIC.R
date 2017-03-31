@@ -39,7 +39,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
                      surface.model=surface.model, 
                      incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation, ESPA = F)}
+                     WeatherStation=WeatherStation)}
   if(sat=="MODIS"){image.SR <- image.DN}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
@@ -86,7 +86,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
   image.SR <- calcSR(image.TOAr=image.TOAr, 
                       surface.model=surface.model, 
                       incidence.hor = solar.angles.r$incidence.hor, 
-                      WeatherStation=WeatherStation, sat="auto", ESPA = F)
+                      WeatherStation=WeatherStation, sat="auto")
   albedo <- albedo(image.SR = image.SR)
   Ts <- surfaceTemperature(sat = "auto" )
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn)

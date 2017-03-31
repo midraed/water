@@ -4,14 +4,19 @@
 \alias{METRIC.EB}
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
-METRIC.EB(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
+METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
   LAI.method = "metric2010", Zom.method = "short.crops",
   anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
-  Z.om.ws = 0.0018, ESPA = FALSE, verbose = FALSE)
+  Z.om.ws = 0.0018, verbose = FALSE)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
+
+\item{image.SR}{L8 ONLY. Surface reflectance imagen. water package does not 
+include a model to calculate surface reflectance for Landsat 8 images. Landsat 8 users 
+should download precalculated surface reflectances from espa website 
+(espa.cr.usgs.gov).}
 
 \item{WeatherStation}{Weather Station data, can be a waterWeatherStation 
 object}
@@ -54,20 +59,12 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 \item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
 0.0018 or 0.03 for long grass}
 
-\item{ESPA}{Logical. If TRUE will look for espa.usgs.gov related 
-products on working folder. Landsat 8 users please see Details.}
-
 \item{verbose}{Logical. If TRUE will print aditional data to console}
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model
 }
 \details{
-water package does not include a model to calculate surface reflectance for 
-Landsat 8 images. Landsat 8 users should download precalculated reflectances
-(TOA and surface) and brightness temperature from espa website 
-(espa.cr.usgs.gov). When ESPA = TRUE, water will load those files from the
-working folder.
 There are differents models to convert narrowband data to broadband albedo. 
 You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
 calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
