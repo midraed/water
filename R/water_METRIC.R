@@ -95,6 +95,10 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 
 #' Estimates Energy Balance using METRIC2010 Model
 #' @param image.DN         raw imagen in digital counts to evaluate
+#' @param image.SR         L8 ONLY. Surface reflectance imagen. water package does not 
+#' include a model to calculate surface reflectance for Landsat 8 images. Landsat 8 users 
+#' should download precalculated surface reflectances from espa website 
+#' (espa.cr.usgs.gov). 
 #' @param WeatherStation   Weather Station data, can be a waterWeatherStation 
 #' object
 #' @param MTL              Landsat metadata file
@@ -121,15 +125,8 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param ETp.coef         ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
 #' 0.0018 or 0.03 for long grass
-#' @param ESPA             Logical. If TRUE will look for espa.usgs.gov related 
-#' products on working folder. Landsat 8 users please see Details.
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @details
-#' water package does not include a model to calculate surface reflectance for 
-#' Landsat 8 images. Landsat 8 users should download precalculated reflectances
-#' (TOA and surface) and brightness temperature from espa website 
-#' (espa.cr.usgs.gov). When ESPA = TRUE, water will load those files from the
-#' working folder.
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
 #' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
@@ -138,12 +135,12 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
+METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
                       alb.coeff = "Tasumi", LST.method = "SC",
                       LAI.method = "metric2010", 
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
-                      n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, ESPA = FALSE, 
+                      n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, 
                       verbose = FALSE){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
@@ -160,12 +157,14 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
   if(sat=="L7" | sat=="L8"){
-    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, ESPA=ESPA, 
+    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
                            incidence.rel = solar.angles.r$incidence.rel)
-    image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
-                       surface.model=surface.model, 
-                       incidence.hor = solar.angles.r$incidence.hor, 
-                       WeatherStation=WeatherStation, ESPA = ESPA)}
+    if(sat=="L7"){
+      image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
+                         surface.model=surface.model, 
+                         incidence.hor = solar.angles.r$incidence.hor, 
+                         WeatherStation=WeatherStation)}
+    }
   if(sat=="MODIS"){image.SR <- image.DN}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
