@@ -184,7 +184,7 @@ METRIC.EB <- function(image.DN, WeatherStation, MTL, sat = "auto",
   Rn[Rn < 0]  <-  0
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                    Rn=Rn, image.SR, LAI=LAI)
+                    Rn=Rn, LAI=LAI)
   G[G < 0]  <-  0
   Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                   method = Zom.method, 

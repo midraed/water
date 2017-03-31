@@ -79,7 +79,6 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
 #' @param image.DN      raw image in digital numbers
 #' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA          Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi           area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param incidence.rel solar incidence angle, considering the relief
 #' @param MTL           Landsat Metadata File
@@ -91,20 +90,14 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 #' @export
 calcTOAr <- function(image.DN, sat="auto", 
-                     ESPA=FALSE, aoi, incidence.rel, MTL){
+                     aoi, incidence.rel, MTL){
   path = getwd()
   if(sat=="auto"){sat = getSat(path)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  if(ESPA==TRUE & sat=="L8"){
-    files <- list.files(path = path, pattern = "_toa_band+[2-7].tif$", full.names = T)
-    stack1 <- list()
-    for(i in 1:6){
-      stack1[i] <- raster(files[i])
-    }
-    image_TOA <- do.call(stack, stack1)
-    image_TOA <- aoiCrop(image_TOA, aoi)
-    image_TOA <- image_TOA / 10000
+  if(sat=="L8"){
+    image_TOA <- ((2.0000E-05 * image.DN[[1:6]]) + -0.100000) / incidence.rel  ### There is a small difference with ESPA TOA of less than 0.02
+    names(image_TOA) <- names(image.DN[[1:6]])
   }
   ### Ro TOA L7
   if(sat=="L7"){
