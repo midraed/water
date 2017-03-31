@@ -139,7 +139,6 @@ calcTOAr <- function(image.DN, sat="auto",
 #' Calculates surface reflectance from top of atmosphere radiance using the model developed by Tasumi et al. (2008) and Allen et al. (2007), which considers a band-by-band basis.
 #' @param image.TOAr      raster stack. top of atmosphere reflectance image
 #' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param ESPA            Logical. If TRUE will look for espa.usgs.gov related products on working folder
 #' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param incidence.hor   solar incidence angle, considering plain surface
 #' @param WeatherStation  Weather Station data
@@ -159,17 +158,10 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor,
   }
   path <- getwd()
   if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L8"){bands <- 2:7}
+  if(sat=="L8"){stop("water package does not include a model to calculate surface reflectance 
+  for Landsat 8 images. Landsat 8 users should download precalculated surface reflectances from 
+  espa website (espa.cr.usgs.gov). ")}
   if(sat=="L7"){bands <- c(1:5,7)}
-  if(ESPA==TRUE & sat=="L8"){
-    files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
-    stack1 <- list()
-    for(i in 1:6){
-      stack1[i] <- raster(files[i])
-    }
-    image_SR <- do.call(stack, stack1)
-    image_SR <- aoiCrop(image_SR, aoi) 
-    image_SR <- image_SR / 10000
   }
   if(sat=="L7"){
     if(missing(image.TOAr)){image.TOAr <- calcTOAr()}
