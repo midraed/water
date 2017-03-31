@@ -14,14 +14,13 @@ outLWradiation(LAI, Ts)
 \description{
 This function estimates the long wave outgoing radiation using the Stefan-Boltzmann equation.
 }
-\author{
-Guillermo Federico Olmedo
-
-Fonseca-Luengo, David
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
 mapping evapotranspiration with internalized calibration (METRIC) - Model" 
 Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
+\author{
+Guillermo Federico Olmedo
 
+Fonseca-Luengo, David
+}

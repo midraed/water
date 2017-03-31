@@ -26,10 +26,9 @@ variation in 24 h versus instantaneous energy availability. See Allen (2007)}
 \description{
 Calculates daily ET from a surface energy balance and Weather Station
 }
-\author{
-Guillermo Federico Olmedo
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
-
+\author{
+Guillermo Federico Olmedo
+}

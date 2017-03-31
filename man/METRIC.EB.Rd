@@ -70,10 +70,9 @@ You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients,
 calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
-\author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
-
+\author{
+Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+}

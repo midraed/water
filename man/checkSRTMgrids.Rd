@@ -15,4 +15,3 @@ Check needed SRTM grids from image extent
 \author{
 Guillermo Federico Olmedo
 }
-
