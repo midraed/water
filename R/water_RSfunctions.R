@@ -74,6 +74,31 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   return(raw.image) 
 }  
 
+
+
+#' Load Landsat 8 surface reflectance data from folder
+#' @description
+#' This function loads Landsat bands from a specific folder. 
+#' @param path  folder where band files are stored
+#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
+#' TRUE will look for any object called aoi on .GlobalEnv
+#' @author Guillermo Federico Olmedo
+#' @export
+loadImage.SR <-  function(path = getwd(),  aoi){
+  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
+  stack1 <- list()
+  for(i in 1:6){
+    stack1[i] <- raster(files[i])}
+  image_SR <- do.call(stack, stack1)
+  image_SR <- aoiCrop(image_SR, aoi) 
+  image_SR <- image_SR / 10000
+  image_SR <- saveLoadClean(imagestack = raw.image, 
+                             stack.names = bandnames, 
+                             file = "imageDN", 
+                             overwrite=TRUE)
+  return(image_SR)}  
+
+
 #' Calculates Top of atmosphere reflectance
 #' @description
 #' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
@@ -161,9 +186,8 @@ calcSR <- function(image.TOAr, sat="auto", ESPA=FALSE, aoi, incidence.hor,
   if(sat=="L8"){stop("water package does not include a model to calculate surface reflectance 
   for Landsat 8 images. Landsat 8 users should download precalculated surface reflectances from 
   espa website (espa.cr.usgs.gov). ")}
-  if(sat=="L7"){bands <- c(1:5,7)}
-  }
   if(sat=="L7"){
+    bands <- c(1:5,7)
     if(missing(image.TOAr)){image.TOAr <- calcTOAr()}
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
     ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
