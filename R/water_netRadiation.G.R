@@ -406,7 +406,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
     TIRS_THERMAL_CONSTANTS <- c(K1_CONSTANT_BAND_10 = 774.8853, K1_CONSTANT_BAND_11 = 480.8883, K2_CONSTANT_BAND_10 = 1321.0789,
                                 K2_CONSTANT_BAND_11 = 1201.1442)
     L_b10 <- image.DN$Thermal1*3.3420E-04+0.1
-    bT_b10 <- TIRS_THERMAL_CONSTANTS[3] / log((TIRS_THERMAL_CONSTANTS[1]/L10)+1)
+    bT_b10 <- TIRS_THERMAL_CONSTANTS[3] / log((TIRS_THERMAL_CONSTANTS[1]/L_b10)+1)
     if(method == "SC"){
       #atm.coeff from Jimenez-Munoz, 2014
       atm.coeff <- matrix(data=c(0.04019, 0.02916, 1.01523,
@@ -424,7 +424,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
     }
     if(method=="SW"){
       L_b11 <- image.DN$Thermal2*3.3420E-04+0.1
-      bT_b11 <- TIRS_THERMAL_CONSTANTS[4] / log((TIRS_THERMAL_CONSTANTS[2]/L10)+1)
+      bT_b11 <- TIRS_THERMAL_CONSTANTS[4] / log((TIRS_THERMAL_CONSTANTS[2]/L_b11)+1)
       SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238, -129.20, 16.40)
       w <- 1.2 #Atm water vapor content in g cm-2
       delta_e <- 0 # emissivity difference 

@@ -19,7 +19,6 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="MODIS"){bands <- c(1:7)}
   ## Check for more than 1 image on the same folder
   if(sat=="L8" | sat=="L7"){
-    path = getwd()
     image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(b|B|band)",
                                                          bands[1] ,".(TIF|tif)$"))
     if(length(image_list) > 1) {  ## Check if there are more images present on folder
@@ -84,7 +83,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
 #' @export
-loadImage.SR <-  function(path = getwd(),  aoi){
+loadImageSR <-  function(path = getwd(),  aoi){
   files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
   stack1 <- list()
   for(i in 1:6){
@@ -92,9 +91,10 @@ loadImage.SR <-  function(path = getwd(),  aoi){
   image_SR <- do.call(stack, stack1)
   image_SR <- aoiCrop(image_SR, aoi) 
   image_SR <- image_SR / 10000
-  image_SR <- saveLoadClean(imagestack = raw.image, 
+  bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
+  image_SR <- saveLoadClean(imagestack = image_SR, 
                              stack.names = bandnames, 
-                             file = "imageDN", 
+                             file = "image_SR", 
                              overwrite=TRUE)
   return(image_SR)}  
 
