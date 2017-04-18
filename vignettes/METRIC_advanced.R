@@ -46,7 +46,7 @@ image.TOAr <- calcTOAr(image.DN = image.DN, sat="L7", MTL = MTLfile,
 image.SR <- calcSR(image.TOAr=image.TOAr, sat = "L7", 
                    surface.model=surface.model, 
                    incidence.hor = solar.angles.r$incidence.hor, 
-                   WeatherStation=WeatherStation, ESPA = F)
+                   WeatherStation=WeatherStation)
 
 albedo <- albedo(image.SR = image.SR,  coeff="Tasumi", sat="L7")
 

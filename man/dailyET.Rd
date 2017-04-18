@@ -48,10 +48,9 @@ dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124,
 ET="ETo")
 
 }
-\author{
-Guillermo Federico Olmedo
-}
 \references{
 Allen 2005 ASCE
 }
-
+\author{
+Guillermo Federico Olmedo
+}

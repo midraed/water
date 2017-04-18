@@ -12,12 +12,11 @@ METRICtopo(DEM)
 \description{
 DEM map is used to generate the surface representation of the image through of aspect and slope maps. This procedure helps to avoid differences in the surface temperature (and finally Evapotranspiration) caused by different incidence angles and/or elevations in mountainous areas.
 }
+\references{
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+}
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
 }
-\references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-}
-

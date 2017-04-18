@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](usgs.gov) offers surface reflectance processed trought [ESPA](espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
+Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](http://usgs.gov) offers surface reflectance processed trought [ESPA](http://espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
 
 ## Differences between Landsat 7 and 8
 
@@ -27,7 +27,7 @@ aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000
 To be able to run METRIC with Landsat 8 data, the ESPA surface reflectance products must be available in the working directory. If we list the contents of the L8 example files provided with water, we can see we have 38 files: 2 metadata files, the original and the one from ESPA and 14 tif files with the raw data.
 The Landsat scene can loaded using `loadImage()` function. And the SR data with `loadImage.SR`:
 
-```{r, warning=FALSE, fig.width = 5}
+```{r, warning=FALSE, fig.width = 7}
 raw_data_folder <- system.file("extdata", package="water")
 image <- loadImage(path=raw_data_folder, aoi=aoi, sat="L8")
 image.SR <- loadImageSR(path=raw_data_folder, aoi=aoi)
@@ -36,7 +36,7 @@ plot(image)
 
 Finally, the simple procedure for estimating METRIC can be applied to the image:
 
-```{r, warning=FALSE, fig.width = 5}
+```{r, warning=FALSE, fig.width = 7}
 csvfile <- system.file("extdata", "INTA.csv", package="water")
 MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
 WeatherStation <- read.WSdata(WSdata = csvfile, 

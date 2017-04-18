@@ -23,11 +23,6 @@ Depends: R (>= 3.2.1), raster (>= 2.1), sp (>= 1.1-1), proj4, stringr
 
 License: GPL (>= 2)
 
-
-## Style Guide
-
-I (try) to follow this [style guide](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml)
-
 ## Contributing
 
 Contributions are accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)

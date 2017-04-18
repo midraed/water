@@ -32,11 +32,10 @@ list of the current options (invisibly). If no arguments are provided the option
 \description{
 This function is based on raster::rasterOptions by Robert Hijmans.
 }
-\author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
-}
 \references{
 Robert J. Hijmans (2015). raster: Geographic Data Analysis and Modeling. R
 package version 2.4-18. http://CRAN.R-project.org/package=raster
 }
-
+\author{
+Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+}
