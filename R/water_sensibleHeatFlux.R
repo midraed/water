@@ -98,7 +98,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   if(anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
-    if(minT+deltaTemp<288){minT = 288 + deltaTemp}
+    if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
     ## NDVI used in cold isn't the same as CITRA!
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
@@ -161,7 +161,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   if(anchors.method=="CITRA-MCB"  | anchors.method=="CITRA-MCBbc"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
-    if(minT+deltaTemp<288){minT = 288 + deltaTemp}
+    if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
     ## NDVI used in cold isn't the same as CITRA!
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
