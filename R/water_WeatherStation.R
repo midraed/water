@@ -98,25 +98,20 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     
   sequence <- seq.POSIXt(from=first, to = tail(datetime,1),by= "1 hour")
   # Time interpolation
-  for(i in 1:length(sequence)){
-    if(sum(as.numeric(sequence[i] == datetime)) > 0) {
-      result$hourly[[i]] <- result$alldata[result$alldata$datetime == sequence[i],]
-    } else {
-      WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
-                                                         sequence[i]],1),]
-      WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
-                                                       sequence[i]][1],]
-      delta1 <- as.numeric(difftime(WS.after$datetime, 
-                                    WS.prev$datetime, units="secs"))
-      delta2 <- as.numeric(difftime(sequence[i], WS.prev$datetime, units="secs"))
-      interp <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
-      interp[,2:7] <- round(interp[,2:7],2) 
-      result$hourly[[i]] <- interp
-    }
-  }
-  result$hourly <- do.call("rbind", result$hourly)
-
-  ## Join with satellite data
+  radiationFun <- approxfun(result$alldata$datetime, result$alldata$radiation)
+  windFun <- approxfun(result$alldata$datetime, result$alldata$wind)
+  RHFun <- approxfun(result$alldata$datetime, result$alldata$RH)
+  eaFun <- approxfun(result$alldata$datetime, result$alldata$ea)
+  tempFun <- approxfun(result$alldata$datetime, result$alldata$temp)
+  rainFun <- approxfun(result$alldata$datetime, result$alldata$rain)
+  result$hourly <- data.frame(datetime = sequence,
+                               radiation = radiationFun(sequence),
+                               wind = windFun(sequence),
+                               RH = RHFun(sequence),
+                               ea = eaFun(sequence),
+                               temp = tempFun(sequence),
+                               rain = rainFun(sequence))
+    ## Join with satellite data
   if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
   if(length(MTL)!=0){
     MTL <- readLines(MTL, warn=FALSE)
