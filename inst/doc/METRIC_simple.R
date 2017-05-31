@@ -3,8 +3,8 @@ library(water)
 
 
 ## ------------------------------------------------------------------------
-aoi <- createAoi(topleft = c(273110, -3914450), 
-                 bottomright = c( 288050, -3926650), EPSG = 32619)
+aoi <- createAoi(topleft = c(272955, 6085705), 
+                 bottomright = c( 288195, 6073195), EPSG = 32719)
 
 ## ------------------------------------------------------------------------
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -16,24 +16,23 @@ WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
 ## ---- fig.width = 5------------------------------------------------------
 print(WeatherStation)
 
-plot(WeatherStation, alldata=FALSE)
+plot(WeatherStation, hourly=TRUE)
 
 ## ---- fig.width = 5------------------------------------------------------
-image.DN <- L7_Talca[[c(1:5,7)]]
-B6 <- L7_Talca[[6]]
+image.DN <- L7_Talca
 plot(image.DN)
 
 ## ---- fig.width = 5, warning=FALSE---------------------------------------
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
                             WeatherStation = WeatherStation, 
-                            ETp.coef = 1.2, MTL=MTLfile, 
-                            sat="L7", thermalband=B6)
+                            ETp.coef = 1.2, MTL=MTLfile, n = 5,
+                            sat="L7", thermalband=image.DN$thermal.low)
 
 ## ---- fig.width = 5------------------------------------------------------
 plot(Energy.Balance)
 
 ## ------------------------------------------------------------------------
-ET_WS <- dailyET(WeatherStation = WeatherStation)
+ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 
 ## ---- fig.width = 5, warning=FALSE---------------------------------------
 ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 

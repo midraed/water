@@ -54,8 +54,8 @@ To calculate METRIC crops Evapotranspiration using **water** package, and the si
 
 First, we create the AOI as a polygon using bottomright and topleft points:
 ```{r}
-aoi <- createAoi(topleft = c(273110, -3914450), 
-                 bottomright = c( 288050, -3926650), EPSG = 32619)
+aoi <- createAoi(topleft = c(272955, 6085705), 
+                 bottomright = c( 288195, 6073195), EPSG = 32719)
 ```
 
 Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of satellite overpass.
@@ -72,7 +72,7 @@ We can visualize our weather station data as:
 ```{r, fig.width = 5}
 print(WeatherStation)
 
-plot(WeatherStation, alldata=FALSE)
+plot(WeatherStation, hourly=TRUE)
 ```
 
 
@@ -81,8 +81,7 @@ function called `loadImage` to load a Landsat image from `.TIF files` were downl
 from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
-image.DN <- L7_Talca[[c(1:5,7)]]
-B6 <- L7_Talca[[6]]
+image.DN <- L7_Talca
 plot(image.DN)
 ```
 
@@ -102,8 +101,8 @@ When we run `METRIC.EB`, the energy balance and the surface temperature (Ts) use
 ```{r, fig.width = 5, warning=FALSE}
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
                             WeatherStation = WeatherStation, 
-                            ETp.coef = 1.2, MTL=MTLfile, 
-                            sat="L7", thermalband=B6)
+                            ETp.coef = 1.2, MTL=MTLfile, n = 5,
+                            sat="L7", thermalband=image.DN$thermal.low)
 ```
 
 Now we can plot the results using:
@@ -117,7 +116,7 @@ plot(Energy.Balance)
 To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) for our weather station, so we can calculate the daily ETr with:
 
 ```{r}
-ET_WS <- dailyET(WeatherStation = WeatherStation)
+ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 ```
 
 And finally, we can estimate daily crop ET pixel by pixel:
