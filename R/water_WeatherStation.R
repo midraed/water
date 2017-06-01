@@ -200,10 +200,12 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   WSp <- x$hourly
   if(hourly == FALSE) {WSp <- x$alldata}
   long=FALSE
+  daily_mean = ""
   if(nrow(x$daily)>5){WSp <- x$daily
   names(WSp) <- c("datetime", "radiation", "wind", "RH", "temp", 
                   "temp_max", "temp_min", "ea", "rain")
-  long=TRUE}
+  long=TRUE
+  daily_mean = "(mean daily value)"}
   if(sat == TRUE & exists("x$at.sat$datetime")){atsat  <- as.POSIXlt(x$at.sat$datetime)
   WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
              & as.POSIXlt(WSp$datetime)$year == atsat$year,]
@@ -224,33 +226,33 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   }
   graphics::points(time,WSp$radiation,pch=20,col="red")
   graphics::axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5, tcl=-0.25)
-  graphics::mtext(2,text="Solar radiation (W.m-2)",line=1.7, cex=0.7)
+  graphics::mtext(2,text=paste("Solar radiation (W.m-2)", daily_mean),line=1.7, cex=0.7)
   # Rain
   graphics::par(new=T)
   #WSp[WSp$rain == 0] <- NA
   plot(time, WSp$rain, axes=F, ylim=c(0,max(WSp$rain)*1.7), xlab="", ylab="", 
        type="h",col="light blue",lty=1, main="",xlim=range(time),lwd=3)
   graphics::axis(4, ylim=c(0,max(WSp$rain)*1.7),col="light blue", line = 6.7, lwd=1, cex.axis=0.5, tcl=-0.25)
-  graphics::mtext(4,text="Rain (mm)", cex=0.7, line = 8.4)
+  graphics::mtext(4,text=paste("Rain (mm)", daily_mean), cex=0.7, line = 8.4)
   #
   graphics::par(new=T)
   plot(time, WSp$wind, axes=F, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
        type="l",col="green",lty=2, main="",xlim=range(time),lwd=2,...)
   graphics::axis(2, ylim=c(0,max(WSp$wind)),col="green",lwd=1,line=3.5, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$wind,pch=20,col="green")
-  graphics::mtext(2,text="Wind speed (m.s-1)",line=5.5, cex=0.7)
+  graphics::mtext(2,text=paste("Wind speed (m.s-1)", daily_mean),line=5.5, cex=0.7)
   graphics::par(new=T)
   plot(time, WSp$temp, axes=F, ylim=c(0,max(WSp$temp)), xlab="", ylab="", 
        type="l",col="black",lty=2, main="",xlim=range(time),lwd=2,...)
   graphics::axis(4, ylim=c(0,max(WSp$temp)),col="black",lwd=1, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$temp,pch=20,col="black")
-  graphics::mtext(4,text="Temperature (C)",line=1.7, cex=0.7)
+  graphics::mtext(4,text=paste("Temperature (C)", daily_mean),line=1.7, cex=0.7)
   graphics::par(new=T)
   plot(time, WSp$ea, axes=F, ylim=c(0,max(WSp$ea)), xlab="", ylab="", 
        type="l",col="blue",lty=2, main="",xlim=range(time),lwd=2, ...)
   graphics::axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$ea,pch=20,col="blue")
-  graphics::mtext(4,text="vapor pressure (kPa)",line=5.5, cex=0.7)
+  graphics::mtext(4,text=paste("vapor pressure (kPa)", daily_mean),line=5.5, cex=0.7)
   if(long==FALSE){r <- as.POSIXct(round(range(time), "hours"))
   graphics::axis.POSIXct(1, at = seq(r[1], r[2], by = "hour"), format = "%H:%M")}
   if(long==TRUE){r <- range(time)
