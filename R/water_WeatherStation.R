@@ -199,6 +199,11 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
   WSp <- x$hourly
   if(hourly == FALSE) {WSp <- x$alldata}
+  long=FALSE
+  if(nrow(x$daily)>5){WSp <- x$daily
+  names(WSp) <- c("datetime", "radiation", "wind", "RH", "temp", 
+                  "temp_max", "temp_min", "ea", "rain")
+  long=TRUE}
   if(sat == TRUE & exists("x$at.sat$datetime")){atsat  <- as.POSIXlt(x$at.sat$datetime)
   WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
              & as.POSIXlt(WSp$datetime)$year == atsat$year,]
@@ -246,8 +251,10 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   graphics::axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$ea,pch=20,col="blue")
   graphics::mtext(4,text="vapor pressure (kPa)",line=5.5, cex=0.7)
-  r <- as.POSIXct(round(range(time), "hours"))
-  graphics::axis.POSIXct(1, at = seq(r[1], r[2], by = "hour"), format = "%H")
+  if(long==FALSE){r <- as.POSIXct(round(range(time), "hours"))
+  graphics::axis.POSIXct(1, at = seq(r[1], r[2], by = "hour"), format = "%H:%M")}
+  if(long==TRUE){r <- range(time)
+  graphics::axis.Date(1, at = seq(r[1], r[2], by = "day")}
   graphics::mtext("Time",side=1,col="black",line=2)
 }
 
