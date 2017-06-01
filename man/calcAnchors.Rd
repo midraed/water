@@ -46,11 +46,12 @@ black represents the position of the Weather Station}
 \description{
 automatically search end members within the satellite scene (extreme wet and dry conditions).
 }
-\references{
-CITRA y MCB (com pers)
-}
 \author{
 Guillermo Federico Olmedo
 
 de la Fuente-Saiz, Daniel
 }
+\references{
+CITRA y MCB (com pers)
+}
+

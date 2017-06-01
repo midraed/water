@@ -20,3 +20,4 @@ Original data is float. Example data is integer.
 Data available from the U.S. Geological Survey.
 }
 \keyword{datasets}
+

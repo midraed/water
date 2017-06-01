@@ -68,10 +68,11 @@ print(WS)
 plot(WS, alldata=FALSE)
 plot(WS, alldata=TRUE)
 }
+\author{
+Guillermo Federico Olmedo
+}
 \references{
 Landsat 7 Metadata example file available from the U.S. Geological Survey.
 Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
 }
-\author{
-Guillermo Federico Olmedo
-}
+

@@ -55,9 +55,10 @@ WeatherStation  <- data.frame(wind=4.72,
                               elev=124)
   hourlyET(WeatherStation, hours=10.5, DOY=363, long.z=71.635)
 }
-\references{
-Allen 2005 ASCE
-}
 \author{
 Guillermo Federico Olmedo
 }
+\references{
+Allen 2005 ASCE
+}
+

@@ -18,6 +18,11 @@ SWtrasmisivity(Kt = 1, ea, dem, incidence.hor)
 \description{
 Short wave transmisivity is estimated for broad-band considering an extended equation developed by Allen (1996), based from Majumdar et al.(1972), using coefficients developed by ASCE-EWRI (2005).
 }
+\author{
+Guillermo Federico Olmedo
+
+Fonseca-Luengo, David
+}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 
@@ -25,8 +30,4 @@ Majumdar, N.; Mathur, B. & Kaushik, S. Prediction of direct solar radiation for 
 
 ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005 \cr
 }
-\author{
-Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
-}

@@ -22,3 +22,4 @@ load it with:  system.file("extdata", "L7.MTL.txt", package="water")
 Data available from the U.S. Geological Survey.
 }
 \keyword{datasets}
+

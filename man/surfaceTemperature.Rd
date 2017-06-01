@@ -28,6 +28,11 @@ algorithm. "SW" is only available for L8}
 \description{
 Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
 }
+\author{
+Guillermo Federico Olmedo
+
+Fonseca-Luengo, David
+}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
 mapping evapotranspiration with internalized calibration (METRIC) - 
@@ -43,8 +48,4 @@ J. (2014). Land surface temperature retrieval methods from landsat-8 thermal
 infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
-\author{
-Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
-}
