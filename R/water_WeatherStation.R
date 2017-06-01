@@ -254,7 +254,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   if(long==FALSE){r <- as.POSIXct(round(range(time), "hours"))
   graphics::axis.POSIXct(1, at = seq(r[1], r[2], by = "hour"), format = "%H:%M")}
   if(long==TRUE){r <- range(time)
-  graphics::axis.Date(1, at = seq(r[1], r[2], by = "day")}
+  graphics::axis.Date(1, at = seq(r[1], r[2], by = "day"))}
   graphics::mtext("Time",side=1,col="black",line=2)
 }
 
