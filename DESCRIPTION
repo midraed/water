@@ -1,7 +1,7 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance Models
-Version: 0.6.1
-Date: 2017-03-31
+Version: 0.6.1.99
+Date: 2017-05-31
 Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farias [aut],
     David Fonseca-Luengo [aut], Daniel de la Fuente-Saiz [aut], Fernando Fuentes
     Peñailillo [aut]
@@ -23,4 +23,4 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.1
