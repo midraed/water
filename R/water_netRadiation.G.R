@@ -66,8 +66,7 @@ checkSRTMgrids <-function(raw.image){
 #' @export
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
-prepareSRTMdata <- function(format="tif", extent){
-  path = getwd()
+prepareSRTMdata <- function(path=getwd(), format="tif", extent){
   files <- list.files(path= path,  
                       pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
                               format, "$", sep=""), full.names = T) 
