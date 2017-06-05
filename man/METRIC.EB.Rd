@@ -6,7 +6,7 @@
 \usage{
 METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
-  LAI.method = "metric2010", Zom.method = "short.crops",
+  LAI.method = "metric2010", L = 0.1, Zom.method = "short.crops",
   anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
   Z.om.ws = 0.0018, verbose = FALSE)
 }
@@ -43,6 +43,8 @@ for single channel or "SW" for split window algorithm.
 
 \item{LAI.method}{Method used to estimate LAI from spectral data. 
 See Details.}
+
+\item{L}{L value for SAVI calculation}
 
 \item{Zom.method}{method selected to calculate momentum roughness 
 length. Use "short.crops" for short crops methods from Allen et al (2007); 

@@ -115,6 +115,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' "SW" is only available for L8. See \code{water::surfaceTemperature}
 #' @param LAI.method       Method used to estimate LAI from spectral data. 
 #' See Details.
+#' @param L                L value for SAVI calculation
 #' @param Zom.method       method selected to calculate momentum roughness 
 #' length. Use "short.crops" for short crops methods from Allen et al (2007); 
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
@@ -138,7 +139,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
                       alb.coeff = "Tasumi", LST.method = "SC",
-                      LAI.method = "metric2010", 
+                      LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
                       n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, 
                       verbose = FALSE){
@@ -170,7 +171,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   #setTxtProgressBar(pb, 6)
   if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
   # and some LAI models, use SR
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)
   if(sat=="L7" | sat=="L8"){
     Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=image.DN,
                              WeatherStation = WeatherStation, method = LST.method)}
