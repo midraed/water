@@ -7,10 +7,10 @@
 #' @param long               longitude of weather station in decimal degrees. 
 #' Negative values for west longitude
 #' @param elev               elevation of weather station in meters
-#' @param columns            columns order of needed data. Vector containing 
-#' "date", "time", "radiation", "wind", "RH", "temp" and "rain". Other values are 
-#' ignored. If you have a column with date and time in the same column, you can
-#' include "datetime" and "date" and "time" are no longer needed.
+#' @param columns            vector with the column numbers in WSdata for the 
+#'                           date, time, radiation, wind, RH, temperature and 
+#'                           rain. If date and time are in the same column, the 
+#'                           column number has to be the same.
 #' @param date.format        date format. See strptime format argument.
 #' @param time.format        time format. See strptime format argument.
 #' @param datetime.format    datetime format. See strptime format argument.
@@ -47,6 +47,9 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
+  if("temp" %in% columns){warning("The parameter columns has changed and the old
+  sintaxis is now deprecated. In future versions of water package ONLY the 
+  new (numeric and simple!) sintaxis will work.")}
   if("pp" %in% columns){columns[columns == "pp"] <- "rain"}  ## TODO: deprecated "pp"
   if(class(WSdata) == "character"){WSdata <- utils::read.csv(WSdata, ...)}
   else if(class(WSdata) == "data.frame"){WSdata <- WSdata}
@@ -54,23 +57,52 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   or a data.frame with the WS data")
   result <- list()
   result$location <- data.frame(lat=lat, long=long, elev=elev, height=height)
-  if("date" %in% columns & "time" %in% columns){
-    datetime  <- paste(WSdata[, which(columns == "date")], 
-                       WSdata[, which(columns == "time")])
-    datetime <- strptime(datetime, format = paste(date.format, time.format), 
-                         tz = tz)
-  } else {
-    if("datetime" %in% columns){
-      datetime  <- WSdata[, which(columns == "datetime")]
-      datetime <- strptime(datetime, format = datetime.format, tz = tz)
-    } else {message("ERROR: date and time or datetime are needed columns")}
+  
+  ### Old method for columns : the character method!
+  if(class(columns) == "character"){
+    if("date" %in% columns & "time" %in% columns){
+      datetime  <- paste(WSdata[, which(columns == "date")], 
+                         WSdata[, which(columns == "time")])
+      datetime <- strptime(datetime, format = paste(date.format, time.format), 
+                           tz = tz)
+    } else {
+      if("datetime" %in% columns){
+        datetime  <- WSdata[, which(columns == "datetime")]
+        datetime <- strptime(datetime, format = datetime.format, tz = tz)
+      } else {message("ERROR: date and time or datetime are needed columns")}
+    }
+    if("rain" %in% columns){rain = WSdata[, which(columns == "rain")]}
+    else rain = NA
+    radiation = WSdata[, which(columns == "radiation")] * cf[1]
+    wind =  WSdata[, which(columns == "wind")] * cf[2]
+    RH =  WSdata[, which(columns == "RH")]
+    temp =  WSdata[, which(columns == "temp")] * cf[3]  
   }
-  if("rain" %in% columns){rain = WSdata[, which(columns == "rain")]}
-  else rain = NA
-  radiation = WSdata[, which(columns == "radiation")] * cf[1]
-  wind =  WSdata[, which(columns == "wind")] * cf[2]
-  RH =  WSdata[, which(columns == "RH")]
-  temp =  WSdata[, which(columns == "temp")] * cf[3]
+  
+  ### New method for columns : the numeric method!
+  # vector with the column numbers in WSdata for the 
+  # date, time, radiation, wind, RH, temp and rain. If 
+  # date and time are in the same column, the column 
+  # number has to be the same.
+  if(class(columns)== "numeric"){
+    if(columns[1] != columns[2]){
+      datetime  <- paste(WSdata[, columns[1]], 
+                         WSdata[, columns[2]])
+      datetime <- strptime(datetime, format = paste(date.format, time.format), 
+                           tz = tz)
+    } else {
+        datetime  <- WSdata[, columns[1]]
+        datetime <- strptime(datetime, format = datetime.format, tz = tz)
+    }
+    if(!is.na(columns[7])){rain = WSdata[, columns[7]]}
+    else rain = NA
+    radiation = WSdata[, columns[3]] * cf[1]
+    wind =  WSdata[, columns[4]] * cf[2]
+    RH =  WSdata[, columns[5]]
+    temp =  WSdata[, columns[6]] * cf[3]
+    
+  }
+  
   ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
   WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
                        RH=RH, ea=ea, temp=temp, rain=rain)
