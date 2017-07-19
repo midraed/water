@@ -159,12 +159,14 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #'                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
 #'                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
 #'                             LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
+#'                             
+#'                             
 #' ### LSEB with "Perrier" method for Zom and extra parameters                               
 #' Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
 #'                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
 #'                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
-#'                             LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile,
-#'                             extraParameters = c(fLAI = 0.5, h = 1.8) ) 
+#'                             LAI.method = "metric2010", Zom.method = "Perrier", Z.om.ws = 0.03, 
+#'                             MTL = MTLfile, extraParameters = c(fLAI = 0.5, h = 1.8) ) 
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,

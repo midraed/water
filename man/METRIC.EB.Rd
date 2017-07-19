@@ -97,12 +97,14 @@ Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
                             LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
+                            
+                            
 ### LSEB with "Perrier" method for Zom and extra parameters                               
 Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
-                            LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile,
-                            extraParameters = c(fLAI = 0.5, h = 1.8) ) 
+                            LAI.method = "metric2010", Zom.method = "Perrier", Z.om.ws = 0.03, 
+                            MTL = MTLfile, extraParameters = c(fLAI = 0.5, h = 1.8) ) 
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
