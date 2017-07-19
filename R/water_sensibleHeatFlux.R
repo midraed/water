@@ -9,8 +9,8 @@
 #' @param albedo          broadband surface albedo. See albedo()
 #' @param a               "a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
 #' @param b               "b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom" 
-#' @param fLAI.Perrier    proportion of LAI lying above h/2. Only needed for method = "Perrier"
-#' @param h.Perrier       crop height in meters. Only needed for method = "Perrier"
+#' @param fLAI            proportion of LAI lying above h/2. Only needed for method = "Perrier"
+#' @param h               crop height in meters. Only needed for method = "Perrier"
 #' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
 #' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
 #' @details According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
@@ -27,7 +27,7 @@
 ## using some points and tabulated z.om for their covers.
 ## Perrier by Santos 2012 and Pocas 2014.
 momentumRoughnessLength <- function(method="short.crops", LAI, NDVI, 
-                                    albedo, a, b, fLAI.Perrier, h.Perrier, 
+                                    albedo, a, b, fLAI, h, 
                                     mountainous=FALSE, surface.model){
   if(method=="short.crops"){
     Z.om <- (0.018*LAI)
@@ -36,9 +36,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     Z.om <- exp((a*NDVI/albedo)+b)
   }
   if(method=="Perrier"){
-    if(fLAI.Perrier >=0.5){ a <- (2*(1-fLAI.Perrier))^-1 }
-    if(fLAI.Perrier <0.5){ a <- 2*fLAI.Perrier }
-    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h.Perrier
+    if(fLAI >=0.5){ a <- (2*(1-fLAI))^-1 }
+    if(fLAI <0.5){ a <- 2*fLAI }
+    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h
   }
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
