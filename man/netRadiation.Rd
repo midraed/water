@@ -20,12 +20,11 @@ netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 \description{
 This function estimates net radiation considering a surface radiation balance. Equations use the information from the image, in addition of measurements of actual vapor pressure and altitude.
 }
+\references{
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+}
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
 }
-\references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-}
-

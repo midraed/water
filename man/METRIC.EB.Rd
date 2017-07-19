@@ -8,7 +8,7 @@ METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
   LAI.method = "metric2010", L = 0.1, Zom.method = "short.crops",
   anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
-  Z.om.ws = 0.0018, verbose = FALSE)
+  Z.om.ws = 0.0018, verbose = FALSE, extraParameters)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -62,6 +62,10 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 0.0018 or 0.03 for long grass}
 
 \item{verbose}{Logical. If TRUE will print aditional data to console}
+
+\item{extraParameters}{Extra parameters for the non default methods. i.e. 
+Zom.method = "Perrier", needs two extra parameters: fLAI, h. See 
+help(momentumRoughnessLength).}
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model
@@ -72,10 +76,9 @@ You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients,
 calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
-\author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
-
+\author{
+Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+}

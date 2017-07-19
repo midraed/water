@@ -18,11 +18,6 @@ incLWradiation(WeatherStation, DEM, solar.angles, Ts)
 \description{
 This function estimates the long wave incoming radiation using the Stefan-Boltzmann equation. In addition, empirical equation of Bastiaanssen (1995) with coefficients developed by Allen (2000) are used to estimate the effective atmospheric emissivity.
 }
-\author{
-Guillermo Federico Olmedo
-
-Fonseca-Luengo, David
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 
@@ -30,4 +25,8 @@ Bastiaanssen W. Regionalization of surface flux densities and moisture indicator
 
 Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000 \cr
 }
+\author{
+Guillermo Federico Olmedo
 
+Fonseca-Luengo, David
+}

@@ -20,14 +20,13 @@ calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
 \description{
 This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
 }
-\author{
-Guillermo Federico Olmedo
-
-Fonseca-Luengo, David
-}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 
 LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 }
+\author{
+Guillermo Federico Olmedo
 
+Fonseca-Luengo, David
+}
