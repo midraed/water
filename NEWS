@@ -3,6 +3,12 @@ change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
 
+VERSION 0.6.1.99
+
+* Added extraParameters to METRIC.EB. This allows to pass more parameters to 
+  the internal functions and apply different methods. i.e. extra parameters for
+  different Zom.methods.
+
 VERSION 0.6
 
 * Added a new function loadImageSR to load surface reflectance from

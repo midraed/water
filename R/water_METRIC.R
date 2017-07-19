@@ -127,6 +127,9 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
 #' 0.0018 or 0.03 for long grass
 #' @param verbose          Logical. If TRUE will print aditional data to console
+#' @param extraParameters  Extra parameters for the non default methods. i.e. 
+#' Zom.method = "Perrier", needs two extra parameters: fLAI, h. See 
+#' help(momentumRoughnessLength).
 #' @details
 #' There are differents models to convert narrowband data to broadband albedo. 
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
@@ -142,7 +145,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
                       n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, 
-                      verbose = FALSE){
+                      verbose = FALSE, extraParameters){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
@@ -186,9 +189,23 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
                     Rn=Rn, LAI=LAI)
   G[G < 0]  <-  0
-  Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
-                                  method = Zom.method, 
-                                  surface.model = surface.model)
+  if(Zom.method == "short.crops"){
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+                                    method = Zom.method, 
+                                    surface.model = surface.model)
+  }
+  if(Zom.method == "custom"){
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+                                    method = Zom.method, a = extraParameters["a"],
+                                    b = extraParameters["b"],
+                                    surface.model = surface.model)
+  }
+  if(Zom.method == "Perrier"){
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+                                    method = Zom.method, fLAI = extraParameters["fLAI"],
+                                    h = extraParameters["h"],
+                                    surface.model = surface.model)
+  }
   par(mfrow=c(1,2))
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
                               albedo = albedo, Z.om = Z.om, n = n, 
