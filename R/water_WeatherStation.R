@@ -135,7 +135,9 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   RHFun <- approxfun(result$alldata$datetime, result$alldata$RH)
   eaFun <- approxfun(result$alldata$datetime, result$alldata$ea)
   tempFun <- approxfun(result$alldata$datetime, result$alldata$temp)
-  rainFun <- approxfun(result$alldata$datetime, result$alldata$rain)
+  if(!is.na(mean(rain))){
+    rainFun <- approxfun(result$alldata$datetime, result$alldata$rain)
+  } else { rainFun <- function(seq){seq <- NA}}
   result$hourly <- data.frame(datetime = sequence,
                                radiation = radiationFun(sequence),
                                wind = windFun(sequence),
