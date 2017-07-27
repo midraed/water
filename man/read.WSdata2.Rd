@@ -5,7 +5,7 @@
 \title{Prepares weather station data 2}
 \usage{
 read.WSdata2(WSdata, ..., height = 2.2, lat, long, elev, columns = c(date =
-  1, time = 2, radiation = 3, wind = 4, RH = 5, temp = 6, rain = 7),
+  1, time = 2, radiation = 3, wind = 4, RH = 6, temp = 7, rain = 8),
   date.format = "\%d/\%m/\%Y", time.format = "\%H:\%M:\%S",
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 3.6, 1,
   1), MTL)
