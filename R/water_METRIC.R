@@ -137,6 +137,9 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
 #' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 #' coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
+#' @section extraParameters
+#' for Zom.method = "Perrier": two extra parameters: fLAI, h.
+#' for calcAnchors(): buffer, deltaTemp
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
 #' @references 
@@ -222,18 +225,18 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                     Rn=Rn, LAI=LAI)
   G[G < 0]  <-  0
   if(Zom.method == "short.crops"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
                                     method = Zom.method, 
                                     surface.model = surface.model)
   }
   if(Zom.method == "custom"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
                                     method = Zom.method, a = extraParameters["a"],
                                     b = extraParameters["b"],
                                     surface.model = surface.model)
   }
   if(Zom.method == "Perrier"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
                                     method = Zom.method, fLAI = extraParameters["fLAI"],
                                     h = extraParameters["h"],
                                     surface.model = surface.model)
