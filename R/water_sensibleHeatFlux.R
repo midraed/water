@@ -37,9 +37,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     Z.om <- exp((a*NDVI/albedo)+b)
   }
   if(method=="Perrier"){
-    if(fLAI >=0.5){ a <- (2*(1-fLAI))^-1 }
-    if(fLAI <0.5){ a <- 2*fLAI }
-    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))^h
+    if(fLAI <0.5){ a <- (2*(1-fLAI))^-1 }
+    if(fLAI >=0.5){ a <- 2*fLAI }
+    Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))*h
   }
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
