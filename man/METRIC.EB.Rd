@@ -8,7 +8,7 @@ METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
   LAI.method = "metric2010", L = 0.1, Zom.method = "short.crops",
   anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
-  Z.om.ws = 0.0018, verbose = FALSE, extraParameters)
+  Z.om.ws = 0.0018, verbose = FALSE, extraParameters = vector())
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -76,6 +76,13 @@ You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients,
 calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 }
+\section{Extra Parameters}{
+
+Extra Paramenters for functions inside METRIC.EB() include:
+* for momentumRoughness when Zom.method = "Perrier": fLAI, h.
+* for calcAnchors(): minDist, WSbuffer, deltaTemp
+}
+
 \examples{
 ### Data preparation
 library(water)

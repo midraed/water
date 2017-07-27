@@ -137,9 +137,10 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
 #' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 #' coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
-#' @section extraParameters
-#' for Zom.method = "Perrier": two extra parameters: fLAI, h.
-#' for calcAnchors(): buffer, deltaTemp
+#' @section Extra Parameters:
+#' Extra Paramenters for functions inside METRIC.EB() include:
+#' * for momentumRoughness when Zom.method = "Perrier": fLAI, h.
+#' * for calcAnchors(): minDist, WSbuffer, deltaTemp
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
 #' @references 
@@ -180,7 +181,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
                       n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, 
-                      verbose = FALSE, extraParameters){
+                      verbose = FALSE, extraParameters = vector()){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
@@ -242,10 +243,16 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                     surface.model = surface.model)
   }
   par(mfrow=c(1,2))
+  if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
+  if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
+  if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
   hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
                               albedo = albedo, Z.om = Z.om, n = n, 
                               anchors.method = anchors.method, WeatherStation = WeatherStation,
-                              deltaTemp = 5, verbose = verbose)
+                              deltaTemp = extraParameters['deltaTemp'],
+                              minDist = extraParameters['minDist'],
+                              WSbuffer = extraParameters['WSbuffer'],
+                              verbose = verbose)
   print(hot.and.cold)
   #setTxtProgressBar(pb, 45)
   H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, mountainous = !plain,
