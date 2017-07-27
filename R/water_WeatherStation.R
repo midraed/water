@@ -243,15 +243,18 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   if(hourly == FALSE) {WSp <- x$alldata}
   long=FALSE
   daily_mean = ""
-  if(nrow(x$daily)>5){WSp <- x$daily
-  names(WSp) <- c("datetime", "radiation", "wind", "RH", "temp", 
-                  "temp_max", "temp_min", "ea", "rain")
-  long=TRUE
-  daily_mean = "(mean daily value)"}
-  if(sat == TRUE & exists("x$at.sat$datetime")){atsat  <- as.POSIXlt(x$at.sat$datetime)
-  WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
-             & as.POSIXlt(WSp$datetime)$year == atsat$year,]
+  if(sat == TRUE & "datetime" %in% names(x$at.sat)){
+    atsat  <- as.POSIXlt(x$at.sat$datetime)
+    WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == atsat$yday 
+               & as.POSIXlt(WSp$datetime)$year == atsat$year,]
+  } else {
+    if(nrow(x$daily)>5){WSp <- x$daily
+    names(WSp) <- c("datetime", "radiation", "wind", "RH", "temp", 
+                    "temp_max", "temp_min", "ea", "rain")
+    long=TRUE
+    daily_mean = "(mean daily value)"}
   }
+  
   if(!missing(date)){
     date <- as.POSIXlt(date)
     WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == date$yday 
@@ -261,7 +264,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   graphics::par(mar=c(5, 7, 4, 9.5) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", main="",xlim=range(time), ...)
-  if(sat == TRUE & exists("x$at.sat$datetime")){
+  if(sat == TRUE & "datetime" %in% names(x$at.sat)){
     graphics::abline(v=as.POSIXct(atsat), lwd=5, col="gray")
     graphics::text(atsat, max(WSp$radiation)*0.85, "satellite overpass", cex=0.7, 
                    adj=c(NA, -0.5), srt=90, col="gray")
@@ -270,12 +273,14 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   graphics::axis(2, ylim=c(0,max(WSp$radiation)),col="red",lwd=1, cex.axis=0.5, tcl=-0.25)
   graphics::mtext(2,text=paste("Solar radiation (W.m-2)", daily_mean),line=1.7, cex=0.7)
   # Rain
-  graphics::par(new=T)
   #WSp[WSp$rain == 0] <- NA
-  plot(time, WSp$rain, axes=F, ylim=c(0,max(WSp$rain)*1.7), xlab="", ylab="", 
-       type="h",col="light blue",lty=1, main="",xlim=range(time),lwd=3)
-  graphics::axis(4, ylim=c(0,max(WSp$rain)*1.7),col="light blue", line = 6.7, lwd=1, cex.axis=0.5, tcl=-0.25)
-  graphics::mtext(4,text=paste("Rain (mm)", daily_mean), cex=0.7, line = 8.4)
+  if(!all(is.na(WSp$rain))){ 
+    graphics::par(new=T)
+    plot(time, WSp$rain, axes=F, ylim=c(0,max(WSp$rain)*1.7), xlab="", ylab="", 
+         type="h",col="light blue",lty=1, main="",xlim=range(time),lwd=3)
+    graphics::axis(4, ylim=c(0,max(WSp$rain)*1.7),col="light blue", line = 6.7, lwd=1, cex.axis=0.5, tcl=-0.25)
+    graphics::mtext(4,text=paste("Rain (mm)", daily_mean), cex=0.7, line = 8.4)
+    }
   #
   graphics::par(new=T)
   plot(time, WSp$wind, axes=F, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
