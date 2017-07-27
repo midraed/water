@@ -4,8 +4,8 @@
 \alias{read.WSdata2}
 \title{Prepares weather station data 2}
 \usage{
-read.WSdata2(WSdata, ..., height = 2.2, lat, long, elev, columns = c("date",
-  "time", "radiation", "wind", NA, "RH", "temp", "pp"),
+read.WSdata2(WSdata, ..., height = 2.2, lat, long, elev, columns = c(date =
+  1, time = 2, radiation = 3, wind = 4, RH = 5, temp = 6, rain = 7),
   date.format = "\%d/\%m/\%Y", time.format = "\%H:\%M:\%S",
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 3.6, 1,
   1), MTL)
@@ -53,6 +53,11 @@ Prepares weather station data 2
 \details{
 For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
 temperature), cf should be: cf = c(1,0.2777778,1)
+}
+\seealso{
+Other Weather station related functions: \code{\link{plot.waterWeatherStation}},
+  \code{\link{print.waterWeatherStation}},
+  \code{\link{read.WSdata}}
 }
 \author{
 Guillermo Federico Olmedo

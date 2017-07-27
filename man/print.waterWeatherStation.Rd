@@ -14,6 +14,10 @@
 \description{
 Print method for waterWeatherStation S3 class
 }
+\seealso{
+Other Weather station related functions: \code{\link{plot.waterWeatherStation}},
+  \code{\link{read.WSdata2}}, \code{\link{read.WSdata}}
+}
 \author{
 Guillermo Federico Olmedo
 }

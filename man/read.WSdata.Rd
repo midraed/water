@@ -4,8 +4,8 @@
 \alias{read.WSdata}
 \title{Prepares weather station data}
 \usage{
-read.WSdata(WSdata, ..., height = 2.2, lat, long, elev, columns = c("date",
-  "time", "radiation", "wind", NA, "RH", "temp", "pp"),
+read.WSdata(WSdata, ..., height = 2.2, lat, long, elev, columns = c(date =
+  1, time = 2, radiation = 3, wind = 4, RH = 5, temp = 6, rain = 7),
   date.format = "\%Y-\%m-\%d", time.format = "\%H:\%M:\%S",
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 1, 1),
   MTL)
@@ -25,10 +25,12 @@ Negative values for west longitude}
 
 \item{elev}{elevation of weather station in meters}
 
-\item{columns}{columns order of needed data. Vector containing 
-"date", "time", "radiation", "wind", "RH", "temp" and "rain". Other values are 
-ignored. If you have a column with date and time in the same column, you can
-include "datetime" and "date" and "time" are no longer needed.}
+\item{columns}{vector with the column numbers in WSdata for the 
+date, time, radiation, wind, RH, temperature and 
+rain. If date and time are in the same column, the 
+column number has to be the same. Names in this
+vector are ignored and are presented on Usage and 
+examples only as a reference.}
 
 \item{date.format}{date format. See strptime format argument.}
 
@@ -63,6 +65,8 @@ csvfile <- system.file("extdata", "apples.csv", package="water")
 MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
 WS <- read.WSdata(WSdata = csvfile, date.format = "\%d/\%m/\%Y", 
                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+                  columns=c("date" = 1, "time" = 2, "radiation" =3,
+                  "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7), 
                   MTL = MTLfile)
 print(WS)
 plot(WS, alldata=FALSE)
@@ -71,6 +75,13 @@ plot(WS, alldata=TRUE)
 \references{
 Landsat 7 Metadata example file available from the U.S. Geological Survey.
 Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
+}
+\seealso{
+\code{\link{read.WSdata2}} for the equivalent using read.csv2()
+
+Other Weather station related functions: \code{\link{plot.waterWeatherStation}},
+  \code{\link{print.waterWeatherStation}},
+  \code{\link{read.WSdata2}}
 }
 \author{
 Guillermo Federico Olmedo

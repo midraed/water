@@ -10,7 +10,9 @@
 #' @param columns            vector with the column numbers in WSdata for the 
 #'                           date, time, radiation, wind, RH, temperature and 
 #'                           rain. If date and time are in the same column, the 
-#'                           column number has to be the same.
+#'                           column number has to be the same. Names in this
+#'                           vector are ignored and are presented on Usage and 
+#'                           examples only as a reference.
 #' @param date.format        date format. See strptime format argument.
 #' @param time.format        time format. See strptime format argument.
 #' @param datetime.format    datetime format. See strptime format argument.
@@ -30,6 +32,8 @@
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
 #' WS <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
 #'                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+#'                   columns=c("date" = 1, "time" = 2, "radiation" =3,
+#'                   "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7), 
 #'                   MTL = MTLfile)
 #' print(WS)
 #' plot(WS, alldata=FALSE)
@@ -37,13 +41,15 @@
 #' @author Guillermo Federico Olmedo
 #' @return waterWeatherStation object, with data.frames with all data, hourly
 #' data and conditions at satellite flyby.
+#' @family Weather station related functions
+#' @seealso \code{\link{read.WSdata2}} for the equivalent using read.csv2()
 #' @references 
 #' Landsat 7 Metadata example file available from the U.S. Geological Survey.
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
 #' @export
 read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
-                        columns = c("date", "time", "radiation", "wind", NA,
-                                    "RH", "temp", "pp"),
+                        columns = c("date" = 1, "time" = 2, "radiation" =3,
+                                    "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7),
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
@@ -200,11 +206,12 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @details 
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
 #' temperature), cf should be: cf = c(1,0.2777778,1)
+#' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
-                         columns = c("date", "time", "radiation", "wind", NA,
-                                     "RH", "temp", "pp"),
+                         columns = c("date" = 1, "time" = 2, "radiation" =3,
+                                     "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7),
                          date.format = "%d/%m/%Y", time.format = "%H:%M:%S", 
                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                          cf = c(1, 3.6, 1, 1), MTL){
@@ -228,6 +235,7 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @importFrom utils read.csv
 #' @importFrom graphics abline axis axis.POSIXct mtext par points
 #' @export
+#' @family Weather station related functions
 #' @method plot waterWeatherStation
 plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
@@ -299,6 +307,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
 #' @param ...      additional parameters to pass to print()    
 #' @author Guillermo Federico Olmedo
 #' @export
+#' @family Weather station related functions
 #' @method print waterWeatherStation
 print.waterWeatherStation <- function(x, ...){
   cat("Weather Station @ lat:", round(x$location$lat, 2), "long:", 
