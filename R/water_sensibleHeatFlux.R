@@ -16,6 +16,7 @@
 #' @details According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
+#' @family sensible heat flux functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' 
@@ -73,6 +74,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
+#' @family sensible heat flux functions
 #' @references 
 #' CITRA y MCB (com pers)
 #' @export
@@ -354,6 +356,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
 #' @author Fernando Fuentes Peñailillo
+#' @family sensible heat flux functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'

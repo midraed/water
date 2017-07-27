@@ -28,6 +28,10 @@ Tasumi M.; Allen R.G. and Trezza, R. At-surface albedo from Landsat and MODIS sa
 
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
+\seealso{
+Other remote sensing support functions: \code{\link{calcTOAr}},
+  \code{\link{loadImageSR}}, \code{\link{loadImage}}
+}
 \author{
 Guillermo Federico Olmedo
 

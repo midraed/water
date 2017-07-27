@@ -5,6 +5,7 @@
 #' @param bottomright a vector with bottomright x,y coordinates
 #' @param EPSG        Coordinate reference system EPSG code
 #' @return object of class SpatialPolygons
+#' @family support functions
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @examples 
@@ -29,6 +30,7 @@ createAoi <- function(topleft, bottomright, EPSG){
 #' @param raw.image  image to calculate extent
 #' @author Guillermo Federico Olmedo
 #' @export
+#' @family support functions
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
 checkSRTMgrids <-function(raw.image){
@@ -64,6 +66,7 @@ checkSRTMgrids <-function(raw.image){
 #' @param extent  minimal extent of mosaic
 #' @author Guillermo Federico Olmedo
 #' @export
+#' @family support functions
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
 prepareSRTMdata <- function(path=getwd(), format="tif", extent){
@@ -91,6 +94,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
+#' @family net radiation related functions
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 METRICtopo <- function(DEM){
@@ -118,6 +122,7 @@ METRICtopo <- function(DEM){
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @author Fernando Fuentes Peñailillo
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -195,6 +200,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente Saiz
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -232,6 +238,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' or "Olmedo" to use Olmedo coefficients for Landsat 8.
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
@@ -273,6 +280,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @author Fernando Fuentes Peñailillo
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
@@ -331,6 +339,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1){
 #' @param incidence.hor solar incidence angle, considering plain surface
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
@@ -366,6 +375,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param method          "SC" for single channel or "SW" for split window 
 #'                        algorithm. "SW" is only available for L8
 #' @param WeatherStation  Weather Station data
+#' @family net radiation related functions
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @references 
@@ -458,6 +468,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
 #' @param Ts   Land surface temperature. See surfaceTemperature()
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
 #' mapping evapotranspiration with internalized calibration (METRIC) - Model" 
@@ -481,6 +492,7 @@ outLWradiation <- function(LAI, Ts){
 #' @param Ts               Land surface temperature. See surfaceTemperature()
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
@@ -517,6 +529,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
 #' @param Rl.out  outgoing long-wave radiation
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -541,6 +554,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export

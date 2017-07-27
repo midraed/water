@@ -43,6 +43,14 @@ J. (2014). Land surface temperature retrieval methods from landsat-8 thermal
 infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
+\seealso{
+Other net radiation related functions: \code{\link{LAI}},
+  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
+  \code{\link{incLWradiation}},
+  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
+  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
+  \code{\link{solarAngles}}
+}
 \author{
 Guillermo Federico Olmedo
 

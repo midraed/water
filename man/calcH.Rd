@@ -62,6 +62,10 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 
 Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 }
+\seealso{
+Other sensible heat flux functions: \code{\link{calcAnchors}},
+  \code{\link{momentumRoughnessLength}}
+}
 \author{
 Guillermo Federico Olmedo
 

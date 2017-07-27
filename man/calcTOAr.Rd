@@ -25,6 +25,10 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 
 LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 }
+\seealso{
+Other remote sensing support functions: \code{\link{calcSR}},
+  \code{\link{loadImageSR}}, \code{\link{loadImage}}
+}
 \author{
 Guillermo Federico Olmedo
 

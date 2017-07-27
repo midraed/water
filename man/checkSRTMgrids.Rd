@@ -12,6 +12,10 @@ checkSRTMgrids(raw.image)
 \description{
 Check needed SRTM grids from image extent
 }
+\seealso{
+Other support functions: \code{\link{createAoi}},
+  \code{\link{prepareSRTMdata}}
+}
 \author{
 Guillermo Federico Olmedo
 }

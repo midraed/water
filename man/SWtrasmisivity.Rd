@@ -25,6 +25,14 @@ Majumdar, N.; Mathur, B. & Kaushik, S. Prediction of direct solar radiation for 
 
 ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005 \cr
 }
+\seealso{
+Other net radiation related functions: \code{\link{LAI}},
+  \code{\link{albedo}}, \code{\link{incLWradiation}},
+  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
+  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
+  \code{\link{solarAngles}},
+  \code{\link{surfaceTemperature}}
+}
 \author{
 Guillermo Federico Olmedo
 

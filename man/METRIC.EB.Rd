@@ -109,6 +109,10 @@ Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
+\seealso{
+Other METRIC model functions: \code{\link{METRIC.G}},
+  \code{\link{METRIC.Rn}}
+}
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }

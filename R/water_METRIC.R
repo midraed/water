@@ -13,6 +13,7 @@
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data. 
 #' See Details.
+#' @family METRIC model functions
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -69,6 +70,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' if plain = TRUE
 #' @param aoi              SpatialPolygon object with limits of Area of interest
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @family METRIC model functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
@@ -136,6 +138,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
 #' coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @family METRIC model functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @examples 

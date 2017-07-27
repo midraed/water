@@ -25,6 +25,10 @@ br <- c(557200, -3700000)
 aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 plot(aoi)
 }
+\seealso{
+Other support functions: \code{\link{checkSRTMgrids}},
+  \code{\link{prepareSRTMdata}}
+}
 \author{
 Guillermo Federico Olmedo
 

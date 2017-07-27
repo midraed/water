@@ -30,6 +30,14 @@ Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salin
 Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
 Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 }
+\seealso{
+Other net radiation related functions: \code{\link{SWtrasmisivity}},
+  \code{\link{albedo}}, \code{\link{incLWradiation}},
+  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
+  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
+  \code{\link{solarAngles}},
+  \code{\link{surfaceTemperature}}
+}
 \author{
 Guillermo Federico Olmedo
 

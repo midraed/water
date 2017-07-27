@@ -44,6 +44,10 @@ Pocas, I., Paco, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santo
 
 Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267-3283. doi:10.1007/s11269-012-0071-8 \cr
 }
+\seealso{
+Other sensible heat flux functions: \code{\link{calcAnchors}},
+  \code{\link{calcH}}
+}
 \author{
 Guillermo Federico Olmedo
 

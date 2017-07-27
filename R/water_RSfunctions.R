@@ -8,6 +8,7 @@
 #' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family remote sensing support functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
@@ -82,6 +83,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
 #' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
+#' @family remote sensing support functions
 #' @export
 loadImageSR <-  function(path = getwd(),  aoi){
   files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
@@ -109,6 +111,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' @param MTL           Landsat Metadata File
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
+#' @family remote sensing support functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
@@ -170,6 +173,7 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David 
+#' @family remote sensing support functions
 #' @references 
 #' Tasumi M.; Allen R.G. and Trezza, R. At-surface albedo from Landsat and MODIS satellites for use in energy balance studies of evapotranspiration Journal of Hydrolog. Eng., 2008, 13, (51-63) \cr
 #'

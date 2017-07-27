@@ -49,6 +49,10 @@ automatically search end members within the satellite scene (extreme wet and dry
 \references{
 CITRA y MCB (com pers)
 }
+\seealso{
+Other sensible heat flux functions: \code{\link{calcH}},
+  \code{\link{momentumRoughnessLength}}
+}
 \author{
 Guillermo Federico Olmedo
 

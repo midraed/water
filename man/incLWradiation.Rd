@@ -25,6 +25,14 @@ Bastiaanssen W. Regionalization of surface flux densities and moisture indicator
 
 Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000 \cr
 }
+\seealso{
+Other net radiation related functions: \code{\link{LAI}},
+  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
+  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
+  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
+  \code{\link{solarAngles}},
+  \code{\link{surfaceTemperature}}
+}
 \author{
 Guillermo Federico Olmedo
 

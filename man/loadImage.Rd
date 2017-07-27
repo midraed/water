@@ -21,6 +21,10 @@ This function loads Landsat bands from a specific folder.
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
+\seealso{
+Other remote sensing support functions: \code{\link{calcSR}},
+  \code{\link{calcTOAr}}, \code{\link{loadImageSR}}
+}
 \author{
 Guillermo Federico Olmedo
 

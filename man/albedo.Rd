@@ -35,6 +35,15 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
 Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 }
+\seealso{
+Other net radiation related functions: \code{\link{LAI}},
+  \code{\link{SWtrasmisivity}},
+  \code{\link{incLWradiation}},
+  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
+  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
+  \code{\link{solarAngles}},
+  \code{\link{surfaceTemperature}}
+}
 \author{
 Guillermo Federico Olmedo
 
