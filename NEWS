@@ -5,6 +5,8 @@ Guillermo OLMEDO
 
 VERSION 0.6.1.99
 
+* Added a workaround for read.WSdata() when there is not rain data
+* Fixed a bug in momentumRoughness() when using the Perrier equation
 * Added extraParameters to METRIC.EB. This allows to pass more parameters to 
   the internal functions and apply different methods. i.e. extra parameters for
   different Zom.methods.
