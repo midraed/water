@@ -9,9 +9,11 @@ aoi <- createAoi(topleft = c(272955, 6085705),
 ## ------------------------------------------------------------------------
 csvfile <- system.file("extdata", "apples.csv", package="water")
 MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
-WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
-                  lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
-                  MTL = MTLfile)
+WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
+                              lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
+                              columns=c("date" = 1, "time" = 2, "radiation" = 3,
+                              "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
+                              MTL = MTLfile)
 
 ## ---- fig.width = 5------------------------------------------------------
 print(WeatherStation, hourly=FALSE)

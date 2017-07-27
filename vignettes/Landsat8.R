@@ -13,8 +13,8 @@ csvfile <- system.file("extdata", "INTA.csv", package="water")
 MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
 WeatherStation <- read.WSdata(WSdata = csvfile, 
                               datetime.format =  "%Y/%m/%d %H:%M", 
-                              columns = c("datetime", "temp",
-                              "RH", "pp", "radiation", "wind"), 
+                              columns=c("date" = 1, "time" = 1, "radiation" = 5,
+                              "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4), 
                               lat=-33.00513, long= -68.86469, elev=927, height= 2,
                               MTL=MTLfile)
 Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
