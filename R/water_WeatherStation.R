@@ -53,7 +53,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
-  if(tz=""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))}
+  if(tz==""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))}
   if("temp" %in% columns){warning("The parameter columns has changed and the old
   sintaxis is now deprecated. In future versions of water package ONLY the 
   new (numeric and simple!) sintaxis will work.")}
