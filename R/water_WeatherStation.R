@@ -32,7 +32,7 @@
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
 #' WS <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
 #'                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
-#'                   columns=c("date" = 1, "time" = 2, "radiation" =3,
+#'                   columns=c("date" = 1, "time" = 2, "radiation" = 3,
 #'                   "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7), 
 #'                   MTL = MTLfile)
 #' print(WS)
@@ -48,7 +48,7 @@
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
 #' @export
 read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
-                        columns = c("date" = 1, "time" = 2, "radiation" =3,
+                        columns = c("date" = 1, "time" = 2, "radiation" = 3,
                                     "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7),
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
@@ -210,7 +210,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @author Guillermo Federico Olmedo
 #' @export
 read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
-                         columns = c("date" = 1, "time" = 2, "radiation" =3,
+                         columns = c("date" = 1, "time" = 2, "radiation" = 3,
                                      "wind" = 4, "RH" = 5, "temp" = 6, "rain" = 7),
                          date.format = "%d/%m/%Y", time.format = "%H:%M:%S", 
                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
