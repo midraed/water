@@ -6,7 +6,7 @@
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
   anchors.method = "CITRA-MCBbc", WeatherStation, plots = TRUE,
-  deltaTemp = 5, buffer = 500, verbose = FALSE)
+  deltaTemp = 5, minDist = 500, WSbuffer = 30000, verbose = FALSE)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}
@@ -29,9 +29,7 @@ random selection of hot and cold candidates according to CITRA-MCB method, or
 "CITRA-MCBbc" for selecting the best candidates}
 
 \item{WeatherStation}{Optional. WeatherStation data at the satellite overpass. 
-Should be a waterWeatherStation object calculated using read.WSdata and MTL file.
-If you provide a WeatherStation object it will restrict the location of anchors
-pixels to less than 30 km away from it.}
+Should be a waterWeatherStation object calculated using read.WSdata and MTL file.}
 
 \item{plots}{Logical. If TRUE will plot position of anchors points
 selected. Points in red are selected hot pixels, blue are the cold ones and the 
@@ -39,7 +37,10 @@ black represents the position of the Weather Station}
 
 \item{deltaTemp}{deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"}
 
-\item{buffer}{minimun distance allowed for two anchor pixels of the same kind}
+\item{minDist}{minimun distance allowed for two anchor pixels of the 
+same type (in meters).}
+
+\item{WSbuffer}{maximun distante to the Weather Station (in meters).}
 
 \item{verbose}{Logical. If TRUE will print aditional data to console}
 }

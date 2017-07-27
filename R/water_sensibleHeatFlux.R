@@ -64,13 +64,13 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' "CITRA-MCBbc" for selecting the best candidates
 #' @param WeatherStation Optional. WeatherStation data at the satellite overpass. 
 #' Should be a waterWeatherStation object calculated using read.WSdata and MTL file.
-#' If you provide a WeatherStation object it will restrict the location of anchors
-#' pixels to less than 30 km away from it.
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected. Points in red are selected hot pixels, blue are the cold ones and the 
 #' black represents the position of the Weather Station
 #' @param deltaTemp        deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"
-#' @param buffer           minimun distance allowed for two anchor pixels of the same kind
+#' @param minDist           minimun distance allowed for two anchor pixels of the 
+#' same type (in meters).
+#' @param WSbuffer         maximun distante to the Weather Station (in meters).
 #' @param verbose          Logical. If TRUE will print aditional data to console
 #' @author Guillermo Federico Olmedo
 #' @author de la Fuente-Saiz, Daniel
@@ -80,7 +80,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "CITRA-MCBbc", WeatherStation,
-                         plots=TRUE, deltaTemp=5, buffer = 500, verbose=FALSE) {
+                         plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
+                         verbose=FALSE) {
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   if(!missing(WeatherStation)){
@@ -92,7 +93,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
     WSbuffer <- raster(Ts)
     values(WSbuffer)[WScell] <- 1
-    WSbuffer <- buffer(WSbuffer, width = 30000)
+    WSbuffer <- buffer(WSbuffer, width = WSbuffer)
   } else {
     WSbuffer <- raster(Ts)
     values(WSbuffer)<- 1
@@ -121,7 +122,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -146,7 +147,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
@@ -183,7 +184,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -208,7 +209,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
@@ -248,7 +249,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -273,7 +274,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = buffer) ### 500m buffer
+        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
