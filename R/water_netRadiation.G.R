@@ -354,8 +354,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
                       cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
   tauD <- raster(tauB)
-  tauD[tauB >= 0.15] <- 0.35 - 0.36 * tauB 
-  tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB  
+  tauD <- 0.35 - 0.36 * tauB 
+  tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB[tauB < 0.15]
   tau.sw <- tauB + tauD
   # Next one it's from METRIC 2007, previous from METRIC 2010
   #sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
