@@ -92,6 +92,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   if(anchors.method %in% c("CITRA-MCBr")){anchors.method <- "random"}
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
+  NDVI[NDVI < -1]  <-  NA
+  NDVI[NDVI > 1]  <-  NA
   if(!missing(WeatherStation)){
     WSloc <- WeatherStation$location
     coordinates(WSloc) <- ~ long + lat
