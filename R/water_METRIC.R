@@ -15,7 +15,7 @@
 #' See Details.
 #' @family METRIC model functions
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
 METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
@@ -154,6 +154,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' image.SR <- loadImageSR(path=raw_data_folder, aoi=aoi)
 #' csvfile <- system.file("extdata", "INTA.csv", package="water")
 #' MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
+#' \dontrun{
 #' WeatherStation <- read.WSdata(WSdata = csvfile, 
 #'                               datetime.format =  "%Y/%m/%d %H:%M", 
 #'                               columns = c("datetime", "temp",
@@ -174,6 +175,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #'                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
 #'                             LAI.method = "metric2010", Zom.method = "Perrier", Z.om.ws = 0.03, 
 #'                             MTL = MTLfile, extraParameters = c(fLAI = 0.5, h = 1.8) ) 
+#' }
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi,
