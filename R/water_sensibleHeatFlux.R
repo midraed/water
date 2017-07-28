@@ -59,9 +59,10 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param n                number of pair of anchors pixels to calculate
 #' @param aoi              area of interest to limit the search. If 
 #' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
-#' @param anchors.method   method for the selection of anchor pixels. "CITRA-MCBr" for
+#' @param anchors.method   method for the selection of anchor pixels. "random" for
 #' random selection of hot and cold candidates according to CITRA-MCB method, or 
-#' "CITRA-MCBbc" for selecting the best candidates
+#' "best" for selecting the best candidates. And "flexible" for method with soft
+#' limits to the anchor pixel conditions.
 #' @param WeatherStation Optional. WeatherStation data at the satellite overpass. 
 #' Should be a waterWeatherStation object calculated using read.WSdata and MTL file.
 #' @param plots            Logical. If TRUE will plot position of anchors points
@@ -79,9 +80,16 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "CITRA-MCBbc", WeatherStation,
+                         anchors.method= "best", WeatherStation,
                          plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
                          verbose=FALSE) {
+  ### old method names. Remove after version 0.8
+  if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc", "CITRA-MCBr")){
+    warning("anchor method names has changed. Old names (CITRA-MCBx) are 
+            deprecated. Options now include 'best', 'random' and 'flexible'")
+  }
+  if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc")){anchors.method <- "best"}
+  if(anchors.method %in% c("CITRA-MCBr")){anchors.method <- "random"}
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   if(!missing(WeatherStation)){
@@ -98,7 +106,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WS.buffer <- raster(Ts)
     values(WS.buffer)<- 1
   }
-  if(anchors.method=="CITRA-MCBr"){
+  if(anchors.method=="random"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
@@ -113,11 +121,15 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
+    ### Test # anchors
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    if(cold.n < 1 | hot.n < 1){
+      stop(paste("Not enough pixels with the conditions for anchor pixels. I 
+                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+    }
     # First cold sample
     try(cold <- sample(which(cold.candidates),1), silent=TRUE)
-    if(!exists("cold")){
-      stop("There are no pixels that meet the conditions for cold pixels")
-    }
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
@@ -140,9 +152,6 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     
     # First hot sample
     try(hot <- sample(which(hot.candidates & values(Ts>quantile(Ts[hot.candidates], 0.75))),1), silent=TRUE)
-    if(!exists("hot")){
-      stop("There are no pixels that meet the conditions for hot pixels")
-    }
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
@@ -161,7 +170,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
   }
-  if(anchors.method=="CITRA-MCB"  | anchors.method=="CITRA-MCBbc"){
+  if(anchors.method=="best"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
@@ -176,6 +185,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
+    ### Test # anchors
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    if(cold.n < 1 | hot.n < 1){
+      stop(paste("Not enough pixels with the conditions for anchor pixels. I 
+                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+    }
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
@@ -241,6 +257,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
+    ### Test # anchors
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    if(cold.n < 1 | hot.n < 1){
+      stop(paste("Not enough pixels with the conditions for anchor pixels. I 
+                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+    }
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA

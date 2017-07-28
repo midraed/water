@@ -5,8 +5,8 @@
 \title{Select anchors pixels for H function}
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
-  anchors.method = "CITRA-MCBbc", WeatherStation, plots = TRUE,
-  deltaTemp = 5, minDist = 500, WSbuffer = 30000, verbose = FALSE)
+  anchors.method = "best", WeatherStation, plots = TRUE, deltaTemp = 5,
+  minDist = 500, WSbuffer = 30000, verbose = FALSE)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}
@@ -24,9 +24,10 @@ calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
 \item{aoi}{area of interest to limit the search. If 
 waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
 
-\item{anchors.method}{method for the selection of anchor pixels. "CITRA-MCBr" for
+\item{anchors.method}{method for the selection of anchor pixels. "random" for
 random selection of hot and cold candidates according to CITRA-MCB method, or 
-"CITRA-MCBbc" for selecting the best candidates}
+"best" for selecting the best candidates. And "flexible" for method with soft
+limits to the anchor pixel conditions.}
 
 \item{WeatherStation}{Optional. WeatherStation data at the satellite overpass. 
 Should be a waterWeatherStation object calculated using read.WSdata and MTL file.}
