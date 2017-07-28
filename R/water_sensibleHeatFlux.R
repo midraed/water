@@ -91,12 +91,12 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WSloc <- sp::spTransform(WSloc, Ts@crs)
     ## Longer but avoids to use rgeos
     WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
-    WSbuffer <- raster(Ts)
-    values(WSbuffer)[WScell] <- 1
-    WSbuffer <- buffer(WSbuffer, width = WSbuffer)
+    WS.buffer <- raster(Ts)
+    values(WS.buffer)[WScell] <- 1
+    WS.buffer <- buffer(WS.buffer, width = WSbuffer)
   } else {
-    WSbuffer <- raster(Ts)
-    values(WSbuffer)<- 1
+    WS.buffer <- raster(Ts)
+    values(WS.buffer)<- 1
   }
   if(anchors.method=="CITRA-MCBr"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
@@ -109,10 +109,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       values(albedo>=0.18) & values(albedo<=0.25) &
       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp)) & values(WSbuffer == 1)
+      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     # First cold sample
     try(cold <- sample(which(cold.candidates),1), silent=TRUE)
     if(!exists("cold")){
@@ -129,7 +129,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=0.18) & values(albedo<=0.25) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WSbuffer == 1)
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
@@ -152,7 +152,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
@@ -172,10 +172,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       values(albedo>=0.18) & values(albedo<=0.25) &
       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp)) & values(WSbuffer == 1)
+      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
@@ -191,7 +191,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=0.18) & values(albedo<=0.25) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WSbuffer == 1)
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
         values(Ts.cold)[!cold.candidates] <- NA
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
@@ -214,7 +214,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
         values(Ts.hot)[!hot.candidates] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
@@ -237,10 +237,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       values(albedo>=0.15) & values(albedo<=0.25) &
       values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp)) & values(WSbuffer == 1)
+      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
@@ -256,7 +256,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=0.18) & values(albedo<=0.25) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WSbuffer == 1)
+          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
         values(Ts.cold)[!cold.candidates] <- NA
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
@@ -279,7 +279,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WSbuffer == 1)
+          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
         values(Ts.hot)[!hot.candidates] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
