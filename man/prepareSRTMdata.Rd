@@ -7,6 +7,8 @@
 prepareSRTMdata(path = getwd(), format = "tif", extent)
 }
 \arguments{
+\item{path}{folder where SRTM files are stored}
+
 \item{format}{format of SRTM grid files}
 
 \item{extent}{minimal extent of mosaic}

@@ -64,6 +64,7 @@ checkSRTMgrids <-function(raw.image){
 #' Create a mosaic with SRTM grid from image extent
 #' @param format  format of SRTM grid files
 #' @param extent  minimal extent of mosaic
+#' @param path  folder where SRTM files are stored
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions

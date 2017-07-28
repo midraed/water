@@ -137,13 +137,13 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     
   sequence <- seq.POSIXt(from=first, to = tail(datetime,1),by= "1 hour")
   # Time interpolation
-  radiationFun <- approxfun(result$alldata$datetime, result$alldata$radiation)
-  windFun <- approxfun(result$alldata$datetime, result$alldata$wind)
-  RHFun <- approxfun(result$alldata$datetime, result$alldata$RH)
-  eaFun <- approxfun(result$alldata$datetime, result$alldata$ea)
-  tempFun <- approxfun(result$alldata$datetime, result$alldata$temp)
+  radiationFun <- stats::approxfun(result$alldata$datetime, result$alldata$radiation)
+  windFun <- stats::approxfun(result$alldata$datetime, result$alldata$wind)
+  RHFun <- stats::approxfun(result$alldata$datetime, result$alldata$RH)
+  eaFun <- stats::approxfun(result$alldata$datetime, result$alldata$ea)
+  tempFun <- stats::approxfun(result$alldata$datetime, result$alldata$temp)
   if(!all(is.na(rain))){
-    rainFun <- approxfun(result$alldata$datetime, result$alldata$rain)
+    rainFun <- stats::approxfun(result$alldata$datetime, result$alldata$rain)
   } else { rainFun <- function(seq){seq <- NA}}
   result$hourly <- data.frame(datetime = sequence,
                                radiation = radiationFun(sequence),
