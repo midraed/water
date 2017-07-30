@@ -245,23 +245,22 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   }
   
   if(anchors.method=="flexible"){
-    minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.15&albedo<=0.25&Z.om>=0.03&
-                          Z.om<=0.08], 0.05, na.rm=TRUE)
-    if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
-    ## NDVI used in cold isn't the same as CITRA!
+    if(is.na(extraParameters["anchorsThr"])){extraParameters['anchorsThr'] = .8}
+    thr <-extraParameters["anchorsThr"]
+    cold.candidates <- values(LAI>=quantile(LAI, thr)) &  
+      values(Ts<=quantile(Ts, thr)) &
+    values(Z.om<quantile(Z.om, 1-thr)) &  values(WS.buffer == 1)
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
-    cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
-      values(albedo>=0.15) & values(albedo<=0.25) &
-      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-      values(Z.om>=0.03) & values(Z.om<=0.08) &
-      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     ### Test # anchors
+   
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    print(paste("I 
+                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
     if(cold.n < 1 | hot.n < 1){
       stop(paste("Not enough pixels with the conditions for anchor pixels. I 
                  found", cold.n, "cold pixels and", hot.n, "hot pixels."))
