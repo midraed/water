@@ -122,8 +122,10 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' length. Use "short.crops" for short crops methods from Allen et al (2007); 
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
-#' @param anchors.method   method to select anchor pixels. Currently only 
-#' "CITRA-MCB" automatic method available.
+#' @param anchors.method   method for the automatic selection of the anchor pixels. 
+#' @param anchors          data.frame or SpatialPointsDataFrame with the anchor
+#'                         pixels. The data frame must include a "type" column 
+#'                         with "hot" and "cold" values.
 #' @param n                number of pair of anchors pixels to calculate
 #' @param ETp.coef         ETp coefficient usually 1.05 or 1.2 for alfalfa
 #' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
@@ -182,7 +184,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       alb.coeff = "Tasumi", LST.method = "SC",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
-                      n = 1, ETp.coef= 1.05, Z.om.ws=0.0018, 
+                      anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.0018,
                       verbose = FALSE, extraParameters = vector()){
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
@@ -245,19 +247,21 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                     surface.model = surface.model)
   }
   par(mfrow=c(1,2))
-  if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
-  if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
-  if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
-  hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
-                              albedo = albedo, Z.om = Z.om, n = n, 
-                              anchors.method = anchors.method, WeatherStation = WeatherStation,
-                              deltaTemp = extraParameters['deltaTemp'],
-                              minDist = extraParameters['minDist'],
-                              WSbuffer = extraParameters['WSbuffer'],
-                              verbose = verbose)
-  print(hot.and.cold)
+  if(missing(anchors)){
+    if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
+    if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
+    if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
+    anchors <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
+                           albedo = albedo, Z.om = Z.om, n = n, 
+                           anchors.method = anchors.method, WeatherStation = WeatherStation,
+                           deltaTemp = extraParameters['deltaTemp'],
+                           minDist = extraParameters['minDist'],
+                           WSbuffer = extraParameters['WSbuffer'],
+                           verbose = verbose)
+    print(anchors)
+  }
   #setTxtProgressBar(pb, 45)
-  H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om, mountainous = !plain,
+  H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
              WeatherStation = WeatherStation, ETp.coef = ETp.coef,
              Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
   par(mfrow=c(1,1))
