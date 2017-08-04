@@ -4,12 +4,12 @@
 \alias{LAI}
 \title{Estimate LAI from Landsat Data}
 \usage{
-LAI(method = "metric2010", image, aoi, L = 0.1)
+LAI(method = "metric2010", image, aoi, L = 0.1, MTL)
 }
 \arguments{
 \item{method}{Method used to estimate LAI from spectral data.}
 
-\item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE}
+\item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Digital counts for method = "vineyard".}
 
 \item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
 

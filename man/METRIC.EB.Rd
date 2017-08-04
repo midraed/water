@@ -7,7 +7,7 @@
 METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
   plain = TRUE, DEM, aoi, alb.coeff = "Tasumi", LST.method = "SC",
   LAI.method = "metric2010", L = 0.1, Zom.method = "short.crops",
-  anchors.method = "CITRA-MCB", n = 1, ETp.coef = 1.05,
+  anchors.method = "CITRA-MCB", anchors, n = 1, ETp.coef = 1.05,
   Z.om.ws = 0.0018, verbose = FALSE, extraParameters = vector())
 }
 \arguments{
@@ -51,8 +51,11 @@ length. Use "short.crops" for short crops methods from Allen et al (2007);
 "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
 Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
-\item{anchors.method}{method to select anchor pixels. Currently only 
-"CITRA-MCB" automatic method available.}
+\item{anchors.method}{method for the automatic selection of the anchor pixels.}
+
+\item{anchors}{data.frame or SpatialPointsDataFrame with the anchor
+pixels. The data frame must include a "type" column 
+with "hot" and "cold" values.}
 
 \item{n}{number of pair of anchors pixels to calculate}
 
