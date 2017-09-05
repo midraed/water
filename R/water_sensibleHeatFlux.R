@@ -421,6 +421,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     u200 <- u200 * (1+0.1*((DEM-WeatherStation$elev)/1000))
   }
   friction.velocity <- 0.41 * u200 / log(200/Z.om) 
+  friction.velocity[friction.velocity==0] <- 0.1
   r.ah <- log(2/0.1)/(friction.velocity*0.41) #ok
   
   LE.cold <- ETo.hourly * ETp.coef * (2.501 - 0.002361*(mean(Ts[cold])-273.15))*
@@ -448,10 +449,10 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   if(method == "mean"){
     ### Start of iterative process -------------------------------------------------    
     while(!converge){
-      i <-  i + 1 
       if(verbose==TRUE){
         print(paste("iteraction #", i))
       }
+      i <-  i + 1 
       ### We calculate dT and H 
       dT.cold <- H.cold * mean(r.ah[cold], na.rm= T) / (mean(air.density[cold], na.rm= T)*1004)
       dT.hot <- (mean(Rn[hot], na.rm= T) - mean(G[hot], na.rm= T)) * mean(r.ah[hot], na.rm= T) / (mean(air.density[hot], na.rm= T)*1004)
@@ -494,6 +495,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       }
       ## And finally, r.ah and friction velocity
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
+      friction.velocity[friction.velocity==0] <- 0.1
       # converge condition
       r.ah.hot.previous <- mean(r.ah[hot], na.rm= T)
       r.ah.cold.previous <- mean(r.ah[cold], na.rm= T)
