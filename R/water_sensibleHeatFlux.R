@@ -173,7 +173,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       }}
   }
   if(anchors.method=="best"){
-    minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
+    minT <- quantile(Ts[LAI>=2.8&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
     ## NDVI used in cold isn't the same as CITRA!
