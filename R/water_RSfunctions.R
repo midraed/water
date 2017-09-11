@@ -112,10 +112,9 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' @family remote sensing support functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-#'
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 #' @export
-  calcRadiance <- function(image.DN, sat = "auto", MTL){
+calcRadiance <- function(image.DN, sat = "auto", MTL){
  
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat=="L8"){bands <- c(2:7, 10, 11)}
