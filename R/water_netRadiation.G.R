@@ -289,7 +289,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, aoi, L=0.1, MTL){
+LAI <- function(method="metric2010", image, aoi, L=0.1, ...){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
   if(method=="turner"){
@@ -313,27 +313,9 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, MTL){
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="vineyard"){
-    # toa.4.5 is the DN image
-    if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-    MTL <- readLines(MTL, warn=FALSE)
-    RED.ADD <- grep("RADIANCE_ADD_BAND_4",MTL,value=TRUE)
-    RED.ADD <- as.numeric(regmatches(RED.ADD, 
-                                         regexec(text=RED.ADD ,
-                                                 pattern="([-]+)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
-    RED.MULT <- grep("RADIANCE_MULT_BAND_4",MTL,value=TRUE)
-    RED.MULT <- as.numeric(regmatches(RED.MULT, 
-                                     regexec(text=RED.MULT ,
-                                             pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
-    NIR.ADD <- grep("RADIANCE_ADD_BAND_5",MTL,value=TRUE)
-    NIR.ADD <- as.numeric(regmatches(NIR.ADD, 
-                                     regexec(text=NIR.ADD ,
-                                             pattern="([-]+)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
-    NIR.MULT <- grep("RADIANCE_MULT_BAND_5",MTL,value=TRUE)
-    NIR.MULT <- as.numeric(regmatches(NIR.MULT, 
-                                      regexec(text=NIR.MULT ,
-                                              pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
-    toa.4.5[[1]] <- (toa.4.5[[1]] * RED.MULT) + RED.ADD
-    toa.4.5[[2]] <- (toa.4.5[[2]] * NIR.MULT) + NIR.ADD
+    # image must be the DN image
+    image <- calcRadiance(image)
+    toa.4.5 <- stack(image[[3]], image[[4]])}
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }
