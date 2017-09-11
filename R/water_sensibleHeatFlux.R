@@ -244,23 +244,133 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     
   }
   
-  if(anchors.method=="flexible"){
-    if(is.na(extraParameters["anchorsThr"])){extraParameters['anchorsThr'] = .8}
-    thr <-extraParameters["anchorsThr"]
-    cold.candidates <- values(LAI>=quantile(LAI, thr)) &  
-      values(Ts<=quantile(Ts, thr)) &
-    values(Z.om<quantile(Z.om, 1-thr)) &  values(WS.buffer == 1)
+  if(anchors.method=="flexible"){    ### method = "flexible" ####
+    ### Find minT and maxT or fall back to default values 
+    minT <- quantile(Ts[LAI>=2.8&LAI<=6&albedo>=0.15&albedo<=0.25&Z.om>=0.03&
+                          Z.om<=0.08], 0.05, na.rm=TRUE)
+    if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
     maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
                      Z.om<=0.005], na.rm=TRUE)
-    hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
-      values(NDVI>=0.1) & values(NDVI<=0.28) &
-      values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
+    if(is.na(maxT)){maxT <- quantile(Ts, 0.95, na.rm = T)}
+    ### create data.frames with optimal values for anchors
+    optValCold <- data.frame(LAI = c(3,6), albedo = c(0.18, 0.25),
+                                Z.om = c(0.03, 0.08))
+    optValHot <- data.frame(albedo = c(0.13, 0.15), NDVI = c(0.1, 0.28),
+                               Z.om = c(NA, 0.005), Ts = c(maxT-deltaTemp, NA))
+    ### Search for colds!
+    cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+      values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+      values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+    useBuffer <- TRUE
+    flex <- 0
+    while(cold.n < 1){        ## flexibilize cold criteria
+      useBuffer <- !useBuffer
+      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
+      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+      useBuffer <- !useBuffer
+      flex <- flex + 0.01
+      optValCold[1,] <- optValCold[1,] * c((1-flex), 1, 1)
+      optValCold[2,] <- optValCold[2,] * c((1+flex), 1, 1)
+      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
+      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+      optValCold[1,] <- optValCold[1,] * c(1, (1-flex), 1)
+      optValCold[2,] <- optValCold[2,] * c(1, (1+flex), 1)
+      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
+      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+      optValCold[1,] <- optValCold[1,] * c(1, 1, (1-flex))
+      optValCold[2,] <- optValCold[2,] * c(1, 1, (1+flex))
+      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
+      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+      optValCold[1,] <- optValCold[1,] * (1-flex)
+      optValCold[2,] <- optValCold[2,] * (1+flex)
+      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
+        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
+      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
+      if(flex == 1){stop("Automatic selection of cold anchors FAILED")}
+    } 
+    if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for cold pixels was:
+    LAI:", optValCold[1,1], "to", optValCold[2,1], "
+    albedo:", optValCold[1,2], "to", optValCold[2,2], "
+    Z.om:", optValCold[1,3], "to", optValCold[2,3], "
+    and buffer ==", useBuffer))}
+    ### Search for hots !
+    hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+      values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+      values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    useBuffer <- TRUE
+    flex <- 0
+    while(hot.n < 1){        ## flexibilize hot criteria
+      useBuffer <- !useBuffer
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      useBuffer <- !useBuffer
+      flex <- flex + 0.01
+      optValHot[1,] <- optValHot[1,] * c((1-flex), 1, 1, 1)
+      optValHot[2,] <- optValHot[2,] * c((1+flex), 1, 1, 1)
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      optValHot[1,] <- optValHot[1,] * c(1, (1-flex), 1, 1)
+      optValHot[2,] <- optValHot[2,] * c(1, (1+flex), 1, 1)
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      optValHot[1,] <- optValHot[1,] * c(1, 1, (1-flex), 1)
+      optValHot[2,] <- optValHot[2,] * c(1, 1, (1+flex), 1)
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      optValHot[1,] <- optValHot[1,] * c(1, 1, 1, (1-flex))
+      optValHot[2,] <- optValHot[2,] * c(1, 1, 1, (1+flex))
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      optValHot[1,] <- optValHot[1,] * (1-flex)
+      optValHot[2,] <- optValHot[2,] * (1+flex)
+      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
+      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+      if(flex == 1){stop("Automatic selection of hot anchors FAILED")}
+    } 
+    if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for hot pixels was:
+    albedo:", optValHot[1,1], "to", optValHot[2,1], "
+    NDVI:", optValHot[1,2], "to", optValHot[2,2], "
+    max Z.om:", optValHot[2,3], "
+    min Ts:", optValHot[1,4], "
+    and buffer ==", useBuffer))}
     ### Test # anchors
-   
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-    print(paste("I 
-                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
     if(cold.n < 1 | hot.n < 1){
       stop(paste("Not enough pixels with the conditions for anchor pixels. I 
                  found", cold.n, "cold pixels and", hot.n, "hot pixels."))
@@ -313,8 +423,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
     
-  }
+    }
   
+
   if(verbose==TRUE){
     print("Cold pixels")
     print(data.frame(cbind(pixel=cold, "LAI"=LAI[cold], "NDVI"=NDVI[cold], 
