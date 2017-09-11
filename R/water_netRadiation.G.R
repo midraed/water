@@ -271,7 +271,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @description
 #' This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
 #' @param method   Method used to estimate LAI from spectral data. 
-#' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"; surface reflectance for method = "turner". Not needed if ESPA == TRUE
+#' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Digital counts for method = "vineyard".
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
@@ -289,7 +289,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, aoi, L=0.1){
+LAI <- function(method="metric2010", image, aoi, L=0.1, ...){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
   if(method=="turner"){
@@ -313,6 +313,9 @@ LAI <- function(method="metric2010", image, aoi, L=0.1){
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="vineyard"){
+    # image must be the DN image
+    image <- calcRadiance(image)
+    toa.4.5 <- stack(image[[3]], image[[4]])}
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }

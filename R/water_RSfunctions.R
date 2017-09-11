@@ -101,6 +101,57 @@ loadImageSR <-  function(path = getwd(),  aoi){
   return(image_SR)}  
 
 
+#' Calculates radiance
+#' @description
+#' This function calculates radiance
+#' @param image.DN      raw image in digital numbers
+#' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param MTL           Landsat Metadata File
+#' @author Guillermo Federico Olmedo
+#' @author María Victoria Munafó
+#' @family remote sensing support functions
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
+#' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+#' @export
+  calcRadiance <- function(image.DN, sat = "auto", MTL){
+ 
+  if(sat=="auto"){sat = getSat(path)} #DRY!
+  if(sat=="L8"){bands <- c(2:7, 10, 11)}
+  if(sat=="L7"){bands <- c(1:5,7, 6)}
+  path=getwd()
+  if(missing(MTL)){MTL <- list.files(path = getwd(), pattern = "MTL.txt", full.names = T)}
+ 
+  MTL <- readLines(MTL, warn=FALSE)
+  ADD <- vector()
+  MULT <- vector()
+ 
+   for( i in 1:length(bands)){
+     
+     ADDstring <- paste0("RADIANCE_ADD_BAND_", bands[i])
+     ADDstring <- grep(ADDstring,MTL,value=TRUE)
+     ADD[i] <- as.numeric(regmatches(ADDstring, 
+                      regexec(text=ADDstring ,
+                         pattern="([-]*)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
+    
+     MULTstring <- paste0("RADIANCE_MULT_BAND_",bands[i])
+     MULTstring <- grep(MULTstring,MTL,value=TRUE)
+     MULT[i] <- as.numeric(regmatches(MULTstring, 
+                    regexec(text=MULTstring ,
+                    pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
+  
+   }
+  image <- image.DN * MULT + ADD
+  bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
+  if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
+  image <- saveLoadClean(imagestack = image, 
+                            stack.names = bandnames, 
+                            file = "image_Rad", 
+                            overwrite=TRUE)
+  return(image)
+}
+
 #' Calculates Top of atmosphere reflectance
 #' @description
 #' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
