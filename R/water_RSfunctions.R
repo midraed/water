@@ -101,6 +101,50 @@ loadImageSR <-  function(path = getwd(),  aoi){
   return(image_SR)}  
 
 
+#' Calculates radiance
+#' @description
+#' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
+#' @param image.DN      raw image in digital numbers
+#' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
+#' @param aoi           area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param incidence.rel solar incidence angle, considering the relief
+#' @param MTL           Landsat Metadata File
+#' @author Guillermo Federico Olmedo
+#' @author Fonseca-Luengo, David
+#' @family remote sensing support functions
+#' @references 
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
+#' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+#' @export
+calcRadiance <- function(image.DN, sat = "auto", MTL){
+  if(sat=="auto"){sat = getSat(path)} #DRY!
+  if(sat=="L8"){bands <- c(2:7, 10, 11)}
+  if(sat=="L7"){bands <- c(1:5,7, 6)}
+  if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
+  MTL <- readLines(MTL, warn=FALSE)
+  
+  RED.ADD <- grep("RADIANCE_ADD_BAND_4",MTL,value=TRUE)
+  RED.ADD <- as.numeric(regmatches(RED.ADD, 
+                                   regexec(text=RED.ADD ,
+                                           pattern="([-]+)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
+  RED.MULT <- grep("RADIANCE_MULT_BAND_4",MTL,value=TRUE)
+  RED.MULT <- as.numeric(regmatches(RED.MULT, 
+                                    regexec(text=RED.MULT ,
+                                            pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
+  NIR.ADD <- grep("RADIANCE_ADD_BAND_5",MTL,value=TRUE)
+  NIR.ADD <- as.numeric(regmatches(NIR.ADD, 
+                                   regexec(text=NIR.ADD ,
+                                           pattern="([-]+)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
+  NIR.MULT <- grep("RADIANCE_MULT_BAND_5",MTL,value=TRUE)
+  NIR.MULT <- as.numeric(regmatches(NIR.MULT, 
+                                    regexec(text=NIR.MULT ,
+                                            pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
+  toa.4.5[[1]] <- (toa.4.5[[1]] * RED.MULT) + RED.ADD
+  toa.4.5[[2]] <- (toa.4.5[[2]] * NIR.MULT) + NIR.ADD
+}
+
+
 #' Calculates Top of atmosphere reflectance
 #' @description
 #' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
