@@ -316,7 +316,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, ...){
     stop("method==vineyard does not works!!! ")
     # image must be the DN image
     image <- calcRadiance(image)
-    toa.4.5 <- stack(image[[3]], image[[4]])}
+    toa.4.5 <- stack(image[[3]], image[[4]])
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }
