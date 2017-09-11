@@ -313,7 +313,6 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, ...){
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="vineyard"){
-    stop("method==vineyard does not works!!! ")
     # image must be the DN image
     image <- calcRadiance(image)
     toa.4.5 <- stack(image[[3]], image[[4]])
