@@ -16,7 +16,10 @@ plot.waterLSEB <- function(x){
 #' @family LSEB objects related functions
 #' @method print waterLSEB
 print.waterLSEB <- function(x){
-  print(x)
+  print(x$EB)
+  print(x$WeatherStation)
+  print(x$anchors)
+  print(x$methods)
 }
 
 
