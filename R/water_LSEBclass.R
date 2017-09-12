@@ -24,3 +24,16 @@ print.waterLSEB <- function(x){
 }
 
 
+#' writeRaster method for waterLSEB S3 class
+#' @param x        waterLSEB object.
+#' @param ...      additional parameters to pass to writeRaster()
+#' @author  María Victoria Munafó
+#' @export
+#' @family LSEB objects related functions
+#' @method writeRaster waterLSEB
+
+writeRaster.waterLSEB <- function(x, ...){
+  raster::writeRaster(x$EB, ...)
+}
+
+
