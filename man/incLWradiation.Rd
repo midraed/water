@@ -27,10 +27,10 @@ Allen R. RAPID long-wave radiation calculations and model comparisons Internal r
 }
 \seealso{
 Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
-  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
-  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
-  \code{\link{solarAngles}},
+  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
+  \code{\link{albedo}}, \code{\link{incSWradiation}},
+  \code{\link{netRadiation}}, \code{\link{outLWradiation}},
+  \code{\link{soilHeatFlux}}, \code{\link{solarAngles}},
   \code{\link{surfaceTemperature}}
 }
 \author{

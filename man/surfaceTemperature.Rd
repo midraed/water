@@ -45,8 +45,8 @@ infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10),
 }
 \seealso{
 Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
-  \code{\link{incLWradiation}},
+  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
+  \code{\link{albedo}}, \code{\link{incLWradiation}},
   \code{\link{incSWradiation}}, \code{\link{netRadiation}},
   \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
   \code{\link{solarAngles}}

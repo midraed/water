@@ -27,7 +27,8 @@ ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of 
 }
 \seealso{
 Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{albedo}}, \code{\link{incLWradiation}},
+  \code{\link{METRICtopo}}, \code{\link{albedo}},
+  \code{\link{incLWradiation}},
   \code{\link{incSWradiation}}, \code{\link{netRadiation}},
   \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
   \code{\link{solarAngles}},

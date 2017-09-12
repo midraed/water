@@ -37,7 +37,7 @@ Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I.
 }
 \seealso{
 Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{SWtrasmisivity}},
+  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
   \code{\link{incLWradiation}},
   \code{\link{incSWradiation}}, \code{\link{netRadiation}},
   \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},

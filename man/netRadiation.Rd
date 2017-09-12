@@ -25,8 +25,8 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 }
 \seealso{
 Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
-  \code{\link{incLWradiation}},
+  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
+  \code{\link{albedo}}, \code{\link{incLWradiation}},
   \code{\link{incSWradiation}},
   \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
   \code{\link{solarAngles}},

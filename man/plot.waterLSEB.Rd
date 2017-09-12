@@ -13,7 +13,8 @@
 Plot method for waterLSEB S3 class
 }
 \seealso{
-Other LSEB objects related functions: \code{\link{print.waterLSEB}}
+Other LSEB objects related functions: \code{\link{print.waterLSEB}},
+  \code{\link{writeRaster.waterLSEB}}
 }
 \author{
 Guillermo Federico Olmedo
