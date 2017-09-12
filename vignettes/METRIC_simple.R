@@ -31,14 +31,14 @@ Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE,
                             sat="L7", thermalband=image.DN$thermal.low)
 
 ## ---- fig.width = 5------------------------------------------------------
-plot(Energy.Balance)
+plot(Energy.Balance$EB)
 
 ## ------------------------------------------------------------------------
 ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 
 ## ---- fig.width = 5, warning=FALSE---------------------------------------
-ET.24 <- ET24h(Rn=Energy.Balance$NetRadiation, G=Energy.Balance$SoilHeat, 
-               H=Energy.Balance$SensibleHeat, 
-               Ts=Energy.Balance$surfaceTemperature, 
+ET.24 <- ET24h(Rn=Energy.Balance$EB$NetRadiation, G=Energy.Balance$EB$SoilHeat, 
+               H=Energy.Balance$EB$SensibleHeat, 
+               Ts=Energy.Balance$EB$surfaceTemperature, 
                WeatherStation = WeatherStation, ETr.daily=ET_WS)
 
