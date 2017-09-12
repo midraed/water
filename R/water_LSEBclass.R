@@ -4,7 +4,7 @@
 #' @export
 #' @family LSEB objects related functions
 #' @method plot waterLSEB
-plot.waterLESB <- function(x){
+plot.waterLSEB <- function(x){
   plot(x$EB[[1:4]])
 }
 
@@ -15,7 +15,7 @@ plot.waterLESB <- function(x){
 #' @export
 #' @family LSEB objects related functions
 #' @method print waterLSEB
-print.waterWeatherStation <- function(x){
+print.waterLSEB <- function(x){
   print(x)
 }
 
