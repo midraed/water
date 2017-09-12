@@ -248,13 +248,17 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                     h = extraParameters["h"],
                                     surface.model = surface.model)
   }
+  if(Z.om != "short.crops"){Z.om.sc <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
+                                                             method = Zom.method, 
+                                                             surface.model = surface.model)
+  } else {Z.om.sc <- Z.om}
   par(mfrow=c(1,2))
   if(missing(anchors)){
     if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
     if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
     if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
     anchors <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
-                           albedo = albedo, Z.om = Z.om, n = n, 
+                           albedo = albedo, Z.om = Z.om.sc, n = n, 
                            anchors.method = anchors.method, WeatherStation = WeatherStation,
                            deltaTemp = extraParameters['deltaTemp'],
                            minDist = extraParameters['minDist'],
