@@ -1,11 +1,13 @@
 getSat <- function(path){
   band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_(B|band)2.(TIF|tif)$")), 0,3)
   if(length(band)==0){
+    band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d{2}_\\w{4}_\\d{6}_\\d{8}_\\d{8}_\\w{2}_\\w{2}_(B|b|band)2.(TIF|tif)$")), 0,4)
+  } else {
     print(paste("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF in ", path))
     return()
   }
-  if(band =="LC8"){return("L8")}
-  if(band =="LE7"){return("L7")}
+  if(band =="LC8" | band == "LC08"){return("L8")}
+  if(band =="LE7" | band == "LC07"){return("L7")}
   if(band != "LE7" & band != "LC8"){
     print("Can't establish sat from band names")
     return()}
