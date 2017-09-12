@@ -21,5 +21,5 @@ Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
                             LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
-plot(Energy.Balance)
+plot(Energy.Balance$EB)
 

@@ -277,6 +277,17 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                 "LatentHeat", "surfaceTemperature"), 
                 file = "EB", overwrite=TRUE)
   #setTxtProgressBar(pb, 100)
-  return(EB)
+  result <- list()
+  result$EB <- EB
+  result$WeatherStation <- WeatherStation
+  coordinates(anchors) <- ~ X + Y
+  result$anchors <- anchors
+  result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
+                      LAI.method = LAI.method, Zom.method = Zom.method, 
+                      anchors.method = anchors.method, plain = plain,
+                      ETp.coef= ETp.coef, Z.om.ws=Z.om.ws,
+                      extraParameters = extraParameters)
+  class(result) <- "waterLSEB"
+  return(result)
 }
   
