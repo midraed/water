@@ -94,8 +94,8 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' @param DEM  raster with Digital elevation model 
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
-#' @references 
 #' @family net radiation related functions
+#' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 METRICtopo <- function(DEM){
