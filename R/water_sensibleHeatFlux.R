@@ -266,7 +266,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     useBuffer <- TRUE
     flex <- 0
-    while(cold.n < 1){        ## flexibilize cold criteria
+    optValColdBck <- optValCold
+    while(cold.n < 1){        ## relax cold criteria
       useBuffer <- !useBuffer
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
@@ -277,39 +278,39 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       useBuffer <- !useBuffer
       flex <- flex + 0.01
       print(paste0("relaxing criteria for cold pixels: ", flex, "%"))
-      optValCold[1,] <- optValCold[1,] * c((1-flex), 1, 1)
-      optValCold[2,] <- optValCold[2,] * c((1+flex), 1, 1)
+      optValCold[1,] <- optValColdBck[1,] * c((1-flex), 1, 1)
+      optValCold[2,] <- optValColdBck[2,] * c((1+flex), 1, 1)
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
         values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
         values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
         values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
       cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValCold[1,] * c(1, (1-flex), 1)
-      optValCold[2,] <- optValCold[2,] * c(1, (1+flex), 1)
+      optValCold[1,] <- optValColdBck[1,] * c(1, (1-flex), 1)
+      optValCold[2,] <- optValColdBck[2,] * c(1, (1+flex), 1)
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
         values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
         values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
         values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
       cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValCold[1,] * c(1, 1, (1-flex))
-      optValCold[2,] <- optValCold[2,] * c(1, 1, (1+flex))
+      optValCold[1,] <- optValColdBck[1,] * c(1, 1, (1-flex))
+      optValCold[2,] <- optValColdBck[2,] * c(1, 1, (1+flex))
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
         values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
         values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
         values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
       cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValCold[1,] * (1-flex)
-      optValCold[2,] <- optValCold[2,] * (1+flex)
+      optValCold[1,] <- optValColdBck[1,] * (1-flex)
+      optValCold[2,] <- optValColdBck[2,] * (1+flex)
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
         values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
         values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
         values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
       cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      if(flex == 1){stop("Automatic selection of cold anchors FAILED")}
+      if(flex >= 1){stop("Automatic selection of cold anchors FAILED")}
     } 
     if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for cold pixels was:
     LAI:", optValCold[1,1], "to", optValCold[2,1], "
@@ -323,7 +324,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
     useBuffer <- TRUE
     flex <- 0
-    while(hot.n < 1){        ## flexibilize hot criteria
+    optValHotBck <- optValHot
+    while(hot.n < 1){        ## relax hot criteria
       useBuffer <- !useBuffer
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
@@ -332,37 +334,37 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       useBuffer <- !useBuffer
       flex <- flex + 0.01
       print(paste0("relaxing criteria for hot pixels: ", flex, "%"))
-      optValHot[1,] <- optValHot[1,] * c((1-flex), 1, 1, 1)
-      optValHot[2,] <- optValHot[2,] * c((1+flex), 1, 1, 1)
+      optValHot[1,] <- optValHotBck[1,] * c((1-flex), 1, 1, 1)
+      optValHot[2,] <- optValHotBck[2,] * c((1+flex), 1, 1, 1)
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
         values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHot[1,] * c(1, (1-flex), 1, 1)
-      optValHot[2,] <- optValHot[2,] * c(1, (1+flex), 1, 1)
+      optValHot[1,] <- optValHotBck[1,] * c(1, (1-flex), 1, 1)
+      optValHot[2,] <- optValHotBck[2,] * c(1, (1+flex), 1, 1)
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
         values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHot[1,] * c(1, 1, (1-flex), 1)
-      optValHot[2,] <- optValHot[2,] * c(1, 1, (1+flex), 1)
+      optValHot[1,] <- optValHotBck[1,] * c(1, 1, (1-flex), 1)
+      optValHot[2,] <- optValHotBck[2,] * c(1, 1, (1+flex), 1)
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
         values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHot[1,] * c(1, 1, 1, (1-flex))
-      optValHot[2,] <- optValHot[2,] * c(1, 1, 1, (1+flex))
+      optValHot[1,] <- optValHotBck[1,] * c(1, 1, 1, (1-flex))
+      optValHot[2,] <- optValHotBck[2,] * c(1, 1, 1, (1+flex))
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
         values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHot[1,] * (1-flex)
-      optValHot[2,] <- optValHot[2,] * (1+flex)
+      optValHot[1,] <- optValHotBck[1,] * (1-flex)
+      optValHot[2,] <- optValHotBck[2,] * (1+flex)
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
         values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      if(flex == 1){stop("Automatic selection of hot anchors FAILED")}
+      if(flex >= 1){stop("Automatic selection of hot anchors FAILED")}
     } 
     if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for hot pixels was:
     albedo:", optValHot[1,1], "to", optValHot[2,1], "
