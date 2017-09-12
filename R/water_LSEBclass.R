@@ -19,6 +19,7 @@ print.waterLSEB <- function(x){
   print(x$EB)
   print(x$WeatherStation)
   print(x$anchors)
+  print(x$anchors@data)
   print(x$methods)
 }
 

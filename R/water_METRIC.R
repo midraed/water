@@ -280,6 +280,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   result <- list()
   result$EB <- EB
   result$WeatherStation <- WeatherStation
+  coordinates(anchors) <- ~ X + Y
   result$anchors <- anchors
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
