@@ -276,6 +276,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
       useBuffer <- !useBuffer
       flex <- flex + 0.01
+      print(paste0("relaxing criteria for cold pixels: ", flex, "%"))
       optValCold[1,] <- optValCold[1,] * c((1-flex), 1, 1)
       optValCold[2,] <- optValCold[2,] * c((1+flex), 1, 1)
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
@@ -330,6 +331,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
       useBuffer <- !useBuffer
       flex <- flex + 0.01
+      print(paste0("relaxing criteria for hot pixels: ", flex, "%"))
       optValHot[1,] <- optValHot[1,] * c((1-flex), 1, 1, 1)
       optValHot[2,] <- optValHot[2,] * c((1+flex), 1, 1, 1)
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
