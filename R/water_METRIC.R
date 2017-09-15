@@ -249,7 +249,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                     surface.model = surface.model)
   }
   if(Zom.method != "short.crops"){Z.om.sc <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
-                                                             method = Zom.method, 
+                                                             method = "short.crops", 
                                                              surface.model = surface.model)
   } else {Z.om.sc <- Z.om}
   par(mfrow=c(1,2))
