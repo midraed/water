@@ -5,8 +5,8 @@
 \title{Select anchors pixels for H function}
 \usage{
 calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
-  anchors.method = "best", WeatherStation, plots = TRUE, deltaTemp = 5,
-  minDist = 500, WSbuffer = 30000, verbose = FALSE)
+  anchors.method = "flexible", WeatherStation, plots = TRUE,
+  deltaTemp = 5, minDist = 500, WSbuffer = 30000, verbose = FALSE)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}
