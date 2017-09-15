@@ -80,7 +80,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' CITRA y MCB (com pers)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "best", WeatherStation,
+                         anchors.method= "flexible", WeatherStation,
                          plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
                          verbose=FALSE) {
   ### old method names. Remove after version 0.8
