@@ -3,7 +3,26 @@ change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
 
-VERSION 0.6.1.99
+VERSION 0.7
+
+* New S3 class for the results of METRIC.EB(). The new class includes the
+  RasterStack with the LSEB results, the weather station data used, and the
+  parameters and methods selected in METRIC.EB().
+* When using METRIC.EB(), calcAnchors always uses method="short.crops" not 
+  matter the method selected for Zom.method.
+* water can handle filenames for Landsat images using the pre-collection or
+  the collection 1 sets.
+* New method for calcAnchors: "flexible". This method is based in the "best" 
+  method, but, will relax the requesites for the anchors when there is no pixel
+  with those conditions. "flexible" is the default method now.
+* in LAI() the method "vineyard" used the toa reflectancy image. This was 
+  corrected and now uses the radiance image
+* Added a function to estimate radiance from a digital counts image and a 
+  metadata file: calcRadiance().
+* Several minor bugs fixed.
+
+
+VERSION 0.6.1
 
 * Added a workaround for read.WSdata() when there is not rain data
 * Fixed a bug in momentumRoughness() when using the Perrier equation

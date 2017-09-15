@@ -1,18 +1,18 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance Models
-Version: 0.6.4.99.1
-Date: 2017-05-31
+Version: 0.7
+Date: 2017-09-15
 Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farias [aut],
     David Fonseca-Luengo [aut], Daniel de la Fuente-Saiz [aut], Fernando Fuentes
-    Peñailillo [aut]
+    Peñailillo [aut], María Victoria Munafó [ctb]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 Description: Tools and functions to calculate actual Evapotranspiration
     using surface energy balance models.
 Depends:
-    R (>= 3.0),
-    raster (>= 2.4-18),
-    sp (>= 1.1-1),
-    rgdal (>= 1.0-4)
+    R (>= 3.4),
+    raster (>= 2.5),
+    sp (>= 1.2),
+    rgdal (>= 1.2)
 Imports:
 License: GPL (>= 2)
 URL: http://midraed.github.io/water
