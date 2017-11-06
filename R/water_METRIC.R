@@ -180,7 +180,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' }
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
-                      thermalband, plain=TRUE, DEM, aoi,
+                      thermalband, plain=TRUE, DEM, aoi, G.method = "Tasumi",
                       alb.coeff = "Tasumi", LST.method = "SC",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "CITRA-MCB",
@@ -229,7 +229,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   # Rn[Rn < 0]  <-  0 # see H
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
-                    Rn=Rn, LAI=LAI)
+                    Rn=Rn, LAI=LAI, method = G.method)
   # G[G < 0]  <-  0 # see H
   if(Zom.method == "short.crops"){
     Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
