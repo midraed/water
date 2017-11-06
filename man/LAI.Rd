@@ -4,7 +4,7 @@
 \alias{LAI}
 \title{Estimate LAI from Landsat Data}
 \usage{
-LAI(method = "metric2010", image, aoi, L = 0.1, ...)
+LAI(method = "metric2010", image, aoi, L = 0.1)
 }
 \arguments{
 \item{method}{Method used to estimate LAI from spectral data.}
