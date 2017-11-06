@@ -226,11 +226,11 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
                            solar.angles = solar.angles.r, Ts= Ts)
   Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
-  Rn[Rn < 0]  <-  0
+  # Rn[Rn < 0]  <-  0 # see H
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
                     Rn=Rn, LAI=LAI)
-  G[G < 0]  <-  0
+  # G[G < 0]  <-  0 # see H
   if(Zom.method == "short.crops"){
     Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
                                     method = Zom.method, 
@@ -273,8 +273,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   H <-  H$H
+  # H[H < 0]  <-  0  not a good solution...! not for any of the components
   LE <- Rn - G - H
-  LE[LE < 0]  <-  0
+  LE[LE < 0]  <-  0   # see H
   EB <- stack(Rn, G, H, LE, Ts)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
