@@ -317,6 +317,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     albedo:", optValCold[1,2], "to", optValCold[2,2], "
     Z.om:", optValCold[1,3], "to", optValCold[2,3], "
     and buffer ==", useBuffer))}
+    flex.cold <- flex
     ### Search for hots !
     hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
       values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
@@ -372,6 +373,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     max Z.om:", optValHot[2,3], "
     min Ts:", optValHot[1,4], "
     and buffer ==", useBuffer))}
+    flex.hot <- flex
     ### Test # anchors
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
@@ -455,6 +457,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                                                               Ts[cold][i], round(LAI[cold][i],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
+  }
+  if(method=="flexible"){
+    hot.and.cold$flex <- flex.cold
+    #hot.and.cold$flex[hot.and.cold$type == "hot"] <- flex.hot
   }
   return(hot.and.cold)
 }

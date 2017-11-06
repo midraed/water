@@ -267,6 +267,11 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     print(anchors)
   }
   #setTxtProgressBar(pb, 45)
+  if(anchors.method == "flexible"){
+    flex.cold <- hot.and.cold$flex
+    ETp.coef <- ETp.coef * flex.cold
+    print(paste0("ETp.coef updated to: ", ETp.coef))
+  }
   H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
              WeatherStation = WeatherStation, ETp.coef = ETp.coef,
              Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
