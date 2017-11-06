@@ -4,10 +4,12 @@
 \alias{plot.waterLSEB}
 \title{Plot method for waterLSEB S3 class}
 \usage{
-\method{plot}{waterLSEB}(x)
+\method{plot}{waterLSEB}(x, ...)
 }
 \arguments{
 \item{x}{waterLSEB object.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \description{
 Plot method for waterLSEB S3 class

@@ -4,10 +4,12 @@
 \alias{print.waterLSEB}
 \title{Print method for waterLSEB S3 class}
 \usage{
-\method{print}{waterLSEB}(x)
+\method{print}{waterLSEB}(x, ...)
 }
 \arguments{
 \item{x}{waterLSEB object.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \description{
 Print method for waterLSEB S3 class
