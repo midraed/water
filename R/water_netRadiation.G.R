@@ -289,7 +289,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, aoi, L=0.1, ...){
+LAI <- function(method="metric2010", image, aoi, L=0.1){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
   if(method=="turner"){
@@ -556,22 +556,28 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @param LAI      raster layer with leaf area index. See LAI()
 #' @param Rn       Net radiation. See netRadiation()
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' @param method   method used for the G estimation. Currently implemeted are 
+#'                 "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
-soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi){
+soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   sr.4.5 <- stack(image[[3]], image[[4]])
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
-  G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
+  if(method == "Bastiaanssen"){
+    G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
+  }
+  if(method == "Tasumi"){
+    G <- raster(NDVI)
+    e <- 2.71828
+    G <- (0.05 + 0.18 * e^(-0.521*LAI)) * Rn
+    G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * 
+      Rn[LAI < 0.5]
+  }
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
-  G <- raster(NDVI)
-  e <- 2.71828
-  G <- (0.05 + 0.18 * e^(-0.521*LAI)) * Rn
-  G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * 
-    Rn[LAI < 0.5]
   return(G)
 }
 
