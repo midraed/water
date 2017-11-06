@@ -1,9 +1,9 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance Models
-Version: 0.7
-Date: 2017-09-15
-Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farias [aut],
-    David Fonseca-Luengo [aut], Daniel de la Fuente-Saiz [aut], Fernando Fuentes
+Version: 0.7.5
+Date: 2017-10-15
+Author: Guillermo Federico Olmedo [aut, cre], Samuel Ortega-Farías [aut],
+    David Fonseca-Luengo [aut], Daniel de la Fuente-Sáiz [aut], Fernando Fuentes
     Peñailillo [aut], María Victoria Munafó [ctb]
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 Description: Tools and functions to calculate actual Evapotranspiration
