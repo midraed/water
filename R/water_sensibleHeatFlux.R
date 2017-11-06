@@ -458,7 +458,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
   }
-  if(method=="flexible"){
+  if(anchors.method=="flexible"){
     hot.and.cold$flex <- flex.cold
     #hot.and.cold$flex[hot.and.cold$type == "hot"] <- flex.hot
   }
