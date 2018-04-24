@@ -35,6 +35,9 @@ if plain = TRUE}
 
 \item{aoi}{SpatialPolygon object with limits of Area of interest}
 
+\item{G.method}{method used for the G estimation. Currently implemeted are 
+"Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
+
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 

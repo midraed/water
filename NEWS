@@ -3,6 +3,15 @@ change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
 
+VERSION 0.8
+
+* New method for anchors pixels selection named "flexible". This method
+  will find the pixel with the best condition when there aren't any perfect 
+  candidates. It will relax the conditions needed and then adjust the ETp.coef
+  based on Gonzalez et al 2015. See calcH()
+* Added a new method to G estimation. Now the method can be choosen from 
+  soilHeatFlux() and also in METRIC.EB()
+
 VERSION 0.7
 
 * New S3 class for the results of METRIC.EB(). The new class includes the
