@@ -4,7 +4,7 @@
 \alias{soilHeatFlux}
 \title{Estimates Soil Heat Flux}
 \usage{
-soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi)
+soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi")
 }
 \arguments{
 \item{image}{surface reflectance image}
@@ -18,6 +18,9 @@ soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi)
 \item{Rn}{Net radiation. See netRadiation()}
 
 \item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+
+\item{method}{method used for the G estimation. Currently implemeted are 
+"Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
 }
 \description{
 This function implements models to estimate soil heat flux for different surfaces and considering different inputs.

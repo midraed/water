@@ -22,8 +22,8 @@ LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Off
 }
 \seealso{
 Other remote sensing support functions: \code{\link{calcSR}},
-  \code{\link{calcTOAr}}, \code{\link{loadImageSR}},
-  \code{\link{loadImage}}
+  \code{\link{calcTOAr}}, \code{\link{cfmask}},
+  \code{\link{loadImageSR}}, \code{\link{loadImage}}
 }
 \author{
 Guillermo Federico Olmedo

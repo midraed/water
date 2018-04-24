@@ -147,6 +147,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @family METRIC model functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
 #' @examples 
 #' ### Data preparation
 #' library(water)
@@ -269,8 +270,14 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   #setTxtProgressBar(pb, 45)
   if(anchors.method == "flexible"){
      flex.cold <- anchors$flex
-     ETp.coef <- mean(ETp.coef * (1 -flex.cold)^2)
-     print(paste0("ETp.coef updated to: ", ETp.coef))
+     NDVIcold <- mean(as.numeric(anchors$NDVI[anchors$type == "cold"]))
+     print(paste0("mean NDVI for cold pixel: ", NDVIcold))
+     # NDVI and Kc relationship from:
+     #González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, 
+     #Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient 
+     #and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
+     ETp.coef <-  2.11 * NDVIcold - 0.4989 
+     print(paste0("ETp.coef updated to: ", ETp.coef, " (Gonzalez et al, 2015)"))
 
   }
   H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,

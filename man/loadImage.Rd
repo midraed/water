@@ -24,7 +24,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 \seealso{
 Other remote sensing support functions: \code{\link{calcRadiance}},
   \code{\link{calcSR}}, \code{\link{calcTOAr}},
-  \code{\link{loadImageSR}}
+  \code{\link{cfmask}}, \code{\link{loadImageSR}}
 }
 \author{
 Guillermo Federico Olmedo
