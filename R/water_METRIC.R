@@ -110,6 +110,9 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
 #' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param G.method         method used for the G estimation. Currently implemeted are 
+#'                         "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
+
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
 #' @param LST.method       Method for land surface temperature estimation. "SC" 
