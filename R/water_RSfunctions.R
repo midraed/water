@@ -279,3 +279,44 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
                             overwrite=TRUE)
   return(image_SR)
 }  
+
+
+#' mask clouds
+#' @description
+#' This function mask clouds and other values using the cfmask
+#' @param path  folder where band files are stored
+#' @param image  L8 raw image
+#' @param cfmask Raster layer with the cfmask
+#' @param keep values in cfmask to preserve in the final output
+#' @param buffer buffer width around excluded values, numeric > 0. Unit is meter
+#'              if x has a longitude/latitude CRS, or mapunits in other cases
+#' @author Guillermo Federico Olmedo
+#' @family remote sensing support functions
+#' @export
+cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
+                    buffer = 60){
+  if(missing(cfmask)){
+    file <- list.files(pattern="_cfmask.tif$")
+    cfmask <- raster(file)
+  }
+  cfmask <- crop(cfmask, image)
+  values(cfmask)[!values(cfmask) %in% keep] <- NA
+  values(cfmask)[!is.na(values(cfmask))] <- 1
+  image <- mask(image, cfmask)
+  return(image)
+}
+
+
+
+# cfmask <-  function(path = getwd(), image, cfmask,
+#                     buffer = 60){
+#   if(missing(cfmask)){
+#     file <- list.files(pattern="_sr_cloud.tif$")
+#     cfmask <- raster(file)
+#   }
+#   cfmask <- crop(cfmask, image)
+#   values(cfmask)[values(cfmask) <= 16] <- NA
+#   values(cfmask)[!is.na(values(cfmask))] <- 1
+#   image <- mask(image, cfmask)
+#   return(image)
+# }
