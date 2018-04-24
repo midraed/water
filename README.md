@@ -1,5 +1,8 @@
 Repository for the development version of water package.
 
+[![](http://cranlogs.r-pkg.org/badges/water)](http://cran.rstudio.com/web/packages/water/index.html)
+
+
 water package is available at [CRAN network](https://cran.r-project.org/package=water)
 
 You can install development version with: 
