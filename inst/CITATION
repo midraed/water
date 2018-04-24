@@ -1,0 +1,10 @@
+citEntry(entry="article",
+         title = "water : Tools and Functions to Estimate Actual Evapotranspiration Using Land Surface Energy Balance Models in R",
+         author = {"Olmedo, Guillermo Federico and Ortega-Farías, Samuel and {De la Fuente-Sáiz}, Daniel and Fonseca, David and Fuentes-Peñailillo, Fernando"},
+	       journal = {"The R Journal"},
+         number = {2},
+         pages = {"352--369"},
+         volume = {8},
+         year = {2016},
+         textVersion = "Olmedo, G.F. et al., 2016. water : Tools and Functions to Estimate Actual Evapotranspiration Using Land Surface Energy Balance Models in R. The R Journal, 8(2), pp.352–369."
+)
