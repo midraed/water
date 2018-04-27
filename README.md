@@ -1,6 +1,6 @@
 Repository for the development version of water package.
 
-[![](http://cranlogs.r-pkg.org/badges/water)](https://cran.r-project.org/package=water)
+[![](http://cranlogs.r-pkg.org/badges/grand-total/water)](https://cran.r-project.org/package=water)
 
 
 water package is available at [CRAN network](https://cran.r-project.org/package=water)
