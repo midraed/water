@@ -272,16 +272,17 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   #setTxtProgressBar(pb, 45)
   if(anchors.method == "flexible"){
-     flex.cold <- anchors$flex
+     flex.cold <- anchors$flex[anchors$type == "cold"][1]
      NDVIcold <- mean(as.numeric(anchors$NDVI[anchors$type == "cold"]))
-     print(paste0("mean NDVI for cold pixel: ", NDVIcold))
-     # NDVI and Kc relationship from:
-     #González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, 
-     #Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient 
-     #and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
-     ETp.coef <-  2.11 * NDVIcold - 0.4989 
-     print(paste0("ETp.coef updated to: ", ETp.coef, " (Gonzalez et al, 2015)"))
-
+     if(flex.cold > 0 & NDVIcold < 0.8){
+       print(paste0("mean NDVI for cold pixel: ", NDVIcold))
+       # NDVI and Kc relationship from:
+       #González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, 
+       #Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient 
+       #and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
+       ETp.coef <-  2.11 * NDVIcold - 0.4989 
+       print(paste0("ETp.coef updated to: ", ETp.coef, " (Gonzalez et al, 2015)"))
+     }
   }
   H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
              WeatherStation = WeatherStation, ETp.coef = ETp.coef,

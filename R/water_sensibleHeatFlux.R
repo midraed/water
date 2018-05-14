@@ -103,7 +103,17 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WScell <- extract(Ts, WSloc, cellnumbers=T)[1]
     WS.buffer <- raster(Ts)
     values(WS.buffer)[WScell] <- 1
+    
+
+    
+    # BUG in raster package
+    # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+    rasterOptions(todisk=TRUE)
     WS.buffer <- buffer(WS.buffer, width = WSbuffer)
+    rasterOptions(todisk=FALSE)
+    
+    
+    
   } else {
     WS.buffer <- raster(Ts)
     values(WS.buffer)<- 1
@@ -136,7 +146,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+        
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
+        
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -158,7 +175,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
@@ -202,7 +225,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
@@ -227,7 +256,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
@@ -267,7 +302,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     useBuffer <- TRUE
     flex <- 0
     optValColdBck <- optValCold
-    while(cold.n < 1){        ## relax cold criteria
+    while(cold.n <= n){        ## relax cold criteria
       useBuffer <- !useBuffer
       cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
         values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
@@ -326,7 +361,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     useBuffer <- TRUE
     flex <- 0
     optValHotBck <- optValHot
-    while(hot.n < 1){        ## relax hot criteria
+    while(hot.n <= n){        ## relax hot criteria
       useBuffer <- !useBuffer
       hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
         values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
@@ -389,16 +424,24 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[cold] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+        
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
         distbuffer <- is.na(distbuffer)
-        newAnchor <- NA
-        cold.candidates <- values(LAI>=3) & values(LAI<=6) &  
-          values(albedo>=0.18) & values(albedo<=0.25) &
+        newAnchor <- NA   
+        cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &  
+          values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-          values(Z.om>=0.03) & values(Z.om<=0.08) &
-          values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
+          values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
+          values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer)) &
+          values(distbuffer==1)
+        
         values(Ts.cold)[!cold.candidates] <- NA
-        if(length(which(cold.candidates))<2){
+        if(length(which(cold.candidates))<=2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
@@ -414,12 +457,19 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       for(nsample in 1:(n-1)){
         distbuffer <- raster(Ts)
         values(distbuffer)[hot] <- 1
-        distbuffer <- buffer(distbuffer, width = minDist) ### 500m buffer
+        
+        # BUG in raster package
+        # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
+        rasterOptions(todisk=TRUE)
+        distbuffer <- raster::buffer(distbuffer, width = minDist) ### 500m buffer
+        rasterOptions(todisk=FALSE)
+        
         distbuffer <- is.na(distbuffer)
         newAnchor <- NA
-        hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
-          values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
-          values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
+        hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
+          values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
+          values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1) &
+          values(distbuffer==1)
         values(Ts.hot)[!hot.candidates] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
