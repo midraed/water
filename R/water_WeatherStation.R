@@ -321,7 +321,7 @@ print.waterWeatherStation <- function(x, ...){
   if(!is.null(x$at.sat)){
   cat("Summary:\n")
   print(summary(x$alldata[format(x$alldata$datetime, format = "%d-%m-%Y") == 
-                            format(x$at.sat$datetime, format = "%d-%m-%Y"), 1:7]))
+                            format(x$at.sat$datetime, format = "%d-%m-%Y"), 2:7]))
   cat("\n Conditions at satellite overpass:\n")
   print(x$at.sat)} else {
     cat("Summary:\n")
