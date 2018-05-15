@@ -318,11 +318,15 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
 print.waterWeatherStation <- function(x, ...){
   cat("Weather Station @ lat:", round(x$location$lat, 2), "long:", 
       round(x$location$long, 2), "elev:", round(x$location$elev, 2), "\n")
-  cat("Summary:\n")
-  print(summary(x$alldata[,2:7]), ...)
   if(!is.null(x$at.sat)){
-  cat("\n Conditions at satellite flyby:\n")
-  print(x$at.sat)}
+  cat("Summary:\n")
+  print(summary(x$alldata[format(x$alldata$datetime, format = "%d-%m-%Y") == 
+                            format(x$at.sat$datetime, format = "%d-%m-%Y"), 1:7]))
+  cat("\n Conditions at satellite overpass:\n")
+  print(x$at.sat)} else {
+    cat("Summary:\n")
+    print(summary(x$alldata[,1:7]))
+  }
 }
 
 
