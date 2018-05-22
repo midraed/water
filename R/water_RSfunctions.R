@@ -288,7 +288,8 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
 #' @param image    L8 raw image
 #' @param cfmask   Raster layer with the cfmask
 #' @param keep     values in cfmask to preserve in the final output. 
-#'                 Use 0 for cfmask files, and 2720 for bqa files. 
+#'                 Use 0 for cfmask files, and 2720 for bqa files. For Landsat 7
+#'                 BQA images, the value should be 672. 
 #' @param buffer buffer width around excluded values, numeric > 0. Unit is meter
 #'              if x has a longitude/latitude CRS, or mapunits in other cases
 #' @author Guillermo Federico Olmedo
@@ -298,7 +299,7 @@ cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
                     buffer = 60){
   if(missing(cfmask)){
     file <- list.files(pattern="_cfmask.tif$")
-    if(length(file) != 1){file <- list.files(pattern="_bqa.tif$")}
+    if(length(file) != 1){file <- list.files(pattern="_bqa.tif$|_BQA.TIF")}
     cfmask <- raster(file)
   }
   cfmask <- crop(cfmask, image)
