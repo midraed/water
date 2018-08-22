@@ -274,6 +274,8 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Digital counts for method = "vineyard".
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
+#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
+#' from filenames 
 #' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
 #' LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
 #' depending on preferences of the user.
@@ -289,7 +291,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, aoi, L=0.1){
+LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- stack(image[[3]], image[[4]])}
   if(method=="turner"){
@@ -314,7 +316,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1){
   }
   if(method=="vineyard"){
     # image must be the DN image
-    image <- calcRadiance(image)
+    image <- calcRadiance(image, sat = sat)
     toa.4.5 <- stack(image[[3]], image[[4]])
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
