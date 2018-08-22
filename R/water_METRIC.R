@@ -218,7 +218,10 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   #setTxtProgressBar(pb, 6)
   if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
   # and some LAI models, use SR
-  if(LAI.method == "vineyard"){LAI <- LAI(method = LAI.method, image = image.DN, L=L, sat = sat)}
+  if(LAI.method == "vineyard"){
+    image.rad <- calcRadiance(image.DN, sat = sat, MTL = MTL)
+    LAI <- LAI(method = LAI.method, image = image.rad, L=L)
+    }
   if(LAI.method == "turner"){LAI <- LAI(method = LAI.method, image = image.SR, L=L)}
   if (LAI.method != "vineyard" & LAI.method != "turner"){LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)}
   if(sat=="L7" | sat=="L8"){
