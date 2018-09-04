@@ -575,7 +575,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours, 
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
                          ET= "ETor")
-  Ts.datum <- Ts - (DEM - WeatherStation$elev) * 6.49 / 1000
+  Ts.datum <- Ts + (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))# En el paper dice por 1e6
