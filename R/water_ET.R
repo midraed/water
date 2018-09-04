@@ -209,5 +209,5 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
       }
   }} else {
     print("not implemented yet")}
-  return(sum(ET.daily))
+  return(sum(ET.daily, na.rm=T))
 }
