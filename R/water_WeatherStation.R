@@ -261,6 +261,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
     WSp <- WSp[as.POSIXlt(WSp$datetime)$yday == date$yday 
                & as.POSIXlt(WSp$datetime)$year == date$year,]
   }
+  WSp <- WSp[order(WSp$datetime),]
   time <- WSp$datetime
   graphics::par(mar=c(5, 7, 4, 9.5) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
