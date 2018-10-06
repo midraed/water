@@ -299,7 +299,7 @@ cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
                     buffer = 60){
   if(missing(cfmask)){
     file <- list.files(pattern="_cfmask.tif$")
-    if(length(file) != 1){file <- list.files(pattern="_bqa.tif$|_BQA.TIF")}
+    if(length(file) != 1){file <- list.files(pattern="_bqa.tif$|_BQA.TIF$")}
     cfmask <- raster(file)
   }
   cfmask <- crop(cfmask, image)
