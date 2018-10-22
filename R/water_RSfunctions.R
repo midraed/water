@@ -86,7 +86,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' @family remote sensing support functions
 #' @export
 loadImageSR <-  function(path = getwd(),  aoi){
-  files <- list.files(path = path, pattern = "_sr_band+[2-7].tif$", full.names = T)
+  files <- list.files(path = path, pattern = "_sr_band+[2-7].(TIF|tif)$", full.names = T)
   stack1 <- list()
   for(i in 1:6){
     stack1[i] <- raster(files[i])}
