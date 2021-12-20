@@ -26,11 +26,13 @@ aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 plot(aoi)
 }
 \seealso{
-Other support functions: \code{\link{checkSRTMgrids}},
-  \code{\link{prepareSRTMdata}}
+Other support functions: 
+\code{\link{checkSRTMgrids}()},
+\code{\link{prepareSRTMdata}()}
 }
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
 }
+\concept{support functions}

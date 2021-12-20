@@ -4,9 +4,21 @@
 \alias{calcH}
 \title{Iterative function to estimate H and R.ah}
 \usage{
-calcH(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef = 1.05,
-  Z.om.ws = 0.03, mountainous = FALSE, DEM, Rn, G, verbose = FALSE,
-  maxit = 20)
+calcH(
+  anchors,
+  method = "mean",
+  Ts,
+  Z.om,
+  WeatherStation,
+  ETp.coef = 1.05,
+  Z.om.ws = 0.03,
+  mountainous = FALSE,
+  DEM,
+  Rn,
+  G,
+  verbose = FALSE,
+  maxit = 20
+)
 }
 \arguments{
 \item{anchors}{anchors points. Can be the result from calcAnchors() or
@@ -63,8 +75,9 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 }
 \seealso{
-Other sensible heat flux functions: \code{\link{calcAnchors}},
-  \code{\link{momentumRoughnessLength}}
+Other sensible heat flux functions: 
+\code{\link{calcAnchors}()},
+\code{\link{momentumRoughnessLength}()}
 }
 \author{
 Guillermo Federico Olmedo
@@ -73,3 +86,4 @@ de la Fuente-Saiz, Daniel
 
 Fernando Fuentes Peñailillo
 }
+\concept{sensible heat flux functions}

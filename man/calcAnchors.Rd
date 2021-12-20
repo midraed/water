@@ -4,9 +4,22 @@
 \alias{calcAnchors}
 \title{Select anchors pixels for H function}
 \usage{
-calcAnchors(image, Ts, LAI, albedo, Z.om, n = 1, aoi,
-  anchors.method = "flexible", WeatherStation, plots = TRUE,
-  deltaTemp = 5, minDist = 500, WSbuffer = 30000, verbose = FALSE)
+calcAnchors(
+  image,
+  Ts,
+  LAI,
+  albedo,
+  Z.om,
+  n = 1,
+  aoi,
+  anchors.method = "flexible",
+  WeatherStation,
+  plots = TRUE,
+  deltaTemp = 5,
+  minDist = 500,
+  WSbuffer = 30000,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{image}{top-of-atmosphere landsat reflectance image}
@@ -52,11 +65,13 @@ automatically search end members within the satellite scene (extreme wet and dry
 CITRA y MCB (com pers)
 }
 \seealso{
-Other sensible heat flux functions: \code{\link{calcH}},
-  \code{\link{momentumRoughnessLength}}
+Other sensible heat flux functions: 
+\code{\link{calcH}()},
+\code{\link{momentumRoughnessLength}()}
 }
 \author{
 Guillermo Federico Olmedo
 
 de la Fuente-Saiz, Daniel
 }
+\concept{sensible heat flux functions}

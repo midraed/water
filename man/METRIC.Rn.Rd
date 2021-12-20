@@ -4,8 +4,18 @@
 \alias{METRIC.Rn}
 \title{Estimates Net Radiation as in METRIC Model}
 \usage{
-METRIC.Rn(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
-  alb.coeff = "Tasumi", LAI.method = "metric2010", plain = TRUE, DEM, aoi)
+METRIC.Rn(
+  image.DN,
+  WeatherStation,
+  MTL,
+  sat = "auto",
+  thermalband,
+  alb.coeff = "Tasumi",
+  LAI.method = "metric2010",
+  plain = TRUE,
+  DEM,
+  aoi
+)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -39,9 +49,11 @@ Estimates Net Radiation as in METRIC Model
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
 \seealso{
-Other METRIC model functions: \code{\link{METRIC.EB}},
-  \code{\link{METRIC.G}}
+Other METRIC model functions: 
+\code{\link{METRIC.EB}()},
+\code{\link{METRIC.G}()}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
+\concept{METRIC model functions}

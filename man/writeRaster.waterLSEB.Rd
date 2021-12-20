@@ -15,9 +15,11 @@
 writeRaster method for waterLSEB S3 class
 }
 \seealso{
-Other LSEB objects related functions: \code{\link{plot.waterLSEB}},
-  \code{\link{print.waterLSEB}}
+Other LSEB objects related functions: 
+\code{\link{plot.waterLSEB}()},
+\code{\link{print.waterLSEB}()}
 }
 \author{
 María Victoria Munafó
 }
+\concept{LSEB objects related functions}

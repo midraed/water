@@ -4,8 +4,18 @@
 \alias{dailyET}
 \title{Calculates daily ET using Penman Monteith hourly formula for every hour}
 \usage{
-dailyET(WeatherStation, DOY, height, lat, long, elev, ET = "ETr",
-  long.z = WeatherStation$long, date = "auto", MTL)
+dailyET(
+  WeatherStation,
+  DOY,
+  height,
+  lat,
+  long,
+  elev,
+  ET = "ETr",
+  long.z = WeatherStation$long,
+  date = "auto",
+  MTL
+)
 }
 \arguments{
 \item{WeatherStation}{a data frame with all the needed fields (see example)}

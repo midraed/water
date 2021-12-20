@@ -20,12 +20,17 @@ This function calculates incoming solar radiation from surface model and solar a
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
-  \code{\link{albedo}}, \code{\link{incLWradiation}},
-  \code{\link{netRadiation}}, \code{\link{outLWradiation}},
-  \code{\link{soilHeatFlux}}, \code{\link{solarAngles}},
-  \code{\link{surfaceTemperature}}
+Other net radiation related functions: 
+\code{\link{LAI}()},
+\code{\link{METRICtopo}()},
+\code{\link{SWtrasmisivity}()},
+\code{\link{albedo}()},
+\code{\link{incLWradiation}()},
+\code{\link{netRadiation}()},
+\code{\link{outLWradiation}()},
+\code{\link{soilHeatFlux}()},
+\code{\link{solarAngles}()},
+\code{\link{surfaceTemperature}()}
 }
 \author{
 Guillermo Federico Olmedo
@@ -34,3 +39,4 @@ Daniel de la Fuente Saiz
 
 Fonseca-Luengo, David
 }
+\concept{net radiation related functions}

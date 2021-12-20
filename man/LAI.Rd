@@ -4,16 +4,18 @@
 \alias{LAI}
 \title{Estimate LAI from Landsat Data}
 \usage{
-LAI(method = "metric2010", image, aoi, L = 0.1)
+LAI(method = "metric2010", image, aoi, L = 0.1, sat)
 }
 \arguments{
 \item{method}{Method used to estimate LAI from spectral data.}
 
-\item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Digital counts for method = "vineyard".}
+\item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Radiance for method = "vineyard".}
 
 \item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
 
 \item{L}{L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1}
+
+\item{sat}{Landsat satellite version. "L7" or "L8"}
 }
 \description{
 This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
@@ -31,13 +33,17 @@ Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa
 Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 }
 \seealso{
-Other net radiation related functions: \code{\link{METRICtopo}},
-  \code{\link{SWtrasmisivity}}, \code{\link{albedo}},
-  \code{\link{incLWradiation}},
-  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
-  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
-  \code{\link{solarAngles}},
-  \code{\link{surfaceTemperature}}
+Other net radiation related functions: 
+\code{\link{METRICtopo}()},
+\code{\link{SWtrasmisivity}()},
+\code{\link{albedo}()},
+\code{\link{incLWradiation}()},
+\code{\link{incSWradiation}()},
+\code{\link{netRadiation}()},
+\code{\link{outLWradiation}()},
+\code{\link{soilHeatFlux}()},
+\code{\link{solarAngles}()},
+\code{\link{surfaceTemperature}()}
 }
 \author{
 Guillermo Federico Olmedo
@@ -46,3 +52,4 @@ Fonseca-Luengo, David
 
 Fernando Fuentes Peñailillo
 }
+\concept{net radiation related functions}

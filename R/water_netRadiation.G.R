@@ -274,6 +274,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Radiance for method = "vineyard".
 #' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
+#' @param sat      Landsat satellite version. "L7" or "L8"
 #' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
 #' LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
 #' depending on preferences of the user.

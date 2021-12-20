@@ -14,7 +14,8 @@ cfmask(path = getwd(), image, cfmask, keep = 0, buffer = 60)
 \item{cfmask}{Raster layer with the cfmask}
 
 \item{keep}{values in cfmask to preserve in the final output. 
-Use 0 for cfmask files, and 2720 for bqa files.}
+Use 0 for cfmask files, and 2720 for bqa files. For Landsat 7
+BQA images, the value should be 672.}
 
 \item{buffer}{buffer width around excluded values, numeric > 0. Unit is meter
 if x has a longitude/latitude CRS, or mapunits in other cases}
@@ -23,10 +24,14 @@ if x has a longitude/latitude CRS, or mapunits in other cases}
 This function mask clouds and other values using the cfmask
 }
 \seealso{
-Other remote sensing support functions: \code{\link{calcRadiance}},
-  \code{\link{calcSR}}, \code{\link{calcTOAr}},
-  \code{\link{loadImageSR}}, \code{\link{loadImage}}
+Other remote sensing support functions: 
+\code{\link{calcRadiance}()},
+\code{\link{calcSR}()},
+\code{\link{calcTOAr}()},
+\code{\link{loadImageSR}()},
+\code{\link{loadImage}()}
 }
 \author{
 Guillermo Federico Olmedo
 }
+\concept{remote sensing support functions}

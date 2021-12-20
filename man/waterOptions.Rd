@@ -4,8 +4,14 @@
 \alias{waterOptions}
 \title{Global options for water package}
 \usage{
-waterOptions(overwrite, writeResults, outputFolder, SRTMrepo, autoAoi,
-  default = FALSE)
+waterOptions(
+  overwrite,
+  writeResults,
+  outputFolder,
+  SRTMrepo,
+  autoAoi,
+  default = FALSE
+)
 }
 \arguments{
 \item{overwrite}{Logical. If TRUE and writeResults is TRUE it will 

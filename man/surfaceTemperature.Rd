@@ -4,8 +4,15 @@
 \alias{surfaceTemperature}
 \title{Estimates Land Surface Temperature from Landsat Data}
 \usage{
-surfaceTemperature(image.DN, sat = "auto", LAI, aoi, method = "SC",
-  WeatherStation, thermalband)
+surfaceTemperature(
+  image.DN,
+  sat = "auto",
+  LAI,
+  aoi,
+  method = "SC",
+  WeatherStation,
+  thermalband
+)
 }
 \arguments{
 \item{image.DN}{raw image in digital numbers}
@@ -44,15 +51,21 @@ infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10),
 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
 \seealso{
-Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
-  \code{\link{albedo}}, \code{\link{incLWradiation}},
-  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
-  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
-  \code{\link{solarAngles}}
+Other net radiation related functions: 
+\code{\link{LAI}()},
+\code{\link{METRICtopo}()},
+\code{\link{SWtrasmisivity}()},
+\code{\link{albedo}()},
+\code{\link{incLWradiation}()},
+\code{\link{incSWradiation}()},
+\code{\link{netRadiation}()},
+\code{\link{outLWradiation}()},
+\code{\link{soilHeatFlux}()},
+\code{\link{solarAngles}()}
 }
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
 }
+\concept{net radiation related functions}

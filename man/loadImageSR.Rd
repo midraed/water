@@ -16,10 +16,14 @@ TRUE will look for any object called aoi on .GlobalEnv}
 This function loads Landsat bands from a specific folder.
 }
 \seealso{
-Other remote sensing support functions: \code{\link{calcRadiance}},
-  \code{\link{calcSR}}, \code{\link{calcTOAr}},
-  \code{\link{cfmask}}, \code{\link{loadImage}}
+Other remote sensing support functions: 
+\code{\link{calcRadiance}()},
+\code{\link{calcSR}()},
+\code{\link{calcTOAr}()},
+\code{\link{cfmask}()},
+\code{\link{loadImage}()}
 }
 \author{
 Guillermo Federico Olmedo
 }
+\concept{remote sensing support functions}

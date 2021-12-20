@@ -4,8 +4,18 @@
 \alias{momentumRoughnessLength}
 \title{Calculates Momentum Roughness Length}
 \usage{
-momentumRoughnessLength(method = "short.crops", LAI, NDVI, albedo, a, b, fLAI,
-  h, mountainous = FALSE, surface.model)
+momentumRoughnessLength(
+  method = "short.crops",
+  LAI,
+  NDVI,
+  albedo,
+  a,
+  b,
+  fLAI,
+  h,
+  mountainous = FALSE,
+  surface.model
+)
 }
 \arguments{
 \item{method}{method selected to calculate momentum roughness length. Use 
@@ -45,11 +55,13 @@ Pocas, I., Paco, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santo
 Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267-3283. doi:10.1007/s11269-012-0071-8 \cr
 }
 \seealso{
-Other sensible heat flux functions: \code{\link{calcAnchors}},
-  \code{\link{calcH}}
+Other sensible heat flux functions: 
+\code{\link{calcAnchors}()},
+\code{\link{calcH}()}
 }
 \author{
 Guillermo Federico Olmedo
 
 de la Fuente-Saiz, Daniel
 }
+\concept{sensible heat flux functions}

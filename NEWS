@@ -2,6 +2,13 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
+VERSION 0.8.4
+
+* Fixed read.WSdata example using a fixed (the correct one) timezone. Before this
+  timezone of the example was estimated with user timezone
+* Fixed mistmatch between LAI code and LAI documentation
+* Suppress confusing warning on read.WSdata()
+
 
 VERSION 0.8
 

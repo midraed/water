@@ -34,7 +34,7 @@
 #'                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
 #'                   columns=c("date" = 1, "time" = 2, "radiation" = 3,
 #'                   "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
-#'                   MTL = MTLfile)
+#'                   MTL = MTLfile, tz = "America/Santiago")
 #' print(WS)
 #' plot(WS, alldata=FALSE)
 #' plot(WS, alldata=TRUE)
@@ -163,11 +163,11 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     sat.date <-regmatches(date.line,regexec(text=date.line,
                         pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
     sat.datetime <- strptime(paste(sat.date, sat.time), 
-                             format = "%Y-%m-%d %H:%M:%S", tz="GMT")
-    WS.prev<-WSdata[WSdata$datetime == tail(datetime[datetime < 
-                                                       sat.datetime],1),]
-    WS.after <- WSdata[WSdata$datetime == datetime[datetime > 
-                                                     sat.datetime][1],]
+                             format = "%Y-%m-%d %H:%M:%S", tz="Europe/London")
+    WS.prev<-suppressWarnings(WSdata[WSdata$datetime == tail(datetime[datetime < 
+                                                       sat.datetime],1),])
+    WS.after <- suppressWarnings(WSdata[WSdata$datetime == datetime[datetime > 
+                                                     sat.datetime][1],])
     delta1 <- as.numeric(difftime(WS.after$datetime, 
                                   WS.prev$datetime, units="secs"))
     delta2 <- as.numeric(difftime(sat.datetime, WS.prev$datetime, units="secs"))

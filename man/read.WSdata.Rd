@@ -4,11 +4,21 @@
 \alias{read.WSdata}
 \title{Prepares weather station data}
 \usage{
-read.WSdata(WSdata, ..., height = 2.2, lat, long, elev, columns = c(date =
-  1, time = 2, radiation = 3, wind = 4, RH = 6, temp = 7, rain = 8),
-  date.format = "\%Y-\%m-\%d", time.format = "\%H:\%M:\%S",
-  datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S", tz = "", cf = c(1, 1, 1),
-  MTL)
+read.WSdata(
+  WSdata,
+  ...,
+  height = 2.2,
+  lat,
+  long,
+  elev,
+  columns = c(date = 1, time = 2, radiation = 3, wind = 4, RH = 6, temp = 7, rain = 8),
+  date.format = "\%Y-\%m-\%d",
+  time.format = "\%H:\%M:\%S",
+  datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S",
+  tz = "",
+  cf = c(1, 1, 1),
+  MTL
+)
 }
 \arguments{
 \item{WSdata}{csv file with weather station data or data.frame}
@@ -67,7 +77,7 @@ WS <- read.WSdata(WSdata = csvfile, date.format = "\%d/\%m/\%Y",
                   lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
                   columns=c("date" = 1, "time" = 2, "radiation" = 3,
                   "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
-                  MTL = MTLfile)
+                  MTL = MTLfile, tz = "America/Santiago")
 print(WS)
 plot(WS, alldata=FALSE)
 plot(WS, alldata=TRUE)
@@ -79,10 +89,12 @@ Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
 \seealso{
 \code{\link{read.WSdata2}} for the equivalent using read.csv2()
 
-Other Weather station related functions: \code{\link{plot.waterWeatherStation}},
-  \code{\link{print.waterWeatherStation}},
-  \code{\link{read.WSdata2}}
+Other Weather station related functions: 
+\code{\link{plot.waterWeatherStation}()},
+\code{\link{print.waterWeatherStation}()},
+\code{\link{read.WSdata2}()}
 }
 \author{
 Guillermo Federico Olmedo
 }
+\concept{Weather station related functions}

@@ -17,9 +17,11 @@ prepareSRTMdata(path = getwd(), format = "tif", extent)
 Create a mosaic with SRTM grid from image extent
 }
 \seealso{
-Other support functions: \code{\link{checkSRTMgrids}},
-  \code{\link{createAoi}}
+Other support functions: 
+\code{\link{checkSRTMgrids}()},
+\code{\link{createAoi}()}
 }
 \author{
 Guillermo Federico Olmedo
 }
+\concept{support functions}

@@ -4,12 +4,30 @@
 \alias{METRIC.EB}
 \title{Estimates Energy Balance using METRIC2010 Model}
 \usage{
-METRIC.EB(image.DN, image.SR, WeatherStation, MTL, sat = "auto", thermalband,
-  plain = TRUE, DEM, aoi, G.method = "Tasumi", alb.coeff = "Tasumi",
-  LST.method = "SC", LAI.method = "metric2010", L = 0.1,
-  Zom.method = "short.crops", anchors.method = "CITRA-MCB", anchors,
-  n = 1, ETp.coef = 1.05, Z.om.ws = 0.0018, verbose = FALSE,
-  extraParameters = vector())
+METRIC.EB(
+  image.DN,
+  image.SR,
+  WeatherStation,
+  MTL,
+  sat = "auto",
+  thermalband,
+  plain = TRUE,
+  DEM,
+  aoi,
+  G.method = "Tasumi",
+  alb.coeff = "Tasumi",
+  LST.method = "SC",
+  LAI.method = "metric2010",
+  L = 0.1,
+  Zom.method = "short.crops",
+  anchors.method = "CITRA-MCB",
+  anchors,
+  n = 1,
+  ETp.coef = 1.05,
+  Z.om.ws = 0.0018,
+  verbose = FALSE,
+  extraParameters = vector()
+)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
@@ -127,9 +145,11 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105.
 }
 \seealso{
-Other METRIC model functions: \code{\link{METRIC.G}},
-  \code{\link{METRIC.Rn}}
+Other METRIC model functions: 
+\code{\link{METRIC.G}()},
+\code{\link{METRIC.Rn}()}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
+\concept{METRIC model functions}

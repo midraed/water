@@ -36,16 +36,21 @@ M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflecti
 Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
 }
 \seealso{
-Other net radiation related functions: \code{\link{LAI}},
-  \code{\link{METRICtopo}}, \code{\link{SWtrasmisivity}},
-  \code{\link{incLWradiation}},
-  \code{\link{incSWradiation}}, \code{\link{netRadiation}},
-  \code{\link{outLWradiation}}, \code{\link{soilHeatFlux}},
-  \code{\link{solarAngles}},
-  \code{\link{surfaceTemperature}}
+Other net radiation related functions: 
+\code{\link{LAI}()},
+\code{\link{METRICtopo}()},
+\code{\link{SWtrasmisivity}()},
+\code{\link{incLWradiation}()},
+\code{\link{incSWradiation}()},
+\code{\link{netRadiation}()},
+\code{\link{outLWradiation}()},
+\code{\link{soilHeatFlux}()},
+\code{\link{solarAngles}()},
+\code{\link{surfaceTemperature}()}
 }
 \author{
 Guillermo Federico Olmedo
 
 Fonseca-Luengo, David
 }
+\concept{net radiation related functions}
