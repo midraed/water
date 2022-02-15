@@ -8,7 +8,7 @@
 An object of class \code{RasterLayer} of dimension 417 x 508 x 1.
 }
 \source{
-\url{https://www.usgs.gov/}
+\url{http://www.usgs.gov/}
 }
 \usage{
 DEM_Talca

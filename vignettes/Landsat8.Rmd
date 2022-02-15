@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](https://usgs.gov) offers surface reflectance processed trought [ESPA](https://espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
+Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](https://www.usgs.gov) offers surface reflectance processed trought [ESPA](https://espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
 
 ## Differences between Landsat 7 and 8
 
