@@ -81,13 +81,13 @@ plot(WeatherStation, hourly=TRUE)
 
 After that, we load the Landast satellite image. Usually, using `water` we can use the 
 function called `loadImage` to load a Landsat image from `.TIF files` were downloaded directly
-from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
+from [Earth Explorer](https://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
 image.DN <- L7_Talca
 ```
 
-Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image that we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](http://earthexplorer.usgs.gov/). Therefore, is needed to check wich grid files we are going to use considering the satellite scene location and the AOI polygon, using:
+Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image that we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](https://earthexplorer.usgs.gov/). Therefore, is needed to check wich grid files we are going to use considering the satellite scene location and the AOI polygon, using:
 
 ```{r}
 checkSRTMgrids(image.DN)

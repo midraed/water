@@ -15,8 +15,8 @@ Depends:
     rgdal (>= 1.2)
 Imports:
 License: GPL (>= 2)
-URL: http://midraed.github.io/water
-BugReports: https://github.com/midraed/water/issues
+URL: https://midraed.github.io/water/
+BugReports: https://github.com/midraed/water/issues/
 LazyData: true
 Suggests:
     knitr,

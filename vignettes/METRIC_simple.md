@@ -116,7 +116,7 @@ plot(WeatherStation, hourly=TRUE)
 
 After that, we need to load the Landast satellite image. Usually, using `water` we can use the 
 function called `loadImage` to load a Landsat image from `.TIF files` were downloaded directly
-from [Earth Explorer](http://earthexplorer.usgs.gov/). In this vignette we are
+from [Earth Explorer](https://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 
 ```r
@@ -197,4 +197,4 @@ ET.24 <- ET24h(Rn=Energy.Balance$EB$NetRadiation, G=Energy.Balance$EB$SoilHeat,
 
 Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC)-Model. Journal of Irrigation and Drainage Engineering, 133, 380.
 
-Bastiaanssen, W. G. M., Menenti, M., Feddes, R. a., & Holtslag, A. a. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. http://doi.org/10.1016/S0022-1694(98)00253-4
+Bastiaanssen, W. G. M., Menenti, M., Feddes, R. a., & Holtslag, A. a. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. https://doi.org/10.1016/S0022-1694(98)00253-4
