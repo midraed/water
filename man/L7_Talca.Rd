@@ -8,7 +8,7 @@
 An object of class \code{RasterBrick} of dimension 417 x 508 x 7.
 }
 \source{
-\url{http://www.usgs.gov/}
+\url{https://www.usgs.gov/}
 }
 \usage{
 L7_Talca

@@ -8,7 +8,7 @@
 #' 
 #' Data available from the U.S. Geological Survey.
 #'
-#' @source \url{http://www.usgs.gov/}
+#' @source \url{https://www.usgs.gov/}
 "L7_Talca"
 
 
@@ -20,5 +20,5 @@
 #' 
 #' Data available from the U.S. Geological Survey.
 #'
-#' @source \url{http://www.usgs.gov/}
+#' @source \url{https://www.usgs.gov/}
 "DEM_Talca"
