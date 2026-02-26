@@ -226,7 +226,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   if (LAI.method != "vineyard" & LAI.method != "turner"){LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)}
   if(sat=="L7" | sat=="L8"){
     Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=image.DN,
-                             WeatherStation = WeatherStation, method = LST.method)}
+                             WeatherStation = WeatherStation,
+                             method = LST.method,
+                             thermalband = thermalband)}
   if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
