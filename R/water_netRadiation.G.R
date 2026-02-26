@@ -99,8 +99,8 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 METRICtopo <- function(DEM){
-  aspect <- terrain(DEM, opt="aspect") 
-  slope <- terrain(DEM, opt="slope") 
+  aspect <- raster::terrain(DEM, opt="aspect") 
+  slope <- raster::terrain(DEM, opt="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- stack(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
@@ -583,6 +583,5 @@ soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
   return(G)
 }
-
 
 
