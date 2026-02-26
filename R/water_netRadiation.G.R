@@ -290,16 +290,17 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   if(method=="turner"){
     sr.4.5 <- sr.4.5 * 0.0001}
   if(method=="metric2010"){
-    SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + 
-                                                        toa.4.5[[2]])
-    SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
-                             file = "SAVI_ID", overwrite=TRUE)
-    LAI <- rast(SAVI_ID)
+    # SAVI
+    SAVI_ID <- (1 + L) * (toa.4.5[[2]] - toa.4.5[[1]]) / (L + toa.4.5[[1]] + toa.4.5[[2]])
+    SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID",
+                             file = "SAVI_ID", overwrite = TRUE)
     
-    LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & 
-                                                          SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
-    LAI[SAVI_ID <= 0] <- 0
-    LAI[SAVI_ID > 0.817] <- 6
+    # LAI from SAVI
+    LAI <- ifel(
+      SAVI_ID <= 0, 0,
+      ifel(SAVI_ID <= 0.817, 11 * (SAVI_ID^3), 6)
+    )
+    names(LAI) <- "LAI"
   }
   if(method=="metric"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
