@@ -14,7 +14,7 @@ createAoi(topleft, bottomright, EPSG)
 \item{EPSG}{Coordinate reference system EPSG code}
 }
 \value{
-object of class SpatialPolygons
+object of class sf
 }
 \description{
 An AOI (Area of Interest) is created based on two points (topleft and bottomright) using a coordinate reference system.
