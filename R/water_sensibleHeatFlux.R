@@ -482,16 +482,16 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   ### We can plot anchor points
   if(plots==TRUE){
     plot(LAI, main="LAI and hot and cold pixels")
-    graphics::points(xyFromCell(LAI, hot), col="red", pch=3)
-    graphics::points(xyFromCell(LAI, cold), col="blue", pch=4)
+    graphics::points(terra::xyFromCell(LAI, sanitizeCellIndex(hot)), col="red", pch=3)
+    graphics::points(terra::xyFromCell(LAI, sanitizeCellIndex(cold)), col="blue", pch=4)
     graphics::points(WSloc, pch=13)
   }
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(),
                              Y=integer(), Ts=double(), LAI=double(), NDVI=double(),
                              type=factor(levels = c("hot", "cold")))
-  for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], xyFromCell(LAI, hot[i]),
+  for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], terra::xyFromCell(LAI, sanitizeCellIndex(hot[i])),
                                                  Ts[hot][i], round(LAI[hot][i],2), round(NDVI[hot][i],2), "hot")}
-  for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], xyFromCell(LAI, cold[i]),
+  for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], terra::xyFromCell(LAI, sanitizeCellIndex(cold[i])),
                                                               Ts[cold][i], round(LAI[cold][i],2), round(NDVI[cold][i],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
