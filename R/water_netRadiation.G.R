@@ -295,9 +295,10 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
     SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
                              file = "SAVI_ID", overwrite=TRUE)
     LAI <- rast(SAVI_ID)
-    LAI[SAVI_ID <= 0] <- 0
+    
     LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & 
                                                           SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
+    LAI[SAVI_ID <= 0] <- 0
     LAI[SAVI_ID > 0.817] <- 6
   }
   if(method=="metric"){
