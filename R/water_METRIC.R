@@ -187,7 +187,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi, G.method = "Tasumi",
                       alb.coeff = "Tasumi", LST.method = "SC",
                       LAI.method = "metric2010", L = 0.1,
-                      Zom.method = "short.crops", anchors.method = "CITRA-MCB",
+                      Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.0018,
                       verbose = FALSE, extraParameters = vector()){
   path=getwd()

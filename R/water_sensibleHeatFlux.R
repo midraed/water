@@ -562,8 +562,22 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   
   # ---- helper: safe numeric values by cell (Option A) ----
   cell_vals <- function(r, cells) {
-    as.numeric(terra::values(r, cells = cells, mat = FALSE))
+    x <- r[cells]
+    
+    # Case 1: terra returns a data.frame (like your r.ah[hot] output)
+    if (is.data.frame(x)) {
+      # common: one column with layer name (e.g., "B")
+      return(as.numeric(x[[1]]))
+    }
+    
+    # Case 2: terra returns a SpatRaster
+    if (inherits(x, "SpatRaster")) {
+      return(as.numeric(terra::values(x, mat = FALSE)))
+    }
+    
+    stop("Unexpected return type from r[cells]: ", paste(class(x), collapse = ", "))
   }
+  
   cell_mean <- function(r, cells, na.rm = TRUE) {
     mean(cell_vals(r, cells), na.rm = na.rm)
   }
