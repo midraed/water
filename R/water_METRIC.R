@@ -126,7 +126,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method for the automatic selection of the anchor pixels. 
-#' @param anchors          data.frame or SpatialPointsDataFrame with the anchor
+#' @param anchors          data.frame or sf object with point geometry with the anchor
 #'                         pixels. The data frame must include a "type" column 
 #'                         with "hot" and "cold" values.
 #' @param n                number of pair of anchors pixels to calculate
@@ -305,7 +305,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   result <- list()
   result$EB <- EB
   result$WeatherStation <- WeatherStation
-  coordinates(anchors) <- ~ X + Y
+  if(!inherits(anchors, "sf")){
+    anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
+  }
   result$anchors <- anchors
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
