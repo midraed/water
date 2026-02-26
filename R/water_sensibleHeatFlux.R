@@ -83,6 +83,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "flexible", WeatherStation,
                          plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
                          verbose=FALSE) {
+  sanitizeCellIndex <- function(index) {
+    as.integer(stats::na.omit(unlist(index, use.names = FALSE)))
+  }
   ### old method names. Remove after version 0.8
   if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc", "CITRA-MCBr")){
     warning("anchor method names has changed. Old names (CITRA-MCBx) are
@@ -142,7 +145,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[cold] <- 1
+        values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
@@ -169,7 +172,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[hot] <- 1
+        values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
@@ -217,7 +220,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[cold] <- 1
+        values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
@@ -246,7 +249,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[hot] <- 1
+        values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
@@ -412,7 +415,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[cold] <- 1
+        values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
@@ -443,7 +446,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
-        values(distbuffer)[hot] <- 1
+        values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
