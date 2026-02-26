@@ -19,7 +19,6 @@ Description: Tools and functions to calculate actual Evapotranspiration
 Depends:
     R (>= 3.4),
     terra (>= 1.7-0),
-    sp (>= 1.2),
     sf (>= 1.0-0)
 Imports:
 License: GPL (>= 2)

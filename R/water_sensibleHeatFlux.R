@@ -96,9 +96,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   NDVI[NDVI > 1]  <-  NA
   if(!missing(WeatherStation)){
     WSloc <- WeatherStation$location
-    coordinates(WSloc) <- ~ long + lat
-    WSloc@proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
-    WSloc <- methods::as(terra::project(terra::vect(WSloc), terra::crs(Ts)), "Spatial")
+    WSloc <- sf::st_as_sf(WSloc, coords = c("long", "lat"), crs = 4326)
+    WSloc <- sf::st_transform(WSloc, crs = terra::crs(Ts))
     ## Longer but avoids to use rgeos
     WScell <- terra::extract(Ts, terra::vect(WSloc), cells = TRUE)[1, "cell"]
     WS.buffer <- rast(Ts)
@@ -550,13 +549,11 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  if(class(anchors) != "SpatialPointsDataFrame"){
-    coordinates(anchors) <- ~ X + Y  
+  if(!inherits(anchors, "sf")){
+    anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
   }
-  hot <- as.numeric(extract(Ts, anchors[anchors@data$type=="hot",], 
-                            cellnumbers=T)[,1])
-  cold <- as.numeric(extract(Ts, anchors[anchors@data$type=="cold",], 
-                             cellnumbers=T)[,1])
+  hot <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="hot",]), cells=TRUE)[, "cell"])
+  cold <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="cold",]), cells=TRUE)[, "cell"])
   ###
   ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours, 
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,

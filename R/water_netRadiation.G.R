@@ -4,7 +4,7 @@
 #' @param topleft     a vector with topleft x,y coordinates 
 #' @param bottomright a vector with bottomright x,y coordinates
 #' @param EPSG        Coordinate reference system EPSG code
-#' @return object of class SpatialPolygons
+#' @return object of class sf polygon
 #' @family support functions
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
@@ -13,16 +13,15 @@
 #' br <- c(557200, -3700000) 
 #' aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
-#' @import terra sp sf
+#' @import terra sf
 #' @export
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 createAoi <- function(topleft, bottomright, EPSG){
-  aoi <- SpatialPolygons(
-    list(Polygons(list(Polygon(coords = matrix(
-      c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
-        topleft[2], topleft[2], bottomright[2], 
-        bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
-  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("EPSG:", EPSG))}
+  coords <- matrix(c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
+                     topleft[2], topleft[2], bottomright[2], bottomright[2],topleft[2]),
+                   ncol=2, nrow=5)
+  aoi <- sf::st_sf(geometry = sf::st_sfc(sf::st_polygon(list(coords))))
+  if(!missing(EPSG)){sf::st_crs(aoi) <- paste0("EPSG:", EPSG)}
   return(aoi)
 }
 
@@ -35,17 +34,9 @@ createAoi <- function(topleft, bottomright, EPSG){
 # Check if the files are present on path o in a specific SRTM local repo
 checkSRTMgrids <-function(raw.image){
   path = getwd()
-  polyaoi <- SpatialPolygons(
-    list(Polygons(list(Polygon(coords = matrix(
-      c(xmin(raw.image), xmax(raw.image), xmax(raw.image),
-        xmin(raw.image),xmin(raw.image), ymax(raw.image),
-        ymax(raw.image), ymin(raw.image), ymin(raw.image),
-        ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
-  polyaoi@proj4string <- sp::CRS(terra::crs(raw.image))
-#   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
-#                            inverse = TRUE)
-  polyaoi_ll <- methods::as(terra::project(terra::vect(polyaoi), "EPSG:4326"), "Spatial")
-  limits <- ext(polyaoi_ll)
+  polyaoi <- terra::as.polygons(terra::ext(raw.image), crs = terra::crs(raw.image))
+  polyaoi_ll <- terra::project(polyaoi, "EPSG:4326")
+  limits <- terra::ext(polyaoi_ll)
   lat_needed <- seq(ifelse(trunc(limits[3])>0, trunc(limits[3]),trunc(limits[3])-1), 
                     ifelse(trunc(limits[4])>0, trunc(limits[4]),trunc(limits[4])-1), by=1)
   long_needed <- seq(ifelse(trunc(limits[1])>0, trunc(limits[1]),trunc(limits[1])-1), 
@@ -146,9 +137,9 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
                                                pattern="([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
   # latitude
   latitude <- surface.model[[1]]
-  xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
-  xy@proj4string <- sp::CRS(terra::crs(latitude))
-  lat <- terra::crds(terra::project(terra::vect(xy), "EPSG:4326"))[,2]
+  xy <- terra::xyFromCell(latitude, terra::cellFromRowCol(latitude, 1:nrow(latitude), 1))
+  xy <- sf::st_as_sf(data.frame(x = xy[,1], y = xy[,2]), coords = c("x", "y"), crs = terra::crs(latitude))
+  lat <- sf::st_coordinates(sf::st_transform(xy, 4326))[,2]
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
   time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
@@ -581,5 +572,4 @@ soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
   return(G)
 }
-
 

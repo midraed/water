@@ -8,7 +8,7 @@
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data. 
@@ -68,7 +68,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
 #' @references 
@@ -109,7 +109,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @param G.method         method used for the G estimation. Currently implemeted are 
 #'                         "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
 
@@ -126,7 +126,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method for the automatic selection of the anchor pixels. 
-#' @param anchors          data.frame or SpatialPointsDataFrame with the anchor
+#' @param anchors          data.frame or sf POINT object with the anchor
 #'                         pixels. The data frame must include a "type" column 
 #'                         with "hot" and "cold" values.
 #' @param n                number of pair of anchors pixels to calculate
@@ -305,7 +305,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   result <- list()
   result$EB <- EB
   result$WeatherStation <- WeatherStation
-  coordinates(anchors) <- ~ X + Y
+  if(!inherits(anchors, "sf")){
+    anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
+  }
   result$anchors <- anchors
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
