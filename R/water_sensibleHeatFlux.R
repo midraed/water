@@ -168,7 +168,11 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
       }}
 
     # First hot sample
-    try(hot <- sample(which(hot.candidates & values(Ts>quantile(Ts[hot.candidates], 0.75))),1), silent=TRUE)
+    hot.pool <- which(hot.candidates & values(Ts > quantile(Ts[hot.candidates], 0.75, na.rm = TRUE)))
+    if(length(hot.pool) == 0){
+      hot.pool <- which(hot.candidates)
+    }
+    try(hot <- sample(hot.pool, 1), silent=TRUE)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
@@ -469,6 +473,12 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
     }
 
+
+  hot <- sanitizeCellIndex(hot)
+  cold <- sanitizeCellIndex(cold)
+  if(length(hot) == 0 || length(cold) == 0){
+    stop("Automatic anchor selection failed to return valid hot/cold pixels. Try reducing n, increasing deltaTemp, or providing anchors manually.")
+  }
 
   if(verbose==TRUE){
     print("Cold pixels")
