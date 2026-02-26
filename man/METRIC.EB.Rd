@@ -75,7 +75,7 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{anchors.method}{method for the automatic selection of the anchor pixels.}
 
-\item{anchors}{data.frame or SpatialPointsDataFrame with the anchor
+\item{anchors}{data.frame or sf object with point geometry with the anchor
 pixels. The data frame must include a "type" column 
 with "hot" and "cold" values.}
 
