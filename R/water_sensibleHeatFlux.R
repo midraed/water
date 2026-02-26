@@ -245,7 +245,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     # hot samples
     Ts.hot <- Ts
     values(Ts.hot)[!hot.candidates] <- NA
-    hot <- terra::which.max(values(Ts.hot), na.rm = TRUE)
+    hot <- terra::which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
@@ -265,7 +265,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
         }
-        try(newAnchor <- which.max(values(Ts.hot), na.rm = TRUE)[1], silent = FALSE)
+        try(newAnchor <- which.max(values(Ts.hot))[1], silent = FALSE)
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
 
@@ -411,7 +411,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
-    cold <- terra::which.min(values(Ts.cold), na.rm = TRUE)[1]
+    cold <- terra::which.min(values(Ts.cold))[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
@@ -435,14 +435,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
-        try(newAnchor <- terra::which.min(values(Ts.cold), na.rm = TRUE)[1], silent = FALSE)
+        try(newAnchor <- terra::which.min(values(Ts.cold))[1], silent = FALSE)
         if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
       }}
 
     # hot samples
     Ts.hot <- Ts
     values(Ts.hot)[!hot.candidates] <- NA
-    hot <- which.max(values(Ts.hot), na.rm = TRUE)
+    hot <- which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts)
@@ -463,7 +463,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
         }
-        try(newAnchor <- which.max(values(Ts.hot), na.rm = TRUE)[1], silent = FALSE)
+        try(newAnchor <- which.max(values(Ts.hot))[1], silent = FALSE)
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)} 
       }}
 
