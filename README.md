@@ -21,7 +21,7 @@ Author: Guillermo Federico Olmedo, Samuel Ortega-Farías, David Fonseca-Luengo,
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 
 Description: Tools and functions to calculate actual evapotranspiration using surface energy balance models. 
-Depends: R (>= 3.2.1), raster (>= 2.1), sp (>= 1.1-1), proj4, stringr
+Depends: R (>= 3.2.1), raster (>= 2.1), sf (>= 1.0-0), proj4, stringr
 
 License: GPL (>= 2)
 
