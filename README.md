@@ -8,9 +8,8 @@ water package is available at [CRAN network](https://cran.r-project.org/package=
 You can install development version with: 
 
 
-    install.packages("devtools")
-    library(devtools)
-    install_github("midraed/water")
+    install.packages("pak")
+    pak::pak("midraed/water")
 
 
 #Package: water#
