@@ -35,7 +35,7 @@ print.waterLSEB <- function(x, ...){
 #' @method writeRaster waterLSEB
 
 writeRaster.waterLSEB <- function(x, ...){
-  raster::writeRaster(x$EB, ...)
+  terra::writeRaster(x$EB, ...)
 }
 
 

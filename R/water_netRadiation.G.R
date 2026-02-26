@@ -13,7 +13,7 @@
 #' br <- c(557200, -3700000) 
 #' aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
-#' @import rgdal raster sp 
+#' @import terra sp sf
 #' @export
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 createAoi <- function(topleft, bottomright, EPSG){
@@ -22,7 +22,7 @@ createAoi <- function(topleft, bottomright, EPSG){
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
         topleft[2], topleft[2], bottomright[2], 
         bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
-  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("+init=epsg:", EPSG))}
+  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("EPSG:", EPSG))}
   return(aoi)
 }
 
@@ -41,10 +41,11 @@ checkSRTMgrids <-function(raw.image){
         xmin(raw.image),xmin(raw.image), ymax(raw.image),
         ymax(raw.image), ymin(raw.image), ymin(raw.image),
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
-  polyaoi@proj4string <- raw.image@crs
+  polyaoi@proj4string <- sp::CRS(terra::crs(raw.image))
 #   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
 #                            inverse = TRUE)
-  limits <- extent(sp::spTransform(polyaoi, CRS("+proj=longlat +ellps=WGS84")))
+  polyaoi_ll <- methods::as(terra::project(terra::vect(polyaoi), "EPSG:4326"), "Spatial")
+  limits <- ext(polyaoi_ll)
   lat_needed <- seq(ifelse(trunc(limits[3])>0, trunc(limits[3]),trunc(limits[3])-1), 
                     ifelse(trunc(limits[4])>0, trunc(limits[4]),trunc(limits[4])-1), by=1)
   long_needed <- seq(ifelse(trunc(limits[1])>0, trunc(limits[1]),trunc(limits[1])-1), 
@@ -77,12 +78,12 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
   if(length(files) < 1){stop(paste("You need to download SRTM grids and save them to working directory \n try: checkSRTMgrids()"))}
   stack1 <- list()
   for(i in 1:length(files)){
-    stack1[[i]] <- raster(files[i])}
+    stack1[[i]] <- rast(files[i])}
   stack1$fun <- mean
   if(length(files)>1){SRTMmosaic <- do.call(mosaic, stack1)}
   if(length(files)==1){SRTMmosaic <- stack1[[1]]}
-  destino  <-  projectExtent(extent, extent@crs)
-  mosaicp <- projectRaster(SRTMmosaic, destino)
+  destino <- rast(ext = ext(extent), crs = terra::crs(extent))
+  mosaicp <- project(SRTMmosaic, destino)
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
                            file = "DEM", overwrite=TRUE)
   return(mosaicp)
@@ -99,10 +100,10 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 METRICtopo <- function(DEM){
-  aspect <- terrain(DEM, opt="aspect") 
-  slope <- terrain(DEM, opt="slope") 
+  aspect <- terrain(DEM, v="aspect") 
+  slope <- terrain(DEM, v="slope") 
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
-  surface.model <- stack(DEM, slope, aspect_metric)
+  surface.model <- c(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
                                  stack.names = c("DEM", "Slope", "Aspect"), 
                                  file = "surface.model", 
@@ -146,8 +147,8 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
   # latitude
   latitude <- surface.model[[1]]
   xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
-  xy@proj4string <- latitude@crs
-  lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
+  xy@proj4string <- sp::CRS(terra::crs(latitude))
+  lat <- terra::crds(terra::project(terra::vect(xy), "EPSG:4326"))[,2]
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
   time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
@@ -184,7 +185,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
                         + cos(declination)*sin(latitude)*sin(slope)*cos(aspect)*cos(hour.angle)
                         + cos(declination)*sin(aspect)*sin(slope)*sin(hour.angle))
   ## End
-  solarAngles <- stack(latitude, declination, hour.angle, incidence.hor, incidence.rel)
+  solarAngles <- c(latitude, declination, hour.angle, incidence.hor, incidence.rel)
   solarAngles <- saveLoadClean(imagestack = solarAngles, 
                                stack.names = c("latitude", "declination", 
                                                "hour.angle", "incidence.hor", "incidence.rel"), 
@@ -254,9 +255,9 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
     if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} # Liang 2001
   }
   if(sat=="MODIS"){wb <- c(0.037, 0.479, -0.068, 0.0976, 0.266, 0.0757, 0.107)} # Liang 2001 direct-NIR coefficients
-  albedo <- calc(image.SR[[1]], fun=function(x){x *wb[1]})
+  albedo <- app(image.SR[[1]], fun=function(x){x *wb[1]})
     for(i in 2:6){
-      albedo <- albedo + calc(image.SR[[i]], fun=function(x){x *wb[i]})
+      albedo <- albedo + app(image.SR[[i]], fun=function(x){x *wb[i]})
   }
   albedo <- aoiCrop(albedo, aoi) 
   if(coeff=="Liang"){
@@ -292,9 +293,9 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
-      toa.4.5 <- stack(image[[3]], image[[4]])}
+      toa.4.5 <- c(image[[3]], image[[4]])}
   if(method=="turner"){
-      sr.4.5 <- stack(image[[3]], image[[4]])}
+      sr.4.5 <- c(image[[3]], image[[4]])}
   if(method=="turner"){
     sr.4.5 <- sr.4.5 * 0.0001}
   if(method=="metric2010"){
@@ -302,7 +303,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
                                                         toa.4.5[[2]])
     SAVI_ID <- saveLoadClean(imagestack = SAVI_ID, stack.names = "SAVI_ID", 
                              file = "SAVI_ID", overwrite=TRUE)
-    LAI <- raster(SAVI_ID)
+    LAI <- rast(SAVI_ID)
     LAI[SAVI_ID <= 0] <- 0
     LAI[SAVI_ID > 0 & SAVI_ID <= 0.817] <- 11 * SAVI_ID[SAVI_ID > 0 & 
                                                           SAVI_ID <= 0.817]^3 # for SAVI <= 0.817
@@ -315,7 +316,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   }
   if(method=="vineyard"){
     # image must be the DN image
-    toa.4.5 <- stack(image[[3]], image[[4]])
+    toa.4.5 <- c(image[[3]], image[[4]])
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }
@@ -356,7 +357,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
   W <- 0.14 * ea * P + 2.1
   tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
                       cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
-  tauD <- raster(tauB)
+  tauD <- rast(tauB)
   tauD <- 0.35 - 0.36 * tauB 
   tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB[tauB < 0.15]
   tau.sw <- tauB + tauD
@@ -404,7 +405,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  epsilon_NB <- raster(LAI)
+  epsilon_NB <- rast(LAI)
   epsilon_NB <- 0.97 + 0.0033 * LAI  
   epsilon_NB[LAI > 3] <- 0.98
   # Downwelling atm radiance
@@ -565,13 +566,13 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
-  sr.4.5 <- stack(image[[3]], image[[4]])
+  sr.4.5 <- c(image[[3]], image[[4]])
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   if(method == "Bastiaanssen"){
     G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn
   }
   if(method == "Tasumi"){
-    G <- raster(NDVI)
+    G <- rast(NDVI)
     e <- 2.71828
     G <- (0.05 + 0.18 * e^(-0.521*LAI)) * Rn
     G[LAI < 0.5] <- ((1.8*(Ts[LAI < 0.5] - 273.16) / Rn[LAI < 0.5]) + 0.084) * 
@@ -580,7 +581,5 @@ soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
   return(G)
 }
-
-
 
 

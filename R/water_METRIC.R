@@ -24,7 +24,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -78,7 +78,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
                      plain = TRUE, DEM, aoi){
   path=getwd()
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   } 
   surface.model <-METRICtopo(DEM)
@@ -193,7 +193,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -296,7 +296,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   # H[H < 0]  <-  0  not a good solution...! not for any of the components
   LE <- Rn - G - H
   LE[LE < 0]  <-  0   # see H
-  EB <- stack(Rn, G, H, LE, Ts)
+  EB <- c(Rn, G, H, LE, Ts)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
                                 "LatentHeat", "surfaceTemperature"), 
