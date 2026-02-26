@@ -18,9 +18,9 @@ Description: Tools and functions to calculate actual Evapotranspiration
     using surface energy balance models.
 Depends:
     R (>= 3.4),
-    raster (>= 2.5),
+    terra (>= 1.7-0),
     sp (>= 1.2),
-    rgdal (>= 1.2)
+    sf (>= 1.0-0)
 Imports:
 License: GPL (>= 2)
 URL: https://midraed.github.io/water/
