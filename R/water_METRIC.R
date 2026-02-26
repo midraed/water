@@ -191,6 +191,19 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.0018,
                       verbose = FALSE, extraParameters = vector()){
   path=getwd()
+
+  if(missing(thermalband) && sat %in% c("L7", "L8")){
+    thermal.layer <- intersect(c("Thermal1", "thermal.low"), names(image.DN))
+    if(length(thermal.layer) == 0){
+      stop("thermalband is missing. Provide a thermal layer (e.g., image.DN$Thermal1).")
+    }
+    thermalband <- image.DN[[thermal.layer[1]]]
+  }
+
+  if(sat %in% c("L7", "L8") && is.null(thermalband)){
+    stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
+  }
+
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
     DEM <- rast(image.DN[[1]])
