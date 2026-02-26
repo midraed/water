@@ -13,7 +13,7 @@
 #' br <- c(557200, -3700000) 
 #' aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 #' plot(aoi)
-#' @import rgdal raster sp 
+#' @import terra sp sf
 #' @export
 # Maybe i can provide some points and use CHull like in QGIS-Geostat
 createAoi <- function(topleft, bottomright, EPSG){
@@ -22,7 +22,7 @@ createAoi <- function(topleft, bottomright, EPSG){
       c(topleft[1],bottomright[1], bottomright[1],topleft[1],topleft[1],
         topleft[2], topleft[2], bottomright[2], 
         bottomright[2],topleft[2]), ncol=2, nrow= 5))), ID=1)))
-  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("+init=epsg:", EPSG))}
+  if(!missing(EPSG)){aoi@proj4string <- CRS(paste0("EPSG:", EPSG))}
   return(aoi)
 }
 
@@ -41,10 +41,11 @@ checkSRTMgrids <-function(raw.image){
         xmin(raw.image),xmin(raw.image), ymax(raw.image),
         ymax(raw.image), ymin(raw.image), ymin(raw.image),
         ymax(raw.image)), ncol=2, nrow= 5))), ID=1)))
-  polyaoi@proj4string <- raw.image@crs
+  polyaoi@proj4string <- sp::CRS(terra::crs(raw.image))
 #   limits <- proj4::project(xy = matrix(polyaoi@bbox, ncol=2, nrow=2), proj = polyaoi@proj4string, 
 #                            inverse = TRUE)
-  limits <- extent(sp::spTransform(polyaoi, CRS("+proj=longlat +ellps=WGS84")))
+  polyaoi_ll <- methods::as(terra::project(terra::vect(polyaoi), "EPSG:4326"), "Spatial")
+  limits <- extent(polyaoi_ll)
   lat_needed <- seq(ifelse(trunc(limits[3])>0, trunc(limits[3]),trunc(limits[3])-1), 
                     ifelse(trunc(limits[4])>0, trunc(limits[4]),trunc(limits[4])-1), by=1)
   long_needed <- seq(ifelse(trunc(limits[1])>0, trunc(limits[1]),trunc(limits[1])-1), 
@@ -81,7 +82,7 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
   stack1$fun <- mean
   if(length(files)>1){SRTMmosaic <- do.call(mosaic, stack1)}
   if(length(files)==1){SRTMmosaic <- stack1[[1]]}
-  destino  <-  projectExtent(extent, extent@crs)
+  destino  <-  projectExtent(extent, terra::crs(extent))
   mosaicp <- projectRaster(SRTMmosaic, destino)
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
                            file = "DEM", overwrite=TRUE)
@@ -146,8 +147,8 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
   # latitude
   latitude <- surface.model[[1]]
   xy <- SpatialPoints(xyFromCell(latitude, cellFromRowCol(latitude, 1:nrow(latitude), 1)))
-  xy@proj4string <- latitude@crs
-  lat <- coordinates( spTransform(xy, CRS("+proj=longlat +datum=WGS84")))[,2] 
+  xy@proj4string <- sp::CRS(terra::crs(latitude))
+  lat <- terra::crds(terra::project(terra::vect(xy), "EPSG:4326"))[,2]
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
   time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
@@ -580,7 +581,6 @@ soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   G <- saveLoadClean(imagestack = G, file = "G", overwrite=TRUE)
   return(G)
 }
-
 
 
 
