@@ -47,19 +47,19 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   
   stack1 <- list()
   for(i in 1:length(bands)){
-    stack1[i] <- raster(list.files(path=path, 
+    stack1[i] <- rast(list.files(path=path, 
                                    pattern = paste0(image_pattern, bands[i], "(_1)?", "(_VCID_1)?",
                                                     ".(TIF|tif)$"), full.names = T))
   }
   if(sat == "MODIS"){
     thermal <- list.files(path=path, pattern = paste0(".LST_Day_1km",
                                                       ".(TIF|tif)$"), full.names = T)[1]
-    stack1[8] <- raster(thermal)
+    stack1[8] <- rast(thermal)
     time <- list.files(path=path, pattern = paste0(".Day_view_time",
                                                       ".(TIF|tif)$"), full.names = T)[1]
-    stack1[9] <- raster(time)
+    stack1[9] <- rast(time)
   }
-  raw.image <- do.call(stack, stack1)
+  raw.image <- do.call(c, stack1)
   raw.image <- aoiCrop(raw.image, aoi)
   if(sat=="MODIS"){for(i in 1:7){
     raw.image[[i]] <- raw.image[[i]]*0.0001
@@ -89,8 +89,8 @@ loadImageSR <-  function(path = getwd(),  aoi){
   files <- list.files(path = path, pattern = "_sr_band+[2-7].(TIF|tif)$", full.names = T)
   stack1 <- list()
   for(i in 1:6){
-    stack1[i] <- raster(files[i])}
-  image_SR <- do.call(stack, stack1)
+    stack1[i] <- rast(files[i])}
+  image_SR <- do.call(c, stack1)
   image_SR <- aoiCrop(image_SR, aoi) 
   image_SR <- image_SR / 10000
   bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
@@ -201,7 +201,7 @@ calcTOAr <- function(image.DN, sat="auto",
     for(i in 1:6){
       Ro.TOAr[i] <- (pi * (Gain[i] * image.DN[[i]] + Bias[i])) / (ESUN[i] * cos(incidence.rel) * dr)
     }
-    image_TOA <- do.call(stack, Ro.TOAr)
+    image_TOA <- do.call(c, Ro.TOAr)
   }
   #### 
   image_TOA <- saveLoadClean(imagestack = image_TOA, 
@@ -271,7 +271,7 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
     for(i in 1:6){
       stack_SR[i] <- (image.TOAr[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
     }
-    image_SR <- do.call(stack, stack_SR)
+    image_SR <- do.call(c, stack_SR)
   }
   image_SR <- saveLoadClean(imagestack = image_SR, 
                             stack.names = c("B", "G", "R", "NIR", "SWIR1", "SWIR2"), 
@@ -300,7 +300,7 @@ cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
   if(missing(cfmask)){
     file <- list.files(pattern="_cfmask.tif$")
     if(length(file) != 1){file <- list.files(pattern="_bqa.tif$|_BQA.TIF$")}
-    cfmask <- raster(file)
+    cfmask <- rast(file)
   }
   cfmask <- crop(cfmask, image)
   values(cfmask)[!values(cfmask) %in% keep] <- NA
@@ -315,7 +315,7 @@ cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
 #                     buffer = 60){
 #   if(missing(cfmask)){
 #     file <- list.files(pattern="_sr_cloud.tif$")
-#     cfmask <- raster(file)
+#     cfmask <- rast(file)
 #   }
 #   cfmask <- crop(cfmask, image)
 #   values(cfmask)[values(cfmask) <= 16] <- NA

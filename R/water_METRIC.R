@@ -8,7 +8,7 @@
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data. 
@@ -24,7 +24,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -68,7 +68,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
 #' @references 
@@ -78,7 +78,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
                      plain = TRUE, DEM, aoi){
   path=getwd()
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   } 
   surface.model <-METRICtopo(DEM)
@@ -109,7 +109,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
-#' @param aoi              SpatialPolygon object with limits of Area of interest
+#' @param aoi              sf polygon object with limits of Area of interest
 #' @param G.method         method used for the G estimation. Currently implemeted are 
 #'                         "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
 
@@ -126,7 +126,7 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method for the automatic selection of the anchor pixels. 
-#' @param anchors          data.frame or sf object with point geometry with the anchor
+#' @param anchors          data.frame or sf POINT object with the anchor
 #'                         pixels. The data frame must include a "type" column 
 #'                         with "hot" and "cold" values.
 #' @param n                number of pair of anchors pixels to calculate
@@ -193,7 +193,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   path=getwd()
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- raster(image.DN[[1]])
+    DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -296,7 +296,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   # H[H < 0]  <-  0  not a good solution...! not for any of the components
   LE <- Rn - G - H
   LE[LE < 0]  <-  0   # see H
-  EB <- stack(Rn, G, H, LE, Ts)
+  EB <- c(Rn, G, H, LE, Ts)
   EB <- saveLoadClean(imagestack = EB,
                 stack.names = c("NetRadiation", "SoilHeat", "SensibleHeat", 
                                 "LatentHeat", "surfaceTemperature"), 

@@ -31,9 +31,9 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   resultfile <- paste0(tmpdir, file, tstamp, ".tif")
   writeRaster(imagestack, filename = resultfile, ...)
   message(paste("Result saved as", paste0(tmpdir, file, tstamp, ".tif"), "    OK"))
-  stack <- stack(resultfile)
+  stack <- rast(resultfile)
   names(stack) <- stack.names
-  removeTmpFiles(h=0)
+  terra::tmpFiles(old = TRUE, remove = TRUE)
   return(stack)
 }
 
