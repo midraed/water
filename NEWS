@@ -2,6 +2,26 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
+VERSION 0.8.5
+
+* METRIC.EB() can run from Landsat 8/9 Collection 2 Level-2 products only:
+  image.DN is now optional when image.SR is supplied, and the new surf.temp
+  argument takes a surface temperature raster (Kelvin) instead of estimating
+  it from the thermal band. (Francisco Martín Corvalán)
+* loadImageSR() reads Collection 2 Level-2 files (SR_B2 to SR_B7, plus ST_B10
+  as "Band_10" in Kelvin) as well as old ESPA files. It now stops if any of
+  the six reflectance bands is missing.
+* Fixed automatic anchor selection after the migration to terra: the "best"
+  method failed to find cold pixels, and all methods returned only one hot
+  and one cold pixel regardless of n. See calcAnchors()
+* Fixed calcH() failing with "raster has no values" when no pixel met the
+  stability condition
+* ET24h() plots with terra instead of spplot
+* Example data (L7_Talca, DEM_Talca) are now stored as terra
+  PackedSpatRaster objects. Use rast() to unpack them
+* New vignette for Landsat 8 Collection 2 Level-2 data
+
+
 VERSION 0.8.4
 
 * Fixed read.WSdata example using a fixed (the correct one) timezone. Before this
