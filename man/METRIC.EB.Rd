@@ -24,7 +24,7 @@ METRIC.EB(
   anchors,
   n = 1,
   ETp.coef = 1.05,
-  Z.om.ws = 0.0018,
+  Z.om.ws = 0.015,
   verbose = FALSE,
   extraParameters = vector(),
   surf.temp
@@ -93,14 +93,16 @@ automatically with calcAnchors()}
 
 \item{n}{number of pairs of anchor pixels to select}
 
-\item{ETp.coef}{coefficient for the ET of the cold pixels: calcH()
-multiplies it by the hourly grass reference ET (ETo) at the satellite
-overpass. Usually 1.05, or 1.2 for alfalfa. It can be updated with
-anchors.method = "flexible" (see Details)}
+\item{ETp.coef}{ratio of the ET of the cold pixels to the hourly
+alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)
+use 1.05, the default. It can be updated with anchors.method = "flexible"
+(see Details)}
 
 \item{Z.om.ws}{momentum roughness length (m) of the weather station
-surface. The default is 0.0018 here and 0.03 in calcH(); see calcH() for
-typical values}
+surface, used to extrapolate the wind speed to 200 m (Allen et al., 2007,
+Eq. 32). It is about 0.123 times the height of the vegetation around the
+station (Allen et al., 1998): 0.015 m (the default) for a standard station
+over clipped grass 0.12 m tall, 0.03 m for vegetation about 0.25 m tall}
 
 \item{verbose}{Logical. If TRUE will print additional data to console}
 
@@ -141,12 +143,14 @@ computed and the anchor pixels are selected from the surface reflectance
 (image.SR), although the "metric", "metric2010" and "MCB" LAI equations were
 described for top-of-atmosphere reflectance.
 
-The ET of the cold pixels is ETp.coef times the hourly grass reference ET
-(ETo) at the satellite overpass (see calcH()), while ET24h() and dailyET()
-use the alfalfa reference ET (ETr) by default. With anchors.method =
-"flexible", if the cold-pixel criteria had to be relaxed and the mean NDVI of
-the cold pixels is below 0.8, ETp.coef is replaced by 2.11 * NDVI - 0.4989
-(Gonzalez et al., 2015).
+The ET of the cold pixels is ETp.coef times the hourly alfalfa reference ET
+(ETr, ASCE standardized equation) at the satellite overpass (see calcH()),
+the same reference used by ET24h() and dailyET(), as in Allen et al. (2007).
+With anchors.method = "flexible", if the cold-pixel criteria had to be
+relaxed and the mean NDVI of the cold pixels is below 0.8, ETp.coef is
+replaced by Kc * ETo / ETr, where Kc = 2.11 * NDVI - 0.4989 is a crop
+coefficient on a grass reference basis (Gonzalez et al., 2015) and ETo / ETr
+is the ratio of the grass and alfalfa reference ET at the overpass.
 }
 \section{Extra Parameters}{
 
@@ -176,19 +180,20 @@ WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "\%Y/\%m/\%d \
 ### LSEB with surface reflectance and surface temperature
 Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                             WeatherStation = WeatherStation, MTL = MTLfile,
-                            alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
-                            Z.om.ws = 0.03)
+                            alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03)
 
 ### LSEB with "Perrier" method for Zom and extra parameters
 Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                             WeatherStation = WeatherStation, MTL = MTLfile,
-                            alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
-                            Z.om.ws = 0.03, Zom.method = "Perrier",
+                            alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03,
+                            Zom.method = "Perrier",
                             extraParameters = c(fLAI = 0.5, h = 1.8))
 }
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+
+Allen, R. G., Pereira, L. S., Raes, D., & Smith, M. (1998). Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Rome.
 
 González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105.
 }

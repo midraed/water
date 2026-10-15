@@ -6,6 +6,22 @@ VERSION 0.8.5
 
 Fixes that change results:
 
+* calcH(): the ET of the cold pixels was ETp.coef times the hourly grass
+  reference ET (ETo), while ET24h() and dailyET() extrapolate with the
+  alfalfa reference ETr. Both now use ETr, as in Allen et al. (2007), so the
+  default ETp.coef = 1.05 is the paper's 1.05 * ETr. With the same ETp.coef,
+  ET increases by the ETr/ETo ratio (11% and 15% in the examples). Scripts
+  that used ETp.coef = 1.2 to approximate 1.05 * ETr with ETo should now use
+  1.05; the vignettes and examples now use the default. With
+  anchors.method = "flexible", the grass-based Kc of Gonzalez et al. (2015)
+  is multiplied by ETo/ETr, so that update gives the same cold-pixel ET as
+  before.
+* Z.om.ws (momentum roughness length of the weather station, Allen et al.
+  2007, Eq. 32): the default is now 0.015 m, 0.123 times the 0.12 m clipped
+  grass of a standard station (Allen et al. 1998), in METRIC.EB() (it was
+  0.0018) and calcH() (it was 0.03). METRIC is not very sensitive to it
+  (0.4% in LE in the example).
+
 * METRICtopo(): since the migration to terra, slope and aspect were
   computed in degrees and used as radians, so every run with a DEM
   (plain = FALSE) was wrong (e.g. negative net radiation). With
@@ -80,8 +96,8 @@ Other changes and fixes:
   is honoured; waterWriteResults = TRUE no longer deletes temporary files
   in use.
 * calcH(method = "lm") could loop forever.
-* hourlyET() only accepts ET = "ETr" or "ETo"; calcH() requested the
-  invalid "ETor" and silently got ETo, which it still uses.
+* hourlyET() only accepts ET = "ETr" or "ETo" (calcH() requested the
+  invalid "ETor" and silently got ETo).
 * calcH() no longer fails with "raster has no values" when no pixel meets
   the stability condition.
 * ET24h() plots with terra instead of spplot.

@@ -112,12 +112,34 @@ for (seed in 1:5) {
 image.SR <- cfmask(path = c2, image = loadImageSR(c2))
 EB <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                       WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                      n = 5, Z.om.ws = 0.03, ETp.coef = 1.2))
+                      n = 5, Z.om.ws = 0.03))
 stopifnot(inherits(EB, "waterLSEB"), nrow(EB$anchors) == 10)
 invisible(utils::capture.output(print(EB)))
 f <- tempfile(fileext = ".tif")
 writeRaster(EB, f)
 stopifnot(terra::nlyr(terra::rast(f)) == 5)
+
+## Cold pixels and ET24h() use the same alfalfa reference ET (Allen et al.
+## 2007): the reference ET fraction (ETrF) of the cold pixels is ETp.coef
+cold <- terra::extract(EB$EB, terra::vect(EB$anchors[EB$anchors$type == "cold", ]))
+lambda <- (2.501 - 0.00236 * (cold$surfaceTemperature - 273.15)) * 1e6
+ETrF.cold <- mean(3600 * cold$LatentHeat / lambda) / hourlyET(WS, ET = "ETr")
+stopifnot(abs(ETrF.cold - 1.05) < 0.03)
+
+## "flexible": the grass-based Kc (Gonzalez et al. 2015) is converted to the
+## alfalfa reference, ETp.coef = Kc * ETo / ETr
+relaxed <- EB$anchors
+relaxed$flex <- 0.05
+relaxed$NDVI[relaxed$type == "cold"] <- 0.7
+EBflex <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
+                          anchors = relaxed, Z.om.ws = 0.03))
+EBkc <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                        WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
+                        anchors = relaxed, anchors.method = "best", Z.om.ws = 0.03,
+                        ETp.coef = (2.11 * 0.7 - 0.4989) * hourlyET(WS, ET = "ETo") /
+                          hourlyET(WS, ET = "ETr")))
+stopifnot(maxdiff(EBflex$EB$LatentHeat, EBkc$EB$LatentHeat) < 1e-6)
 
 ## METRIC.EB(): weather station outside the image (#46)
 WSfar <- WS
@@ -152,7 +174,7 @@ stopifnot(terra::ncell(EBaoi$EB) < terra::ncell(EB$EB))
 ## Zom.method = "custom"
 EBman <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                         anchors = EB$anchors, Z.om.ws = 0.03, ETp.coef = 1.2))
+                         anchors = EB$anchors, Z.om.ws = 0.03))
 stopifnot(maxdiff(EBman$EB$LatentHeat, EB$EB$LatentHeat) < 1e-6)
 EBzom <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",

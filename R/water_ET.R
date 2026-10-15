@@ -149,8 +149,9 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   }
   LE = Rn - G - H
   ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
-  ETo.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY)
-  ETr.Fr <- ET.inst/ETo.hourly
+  ETr.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY,
+                         ET = "ETr")
+  ETr.Fr <- ET.inst/ETr.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
   ET.24[ET.24 < 0]  <- 0
   #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)

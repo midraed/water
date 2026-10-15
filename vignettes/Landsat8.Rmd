@@ -61,8 +61,7 @@ With `surf.temp`, `METRIC.EB()` uses the Level-2 surface temperature instead of 
 ```{r, fig.width = 7}
 Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                             WeatherStation = WeatherStation, MTL = MTLfile,
-                            alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
-                            Z.om.ws = 0.03)
+                            alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03)
 plot(Energy.Balance)
 ```
 
@@ -90,6 +89,6 @@ MTL.L1 <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package = "wat
 Energy.Balance.DN <- METRIC.EB(image.DN = image.DN, image.SR = image.SR,
                                WeatherStation = WeatherStation, MTL = MTL.L1,
                                sat = "L8", alb.coeff = "Olmedo", LST.method = "SW",
-                               n = 5, ETp.coef = 1.2, Z.om.ws = 0.03)
+                               n = 5, Z.om.ws = 0.03)
 plot(Energy.Balance.DN)
 ```

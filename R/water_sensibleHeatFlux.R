@@ -493,13 +493,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param Z.om           momentum roughness length, from momentumRoughnessLength()
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
-#' @param ETp.coef       coefficient for the ET of the cold pixels: it multiplies
-#' the hourly grass reference ET (ETo) at the satellite overpass (see Details).
-#' Usually 1.05, or 1.2 for alfalfa
+#' @param ETp.coef       ratio of the ET of the cold pixels to the hourly alfalfa
+#' reference ET (ETr) at the satellite overpass (see Details). Allen et al.
+#' (2007) use 1.05, the default
 #' @param Z.om.ws        momentum roughness length (m) of the weather station
-#' surface (default 0.03 here; METRIC.EB() uses a default of 0.0018). A value
-#' of 0.03 might be reasonable for a typical agricultural weather station sited
-#' over vegetation that is about 0.3 m tall. For clipped grass, use 0.015 m
+#' surface, used to extrapolate the wind speed to 200 m (Allen et al., 2007,
+#' Eq. 32). It is about 0.123 times the height of the vegetation around the
+#' station (Allen et al., 1998): 0.015 m (the default) for a standard station
+#' over clipped grass 0.12 m tall, 0.03 m for vegetation about 0.25 m tall
 #' @param mountainous    Logical. If TRUE heat transfer equation will be
 #' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
@@ -520,10 +521,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' needed to account for buoyancy effects. However, H is needed to make this
 #' correction. An iterative solution for both H and rah is used.
 #'
-#' The ET of the cold pixels is computed as ETp.coef times the hourly grass
-#' reference ET (ETo, ASCE standardized equation; see hourlyET()) at the
-#' satellite overpass, while ET24h() and dailyET() use the alfalfa reference ET
-#' (ETr) by default.
+#' The ET of the cold pixels is computed as ETp.coef times the hourly alfalfa
+#' reference ET (ETr, ASCE standardized equation; see hourlyET()) at the
+#' satellite overpass, as in Allen et al. (2007). ET24h() and dailyET() use the
+#' same reference.
 #' @return A list with a and b (coefficients of dT = a * Ts_datum + b), dT
 #' (SpatRaster, near-surface temperature difference, K) and H (SpatRaster,
 #' sensible heat flux, W/m2). The aerodynamic resistance of the anchor pixels at
@@ -535,10 +536,12 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
+#' Allen, R. G., Pereira, L. S., Raes, D., & Smith, M. (1998). Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Rome.
+#'
 #' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
-                   Z.om.ws=0.03, mountainous=FALSE,
+                   Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20) {
   
   # ---- helper: safe numeric values by cell (Option A) ----
@@ -574,9 +577,10 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   hot <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="hot",]), cells=TRUE)[, "cell"])
   cold <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="cold",]), cells=TRUE)[, "cell"])
   
-  ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours,
+  # alfalfa reference ET, as in Allen et al. (2007) and in ET24h()
+  ETr.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours,
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
-                         ET= "ETo")
+                         ET= "ETr")
   
   Ts.datum <- Ts + (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
@@ -603,7 +607,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   
   r.ah <- log(2/0.1)/(friction.velocity*0.41)
   
-  LE.cold <- ETo.hourly * ETp.coef *
+  LE.cold <- ETr.hourly * ETp.coef *
     (2.501 - 0.002361*(cell_mean(Ts, cold)-273.15)) * (1e6)/3600
   
   H.cold <- cell_mean(Rn, cold) - cell_mean(G, cold) - LE.cold
