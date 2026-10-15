@@ -78,23 +78,45 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 
 #' Load Landsat 8 surface reflectance data from folder
 #' @description
-#' This function loads Landsat bands from a specific folder. 
+#' This function loads Landsat bands from a specific folder. Reads Collection 2
+#' Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled as
+#' DN * 0.0000275 - 0.2, fill value 0 set to NA) or old ESPA files
+#' (\code{*_sr_band2.tif} to \code{*_sr_band7.tif}, scaled as DN / 10000).
+#' Layers are named by band number, so missing bands are simply skipped.
+#' For Landsat 8/9 Collection 2, if \code{*_ST_B10.TIF} is present it is added
+#' as the last layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value
+#' 0 set to NA). It can be passed to METRIC.EB() as surf.temp.
 #' @param path  folder where band files are stored
-#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
+#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") ==
 #' TRUE will look for any object called aoi on .GlobalEnv
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
 loadImageSR <-  function(path = getwd(),  aoi){
-  files <- list.files(path = path, pattern = "_sr_band+[2-7].(TIF|tif)$", full.names = T)
-  stack1 <- list()
-  for(i in 1:6){
-    stack1[i] <- rast(files[i])}
-  image_SR <- do.call(c, stack1)
-  image_SR <- aoiCrop(image_SR, aoi) 
-  image_SR <- image_SR / 10000
-  bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
-  image_SR <- saveLoadClean(imagestack = image_SR, 
+  files <- list.files(path = path, pattern = "_(SR_B|sr_band)[2-7]\\.(TIF|tif)$", full.names = T)
+  if(!length(files)) stop("No surface reflectance bands (SR_B2-7 or sr_band2-7) found in ", path)
+  band <- sub(".*_(SR_B|sr_band)([2-7])\\.(TIF|tif)$", "\\2", basename(files))
+  if(anyDuplicated(band)) stop("More than 1 image present on path: ", path)
+  bandnames <- c("2" = "B", "3" = "G", "4" = "R", "5" = "NIR", "6" = "SWIR1", "7" = "SWIR2")
+  ord <- order(band)
+  image_SR <- rast(files[ord])
+  image_SR <- aoiCrop(image_SR, aoi)
+  bandnames <- unname(bandnames[band[ord]])
+  if(grepl("_SR_B", files[1], fixed = TRUE)){
+    image_SR[image_SR == 0] <- NA  # Collection 2 fill value
+    image_SR <- image_SR * 0.0000275 - 0.2
+    # L8/L9 surface temperature, appended last so SR band positions don't change
+    st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = T)
+    if(length(st)){
+      st <- aoiCrop(rast(st[1]), aoi)
+      st[st == 0] <- NA
+      image_SR <- c(image_SR, st * 0.00341802 + 149)
+      bandnames <- c(bandnames, "Band_10")
+    }
+  } else {
+    image_SR <- image_SR / 10000
+  }
+  image_SR <- saveLoadClean(imagestack = image_SR,
                              stack.names = bandnames, 
                              file = "image_SR", 
                              overwrite=TRUE)

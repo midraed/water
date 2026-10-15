@@ -1,0 +1,278 @@
+---
+title: "Landsat 8 y 9: búsqueda y descarga completa"
+lang: es
+format:
+  html:
+    embed-resources: true
+execute:
+  cache: false
+  error: false
+  message: false
+params:
+  poligono: "aoi.geojson"
+  desde: "2016-02-08"
+  hasta: "2016-02-08"
+  ids: "LC08_L2SP_232083_20160209_20200907_02_T1"
+  destino: "../inst/extdata/L8"
+---
+
+## Uso
+
+Instalar una vez en R:
+
+```{r}
+#| eval: false
+install.packages(c("rstac", "sf", "httr", "jsonlite", "knitr", "rmarkdown"))
+```
+
+Guardar el polígono como `aoi.geojson` junto a este Quarto, o cambiar
+`poligono` por la ruta de un GeoPackage o shapefile con CRS definido.
+Si hay varios polígonos, se busca sobre su unión. Las fechas son inclusivas, en UTC.
+
+1. Cambiar polígono y fechas en `params`, manteniendo `ids: ""`, y renderizar.
+2. Revisar la tabla y el gráfico. Copiar el **id_producto** elegido.
+3. Cambiar, por ejemplo, `ids: "LC09_L2SP_224085_20240130_20240131_02_T1"`
+   y renderizar nuevamente. Se pueden incluir varios IDs de la tabla separados por comas.
+
+La búsqueda es pública. La descarga requiere una cuenta ERS con acceso M2M
+habilitado y un **token de aplicación**, no la contraseña ni una sesión del navegador.
+Configurar `USGS_USERNAME` y `USGS_TOKEN` como variables de entorno, por ejemplo
+en el archivo `.Renviron` del proyecto, y reiniciar R. No publicar ese archivo.
+El código lee esas variables sin mostrarlas en el informe.
+
+```text
+USGS_USERNAME= tu_usuario
+USGS_TOKEN= tu_token_de_aplicacion
+```
+
+Desde una terminal con R y Quarto disponibles:
+
+```bash
+<!-- quarto render landsat.qmd -->
+```
+
+Se descargan escenas completas, sin recortar ni reproyectar. Cada producto queda
+en `descargas/<id_producto>/`, con el TAR y todos sus archivos descomprimidos,
+incluido `*_MTL.txt`, conservando sus nombres originales. Si la carpeta del
+producto ya existe, se detiene para evitar sobrescribir datos.
+
+Para mayor informacion de las escenas de L8 y su procesamiento, dirigase a: https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products
+https://www.usgs.gov/centers/eros/science/usgs-eros-archive-landsat-archives-landsat-8-9-olitirs-collection-2-level-2
+
+
+## Buscar escenas
+
+```{r}
+library(rstac)
+library(sf)
+library(dplyr)
+
+desde="2016-02-08" %>% as.Date()
+hasta="2016-02-10" %>% as.Date()
+destino="../inst/extdata/L8"
+params <- list()
+params$destino[[1]]<- "../inst/extdata/L8"
+params
+params$destino <- "../inst/extdata/L8"
+desde <- as.Date(params$desde)
+hasta <- as.Date(params$hasta)
+stopifnot(!is.na(desde), !is.na(hasta), desde <= hasta)
+
+# AOI MZA
+bbox_coords <- c(500000, -3660000,  526000 ,-3644000 )
+names(bbox_coords) <- c("xmin","ymin","xmax","ymax")
+aoi = st_as_sf(st_as_sfc(st_bbox(bbox_coords)), crs=32619)
+
+
+if (nrow(aoi) == 0L || is.na(st_crs(aoi))) stop("Polígono vacío o sin CRS.")
+if (!all(st_geometry_type(aoi) %in% c("POLYGON", "MULTIPOLYGON"))) {
+  stop("El archivo debe contener solamente polígonos.")
+}
+aoi <- st_union(st_transform(st_make_valid(aoi), 4326))
+if (any(st_is_empty(aoi)) || !all(st_is_valid(aoi))) stop("Geometría inválida.")
+#geojson <- tempfile(fileext = ".geojson")
+#st_write(st_sf(geometry = aoi), geojson, quiet = TRUE)
+#geometria <- jsonlite::fromJSON(geojson, simplifyVector = FALSE)$features[[1]]$geometry
+#unlink(geojson)
+
+datetime = paste0(
+  format(as.Date(desde), "%Y-%m-%dT00:00:00Z"), "/",
+  format(as.Date(hasta), "%Y-%m-%dT23:59:59Z")
+)
+
+items <- stac("https://landsatlook.usgs.gov/stac-server") |>
+  stac_search(
+    collections = c("landsat-c2l1", "landsat-c2l2-sr", "landsat-c2l2-st"),
+    bbox = as.vector(st_bbox(st_transform(aoi, 4326))),
+    datetime = paste0(format(as.Date(desde), "%Y-%m-%dT00:00:00Z"), "/",
+                  format(as.Date(hasta), "%Y-%m-%dT23:59:59Z")),,
+    limit = 100
+  ) |>
+  post_request() |>
+  items_fetch()
+
+
+escenas <- Filter(function(x) grepl("^LC0[89]_", x$id) &&
+                    as.Date(substr(x$properties$datetime, 1, 10)) <= hasta,
+                  items$features)
+if (!length(escenas)) stop("No hay escenas Landsat 8/9 para este polígono y fechas.")
+# assets$lwir11  -> Band 10 ST, 
+
+tabla <- do.call(rbind, lapply(escenas, function(x) {
+  nubes <- x$properties[["eo:cloud_cover"]]
+  if (is.null(nubes) || nubes < 0 || nubes > 100) nubes <- NA_real_
+  data.frame(
+    id_producto = sub("_(SR|ST)$", "", x$id),
+    fecha = substr(x$properties$datetime, 1, 10),
+    satelite = x$properties$platform,
+    nivel = if (x$collection == "landsat-c2l1") "L1" else "L2",
+    nubes_pct = nubes
+  )
+}))
+
+tabla <- tabla[!duplicated(tabla$id_producto), ]
+tabla <- tabla[order(tabla$fecha, tabla$nivel, tabla$id_producto), ]
+rownames(tabla) <- NULL
+dir.create(params$destino, recursive = TRUE, showWarnings = FALSE)
+write.csv(tabla, file.path(params$destino, "escenas.csv"), row.names = FALSE)
+knitr::kable(tabla, digits = 2)
+```
+
+## Nubosidad
+
+`eo:cloud_cover` es el porcentaje de nubes de **toda la escena**, no del
+polígono. L1 y L2 de una misma adquisición pueden tener igual nubosidad.
+
+```{r}
+#| fig-height: 6
+validas <- !is.na(tabla$nubes_pct)
+if (any(validas)) {
+  colores <- ifelse(tabla$nivel == "L1", "#0072B2", "#D55E00")
+  plot(as.Date(tabla$fecha[validas]), tabla$nubes_pct[validas],
+       col = colores[validas], pch = 19, ylim = c(0, 100),
+       xlab = "Fecha de adquisición", ylab = "Nubosidad de la escena (%)")
+  text(as.Date(tabla$fecha[validas]), tabla$nubes_pct[validas],
+       labels = which(validas), pos = 3, cex = 0.7)
+  legend("topright", c("L1", "L2"), col = c("#0072B2", "#D55E00"), pch = 19)
+} else {
+  cat("Las escenas no informan nubosidad válida.")
+}
+```
+
+Los números sobre los puntos corresponden a las filas de la tabla y del CSV.
+Algunos puntos pueden superponerse.
+
+## Descargar los productos elegidos
+
+STAC separa reflectancia (`SR`) y temperatura (`ST`) en nivel 2. Aquí se
+descarga el **Product Bundle** de USGS: incluye todos los archivos del producto
+L1 o L2, sin limitarse a las bandas de una colección STAC. En L2SR no hay
+temperatura superficial; L2SP incluye los archivos de temperatura disponibles.
+
+```{r}
+#| echo: false
+m2m <- function(endpoint, body = list(), key = NULL) {
+  headers <- if (is.null(key)) character() else c("X-Auth-Token" = key)
+  r <- httr::POST(
+    paste0("https://m2m.cr.usgs.gov/api/api/json/stable/", endpoint),
+    httr::add_headers(.headers = headers),
+    body = body, encode = "json", httr::timeout(120)
+  )
+  x <- tryCatch(httr::content(r, as = "parsed", simplifyVector = FALSE),
+                error = function(e) NULL)
+  if (is.list(x) && !is.null(x$errorCode)) {
+    stop(endpoint, " (HTTP ", httr::status_code(r), "): ",
+         x$errorCode, " - ", x$errorMessage, call. = FALSE)
+  }
+  if (httr::status_code(r) >= 400) {
+  f <- tempfile(fileext = ".html")
+  writeLines(httr::content(r, as = "text", encoding = "UTF-8"), f)
+  browseURL(f)
+}
+  httr::stop_for_status(r, task = endpoint)
+  x$data
+}
+
+descargar <- function(id, destino, key) {
+  nivel <- if (grepl("_L1", id, fixed = TRUE)) "l1" else "l2"
+  dataset <- paste0("landsat_ot_c2_", nivel)
+  carpeta <- file.path(destino, id)
+  if (file.exists(carpeta)) stop("Ya existe: ", carpeta)
+  lista <- paste0("quarto_", Sys.getpid(), "_", basename(tempfile()))
+  on.exit(try(m2m("scene-list-remove", list(listId = lista), key), silent = TRUE))
+  m2m("scene-list-add", list(listId = lista, datasetName = dataset,
+                           idField = "displayId", entityIds = list(id)), key)
+  opciones <- m2m("download-options", list(datasetName = dataset, listId = lista), key)
+  bundle <- Filter(function(x) isTRUE(x$available) &&
+                     grepl("Product Bundle", x$productName, ignore.case = TRUE), opciones)
+  if (length(bundle) != 1L) stop("No hay un único Product Bundle disponible para ", id)
+
+  etiqueta <- paste0(lista, "_download")
+  pedido <- m2m("download-request", list(label = etiqueta, downloads = list(
+    list(entityId = bundle[[1]]$entityId, productId = bundle[[1]]$id))), key)
+  enlaces <- pedido$availableDownloads
+  # shortcut: espera hasta 10 minutos, ampliar si USGS necesita más preparación.
+  for (intento in seq_len(40)) {
+    if (length(enlaces)) break
+    if (!length(pedido$preparingDownloads)) stop("USGS no entregó ni puso en preparación la descarga.")
+    Sys.sleep(15)
+    estado <- m2m("download-retrieve", list(label = etiqueta), key)
+    enlaces <- c(estado$available, estado$requested)
+    enlaces <- Filter(function(x) !is.null(x$url) && nzchar(x$url), enlaces)
+  }
+  if (length(enlaces) != 1L) stop("Descarga aún no disponible o respuesta ambigua: ", id)
+
+  temporal <- tempfile(pattern = ".landsat_", tmpdir = destino)
+  dir.create(temporal)
+  on.exit(unlink(temporal, recursive = TRUE), add = TRUE)
+  parcial <- file.path(temporal, "bundle.part")
+  r <- httr::GET(enlaces[[1]]$url, httr::write_disk(parcial), httr::timeout(3600))
+  httr::stop_for_status(r)
+  cabecera <- httr::headers(r)[["content-disposition"]]
+  patron <- 'filename="?([^";]+)'
+  nombre <- if (!is.null(cabecera) && grepl(patron, cabecera)) {
+    trimws(sub(paste0(".*", patron, ".*"), "\\1", cabecera))
+  } else paste0(id, ".tar")
+  if (basename(nombre) != nombre || grepl("[\\\\/]", nombre) ||
+      !grepl("\\.tar(\\.gz)?$", nombre)) stop("Nombre inesperado del paquete USGS.")
+
+  archivos <- utils::untar(parcial, list = TRUE)
+  if (!length(archivos) || any(grepl("(^[/\\\\]|^[A-Za-z]:|(^|[/\\\\])\\.\\.([/\\\\]|$))", archivos))) {
+    stop("Paquete vacío o rutas de extracción inválidas.")
+  }
+  if (!any(grepl("_MTL\\.txt$", archivos))) stop("El paquete no contiene MTL.txt.")
+  if (utils::untar(parcial, exdir = temporal) != 0L) stop("Falló la extracción: ", id)
+  rutas <- file.path(temporal, archivos)
+  if (!all(file.exists(rutas)) || any(file.info(rutas)$size == 0 & !dir.exists(rutas))) {
+    stop("Faltan archivos o hay archivos vacíos: ", id)
+  }
+  if (!file.rename(parcial, file.path(temporal, nombre))) stop("No se pudo guardar el TAR.")
+  if (!file.rename(temporal, carpeta)) stop("No se pudo guardar el producto.")
+  cat("Descargado:", id, "—", length(archivos), "entradas del paquete.\n")
+}
+
+ids <- unique(trimws(strsplit(params$ids, ",", fixed = TRUE)[[1]]))
+ids <- ids[nzchar(ids)]
+if (length(ids)) {
+  if (!all(ids %in% tabla$id_producto)) stop("Elegir IDs de la tabla de esta búsqueda.")
+  usuario <- Sys.getenv("USGS_USERNAME")
+  token <- Sys.getenv("USGS_TOKEN")
+  if (!nzchar(usuario) || !nzchar(token)) stop("Definir USGS_USERNAME y USGS_TOKEN.")
+  key <- m2m("login-token", list(username = usuario, token = token))
+  tryCatch({
+    for (id in ids) descargar(id, params$destino, key)
+  }, finally = try(m2m("logout", key = key), silent = TRUE))
+} else {
+  cat("Solo consulta. Para descargar, completar params$ids con IDs de la tabla.")
+}
+
+
+```
+
+## Referencias
+
+- [Catálogo STAC de USGS](https://www.usgs.gov/landsat-missions/spatiotemporal-asset-catalog-stac).
+- [rstac: búsqueda](https://brazil-data-cube.github.io/rstac/reference/stac_search.html).
+- [USGS: paquetes completos y bandas](https://www.usgs.gov/software/machine-machine-m2m-landsat-download-bands-bundles-and-band-groups).
+- [Solicitar acceso M2M](https://www.usgs.gov/faqs/how-can-i-bulk-download-usgs-earth-resources-observation-and-science-eros-products).
+- [Crear un token de aplicación](https://www.usgs.gov/media/files/m2m-application-token-documentation).

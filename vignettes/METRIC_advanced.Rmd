@@ -84,7 +84,7 @@ function called `loadImage` to load a Landsat image from `.TIF files` were downl
 from [Earth Explorer](https://earthexplorer.usgs.gov/). In this vignette we are
 going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
 ```{r, fig.width = 5}
-image.DN <- L7_Talca
+image.DN <- L7_Talca %>% rast()
 ```
 
 Finally we are going to create The Digital Elevation Model (DEM) for the specific satellite image that we are processing. Thus, we needed a image-specifc grid files downloadable from [Earth Explorer](https://earthexplorer.usgs.gov/). Therefore, is needed to check wich grid files we are going to use considering the satellite scene location and the AOI polygon, using:
@@ -96,7 +96,7 @@ checkSRTMgrids(image.DN)
 You should download all needed grid files, and then you can use the function `prepareSRTMdata(extent = image.DN)` to create our DEM. In this vignette we are going to load the example data provided with **water** package.
 
 ```{r}
-DEM <- DEM_Talca
+DEM <- DEM_Talca %>% rast()
 ```
 
 ## Net Radiation (R_n) estimation
