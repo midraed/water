@@ -47,7 +47,7 @@ library(sf)
 desde   <- as.Date("2016-02-08")
 hasta   <- as.Date("2016-02-10")
 ids     <- character()  # p. ej. "LC08_L2SP_232083_20160209_20200907_02_T1"
-destino <- "../inst/extdata/L8"
+destino <- "../../L8"
 
 # AOI Mendoza, vértices en UTM 19S (EPSG:32619); el primero se repite para cerrar el anillo
 vertices <- matrix(c(
