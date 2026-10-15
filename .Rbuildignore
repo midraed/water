@@ -7,3 +7,4 @@
 ^cran-comments\.md$
 ^vignettes/.*\.qmd$
 ^vignettes/descargas$
+^inst/extdata/L8$

@@ -192,6 +192,8 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
     sat.datetime <- strptime(paste(sat.date, sat.time),
                              format = "%Y-%m-%d %H:%M:%S", tz="UTC")
+    # same instant in the weather station time zone, to compare with its records
+    sat.datetime <- as.POSIXlt(as.POSIXct(sat.datetime), tz = tz)
     records <- range(WSdata$datetime)
     if(!(sat.datetime > records[1] && sat.datetime < records[2])){
       warning("The satellite overpass (", format(sat.datetime, usetz = TRUE),

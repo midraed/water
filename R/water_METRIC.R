@@ -235,36 +235,32 @@ metricRn <- function(surface, WeatherStation){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
-#' @examples 
-#' ### Data preparation
+#' @examples
+#' ### Data preparation: Landsat 8 Collection 2 Level-2 example crop
 #' library(water)
-#' aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
-#' raw_data_folder <- system.file("extdata", package="water")
-#' image <- loadImage(path=raw_data_folder, aoi=aoi, sat="L8")
-#' image.SR <- loadImageSR(path=raw_data_folder, aoi=aoi)
-#' csvfile <- system.file("extdata", "INTA.csv", package="water")
-#' MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
-#' \dontrun{
-#' WeatherStation <- read.WSdata(WSdata = csvfile, 
-#'                               datetime.format =  "%Y/%m/%d %H:%M", 
-#'                               columns = c("datetime", "temp",
-#'                                           "RH", "pp", "radiation", "wind"), 
-#'                               lat=-33.00513, long= -68.86469, elev=927, height= 2,
-#'                               MTL=MTLfile)
-#'                               
-#' ### LSEB with default methods and no extra parameters                               
-#' Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
-#'                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
-#'                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
-#'                             LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
-#'                             
-#'                             
-#' ### LSEB with "Perrier" method for Zom and extra parameters                               
-#' Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
-#'                             plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
-#'                             ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
-#'                             LAI.method = "metric2010", Zom.method = "Perrier", Z.om.ws = 0.03, 
-#'                             MTL = MTLfile, extraParameters = c(fLAI = 0.5, h = 1.8) ) 
+#' scene_folder <- system.file("extdata", "L8_C2", package = "water")
+#' image.SR <- loadImageSR(path = scene_folder)
+#' image.SR <- cfmask(path = scene_folder, image = image.SR)
+#' MTLfile <- list.files(scene_folder, pattern = "MTL.txt$", full.names = TRUE)
+#' csvfile <- system.file("extdata", "INTA.csv", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "%Y/%m/%d %H:%M",
+#'                               columns = c("date" = 1, "time" = 1, "radiation" = 5,
+#'                                           "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+#'                               lat = -33.00513, long = -68.86469, elev = 927, height = 2,
+#'                               tz = "America/Argentina/Mendoza", MTL = MTLfile)
+#' \donttest{
+#' ### LSEB with surface reflectance and surface temperature
+#' Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+#'                             WeatherStation = WeatherStation, MTL = MTLfile,
+#'                             alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
+#'                             Z.om.ws = 0.03)
+#'
+#' ### LSEB with "Perrier" method for Zom and extra parameters
+#' Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+#'                             WeatherStation = WeatherStation, MTL = MTLfile,
+#'                             alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
+#'                             Z.om.ws = 0.03, Zom.method = "Perrier",
+#'                             extraParameters = c(fLAI = 0.5, h = 1.8))
 #' }
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",

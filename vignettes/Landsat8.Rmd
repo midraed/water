@@ -1,53 +1,95 @@
 ---
-title: "Using Landsat 8 data with METRIC and water package"
+title: "Landsat 8 and 9 data with METRIC and the water package"
 author: "Guillermo Federico Olmedo"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Landsat 8}
+  %\VignetteIndexEntry{Landsat 8 and 9}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-Landsat 8 has better radiometric resolution, a two bands in the thermal region. In water package we do not provide a method for the estimation of surface reflectace. However, [USGS](https://www.usgs.gov) offers surface reflectance processed trough [ESPA](https://espa.cr.usgs.gov). water package uses ESPA products when running METRIC algorithm with Landsat 8 data. In this vignette we describe how to use Landsat 8 data with METRIC and water package. 
+The **water** package does not estimate surface reflectance for Landsat 8 and 9. Instead, it uses the products that USGS computes for every scene: [Collection 2 Level-2](https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products) surface reflectance (SR) and surface temperature (ST). With them, METRIC can run without the raw digital numbers (DN). This vignette uses a small crop of a Landsat 8 Collection 2 Level-2 scene (path 232, row 83, 9 February 2016, near Mendoza, Argentina) included in **water**. Landsat 9 products have the same structure and are handled the same way.
 
-## Differences between Landsat 7 and 8
+## Getting Collection 2 Level-2 data
 
-Landsat 8 has two new spectral bands: a deep blue visible channel (band 1) specifically designed for water resources and coastal zone investigation, and a new infrared channel (band 9) for the detection of cirrus clouds. Also, the TIRS instrument collects two spectral bands for the wavelength covered by a single band on the previous TM and ETM+ sensors. The two bands from TIRS allows to use the `split windows` method for the estimation of land surface temperature. The estimation of surface reflectance is not included in water package. Nevertheless, water package reads the surface reflectance products obtained from  [ESPA](https://espa.cr.usgs.gov). Finally, as the band limits differ from the ones in Landsat 7, the estimation of albedo needs a new set of coefficients. In water we include coefficients estimated using [SMARTS](http://www.nrel.gov/rredc/smarts/). In the next section we show how to estimate METRIC model with Landsat 8 data using the simple procedure.
+Download the scene from [EarthExplorer](https://earthexplorer.usgs.gov/), dataset "Landsat 8-9 OLI/TIRS C2 L2". Among other files, the scene folder contains:
 
-## Simple procedure 
+- `*_SR_B2.TIF` to `*_SR_B7.TIF`: surface reflectance (blue, green, red, NIR, SWIR1 and SWIR2),
+- `*_ST_B10.TIF`: surface temperature,
+- `*_QA_PIXEL.TIF`: quality band, with the cloud mask,
+- `*_MTL.txt`: metadata, with the acquisition date and time.
 
-As Landsat scenes are almost 1Gb in size, we do not recommend using one complete scene without cropping an area-of-interest first. An area-of-interest can be defined using `createAoi()` function:
+A full scene is almost 1 GB, so crop an area of interest when loading it, e.g. `loadImageSR(path = scene_folder, aoi = createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000), EPSG = 32619))`.
 
-```{r, message=FALSE}
+## Loading the data
+
+`loadImageSR()` reads the SR bands, rescales them to reflectance (DN * 0.0000275 - 0.2) and names them B, G, R, NIR, SWIR1 and SWIR2. It also adds the surface temperature as the last layer, `Band_10`, in Kelvin (DN * 0.00341802 + 149):
+
+```{r, message=FALSE, fig.width = 7}
 library(water)
-aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
+scene_folder <- system.file("extdata", "L8_C2", package = "water")
+image.SR <- loadImageSR(path = scene_folder)
+plot(image.SR)
 ```
 
-To be able to run METRIC with Landsat 8 data, the ESPA surface reflectance products must be available in the working directory. If we list the contents of the L8 example files provided with water, we can see we have 38 files: 2 metadata files, the original and the one from ESPA and 14 tif files with the raw data.
-The Landsat scene can loaded using `loadImage()` function. And the SR data with `loadImage.SR`:
+Clouds and cloud shadows must be masked before running METRIC, otherwise they can be selected as cold anchor pixels. `cfmask()` reads the `QA_PIXEL` band and masks fill, cloud, cirrus and cloud shadow pixels in all layers, including the surface temperature. By default it also masks a 60 m buffer around clouds and shadows:
 
-```{r, warning=FALSE, fig.width = 7}
-raw_data_folder <- system.file("extdata", package="water")
-image <- loadImage(path=raw_data_folder, aoi=aoi, sat="L8")
-image.SR <- loadImageSR(path=raw_data_folder, aoi=aoi)
-plot(image)
+```{r}
+image.SR <- cfmask(path = scene_folder, image = image.SR)
 ```
 
-Finally, the simple procedure for estimating METRIC can be applied to the image:
+## Weather station data
 
-```{r, warning=FALSE, fig.width = 7}
-csvfile <- system.file("extdata", "INTA.csv", package="water")
-MTLfile <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package="water")
-WeatherStation <- read.WSdata(WSdata = csvfile, 
-                              datetime.format =  "%Y/%m/%d %H:%M", 
-                              columns=c("date" = 1, "time" = 1, "radiation" = 5,
-                              "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4), 
-                              lat=-33.00513, long= -68.86469, elev=927, height= 2,
-                              MTL=MTLfile)
-Energy.Balance <- METRIC.EB(image.DN = image, image.SR = image.SR,
-                            plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation, 
-                            ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo", LST.method = "SW", 
-                            LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
-plot(Energy.Balance$EB)
+The weather station data are in `INTA.csv`. With the MTL file, `read.WSdata()` also interpolates the weather conditions at the time of the satellite overpass. The overpass time in the MTL file is UTC and the station clock uses Argentina time, so we set `tz`:
+
+```{r}
+csvfile <- system.file("extdata", "INTA.csv", package = "water")
+MTLfile <- list.files(scene_folder, pattern = "MTL.txt$", full.names = TRUE)
+WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "%Y/%m/%d %H:%M",
+                              columns = c("date" = 1, "time" = 1, "radiation" = 5,
+                                          "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+                              lat = -33.00513, long = -68.86469, elev = 927, height = 2,
+                              tz = "America/Argentina/Mendoza", MTL = MTLfile)
+print(WeatherStation)
+```
+
+## Energy balance
+
+With `surf.temp`, `METRIC.EB()` uses the Level-2 surface temperature instead of estimating it from the thermal band. The satellite is detected from the MTL file (`sat = "auto"`), and `alb.coeff = "Olmedo"` uses albedo coefficients for the Landsat 8 and 9 bands:
+
+```{r, fig.width = 7}
+Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                            WeatherStation = WeatherStation, MTL = MTLfile,
+                            alb.coeff = "Olmedo", n = 5, ETp.coef = 1.2,
+                            Z.om.ws = 0.03)
+plot(Energy.Balance)
+```
+
+Without `image.DN`, `METRIC.EB()` computes the leaf area index and selects the anchor pixels from the surface reflectance. The LAI equations of METRIC were described for top-of-atmosphere reflectance, so the results can differ from a run that also uses the Level-1 data (see the last section).
+
+## Daily evapotranspiration
+
+Finally, the daily evapotranspiration is estimated with the daily reference ET of the weather station:
+
+```{r, fig.width = 5}
+ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
+ET.24 <- ET24h(Rn = Energy.Balance$EB$NetRadiation, G = Energy.Balance$EB$SoilHeat,
+               H = Energy.Balance$EB$SensibleHeat,
+               Ts = Energy.Balance$EB$surfaceTemperature,
+               WeatherStation = WeatherStation, ETr.daily = ET_WS)
+```
+
+## Using Level-1 digital numbers
+
+If the Level-1 product of the same scene is also available (dataset "Landsat 8-9 OLI/TIRS C2 L1" in EarthExplorer), it can be loaded with `loadImage()` and passed as `image.DN`. `METRIC.EB()` then uses the top-of-atmosphere reflectance for the leaf area index and the anchor pixels and, without `surf.temp`, estimates the surface temperature from the thermal bands: `LST.method = "SW"` uses the split window method with bands 10 and 11. The Level-1 example files included in **water** are from the same scene, with the older (pre-Collection) file names:
+
+```{r, fig.width = 7}
+image.DN <- loadImage(path = system.file("extdata", package = "water"), sat = "L8")
+MTL.L1 <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package = "water")
+Energy.Balance.DN <- METRIC.EB(image.DN = image.DN, image.SR = image.SR,
+                               WeatherStation = WeatherStation, MTL = MTL.L1,
+                               sat = "L8", alb.coeff = "Olmedo", LST.method = "SW",
+                               n = 5, ETp.coef = 1.2, Z.om.ws = 0.03)
+plot(Energy.Balance.DN)
 ```
