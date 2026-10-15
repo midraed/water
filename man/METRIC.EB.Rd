@@ -20,38 +20,41 @@ METRIC.EB(
   LAI.method = "metric2010",
   L = 0.1,
   Zom.method = "short.crops",
-  anchors.method = "CITRA-MCB",
+  anchors.method = "flexible",
   anchors,
   n = 1,
   ETp.coef = 1.05,
   Z.om.ws = 0.0018,
   verbose = FALSE,
-  extraParameters = vector()
+  extraParameters = vector(),
+  surf.temp
 )
 }
 \arguments{
-\item{image.DN}{raw imagen in digital counts to evaluate}
+\item{image.DN}{Optional. Raw image in digital counts. If supplied
+(L7/L8) it is used for TOA reflectance (LAI and anchors) and for surface
+temperature; if missing, image.SR is used instead. Needed for
+LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).}
 
-\item{image.SR}{L8 ONLY. Surface reflectance imagen. water package does not 
-include a model to calculate surface reflectance for Landsat 8 images. Landsat 8 users 
-should download precalculated surface reflectances from espa website 
-(espa.cr.usgs.gov).}
+\item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
+SWIR2), e.g. from loadImageSR(). Required: it is not computed from image.DN.}
 
-\item{WeatherStation}{Weather Station data, can be a waterWeatherStation 
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
 
 \item{MTL}{Landsat metadata file}
 
 \item{sat}{Landsat satellite version. "L7" or "L8"}
 
-\item{thermalband}{Landsat low gain thermalband}
+\item{thermalband}{Landsat low gain thermalband. Not needed if
+surf.temp is supplied}
 
 \item{plain}{Logical. If TRUE surface is assumed plain}
 
 \item{DEM}{Digital Elevation Model of the study area. Not needed
 if plain = TRUE}
 
-\item{aoi}{SpatialPolygon object with limits of Area of interest}
+\item{aoi}{sf polygon object with limits of Area of interest}
 
 \item{G.method}{method used for the G estimation. Currently implemeted are 
 "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
@@ -75,7 +78,7 @@ Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{anchors.method}{method for the automatic selection of the anchor pixels.}
 
-\item{anchors}{data.frame or sf object with point geometry with the anchor
+\item{anchors}{data.frame or sf POINT object with the anchor
 pixels. The data frame must include a "type" column 
 with "hot" and "cold" values.}
 
@@ -91,6 +94,10 @@ with "hot" and "cold" values.}
 \item{extraParameters}{Extra parameters for the non default methods. i.e. 
 Zom.method = "Perrier", needs two extra parameters: fLAI, h. See 
 help(momentumRoughnessLength).}
+
+\item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
+same grid as image.SR (e.g. Landsat C2 ST_B10 * 0.00341802 + 149). If
+supplied it is used as Ts and surfaceTemperature() is not called.}
 }
 \description{
 Estimates Energy Balance using METRIC2010 Model

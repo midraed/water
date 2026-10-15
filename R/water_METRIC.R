@@ -96,16 +96,21 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 
 
 #' Estimates Energy Balance using METRIC2010 Model
-#' @param image.DN         raw imagen in digital counts to evaluate
-#' @param image.SR         L8 ONLY. Surface reflectance imagen. water package does not 
-#' include a model to calculate surface reflectance for Landsat 8 images. Landsat 8 users 
-#' should download precalculated surface reflectances from espa website 
-#' (espa.cr.usgs.gov). 
-#' @param WeatherStation   Weather Station data, can be a waterWeatherStation 
+#' @param image.DN         Optional. Raw image in digital counts. If supplied
+#' (L7/L8) it is used for TOA reflectance (LAI and anchors) and for surface
+#' temperature; if missing, image.SR is used instead. Needed for
+#' LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).
+#' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
+#' SWIR2), e.g. from loadImageSR(). Required: it is not computed from image.DN.
+#' @param WeatherStation   Weather Station data, can be a waterWeatherStation
 #' object
 #' @param MTL              Landsat metadata file
 #' @param sat              Landsat satellite version. "L7" or "L8"
-#' @param thermalband      Landsat low gain thermalband
+#' @param thermalband      Landsat low gain thermalband. Not needed if
+#' surf.temp is supplied
+#' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
+#' same grid as image.SR (e.g. Landsat C2 ST_B10 * 0.00341802 + 149). If
+#' supplied it is used as Ts and surfaceTemperature() is not called.
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
@@ -189,10 +194,16 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.0018,
-                      verbose = FALSE, extraParameters = vector()){
+                      verbose = FALSE, extraParameters = vector(), surf.temp){
   path=getwd()
+  if(missing(image.SR)){
+    stop("image.SR is missing. Load surface reflectance (e.g., loadImageSR()).")
+  }
 
-  if(missing(thermalband) && sat %in% c("L7", "L8")){
+  if(missing(surf.temp) && missing(thermalband) && sat %in% c("L7", "L8")){
+    if(missing(image.DN)){
+      stop("Provide surf.temp, thermalband or image.DN with a thermal layer.")
+    }
     thermal.layer <- intersect(c("Thermal1", "thermal.low"), names(image.DN))
     if(length(thermal.layer) == 0){
       stop("thermalband is missing. Provide a thermal layer (e.g., image.DN$Thermal1).")
@@ -200,13 +211,13 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     thermalband <- image.DN[[thermal.layer[1]]]
   }
 
-  if(sat %in% c("L7", "L8") && is.null(thermalband)){
+  if(missing(surf.temp) && sat %in% c("L7", "L8") && is.null(thermalband)){
     stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
   }
 
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- rast(image.DN[[1]])
+    DEM <- rast(image.SR[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -217,32 +228,29 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  if(sat=="L7" | sat=="L8"){
+  # SR comes precomputed; TOAr (used for LAI and anchors) only if DN is supplied
+  image.TOAr <- image.SR
+  if(!missing(image.DN) && sat %in% c("L7", "L8")){
     image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
                            incidence.rel = solar.angles.r$incidence.rel)
-    if(sat=="L7"){
-      image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
-                         surface.model=surface.model, 
-                         incidence.hor = solar.angles.r$incidence.hor, 
-                         WeatherStation=WeatherStation)}
-    }
-  if(sat=="MODIS"){image.SR <- image.DN}
+  }
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
-  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
-  # and some LAI models, use SR
   if(LAI.method == "vineyard"){
+    if(missing(image.DN)){stop("LAI.method = 'vineyard' needs image.DN.")}
     image.rad <- calcRadiance(image.DN, sat = sat, MTL = MTL)
     LAI <- LAI(method = LAI.method, image = image.rad, L=L)
     }
   if(LAI.method == "turner"){LAI <- LAI(method = LAI.method, image = image.SR, L=L)}
   if (LAI.method != "vineyard" & LAI.method != "turner"){LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)}
-  if(sat=="L7" | sat=="L8"){
+  if(!missing(surf.temp)){
+    Ts <- surf.temp
+  } else if(sat=="L7" | sat=="L8"){
     Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=image.DN,
                              WeatherStation = WeatherStation,
                              method = LST.method,
-                             thermalband = thermalband)}
-  if(sat=="MODIS"){Ts <- image.DN$LST}
+                             thermalband = thermalband)
+  } else if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
   Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
