@@ -65,7 +65,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
   if(tz==""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))
-  } else if(!tz %in% OlsonNames()){
+  } else if(!knownTimezone(tz)){
     stop("Unknown time zone: \"", tz, "\". Use a name from OlsonNames(), e.g. ",
          "\"America/Santiago\", or \"Etc/GMT+6\" for 6 hours behind UTC")
   }
@@ -74,13 +74,16 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   new (numeric and simple!) sintaxis will work.")}
   if("pp" %in% columns){columns[columns == "pp"] <- "rain"}  ## TODO: deprecated "pp"
   if(is.character(WSdata)){
-    if(!file.exists(WSdata)){stop("Weather station file not found: ", WSdata)}
+    if(!isURL(WSdata) && !file.exists(WSdata)){
+      stop("Weather station file not found: ", WSdata)
+    }
     WSdata <- utils::read.csv(WSdata, ...)
   } else if(is.data.frame(WSdata)){
     WSdata <- as.data.frame(WSdata)  # e.g. a tibble
   } else stop("WSdata should be a character string with the name of the csv file
   or a data.frame with the WS data")
   num <- function(x, name){
+    if(all(is.na(x))){return(as.numeric(x))}  # e.g. a station without rain data
     if(!is.numeric(x)){
       stop("The weather station column for ", name, " is not numeric (first ",
            "value: \"", x[1], "\"). If the file uses decimal commas, use ",
@@ -254,7 +257,9 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                          cf = c(1, 1, 1), MTL){
   if(is.character(WSdata)){
-    if(!file.exists(WSdata)){stop("Weather station file not found: ", WSdata)}
+    if(!isURL(WSdata) && !file.exists(WSdata)){
+      stop("Weather station file not found: ", WSdata)
+    }
     WSdata <- utils::read.csv2(WSdata, ...)
   }
   read.WSdata(WSdata, height = height, lat = lat, long = long, elev = elev,

@@ -87,8 +87,26 @@ anchors <- quiet(calcAnchors(image = sr, Ts = Ts, LAI = lai, albedo = alb, Z.om 
                              n = 1, plots = TRUE, anchors.method = "flexible"))
 stopifnot(!any(anchors$pixel %in% cloud))
 
-## "random" with a single candidate picks that candidate
-stopifnot(all(replicate(20, water:::sampleOne(10585L)) == 10585L))
+## "random": candidates only, also with a single hot candidate (sample(x, 1)
+## drew from 1:x)
+syn <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 300, ymin = 0, ymax = 300,
+                   crs = "EPSG:32719", nlyrs = 2, vals = 0)
+names(syn) <- c("R", "NIR")
+cold.cells <- 1:10; hot.cells <- 91:100
+set.layer <- function(x, cold, hot, other) {
+  v <- rep(other, terra::ncell(x)); v[cold.cells] <- cold; v[hot.cells] <- hot
+  terra::rast(x[[1]], vals = v)
+}
+syn$R <- set.layer(syn, 0.03, 0.2, 0.15); syn$NIR <- set.layer(syn, 0.37, 0.3, 0.45)
+Ts.syn <- set.layer(syn, 295, 320, 305); Ts.syn[95] <- 321
+for (seed in 1:5) {
+  set.seed(seed)
+  a <- quiet(calcAnchors(image = syn, Ts = Ts.syn, LAI = set.layer(syn, 4, 0.1, 1),
+                         albedo = set.layer(syn, 0.2, 0.14, 0.3),
+                         Z.om = set.layer(syn, 0.05, 0.002, 0.01), n = 1,
+                         plots = FALSE, anchors.method = "random"))
+  stopifnot(a$pixel[a$type == "hot"] == 95, a$pixel[a$type == "cold"] %in% cold.cells)
+}
 
 ## METRIC.EB() with Collection 2 Level-2 data, cloud mask, print() and writeRaster()
 image.SR <- cfmask(path = c2, image = loadImageSR(c2))
@@ -109,6 +127,26 @@ EBfar <- quiet(expect_warning(
             MTL = MTL.L2, alb.coeff = "Olmedo", n = 1, Z.om.ws = 0.03),
   "No pixel is within WSbuffer"))
 stopifnot(inherits(EBfar, "waterLSEB"))
+
+## METRIC.EB(): weather station outside the image but within WSbuffer: no
+## fallback to the whole image
+WSnear <- WS
+WSnear$location$lat <- WS$location$lat + 0.06  # a few km north of the crop
+w <- character()
+invisible(utils::capture.output(withCallingHandlers(
+  METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10, WeatherStation = WSnear,
+            MTL = MTL.L2, alb.coeff = "Olmedo", n = 1, Z.om.ws = 0.03),
+  warning = function(c) { w <<- c(w, conditionMessage(c)); invokeRestart("muffleWarning") })))
+stopifnot(!any(grepl("WSbuffer", w)))
+
+## METRIC.EB(): aoi in another CRS is reprojected to the image CRS
+half <- terra::ext(image.SR); half[2] <- (half[1] + half[2]) / 2
+aoi.ll <- sf::st_transform(sf::st_as_sf(terra::as.polygons(half, crs = terra::crs(image.SR))),
+                           4326)
+EBaoi <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                         WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
+                         n = 1, Z.om.ws = 0.03, aoi = aoi.ll))
+stopifnot(terra::ncell(EBaoi$EB) < terra::ncell(EB$EB))
 
 ## METRIC.EB(): manual anchors with the default anchors.method, and
 ## Zom.method = "custom"
@@ -132,5 +170,11 @@ Rn <- quiet(do.call(METRIC.Rn, args))
 G <- quiet(do.call(METRIC.G, c(args, list(Rn = Rn))))
 stopifnot(maxdiff(Rn, EBsw$EB$NetRadiation) < 1e-8,
           maxdiff(G, EBsw$EB$SoilHeat) < 1e-8)
+
+## METRIC.Rn(): thermal layer named "thermal.low", detected as in METRIC.EB()
+DN.low <- image.DN; names(DN.low)[names(DN.low) == "Thermal1"] <- "thermal.low"
+Rn.low <- quiet(METRIC.Rn(image.DN = DN.low, image.SR = loadImageSR(c2), WeatherStation = WS,
+                          MTL = MTL.L1, sat = "L8", alb.coeff = "Olmedo"))
+stopifnot(inherits(Rn.low, "SpatRaster"))
 
 cat("test-energy-balance.R: all tests passed\n")

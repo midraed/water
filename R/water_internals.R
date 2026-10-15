@@ -40,6 +40,10 @@ sampleOne <- function(x){
 # Path of the Landsat metadata (MTL) file: MTL itself, checked, or the only
 # *MTL.txt file in path when MTL is NULL
 findMTL <- function(MTL = NULL, path = getwd(), required = TRUE){
+  if(!is.null(MTL) && length(MTL) == 0){
+    if(required){stop("MTL is empty: no Landsat MTL file was given")}
+    return(NULL)
+  }
   if(is.null(MTL)){
     MTL <- list.files(path = path, pattern = "MTL\\.txt$", full.names = TRUE)
     if(length(MTL) > 1){
@@ -92,24 +96,41 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   message(paste("Result saved as", paste0(tmpdir, file, tstamp, ".tif"), "    OK"))
   stack <- rast(resultfile)
   names(stack) <- stack.names
-  terra::tmpFiles(current = FALSE, old = TRUE, remove = TRUE)
+  terra::tmpFiles(current = FALSE, orphan = TRUE, remove = TRUE)
   return(stack)
 }
 
 
 aoiCrop <- function(raster, aoi){
   if(!missing(aoi)){
-    raster <- crop(raster,aoi)
+    raster <- cropToAoi(raster, aoi)
     return(raster)
   }
   if(missing(aoi) && isTRUE(getOption("waterAutoAoi")) &&
      exists(x = "aoi", envir = .GlobalEnv, inherits = FALSE)){
     aoi <- get(x = "aoi", envir=.GlobalEnv)
-    raster <- crop(raster,aoi)
+    raster <- cropToAoi(raster, aoi)
     return(raster)
   }
   return(raster)
 }
+
+# Crop x to aoi, reprojecting a polygon aoi to the CRS of x when both have one
+cropToAoi <- function(x, aoi){
+  if(inherits(aoi, c("sf", "sfc"))){aoi <- terra::vect(aoi)}
+  if(inherits(aoi, "SpatVector") && terra::crs(aoi) != "" && terra::crs(x) != "" &&
+     !terra::same.crs(aoi, x)){
+    aoi <- terra::project(aoi, x)
+  }
+  crop(x, aoi)
+}
+
+# TRUE if R knows the time zone (unknown ones only give a warning and use UTC)
+knownTimezone <- function(tz){
+  tryCatch({as.POSIXlt(Sys.time(), tz = tz); TRUE}, warning = function(w) FALSE)
+}
+
+isURL <- function(x){grepl("^(https?|ftp)://", x)}
 
 # Hint for failed anchor selections
 anchorHint <- function(albedo){

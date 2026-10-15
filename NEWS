@@ -4,31 +4,106 @@ Guillermo OLMEDO
 -----------------------------------------------------------------
 VERSION 0.8.5
 
-* METRIC.EB() can run from Landsat 8/9 Collection 2 Level-2 products only:
-  image.DN is now optional when image.SR is supplied, and the new surf.temp
-  argument takes a surface temperature raster (Kelvin) instead of estimating
-  it from the thermal band. (Francisco Martín Corvalán)
+Fixes that change results:
+
+* METRICtopo(): since the migration to terra, slope and aspect were
+  computed in degrees and used as radians, so every run with a DEM
+  (plain = FALSE) was wrong (e.g. negative net radiation). With
+  plain = TRUE the results no longer have an NA border.
+* solarAngles(): the hour angle is now negative before solar noon; east and
+  west slopes were swapped for morning (Landsat) overpasses (plain = FALSE).
+* calcTOAr(): Landsat 8/9 TOA reflectance was divided by the incidence angle
+  instead of its cosine (about 22% too high), which biased LAI and the anchor
+  pixels whenever image.DN was used.
+* calcTOAr(), calcRadiance(): bands are taken by name. The L7_Talca example
+  stores SWIR2 after Thermal1, so "SWIR2" was computed from the thermal band.
+* read.WSdata(): the overpass time in the MTL file (UTC) was read as
+  Europe/London time, one hour off for scenes acquired during British Summer
+  Time (late March to late October).
+* calcAnchors(): pixels with masked reflectance (e.g. clouds) could be
+  selected as anchors; "best" failed to find cold pixels; all methods
+  returned only one hot and one cold pixel regardless of n; "random" could
+  select a pixel that was not a candidate.
+* LAI(method = "metric"): LAI is 6 for SAVI > 0.687 (Allen et al. 2007);
+  dense vegetation gave NaN.
+* calcRadiance(): Landsat 7 radiance was NaN (MTL values without "E-"
+  notation), which broke LAI.method = "vineyard" for Landsat 7.
+
+Landsat 8 and 9 (Collection 2):
+
+* METRIC.EB(), METRIC.Rn() and METRIC.G() run from Collection 2 Level-2
+  products: image.DN is optional when image.SR is supplied, and surf.temp
+  takes the Level-2 surface temperature. (Francisco Martín Corvalán)
 * loadImageSR() reads Collection 2 Level-2 files (SR_B2 to SR_B7, plus ST_B10
-  as "Band_10" in Kelvin) as well as old ESPA files. It now stops if any of
+  as "Band_10" in Kelvin) as well as legacy ESPA files, and stops if any of
   the six reflectance bands is missing.
-* Fixed automatic anchor selection after the migration to terra: the "best"
-  method failed to find cold pixels, and all methods returned only one hot
-  and one cold pixel regardless of n. See calcAnchors()
-* Landsat 9 support. getSat() returns "L9", and L9 is handled like L8
-  (same bands). surfaceTemperature() reads the thermal calibration constants
-  from the MTL file (new MTL argument), required for L9
-* METRIC.Rn() and METRIC.G() work with Landsat 8/9 Level-2 products: new
-  image.SR and surf.temp arguments, same priority as METRIC.EB()
-* METRIC.G() rewritten to match METRIC.Rn(): it can now run, takes MTL,
-  sat, thermalband, G.method and an optional Rn, and returns the same G as
-  METRIC.EB()
-* sat = "auto" now detects the satellite from the MTL file or file names
-* Fixed calcH() failing with "raster has no values" when no pixel met the
-  stability condition
-* ET24h() plots with terra instead of spplot
-* Example data (L7_Talca, DEM_Talca) are now stored as terra
-  PackedSpatRaster objects. Use rast() to unpack them
-* New vignette for Landsat 8 Collection 2 Level-2 data
+* cfmask() masks clouds with the Collection 2 QA_PIXEL band (fill, dilated
+  cloud, cirrus, cloud and cloud shadow bits), looks for the band in path,
+  and implements the buffer argument (#55, #47).
+* Landsat 9 support: getSat() returns "L9", L9 is handled like L8 (same
+  bands), and surfaceTemperature() reads the thermal calibration constants
+  from the MTL file (new MTL argument, required for L9).
+* sat = "auto" detects the satellite from the MTL file or the file names.
+* New example data: a 134 x 184 pixel Collection 2 Level-2 crop (SR, ST,
+  QA_PIXEL and MTL) in inst/extdata/L8_C2. The ESPA surface reflectance
+  example files were removed.
+* The Landsat 8 vignette is now an evaluated Landsat 8/9 Collection 2
+  workflow and no longer refers to the retired ESPA service (#52).
+
+Other changes and fixes:
+
+* calcAnchors(): works when the weather station is outside the image;
+  "flexible" relaxes the criteria near the station and then, with a
+  warning, in the whole image; failed selections explain what to check;
+  plots = TRUE works without a weather station (#46).
+* read.WSdata(): clear errors for unknown time zones, unreadable dates and
+  non-numeric columns; rows with unreadable dates are removed with a
+  warning; tibbles and integer columns work (#41). An overpass outside the
+  station records gives a warning instead of an error (#28).
+  read.WSdata2() works (it reads with read.csv2()).
+* MTL must be the file name; a missing MTL is searched in the folder and
+  must be the only MTL file there (#45).
+* loadImage() accepts any scene prefix, e.g. real-time tier or renamed
+  files, and explains the expected names when nothing matches (#50).
+* prepareSRTMdata() returns the DEM on the image grid (#31).
+* METRIC.G() can run: same arguments as METRIC.Rn(), plus G.method and an
+  optional Rn. METRIC.EB(), METRIC.Rn() and METRIC.G() share the same
+  surface computations, so Rn and G are identical across them; Rn and G
+  gained L and LST.method.
+* METRIC.EB(), METRIC.Rn(), METRIC.G(): aoi crops the inputs (an aoi in
+  another CRS is reprojected); manual anchors work with the default
+  anchors.method; Zom.method = "custom" works; a thermal layer named
+  "thermal.low" is also found by METRIC.Rn() and METRIC.G().
+* print() and writeRaster() work on METRIC.EB() results (writeRaster() is
+  now an S4 method).
+* waterOptions(outputFolder, SRTMrepo) work; waterOptions(autoAoi = FALSE)
+  is honoured; waterWriteResults = TRUE no longer deletes temporary files
+  in use.
+* calcH(method = "lm") could loop forever.
+* hourlyET() only accepts ET = "ETr" or "ETo"; calcH() requested the
+  invalid "ETor" and silently got ETo, which it still uses.
+* calcH() no longer fails with "raster has no values" when no pixel meets
+  the stability condition.
+* ET24h() plots with terra instead of spplot.
+* Example data (L7_Talca, DEM_Talca) are terra PackedSpatRaster objects;
+  use rast() to unpack them.
+* Regression tests in tests/.
+
+Behaviour changes to check in existing scripts:
+
+* cfmask() now applies its buffer argument (60 m by default) around the
+  masked clouds and shadows, also with keep; use buffer = 0 for the
+  previous behaviour.
+* read.WSdata(): a time zone that R does not know is now an error (R only
+  warned and used UTC).
+* hourlyET(): the solar time correction for long.z uses degrees, as in
+  ASCE (before it was about 57 times too small); longitudes are negative
+  for west.
+* read.WSdata2(): the default cf is now c(1, 1, 1), as in read.WSdata().
+* prepareSRTMdata(): with a polygon, the DEM is on the Landsat 30 m grid
+  of its projected CRS; a longitude/latitude polygon is an error.
+* Documentation: help files updated for terra/sf, Landsat 9 and
+  Collection 2, value sections added (#19, #5); vignette fixes (#6).
 
 
 VERSION 0.8.4

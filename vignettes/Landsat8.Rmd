@@ -33,7 +33,7 @@ image.SR <- loadImageSR(path = scene_folder)
 plot(image.SR)
 ```
 
-Clouds and cloud shadows must be masked before running METRIC, otherwise they can be selected as cold anchor pixels. `cfmask()` reads the `QA_PIXEL` band and masks fill, cloud, cirrus and cloud shadow pixels in all layers, including the surface temperature. By default it also masks a 60 m buffer around clouds and shadows:
+Clouds and cloud shadows must be masked before running METRIC, otherwise they can be selected as cold anchor pixels. `cfmask()` reads the `QA_PIXEL` band and masks fill, dilated cloud, cirrus, cloud and cloud shadow pixels in all layers, including the surface temperature. By default it also masks a 60 m buffer around clouds and shadows:
 
 ```{r}
 image.SR <- cfmask(path = scene_folder, image = image.SR)

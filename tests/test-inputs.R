@@ -56,6 +56,14 @@ stopifnot(inherits(ws.int, "waterWeatherStation"))
 chr <- ws.july(); chr$temp <- sub("\\.", ",", format(chr$temp + 0.5))
 expect_error(read.ws(chr, tz = "UTC"), "not numeric")
 
+## read.WSdata(): a station without rain data (all-NA column, read as logical)
+norain <- ws.july(); norain$rain <- NA
+stopifnot(all(is.na(read.ws(norain, tz = "UTC")$alldata$rain)))
+
+## read.WSdata(): any time zone that R knows; an empty MTL means no MTL
+stopifnot(inherits(read.ws(ws.july(), tz = "Etc/GMT+3"), "waterWeatherStation"))
+stopifnot(is.null(read.ws(ws.july(), tz = "UTC", MTL = character(0))$at.sat))
+
 ## read.WSdata(): overpass outside the records warns, no at.sat (#28)
 ws.feb <- expect_warning(read.ws(ws.july(), tz = "UTC", MTL = MTL.L8),
                          "outside the weather station records")
@@ -119,6 +127,9 @@ qa5 <- terra::rast(img5, vals = 21824); qa5[13] <- 22280; names(qa5) <- "QA_PIXE
 stopifnot(terra::global(is.na(cfmask(image = img5, cfmask = qa5, buffer = 0)), "sum")[1, 1] == 1,
           terra::global(is.na(cfmask(image = img5, cfmask = qa5, buffer = 30)), "sum")[1, 1] == 5,
           terra::global(is.na(cfmask(image = img5, cfmask = qa5, buffer = 45)), "sum")[1, 1] == 9)
+names(qa) <- "qa_pixel"  # e.g. renamed by other tools
+stopifnot(isTRUE(all.equal(as.numeric(terra::values(cfmask(image = img, cfmask = qa, buffer = 0))),
+                           c(1, 2, NA, NA, NA))))
 qa.old <- terra::rast(img, vals = c(0, 0, 2, 0, 4))
 stopifnot(isTRUE(all.equal(as.numeric(terra::values(cfmask(image = img, cfmask = qa.old, buffer = 0))),
                            c(1, 2, NA, 4, NA))))
@@ -133,6 +144,18 @@ DEM <- prepareSRTMdata(path = srtm.dir, extent = image)
 stopifnot(terra::compareGeom(DEM, image, stopOnError = FALSE))
 expect_error(prepareSRTMdata(path = srtm.dir, extent = createAoi(c(0, 1), c(1, 0))),
              "no CRS")
+# a polygon gives a DEM on the Landsat 30 m grid (cell edges at 15 m + k * 30 m)
+aoi.utm <- createAoi(topleft = c(511000, -3651000), bottomright = c(513000, -3653000),
+                     EPSG = 32619)
+DEM.aoi <- prepareSRTMdata(path = srtm.dir, extent = aoi.utm)
+stopifnot(all(terra::res(DEM.aoi) == 30), terra::xmin(DEM.aoi) %% 30 == 15)
+expect_error(prepareSRTMdata(path = srtm.dir, extent = sf::st_transform(aoi.utm, 4326)),
+             "longitude/latitude")
+
+## calcRadiance(): Landsat 7 MTL values have no "E-" notation (they gave NaN)
+rad7 <- calcRadiance(terra::rast(L7_Talca), sat = "L7",
+                     MTL = file.path(extdata, "L7.MTL.txt"))
+stopifnot(!anyNA(terra::global(rad7, "mean", na.rm = TRUE)[, 1]))
 
 ## waterOptions(): output folder (trim() was a raster function)
 waterOptions(outputFolder = tmp)

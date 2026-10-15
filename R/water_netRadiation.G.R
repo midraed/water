@@ -98,7 +98,15 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
     if(terra::crs(extent) == ""){
       stop("extent has no CRS; use createAoi(..., EPSG = ) or pass the image")
     }
-    destino <- rast(ext(extent), crs = terra::crs(extent), resolution = 30)
+    if(terra::is.lonlat(extent)){
+      stop("extent is in longitude/latitude; pass the image or a polygon in ",
+           "the projected CRS of the image (e.g. UTM)")
+    }
+    e <- as.vector(ext(extent))
+    snap <- function(v, f){f((v - 15) / 30) * 30 + 15}
+    destino <- rast(ext(snap(e[1], floor), snap(e[2], ceiling),
+                        snap(e[3], floor), snap(e[4], ceiling)),
+                    crs = terra::crs(extent), resolution = 30)
   } else {
     stop("extent must be a SpatRaster (e.g. the Landsat image) or an sf / ",
          "SpatVector polygon with a CRS")

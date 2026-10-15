@@ -190,25 +190,11 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
-  MTL <- readLines(findMTL(if(!missing(MTL)) MTL), warn=FALSE)
-  ADD <- vector()
-  MULT <- vector()
- 
-   for( i in 1:length(bands)){
-     
-     ADDstring <- paste0("RADIANCE_ADD_BAND_", bands[i])
-     ADDstring <- grep(ADDstring,MTL,value=TRUE)
-     ADD[i] <- as.numeric(regmatches(ADDstring, 
-                      regexec(text=ADDstring ,
-                         pattern="([-]*)([0-9]{1,5})([.]+)([0-9]+)"))[[1]][1])
-    
-     MULTstring <- paste0("RADIANCE_MULT_BAND_",bands[i])
-     MULTstring <- grep(MULTstring,MTL,value=TRUE)
-     MULT[i] <- as.numeric(regmatches(MULTstring, 
-                    regexec(text=MULTstring ,
-                    pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
-  
-   }
+  MTL <- findMTL(if(!missing(MTL)) MTL)
+  keys <- bands
+  keys[keys == 6] <- "6_VCID_1"  # Landsat 7 band 6, low gain
+  ADD <- mtlValues(MTL, paste0("RADIANCE_ADD_BAND_", keys))
+  MULT <- mtlValues(MTL, paste0("RADIANCE_MULT_BAND_", keys))
   bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
   if(sat %in% c("L8", "L9")){bandnames <- c(bandnames, "Thermal2")}
   image <- landsatBands(image.DN, bandnames) * MULT + ADD
@@ -414,7 +400,7 @@ cfmask <-  function(path = getwd(), image, cfmask, keep, buffer = 60){
   }
   cfmask <- crop(cfmask, image)
   if(missing(keep)){
-    if(!any(grepl("QA_PIXEL", c(names(cfmask), sources(cfmask))))){
+    if(!any(grepl("QA_PIXEL", c(names(cfmask), sources(cfmask)), ignore.case = TRUE))){
       keep <- 0  # pre-collection cfmask files
     }
   }
@@ -431,6 +417,11 @@ cfmask <-  function(path = getwd(), image, cfmask, keep, buffer = 60){
     cloudy <- terra::buffer(ifel(cloudy, 1, NA), width = buffer)
   }
   clear <- ifel(fill | cloudy, NA, 1)
+  if(!isTRUE(global(clear, "max", na.rm = TRUE)[1, 1] == 1)){
+    warning("cfmask() masked every pixel: check keep (for a Collection 2 ",
+            "QA_PIXEL band leave keep missing; its layer or file name must ",
+            "contain QA_PIXEL)")
+  }
   image <- mask(image, clear)
   return(image)
 }

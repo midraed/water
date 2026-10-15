@@ -126,11 +126,20 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
          "image.DN with a thermal band.")
   }
   if(!missing(aoi)){
-    if(!missing(image.DN)){image.DN <- crop(image.DN, aoi)}
-    if(!missing(image.SR)){image.SR <- crop(image.SR, aoi)}
-    if(!missing(surf.temp)){surf.temp <- crop(surf.temp, aoi)}
-    if(!missing(thermalband)){thermalband <- crop(thermalband, aoi)}
-    if(!plain){DEM <- crop(DEM, aoi)}
+    if(!missing(image.DN)){image.DN <- cropToAoi(image.DN, aoi)}
+    if(!missing(image.SR)){image.SR <- cropToAoi(image.SR, aoi)}
+    if(!missing(surf.temp)){surf.temp <- cropToAoi(surf.temp, aoi)}
+    if(!missing(thermalband)){thermalband <- cropToAoi(thermalband, aoi)}
+    if(!plain){DEM <- cropToAoi(DEM, aoi)}
+  }
+  # thermal band from image.DN, as in METRIC.EB()
+  if(missing(surf.temp) && missing(thermalband) && !missing(image.DN) &&
+     sat %in% c("L7", "L8", "L9")){
+    thermal.layer <- intersect(c("Thermal1", "thermal.low"), names(image.DN))
+    if(length(thermal.layer) == 0){
+      stop("thermalband is missing. Provide a thermal layer (e.g., image.DN$Thermal1).")
+    }
+    thermalband <- image.DN[[thermal.layer[1]]]
   }
   if(plain==TRUE){
     DEM <- rast(if(missing(image.SR)) image.DN[[1]] else image.SR[[1]])

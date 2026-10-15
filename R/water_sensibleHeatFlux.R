@@ -137,8 +137,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WSloc <- WeatherStation$location
     WSloc <- sf::st_as_sf(WSloc, coords = c("long", "lat"), crs = 4326)
     WSloc <- sf::st_transform(WSloc, crs = terra::crs(Ts))
-    # Cells within WSbuffer of the station, also when it lies outside the image
-    WS.buffer <- terra::distance(Ts, terra::vect(WSloc)) <= WSbuffer
+    # Cells within WSbuffer of the centre of the station cell or, when the
+    # station lies outside the image, of the station itself
+    WScell <- terra::cellFromXY(Ts, sf::st_coordinates(WSloc))
+    WSpoint <- if(is.na(WScell)){terra::vect(WSloc)} else {
+      terra::vect(terra::xyFromCell(Ts, WScell), crs = terra::crs(Ts))
+    }
+    WS.buffer <- terra::distance(Ts, WSpoint) <= WSbuffer
     if(!isTRUE(global(WS.buffer, "max", na.rm = TRUE)[1, 1] == 1)){
       warning("No pixel is within WSbuffer (", WSbuffer, " m) of the weather ",
               "station; searching anchors in the whole image")
