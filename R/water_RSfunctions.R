@@ -143,7 +143,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' @export
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   path <- getwd()
-  if(sat=="auto"){sat = getSat(path)} #DRY!
+  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat=="L8"){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
   if(missing(MTL)){MTL <- list.files(path = getwd(), pattern = "MTL.txt", full.names = T)}
@@ -196,7 +196,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 calcTOAr <- function(image.DN, sat="auto", 
                      aoi, incidence.rel, MTL){
   path = getwd()
-  if(sat=="auto"){sat = getSat(path)}
+  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat=="L8"){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(sat=="L8"){

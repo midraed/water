@@ -1,16 +1,30 @@
-getSat <- function(path){
-  band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d+\\w+\\d+_(B|band)2.(TIF|tif)$")), 0,3)
-  if(length(band)==0){
-    band <- substr(list.files(path=path, pattern=paste0("^L[EC]\\d{2}_\\w{4}_\\d{6}_\\d{8}_\\d{8}_\\w{2}_\\w{2}_(B|b|band)2.(TIF|tif)$")), 0,4)
+getSat <- function(path = getwd(), MTL = NULL){
+  # 1. SPACECRAFT_ID from the MTL file, same in every Landsat product format
+  if(is.null(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt$", full.names = T)}
+  MTL <- MTL[file.exists(MTL)]
+  if(length(MTL)){
+    num <- unique(vapply(MTL, function(f){
+      id <- grep("SPACECRAFT_ID", readLines(f, warn = FALSE), value = TRUE)
+      sub("\\D*(\\d+)\\D*", "\\1", id[1])
+    }, character(1), USE.NAMES = FALSE))
   } else {
-    print(paste("ERROR: I expected something like landsat.band = LC82320832013319LGN00_BX.TIF in ", path))
-    return()
+    # 2. Landsat file names: LC8..., LE7... (pre-collection) or LC08_, LE07_
+    files <- list.files(path = path, pattern = "^L[COTE]0?[789].*\\.(TIF|tif)$")
+    num <- unique(sub("^L[COTE]0?([789]).*", "\\1", files))
   }
-  if(band =="LC8" | band == "LC08"){return("L8")}
-  if(band =="LE7" | band == "LC07"){return("L7")}
-  if(band != "LE7" & band != "LC8"){
-    print("Can't establish sat from band names")
-    return()}
+  if(length(num) > 1){
+    stop("Files from more than one Landsat satellite in ", path, ". Set sat.")
+  }
+  if(length(num) == 1 && !is.na(num)){
+    if(num == "7"){return("L7")}
+    if(num == "8"){return("L8")}
+    if(num == "9"){
+      stop("Landsat 9 is not supported (TIRS-2 thermal constants differ from ",
+           "Landsat 8). Set sat = \"L8\" and supply surf.temp to METRIC.EB().")
+    }
+  }
+  stop("Can't establish satellite from MTL file or file names in ", path,
+       ". Set sat = \"L7\", \"L8\" or \"MODIS\".")
 }
 
 
