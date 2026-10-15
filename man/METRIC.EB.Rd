@@ -31,13 +31,15 @@ METRIC.EB(
 )
 }
 \arguments{
-\item{image.DN}{Optional. Raw image in digital counts. If supplied
-(L7/L8) it is used for TOA reflectance (LAI and anchors) and for surface
-temperature; if missing, image.SR is used instead. Needed for
-LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).}
+\item{image.DN}{Raw image in digital counts. Optional if image.SR is
+supplied. If supplied (L7/L8) it is used for TOA reflectance (LAI and
+anchors) and for surface temperature; if missing, image.SR is used instead.
+Needed for LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).}
 
 \item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
-SWIR2), e.g. from loadImageSR(). Required: it is not computed from image.DN.}
+SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
+missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
+Required for L8.}
 
 \item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
