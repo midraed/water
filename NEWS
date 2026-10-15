@@ -14,6 +14,10 @@ VERSION 0.8.5
 * Fixed automatic anchor selection after the migration to terra: the "best"
   method failed to find cold pixels, and all methods returned only one hot
   and one cold pixel regardless of n. See calcAnchors()
+* METRIC.G() rewritten to match METRIC.Rn(): it can now run, takes MTL,
+  sat, thermalband, G.method and an optional Rn, and returns the same G as
+  METRIC.EB()
+* sat = "auto" now detects the satellite from the MTL file or file names
 * Fixed calcH() failing with "raster has no values" when no pixel met the
   stability condition
 * ET24h() plots with terra instead of spplot

@@ -61,38 +61,72 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   return(Rn)
 }
 
-#' Estimates Net Radiation as in METRIC Model
+#' Estimates Soil Heat Flux as in METRIC Model
 #' @param image.DN         raw imagen in digital counts to evaluate
-#' @param WeatherStation   Weather Station data, can be a waterWeatherStation 
+#' @param WeatherStation   Weather Station data, can be a waterWeatherStation
 #' object
-#' @param Rn               RasterLayer with Net Radiation data in W/m2
+#' @param MTL              Landsat metadata file
+#' @param sat              Landsat satellite version. "L7" or "L8"
+#' @param thermalband      Landsat low gain thermalband
+#' @param Rn               Net radiation in W/m2, e.g. from METRIC.Rn(). If
+#' missing it is computed as in METRIC.Rn()
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
 #' @param aoi              sf polygon object with limits of Area of interest
+#' @param alb.coeff        coefficient to transform narrow to broad band albedo.
+#' See Details.
+#' @param LAI.method       Method used to estimate LAI from spectral data.
+#' See Details.
+#' @param G.method         method used for the G estimation. Currently implemeted are
+#' "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,  
-                     plain = TRUE, DEM, aoi){
+METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
+                     Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
+                     G.method = "Tasumi", plain = TRUE, DEM, aoi){
   path=getwd()
+  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(plain==TRUE){
     DEM <- rast(image.DN[[1]])
     values(DEM) <- WeatherStation$location$elev
-  } 
+  }
   surface.model <-METRICtopo(DEM)
-  solar.angles.r <- solarAngles(surface.model = surface.model)
-  image.TOAr <- calcTOAr(image.DN = image.DN, 
+  solar.angles.r <- solarAngles(surface.model = surface.model,
+                                WeatherStation = WeatherStation, MTL = MTL)
+  if(sat=="L7" | sat=="L8"){
+  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
                          incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(image.TOAr=image.TOAr, 
-                      surface.model=surface.model, 
-                      incidence.hor = solar.angles.r$incidence.hor, 
-                      WeatherStation=WeatherStation, sat="auto")
-  albedo <- albedo(image.SR = image.SR)
-  Ts <- surfaceTemperature(sat = "auto" )
-  G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, Rn)
+  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat,
+                     surface.model=surface.model,
+                     incidence.hor = solar.angles.r$incidence.hor,
+                     WeatherStation=WeatherStation)}
+  if(sat=="MODIS"){image.SR <- image.DN}
+  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
+  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
+                                           # and some LAI models, use SR
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
+  if(sat=="L7" | sat=="L8"){
+  Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN = image.DN,
+                           thermalband = thermalband,
+                           WeatherStation = WeatherStation)}
+  if(sat=="MODIS"){Ts <- image.DN$LST}
+  if(missing(Rn)){
+    Rs.inc <- incSWradiation(surface.model = surface.model,
+                             solar.angles = solar.angles.r,
+                             WeatherStation = WeatherStation)
+    Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
+    Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM,
+                             solar.angles = solar.angles.r, Ts= Ts)
+    Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+  }
+  G <- soilHeatFlux(image = image.SR, Ts=Ts, albedo=albedo, Rn=Rn, LAI=LAI,
+                    method = G.method)
+  plot(G, main="METRIC Soil Heat Flux")
+  return(G)
 }
 
 

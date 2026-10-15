@@ -2,33 +2,62 @@
 % Please edit documentation in R/water_METRIC.R
 \name{METRIC.G}
 \alias{METRIC.G}
-\title{Estimates Net Radiation as in METRIC Model}
+\title{Estimates Soil Heat Flux as in METRIC Model}
 \usage{
-METRIC.G(image.DN, WeatherStation = WeatherStation, Rn, plain = TRUE, DEM, aoi)
+METRIC.G(
+  image.DN,
+  WeatherStation,
+  MTL,
+  sat = "auto",
+  thermalband,
+  Rn,
+  alb.coeff = "Tasumi",
+  LAI.method = "metric2010",
+  G.method = "Tasumi",
+  plain = TRUE,
+  DEM,
+  aoi
+)
 }
 \arguments{
 \item{image.DN}{raw imagen in digital counts to evaluate}
 
-\item{WeatherStation}{Weather Station data, can be a waterWeatherStation 
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
 
-\item{Rn}{RasterLayer with Net Radiation data in W/m2}
+\item{MTL}{Landsat metadata file}
+
+\item{sat}{Landsat satellite version. "L7" or "L8"}
+
+\item{thermalband}{Landsat low gain thermalband}
+
+\item{Rn}{Net radiation in W/m2, e.g. from METRIC.Rn(). If
+missing it is computed as in METRIC.Rn()}
+
+\item{alb.coeff}{coefficient to transform narrow to broad band albedo.
+See Details.}
+
+\item{LAI.method}{Method used to estimate LAI from spectral data.
+See Details.}
+
+\item{G.method}{method used for the G estimation. Currently implemeted are
+"Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
 
 \item{plain}{Logical. If TRUE surface is assumed plain}
 
 \item{DEM}{Digital Elevation Model of the study area. Not needed
 if plain = TRUE}
 
-\item{aoi}{SpatialPolygon object with limits of Area of interest}
+\item{aoi}{sf polygon object with limits of Area of interest}
 }
 \description{
-Estimates Net Radiation as in METRIC Model
+Estimates Soil Heat Flux as in METRIC Model
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
 \seealso{
-Other METRIC model functions: 
+Other METRIC model functions:
 \code{\link{METRIC.EB}()},
 \code{\link{METRIC.Rn}()}
 }
