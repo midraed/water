@@ -103,7 +103,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WSloc <- sf::st_transform(WSloc, crs = terra::crs(Ts))
     ## Longer but avoids to use rgeos
     WScell <- terra::extract(Ts, terra::vect(WSloc), cells = TRUE)[1, "cell"]
-    WS.buffer <- rast(Ts)
+    WS.buffer <- rast(Ts, vals = NA)
     values(WS.buffer)[WScell] <- 1
 
 
@@ -144,7 +144,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     try(cold <- sample(which(cold.candidates),1), silent=TRUE)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
@@ -152,7 +152,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &
           values(albedo>=0.18) & values(albedo<=0.25) &
@@ -175,14 +175,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     try(hot <- sample(hot.pool, 1), silent=TRUE)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
@@ -220,17 +220,17 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!cold.candidates] <- NA
-    cold <- terra::which.min(Ts.cold)[1]
+    cold <- which.min(values(Ts.cold))[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &
           values(albedo>=0.18) & values(albedo<=0.25) &
@@ -242,7 +242,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
-        try(newAnchor <- terra::which.min(Ts.cold)[1], silent = FALSE)
+        try(newAnchor <- which.min(values(Ts.cold))[1], silent = FALSE)
         if(!is.na(newAnchor)){cold <- c(cold, newAnchor)} 
       }}
 
@@ -252,14 +252,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot <- terra::which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
@@ -418,14 +418,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     cold <- terra::which.min(values(Ts.cold))[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(cold)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
           values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
@@ -449,14 +449,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hot <- which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
-        distbuffer <- rast(Ts)
+        distbuffer <- rast(Ts, vals = NA)
         values(distbuffer)[sanitizeCellIndex(hot)] <- 1
 
         # BUG in raster package
         # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
         distbuffer <- terra::buffer(distbuffer, width = minDist) ### 500m buffer
         
-        distbuffer <- is.na(distbuffer)
+        distbuffer <- !distbuffer  # terra::buffer() is TRUE inside, FALSE outside
         newAnchor <- NA
         hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
           values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
@@ -500,9 +500,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                              Y=integer(), Ts=double(), LAI=double(), NDVI=double(),
                              type=factor(levels = c("hot", "cold")))
   for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], terra::xyFromCell(LAI, sanitizeCellIndex(hot[i])),
-                                                 Ts[hot][i], round(LAI[hot][i],2), round(NDVI[hot][i],2), "hot")}
+                                                 Ts[hot[i]][1,1], round(LAI[hot[i]][1,1],2), round(NDVI[hot[i]][1,1],2), "hot")}
   for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], terra::xyFromCell(LAI, sanitizeCellIndex(cold[i])),
-                                                              Ts[cold][i], round(LAI[cold][i],2), round(NDVI[cold][i],2), "cold")}
+                                                              Ts[cold[i]][1,1], round(LAI[cold[i]][1,1],2), round(NDVI[cold[i]][1,1],2), "cold")}
   for(i in 1:5){
     hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
   }
