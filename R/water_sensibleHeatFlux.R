@@ -690,9 +690,9 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) /
         (0.41 * 9.807 * H)
       
-      phi.200 <- rast(Monin.Obukhov.L)
-      phi.2   <- rast(Monin.Obukhov.L)
-      phi.01  <- rast(Monin.Obukhov.L)
+      phi.200 <- Monin.Obukhov.L * NA  # empty rast() breaks [<- when no cell matches
+      phi.2   <- Monin.Obukhov.L * NA
+      phi.01  <- Monin.Obukhov.L * NA
       
       # stable condition = L > 0
       phi.200[Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
@@ -792,9 +792,9 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) /
           (0.41 * 9.807 * H)
         
-        phi.200 <- rast(Monin.Obukhov.L)
-        phi.2   <- rast(Monin.Obukhov.L)
-        phi.01  <- rast(Monin.Obukhov.L)
+        phi.200 <- Monin.Obukhov.L * NA  # empty rast() breaks [<- when no cell matches
+        phi.2   <- Monin.Obukhov.L * NA
+        phi.01  <- Monin.Obukhov.L * NA
         
         phi.200[Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
         phi.2  [Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
