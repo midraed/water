@@ -96,12 +96,14 @@ METRIC.G <- function(image.DN, WeatherStation=WeatherStation, Rn,
 
 
 #' Estimates Energy Balance using METRIC2010 Model
-#' @param image.DN         Optional. Raw image in digital counts. If supplied
-#' (L7/L8) it is used for TOA reflectance (LAI and anchors) and for surface
-#' temperature; if missing, image.SR is used instead. Needed for
-#' LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).
+#' @param image.DN         Raw image in digital counts. Optional if image.SR is
+#' supplied. If supplied (L7/L8) it is used for TOA reflectance (LAI and
+#' anchors) and for surface temperature; if missing, image.SR is used instead.
+#' Needed for LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).
 #' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
-#' SWIR2), e.g. from loadImageSR(). Required: it is not computed from image.DN.
+#' SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
+#' missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
+#' Required for L8.
 #' @param WeatherStation   Weather Station data, can be a waterWeatherStation
 #' object
 #' @param MTL              Landsat metadata file
@@ -196,8 +198,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.0018,
                       verbose = FALSE, extraParameters = vector(), surf.temp){
   path=getwd()
-  if(missing(image.SR)){
-    stop("image.SR is missing. Load surface reflectance (e.g., loadImageSR()).")
+  if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
+    stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
+         "MODIS; provide it (e.g., loadImageSR()).")
   }
 
   if(missing(surf.temp) && missing(thermalband) && sat %in% c("L7", "L8")){
@@ -217,7 +220,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
 
   #pb <- txtProgressBar(min = 0, max = 100, style = 3)
   if(plain==TRUE){
-    DEM <- rast(image.SR[[1]])
+    DEM <- rast(if(missing(image.SR)) image.DN[[1]] else image.SR[[1]])
     values(DEM) <- WeatherStation$location$elev
   }
   surface.model <-METRICtopo(DEM)
@@ -228,12 +231,23 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  # SR comes precomputed; TOAr (used for LAI and anchors) only if DN is supplied
-  image.TOAr <- image.SR
   if(!missing(image.DN) && sat %in% c("L7", "L8")){
     image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
                            incidence.rel = solar.angles.r$incidence.rel)
   }
+  # Priority: supplied image.SR > SR derived from image.DN
+  if(missing(image.SR)){
+    if(sat=="L7"){
+      image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat,
+                         surface.model=surface.model,
+                         incidence.hor = solar.angles.r$incidence.hor,
+                         WeatherStation=WeatherStation)
+    } else {
+      image.SR <- image.DN  # MODIS; other sats stopped at the top
+    }
+  }
+  # Without DN (or for MODIS) LAI and anchors use SR instead of TOAr
+  if(missing(image.DN) || sat=="MODIS"){image.TOAr <- image.SR}
   albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
   #setTxtProgressBar(pb, 6)
   if(LAI.method == "vineyard"){
