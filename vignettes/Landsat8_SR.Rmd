@@ -1,0 +1,47 @@
+---
+title: "Using Landsat 8 Collection 2 Level-2 data with METRIC and water package"
+author: "Guillermo Federico Olmedo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Landsat 8 SR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+USGS distributes Landsat 8 Collection 2 Level-2 products with surface reflectance (SR) and surface temperature (ST) already computed. In this vignette we run METRIC directly from those products: no raw digital numbers (DN) are needed, surface reflectance is read with `loadImageSR()` and surface temperature is taken from the `ST_B10` band (loaded by `loadImageSR()` as `Band_10`) through the `surf.temp` argument of `METRIC.EB()`.
+
+## Simple procedure
+
+As Landsat scenes are almost 1Gb in size, we do not recommend using one complete scene without cropping an area-of-interest first. An area-of-interest can be defined using `createAoi()` function:
+
+```{r, message=FALSE}
+library(water)
+aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
+```
+
+The Level-2 scene folder contains the SR bands (`*_SR_B2.TIF` to `*_SR_B7.TIF`), the ST band (`*_ST_B10.TIF`) and the metadata file (`*_MTL.txt`). `loadImageSR()` reads the SR bands, names them by band number and rescales them to reflectance (DN * 0.0000275 - 0.2). For Landsat 8 it also adds the surface temperature as the last layer, `Band_10`, rescaled to Kelvin (DN * 0.00341802 + 149):
+
+```{r, warning=FALSE, fig.width = 7}
+scene_folder <- "../../L8/LC08_L2SP_232083_20160209_20200907_02_T1"
+image.SR <- loadImageSR(path = scene_folder, aoi = aoi)
+plot(image.SR)
+```
+
+Finally, the simple procedure for estimating METRIC can be applied using only SR and ST. As `surf.temp` is supplied, `METRIC.EB()` uses it as surface temperature instead of estimating it from the thermal bands:
+
+```{r, warning=FALSE, fig.width = 7}
+csvfile <- system.file("extdata", "INTA.csv", package="water")
+MTLfile <- file.path(scene_folder, "LC08_L2SP_232083_20160209_20200907_02_T1_MTL.txt")
+WeatherStation <- read.WSdata(WSdata = csvfile,
+                              datetime.format =  "%Y/%m/%d %H:%M",
+                              columns=c("date" = 1, "time" = 1, "radiation" = 5,
+                              "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+                              lat=-33.00513, long= -68.86469, elev=927, height= 2,
+                              MTL=MTLfile)
+Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                            plain=TRUE, aoi=aoi, n = 5, WeatherStation = WeatherStation,
+                            ETp.coef = 1.2, sat="L8", alb.coeff = "Olmedo",
+                            LAI.method = "metric2010", Z.om.ws = 0.03, MTL = MTLfile)
+plot(Energy.Balance$EB)
+```
