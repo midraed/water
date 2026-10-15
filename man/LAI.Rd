@@ -37,6 +37,11 @@ LAI is computed from top-of-atmosphere reflectance ("metric",
 describe the vegetation, depending on the preferences of the user.
 Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner".
 
+"turner" inverts the relationship between surface reflectance NDVI and LAI
+of Turner et al. (1999, Table 3), NDVI = 0.5724 + 0.0989 LAI - 0.0114 LAI^2 +
+0.0004 LAI^3, fitted for forest, grassland and shrub plots: LAI is 0 for NDVI
+below 0.572 and 6 for NDVI above 0.842.
+
 When METRIC.EB(), METRIC.Rn() or METRIC.G() run without image.DN, the
 "metric", "metric2010" and "MCB" methods receive surface reflectance,
 although their equations were described for top-of-atmosphere reflectance.

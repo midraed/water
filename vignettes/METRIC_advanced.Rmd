@@ -67,11 +67,13 @@ Then, we load the weather station data with `read.WSdata()`, which converts our 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
 MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
-WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
+# the wind speed in apples.csv is in km/h: cf converts it to m/s
+WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
                               lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
                               columns=c("date" = 1, "time" = 2, "radiation" = 3,
                               "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8),
-                              MTL = MTLfile, tz = "America/Santiago")
+                              cf = c(1, 0.2777778, 1), MTL = MTLfile,
+                              tz = "America/Santiago")
 ```
 
 We can visualize our weather station data with:
@@ -90,13 +92,13 @@ Landsat 7 example data included in **water**, stored as a packed terra object, s
 image.DN <- rast(L7_Talca)
 ```
 
-Finally, we create the digital elevation model (DEM) for the satellite image we are processing. For that we need the SRTM grid files that cover the image, which can be downloaded from [EarthExplorer](https://earthexplorer.usgs.gov/). We check which grid files are needed for the image extent with:
+Finally, we need a digital elevation model (DEM) of the image area. `getDEM()` downloads the Copernicus DEM GLO-30 (30 m) tiles that cover the image and returns the DEM on the image grid. It needs an internet connection, so it is not run here:
 
-```{r}
-checkSRTMgrids(image.DN)
+```{r, eval = FALSE}
+DEM <- getDEM(image.DN)
 ```
 
-After downloading all the needed grid files, use `prepareSRTMdata(extent = image.DN)` to create the DEM on the image grid. In this vignette we use the example DEM provided with **water**:
+If you already have SRTM tiles, `checkSRTMgrids(image.DN)` lists the files needed and `prepareSRTMdata(extent = image.DN)` mosaics them on the image grid. In this vignette we use the example DEM provided with **water**:
 
 ```{r}
 DEM <- rast(DEM_Talca)

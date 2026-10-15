@@ -60,7 +60,8 @@ MTL.L7 <- file.path(extdata, "L7.MTL.txt")
 WS7 <- quiet(read.WSdata(WSdata = file.path(extdata, "apples.csv"),
                          date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639,
                          elev = 201, height = 2.2, tz = "America/Santiago",
-                         columns = c(1, 2, 3, 4, 6, 7, 8), MTL = MTL.L7))
+                         columns = c(1, 2, 3, 4, 6, 7, 8), cf = c(1, 0.2777778, 1),
+                         MTL = MTL.L7))
 angles7 <- solarAngles(surface.model = METRICtopo(flatDEM(L7)), WeatherStation = WS7,
                        MTL = MTL.L7)
 toa7 <- calcTOAr(image.DN = L7, sat = "L7", MTL = MTL.L7,
@@ -72,6 +73,18 @@ dense <- terra::rast(nrows = 1, ncols = 1, nlyrs = 6,
                      vals = c(0.03, 0.05, 0.05, 0.4786, 0.2, 0.1))
 names(dense) <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
 stopifnot(as.numeric(terra::values(LAI(method = "metric", image = dense))) == 6)
+
+## LAI(method = "turner"): inverse of the NDVI-LAI relationship of Turner et al.
+## (1999, Table 3); it was applied as LAI = f(NDVI) and never exceeded 0.75
+turnerNDVI <- function(L) 0.5724 + 0.0989*L - 0.0114*L^2 + 0.0004*L^3
+target <- c(0, 1, 3, 6)
+red <- 0.05
+nir <- red * (1 + turnerNDVI(target)) / (1 - turnerNDVI(target))
+turner.img <- terra::rast(nrows = 1, ncols = 4, nlyrs = 6)
+terra::values(turner.img) <- cbind(0.03, 0.04, red, nir, 0.2, 0.1)
+names(turner.img) <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
+stopifnot(isTRUE(all.equal(as.numeric(terra::values(LAI(method = "turner", image = turner.img))),
+                           target, tolerance = 0.001)))
 
 ## calcAnchors(): masked reflectance pixels are never anchors, and plots
 ## work without a weather station
@@ -176,6 +189,10 @@ EBman <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
                          anchors = EB$anchors, Z.om.ws = 0.03))
 stopifnot(maxdiff(EBman$EB$LatentHeat, EB$EB$LatentHeat) < 1e-6)
+EBturner <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                            WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
+                            LAI.method = "turner", Z.om.ws = 0.03))
+stopifnot(inherits(EBturner, "waterLSEB"))
 EBzom <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
                          Zom.method = "custom", extraParameters = c(a = 0.1, b = -5),

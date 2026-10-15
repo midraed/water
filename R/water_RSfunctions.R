@@ -37,7 +37,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
     # <scene>_band<n>.tif (pre-collection); Level-2 SR/ST files are skipped
     image_list <- list.files(path=path, pattern = paste0("^L[CEOT]0?[789].*_(b|B|band)",
                                                          bands[1], "\\.(TIF|tif)$"))
-    image_list <- image_list[!grepl("_(SR|ST)_B|_sr_band", image_list)]
+    image_list <- image_list[!grepl("_(SR|ST)_B", image_list)]
     if(length(image_list) == 0){
       stop("No Landsat Level-1 band files found in ", path, ". Expected names ",
            "like LC08_L1TP_232083_20160209_20200907_02_T1_B2.TIF or ",
@@ -105,14 +105,12 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 
 #' Load Landsat 8/9 surface reflectance (and surface temperature) from a folder
 #' @description
-#' Loads Landsat 8 or 9 surface reflectance bands 2 to 7 from a folder. Reads
-#' Collection 2 Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled
-#' as DN * 0.0000275 - 0.2, fill value 0 set to NA) or legacy pre-Collection
-#' files produced by the now retired USGS ESPA system (\code{*_sr_band2.tif} to
-#' \code{*_sr_band7.tif}, scaled as DN / 10000). All six bands are required, as
-#' other functions use them by position.
-#' For Collection 2, if \code{*_ST_B10.TIF} is present it is added as the last
-#' layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
+#' Loads Landsat 8 or 9 Collection 2 Level-2 surface reflectance bands 2 to 7
+#' (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}) from a folder, scaled as
+#' DN * 0.0000275 - 0.2, with the fill value 0 set to NA. All six bands are
+#' required, as other functions use them by position.
+#' If \code{*_ST_B10.TIF} is present it is added as the last layer, "Band_10",
+#' in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
 #' It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
 #' Landsat 7 Level-2 products are not supported (different band numbers).
 #' @param path  folder where band files are stored
@@ -120,16 +118,18 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' missing and waterOptions("autoAoi") is TRUE, an object called aoi in
 #' .GlobalEnv is used if it exists
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
-#' NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). For Collection 2 files, if
-#' \code{*_ST_B10.TIF} is present, a seventh layer Band_10 with surface
-#' temperature (K) is added.
+#' NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). If \code{*_ST_B10.TIF} is
+#' present, a seventh layer Band_10 with surface temperature (K) is added.
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
 loadImageSR <-  function(path = getwd(),  aoi){
-  files <- list.files(path = path, pattern = "_(SR_B|sr_band)[2-7]\\.(TIF|tif)$", full.names = T)
-  if(!length(files)) stop("No surface reflectance bands (SR_B2-7 or sr_band2-7) found in ", path)
-  band <- sub(".*_(SR_B|sr_band)([2-7])\\.(TIF|tif)$", "\\2", basename(files))
+  files <- list.files(path = path, pattern = "_SR_B[2-7]\\.(TIF|tif)$", full.names = T)
+  if(!length(files)){
+    stop("No Collection 2 Level-2 surface reflectance bands (*_SR_B2.TIF to ",
+         "*_SR_B7.TIF) found in ", path)
+  }
+  band <- sub(".*_SR_B([2-7])\\.(TIF|tif)$", "\\1", basename(files))
   if(anyDuplicated(band)) stop("More than 1 image present on path: ", path)
   if(!setequal(band, as.character(2:7))){
     stop("Missing surface reflectance bands in ", path, ": ",
@@ -140,19 +140,15 @@ loadImageSR <-  function(path = getwd(),  aoi){
   image_SR <- rast(files[ord])
   image_SR <- aoiCrop(image_SR, aoi)
   bandnames <- unname(bandnames[band[ord]])
-  if(grepl("_SR_B", files[1], fixed = TRUE)){
-    image_SR[image_SR == 0] <- NA  # Collection 2 fill value
-    image_SR <- image_SR * 0.0000275 - 0.2
-    # L8/L9 surface temperature, appended last so SR band positions don't change
-    st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = T)
-    if(length(st)){
-      st <- aoiCrop(rast(st[1]), aoi)
-      st[st == 0] <- NA
-      image_SR <- c(image_SR, st * 0.00341802 + 149)
-      bandnames <- c(bandnames, "Band_10")
-    }
-  } else {
-    image_SR <- image_SR / 10000
+  image_SR[image_SR == 0] <- NA  # Collection 2 fill value
+  image_SR <- image_SR * 0.0000275 - 0.2
+  # L8/L9 surface temperature, appended last so SR band positions don't change
+  st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = T)
+  if(length(st)){
+    st <- aoiCrop(rast(st[1]), aoi)
+    st[st == 0] <- NA
+    image_SR <- c(image_SR, st * 0.00341802 + 149)
+    bandnames <- c(bandnames, "Band_10")
   }
   image_SR <- saveLoadClean(imagestack = image_SR,
                              stack.names = bandnames, 

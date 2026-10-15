@@ -50,6 +50,7 @@ package version 2.4-18. https://CRAN.R-project.org/package=raster
 Other support functions:
 \code{\link[=checkSRTMgrids]{checkSRTMgrids()}},
 \code{\link[=createAoi]{createAoi()}},
+\code{\link[=getDEM]{getDEM()}},
 \code{\link[=prepareSRTMdata]{prepareSRTMdata()}}
 }
 \author{

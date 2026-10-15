@@ -15,19 +15,16 @@ missing and waterOptions("autoAoi") is TRUE, an object called aoi in
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,
-NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). For Collection 2 files, if
-\code{*_ST_B10.TIF} is present, a seventh layer Band_10 with surface
-temperature (K) is added.
+NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). If \code{*_ST_B10.TIF} is
+present, a seventh layer Band_10 with surface temperature (K) is added.
 }
 \description{
-Loads Landsat 8 or 9 surface reflectance bands 2 to 7 from a folder. Reads
-Collection 2 Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled
-as DN * 0.0000275 - 0.2, fill value 0 set to NA) or legacy pre-Collection
-files produced by the now retired USGS ESPA system (\code{*_sr_band2.tif} to
-\code{*_sr_band7.tif}, scaled as DN / 10000). All six bands are required, as
-other functions use them by position.
-For Collection 2, if \code{*_ST_B10.TIF} is present it is added as the last
-layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
+Loads Landsat 8 or 9 Collection 2 Level-2 surface reflectance bands 2 to 7
+(\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}) from a folder, scaled as
+DN * 0.0000275 - 0.2, with the fill value 0 set to NA. All six bands are
+required, as other functions use them by position.
+If \code{*_ST_B10.TIF} is present it is added as the last layer, "Band_10",
+in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
 It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
 Landsat 7 Level-2 products are not supported (different band numbers).
 }

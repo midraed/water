@@ -11,15 +11,19 @@ checkSRTMgrids(raw.image)
 tiles needed}
 }
 \value{
-Character vector with one EarthExplorer URL per 1 x 1 degree SRTM
-tile needed to cover the image. The number of tiles is also printed.
+Character vector with the file names of the SRTM tiles needed (e.g.
+"s34_w069_1arc_v3.tif"). The number of tiles is also reported.
 }
 \description{
-Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image.
+Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image,
+with the file names that prepareSRTMdata() reads. The tiles can be
+downloaded from EarthExplorer (dataset "SRTM 1 Arc-Second Global"). To
+download a DEM automatically, use getDEM().
 }
 \seealso{
 Other support functions:
 \code{\link[=createAoi]{createAoi()}},
+\code{\link[=getDEM]{getDEM()}},
 \code{\link[=prepareSRTMdata]{prepareSRTMdata()}},
 \code{\link[=waterOptions]{waterOptions()}}
 }

@@ -115,6 +115,13 @@ for (b in c(2:4, 6:7)) {
                      file.path(sr.dir, sprintf("LC08_X_SR_B%d.TIF", b)))
 }
 expect_error(loadImageSR(sr.dir), "Missing surface reflectance bands")
+# only Collection 2 Level-2 files (the ESPA format is no longer read)
+espa.dir <- tempfile(tmpdir = tmp); dir.create(espa.dir)
+for (b in 2:7) {
+  terra::writeRaster(terra::rast(nrows = 3, ncols = 3, vals = 1),
+                     file.path(espa.dir, sprintf("LC82320832016040LGN00_sr_band%d.tif", b)))
+}
+expect_error(loadImageSR(espa.dir), "No Collection 2 Level-2")
 
 ## cfmask(): Collection 2 QA_PIXEL bits (#55)
 img <- terra::rast(nrows = 1, ncols = 5, vals = 1:5)
@@ -156,6 +163,9 @@ expect_error(prepareSRTMdata(path = srtm.dir, extent = sf::st_transform(aoi.utm,
 rad7 <- calcRadiance(terra::rast(L7_Talca), sat = "L7",
                      MTL = file.path(extdata, "L7.MTL.txt"))
 stopifnot(!anyNA(terra::global(rad7, "mean", na.rm = TRUE)[, 1]))
+
+## checkSRTMgrids(): file names of the tiles needed (it built outdated links)
+stopifnot("s34_w069_1arc_v3.tif" %in% suppressMessages(checkSRTMgrids(image)))
 
 ## waterOptions(): output folder (trim() was a raster function)
 waterOptions(outputFolder = tmp)

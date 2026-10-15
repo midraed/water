@@ -28,6 +28,7 @@ projects the result to the grid of the image.
 Other support functions:
 \code{\link[=checkSRTMgrids]{checkSRTMgrids()}},
 \code{\link[=createAoi]{createAoi()}},
+\code{\link[=getDEM]{getDEM()}},
 \code{\link[=waterOptions]{waterOptions()}}
 }
 \author{

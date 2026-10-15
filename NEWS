@@ -44,6 +44,14 @@ Fixes that change results:
   dense vegetation gave NaN.
 * calcRadiance(): Landsat 7 radiance was NaN (MTL values without "E-"
   notation), which broke LAI.method = "vineyard" for Landsat 7.
+* LAI(method = "turner"): Turner et al. (1999) predict NDVI from LAI, but the
+  equation was applied as LAI = f(NDVI), so LAI never exceeded 0.75 and
+  METRIC.EB() found no cold anchors. It is now inverted (LAI 0 to 6) (#70).
+* Example data: the wind speed in apples.csv is in km/h, but the
+  read.WSdata() example and the METRIC vignettes read it as m/s. The daily
+  reference ET of the example was 10.2 instead of 7.0 mm, and the daily ET
+  of the vignettes about 45% too high (#72). The example files and their
+  units are documented in ?`water-extdata`.
 
 Landsat 8 and 9 (Collection 2):
 
@@ -51,8 +59,9 @@ Landsat 8 and 9 (Collection 2):
   products: image.DN is optional when image.SR is supplied, and surf.temp
   takes the Level-2 surface temperature. (Francisco Martín Corvalán)
 * loadImageSR() reads Collection 2 Level-2 files (SR_B2 to SR_B7, plus ST_B10
-  as "Band_10" in Kelvin) as well as legacy ESPA files, and stops if any of
-  the six reflectance bands is missing.
+  as "Band_10" in Kelvin), and stops if any of the six reflectance bands is
+  missing. The retired ESPA format is no longer read (#74); the Landsat 8
+  vignette points to the download guides for USGS and Planetary Computer.
 * cfmask() masks clouds with the Collection 2 QA_PIXEL band (fill, dilated
   cloud, cirrus, cloud and cloud shadow bits), looks for the band in path,
   and implements the buffer argument (#55, #47).
@@ -82,6 +91,11 @@ Other changes and fixes:
 * loadImage() accepts any scene prefix, e.g. real-time tier or renamed
   files, and explains the expected names when nothing matches (#50).
 * prepareSRTMdata() returns the DEM on the image grid (#31).
+* New getDEM(): downloads the Copernicus DEM GLO-30 (30 m) tiles that cover
+  the image from the AWS Open Data registry (no account needed, only the
+  image area is read) and returns the DEM on the image grid (#75).
+  checkSRTMgrids() returns the file names of the SRTM tiles that
+  prepareSRTMdata() reads, instead of outdated download links (#71).
 * METRIC.G() can run: same arguments as METRIC.Rn(), plus G.method and an
   optional Rn. METRIC.EB(), METRIC.Rn() and METRIC.G() share the same
   surface computations, so Rn and G are identical across them; Rn and G

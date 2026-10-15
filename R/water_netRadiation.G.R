@@ -31,35 +31,87 @@ createAoi <- function(topleft, bottomright, EPSG){
 
 #' Check needed SRTM grids from image extent
 #' @description
-#' Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image.
+#' Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image,
+#' with the file names that prepareSRTMdata() reads. The tiles can be
+#' downloaded from EarthExplorer (dataset "SRTM 1 Arc-Second Global"). To
+#' download a DEM automatically, use getDEM().
 #' @param raw.image  SpatRaster whose extent (and CRS) is used to find the SRTM
 #' tiles needed
-#' @return Character vector with one EarthExplorer URL per 1 x 1 degree SRTM
-#' tile needed to cover the image. The number of tiles is also printed.
+#' @return Character vector with the file names of the SRTM tiles needed (e.g.
+#' "s34_w069_1arc_v3.tif"). The number of tiles is also reported.
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
 checkSRTMgrids <-function(raw.image){
-  path = getwd()
-  polyaoi <- terra::as.polygons(terra::ext(raw.image), crs = terra::crs(raw.image))
-  polyaoi_ll <- terra::project(polyaoi, "EPSG:4326")
-  limits <- terra::ext(polyaoi_ll)
-  lat_needed <- seq(ifelse(trunc(limits[3])>0, trunc(limits[3]),trunc(limits[3])-1), 
-                    ifelse(trunc(limits[4])>0, trunc(limits[4]),trunc(limits[4])-1), by=1)
-  long_needed <- seq(ifelse(trunc(limits[1])>0, trunc(limits[1]),trunc(limits[1])-1), 
-                     ifelse(trunc(limits[2])>0, trunc(limits[2]),trunc(limits[2])-1), by = 1)
-  grids <- expand.grid(lat_needed, long_needed)
-  result <- list()
-  link <- "http://earthexplorer.usgs.gov/download/options/8360/SRTM1"
-  for(i in 1:nrow(grids)){
-    result[[i]] <- paste(link, ifelse(grids[i,1]>0,"N", "S"), abs(grids[i,1]),
-                         ifelse(grids[i,2]>0,"E", "W"), "0", abs(grids[i,2]),"V3/", sep="")
+  tiles <- demTiles(raw.image)
+  files <- sprintf("%s%02d_%s%03d_1arc_v3.tif", ifelse(tiles$lat < 0, "s", "n"),
+                   abs(tiles$lat), ifelse(tiles$lon < 0, "w", "e"), abs(tiles$lon))
+  message("You need ", length(files), " SRTM tile(s) of 1 x 1 degree (EarthExplorer, ",
+          "dataset \"SRTM 1 Arc-Second Global\"), or use getDEM() to download a ",
+          "DEM automatically")
+  files
+}
+
+#' Download a digital elevation model for an image
+#' @description
+#' Downloads the Copernicus DEM GLO-30 (30 m) tiles that cover the image and
+#' returns the DEM on the image grid, ready for METRIC.EB(plain = FALSE, DEM =
+#' ). The tiles are Cloud Optimized GeoTIFFs in the AWS Open Data registry,
+#' read over HTTPS: no account is needed, and only the area of the image is
+#' downloaded. It needs an internet connection. To use SRTM tiles already
+#' downloaded, see checkSRTMgrids() and prepareSRTMdata().
+#' @param image   SpatRaster (e.g. the Landsat image) that defines the extent,
+#' CRS and grid of the DEM
+#' @param source  DEM source. Currently only "copernicus" (Copernicus DEM
+#' GLO-30)
+#' @return SpatRaster with one layer named DEM: elevation (m, relative to the
+#' EGM2008 geoid) on the grid of image.
+#' @references
+#' Copernicus DEM GLO-30: (c) DLR e.V. 2010-2014 and (c) Airbus Defence and
+#' Space GmbH 2014-2018, provided under COPERNICUS by the European Union and
+#' ESA; all rights reserved. Distributed through the Registry of Open Data on
+#' AWS, \url{https://registry.opendata.aws/copernicus-dem/}
+#' @author Guillermo Federico Olmedo
+#' @family support functions
+#' @examples
+#' \dontrun{
+#' image.DN <- rast(L7_Talca)
+#' DEM <- getDEM(image.DN)
+#' plot(DEM)
+#' }
+#' @export
+getDEM <- function(image, source = "copernicus"){
+  source <- match.arg(source)
+  if(!inherits(image, "SpatRaster")){
+    stop("image must be a SpatRaster, e.g. the Landsat image")
   }
-  print(paste("You need", nrow(grids), "1deg x 1deg SRTM grids"))
-  print("You can get them here:")
-  return(unlist(result))
+  if(terra::crs(image) == ""){stop("image has no CRS")}
+  tiles <- demTiles(image, margin = 0.01)
+  lat <- sprintf("%s%02d", ifelse(tiles$lat < 0, "S", "N"), abs(tiles$lat))
+  lon <- sprintf("%s%03d", ifelse(tiles$lon < 0, "W", "E"), abs(tiles$lon))
+  name <- paste0("Copernicus_DSM_COG_10_", lat, "_00_", lon, "_00_DEM")
+  url <- paste0("/vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/", name, "/",
+                name, ".tif")
+  area <- ext(terra::project(terra::as.polygons(ext(image), crs = terra::crs(image)),
+                             "EPSG:4326"))
+  area <- ext(area[1] - 0.01, area[2] + 0.01, area[3] - 0.01, area[4] + 0.01)
+  parts <- list()
+  for(u in url){
+    # tiles over the ocean do not exist
+    tile <- tryCatch(crop(rast(u), area), error = function(e) NULL)
+    if(!is.null(tile)){parts[[length(parts) + 1]] <- tile}
+  }
+  if(!length(parts)){
+    stop("No Copernicus DEM tiles could be read for the image (only ocean, or ",
+         "no internet connection)")
+  }
+  DEM <- if(length(parts) == 1) parts[[1]] else terra::merge(terra::sprc(parts))
+  DEM <- project(DEM, image[[1]], method = "bilinear")
+  DEM <- saveLoadClean(imagestack = DEM, stack.names = "DEM", file = "DEM",
+                       overwrite = TRUE)
+  return(DEM)
 }
 
 #' Create a DEM mosaic from SRTM grids for the image extent
@@ -346,6 +398,11 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' describe the vegetation, depending on the preferences of the user.
 #' Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner".
 #'
+#' "turner" inverts the relationship between surface reflectance NDVI and LAI
+#' of Turner et al. (1999, Table 3), NDVI = 0.5724 + 0.0989 LAI - 0.0114 LAI^2 +
+#' 0.0004 LAI^3, fitted for forest, grassland and shrub plots: LAI is 0 for NDVI
+#' below 0.572 and 6 for NDVI above 0.842.
+#'
 #' When METRIC.EB(), METRIC.Rn() or METRIC.G() run without image.DN, the
 #' "metric", "metric2010" and "MCB" methods receive surface reflectance,
 #' although their equations were described for top-of-atmosphere reflectance.
@@ -367,8 +424,6 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
       toa.4.5 <- c(image[[3]], image[[4]])}
   if(method=="turner"){
       sr.4.5 <- c(image[[3]], image[[4]])}
-  if(method=="turner"){
-    sr.4.5 <- sr.4.5 * 0.0001}
   if(method=="metric2010"){
     # SAVI
     SAVI_ID <- (1 + L) * (toa.4.5[[2]] - toa.4.5[[1]]) / (L + toa.4.5[[1]] + toa.4.5[[2]])
@@ -399,7 +454,14 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   }
   if(method=="turner"){
     NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
-    LAI <- 0.5724+0.0989*NDVI-0.0114*NDVI^2+0.0004*NDVI^3 # Turner 1999
+    # Turner et al. (1999, Table 3) regressed the surface reflectance NDVI on
+    # LAI: NDVI = 0.5724 + 0.0989 LAI - 0.0114 LAI^2 + 0.0004 LAI^3, which
+    # increases up to LAI = 6.7. Inverted here for LAI between 0 and 6
+    LAI.grid <- seq(0, 6, by = 0.001)
+    NDVI.grid <- 0.5724 + 0.0989*LAI.grid - 0.0114*LAI.grid^2 + 0.0004*LAI.grid^3
+    LAI <- app(NDVI, fun = function(x){
+      stats::approx(NDVI.grid, LAI.grid, xout = x, rule = 2)$y
+    })
   }
   LAI[LAI<0]  <- 0
   LAI <- saveLoadClean(imagestack = LAI, stack.names = "LAI", 

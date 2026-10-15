@@ -13,7 +13,7 @@ The **water** package does not estimate surface reflectance for Landsat 8 and 9.
 
 ## Getting Collection 2 Level-2 data
 
-Download the scene from [EarthExplorer](https://earthexplorer.usgs.gov/), dataset "Landsat 8-9 OLI/TIRS C2 L2". Among other files, the scene folder contains:
+Download the scene from [EarthExplorer](https://earthexplorer.usgs.gov/), dataset "Landsat 8-9 OLI/TIRS C2 L2". The package repository also has two step-by-step guides (in Spanish) to search and download the scenes for an area and a date range, from the [USGS M2M API](https://github.com/midraed/water/blob/master/vignettes/Landsat_download_USGS.qmd) or from [Microsoft Planetary Computer](https://github.com/midraed/water/blob/master/vignettes/Landsat_download_Planetarycomputer.qmd). Among other files, the scene folder contains:
 
 - `*_SR_B2.TIF` to `*_SR_B7.TIF`: surface reflectance (blue, green, red, NIR, SWIR1 and SWIR2),
 - `*_ST_B10.TIF`: surface temperature,

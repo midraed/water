@@ -132,6 +132,15 @@ knownTimezone <- function(tz){
 
 isURL <- function(x){grepl("^(https?|ftp)://", x)}
 
+# 1 x 1 degree DEM tiles (latitude and longitude of the south-west corner)
+# covering the extent of an image
+demTiles <- function(image, margin = 0){
+  area <- ext(terra::project(terra::as.polygons(ext(image), crs = terra::crs(image)),
+                             "EPSG:4326"))
+  expand.grid(lat = floor(area[3] - margin):floor(area[4] + margin),
+              lon = floor(area[1] - margin):floor(area[2] + margin))
+}
+
 # Hint for failed anchor selections
 anchorHint <- function(albedo){
   alb <- stats::median(values(albedo), na.rm = TRUE)
