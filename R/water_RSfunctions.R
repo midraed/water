@@ -15,11 +15,11 @@
 loadImage <-  function(path = getwd(), sat="auto", aoi){
   ## TODO: For L8 i should load the sirfrefl directly, like in MODIS!
   if(sat=="auto"){sat = getSat(path)} #DRY!
-  if(sat=="L8"){bands <- c(2:7, 10, 11)}
+  if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
   if(sat=="MODIS"){bands <- c(1:7)}
   ## Check for more than 1 image on the same folder
-  if(sat=="L8" | sat=="L7"){
+  if(sat %in% c("L7", "L8", "L9")){
     image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(b|B|band)",
                                                          bands[1] ,".(TIF|tif)$"))
     if(length(image_list) > 1) {  ## Check if there are more images present on folder
@@ -30,7 +30,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
       image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
     }
     bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
-    if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
+    if(sat %in% c("L8", "L9")){bandnames <- c(bandnames, "Thermal2")}
   }
   if(sat=="MODIS"){
     image_list <- list.files(path=path, pattern = paste0(".sur_refl_b0",
@@ -144,7 +144,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   path <- getwd()
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
-  if(sat=="L8"){bands <- c(2:7, 10, 11)}
+  if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
   if(missing(MTL)){MTL <- list.files(path = getwd(), pattern = "MTL.txt", full.names = T)}
  
@@ -169,7 +169,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
    }
   image <- image.DN * MULT + ADD
   bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
-  if(sat=="L8"){bandnames <- c(bandnames, "Thermal2")}
+  if(sat %in% c("L8", "L9")){bandnames <- c(bandnames, "Thermal2")}
   image <- saveLoadClean(imagestack = image, 
                             stack.names = bandnames, 
                             file = "image_Rad", 
@@ -197,9 +197,9 @@ calcTOAr <- function(image.DN, sat="auto",
                      aoi, incidence.rel, MTL){
   path = getwd()
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
-  if(sat=="L8"){bands <- 2:7}
+  if(sat %in% c("L8", "L9")){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
-  if(sat=="L8"){
+  if(sat %in% c("L8", "L9")){
     image_TOA <- ((2.0000E-05 * image.DN[[1:6]]) + -0.100000) / incidence.rel  ### There is a small difference with ESPA TOA of less than 0.02
     names(image_TOA) <- names(image.DN[[1:6]])
   }
@@ -263,9 +263,9 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
   }
   path <- getwd()
   if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L8"){stop("water package does not include a model to calculate surface reflectance 
-  for Landsat 8 images. Landsat 8 users should download precalculated surface reflectances from 
-  espa website (espa.cr.usgs.gov). ")}
+  if(sat %in% c("L8", "L9")){stop("water package does not include a model to calculate ",
+    "surface reflectance for Landsat 8/9. Download Collection 2 Level-2 products ",
+    "and load them with loadImageSR().")}
   if(sat=="L7"){
     bands <- c(1:5,7)
     if(missing(image.TOAr)){image.TOAr <- calcTOAr()}

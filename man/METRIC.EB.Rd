@@ -32,21 +32,22 @@ METRIC.EB(
 }
 \arguments{
 \item{image.DN}{Raw image in digital counts. Optional if image.SR is
-supplied. If supplied (L7/L8) it is used for TOA reflectance (LAI and
+supplied. If supplied (L7/L8/L9) it is used for TOA reflectance (LAI and
 anchors) and for surface temperature; if missing, image.SR is used instead.
 Needed for LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).}
 
 \item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
 SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
 missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
-Required for L8.}
+Required for L8 and L9.}
 
 \item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
 
 \item{MTL}{Landsat metadata file}
 
-\item{sat}{Landsat satellite version. "L7" or "L8"}
+\item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
+detect it from the MTL file}
 
 \item{thermalband}{Landsat low gain thermalband. Not needed if
 surf.temp is supplied}
@@ -154,9 +155,9 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105.
 }
 \seealso{
-Other METRIC model functions: 
-\code{\link{METRIC.G}()},
-\code{\link{METRIC.Rn}()}
+Other METRIC model functions:
+\code{\link[=METRIC.G]{METRIC.G()}},
+\code{\link[=METRIC.Rn]{METRIC.Rn()}}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}

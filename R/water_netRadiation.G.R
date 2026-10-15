@@ -240,7 +240,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
   path <- getwd()
   if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L7" | sat=="L8"){
+  if(sat %in% c("L7", "L8", "L9")){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)} # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} # Liang 2001
@@ -371,8 +371,11 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #'                        waterOptions("autoAoi") == TRUE will look for any 
 #'                        object called aoi on .GlobalEnv
 #' @param method          "SC" for single channel or "SW" for split window 
-#'                        algorithm. "SW" is only available for L8
+#'                        algorithm. "SW" is only available for L8 and L9
 #' @param WeatherStation  Weather Station data
+#' @param MTL             Landsat metadata file. For L8 and L9 the thermal
+#'                        calibration constants are read from it. Required
+#'                        for L9; without it L8 uses Landsat 8 defaults
 #' @family net radiation related functions
 #' @author Guillermo Federico Olmedo
 #' @author Fonseca-Luengo, David
@@ -393,7 +396,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @export
 ## Add Sobrino and Qin improvements to LST in ETM+
 surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi, 
-                               method = "SC", WeatherStation, thermalband){
+                               method = "SC", WeatherStation, thermalband, MTL){
   path=getwd()
   if(class(WeatherStation)== "waterWeatherStation"){
     WeatherStation <- getDataWS(WeatherStation)
@@ -409,12 +412,22 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   Rp <- 0.91     
   # atm transmissivity
   tau_NB <- 0.75+2e-5*WeatherStation$elev
-  if(sat=="auto"){sat = getSat(path)}
-  if(sat=="L8"){
-    TIRS_THERMAL_CONSTANTS <- c(K1_CONSTANT_BAND_10 = 774.8853, K1_CONSTANT_BAND_11 = 480.8883, K2_CONSTANT_BAND_10 = 1321.0789,
-                                K2_CONSTANT_BAND_11 = 1201.1442)
-    L_b10 <- image.DN$Thermal1*3.3420E-04+0.1
-    bT_b10 <- TIRS_THERMAL_CONSTANTS[3] / log((TIRS_THERMAL_CONSTANTS[1]/L_b10)+1)
+  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat %in% c("L8", "L9")){
+    # Landsat 8 defaults; L9 (TIRS-2) constants differ, so read them from MTL
+    cal <- c(RADIANCE_MULT_BAND_10 = 3.3420E-04, RADIANCE_ADD_BAND_10 = 0.1,
+             RADIANCE_MULT_BAND_11 = 3.3420E-04, RADIANCE_ADD_BAND_11 = 0.1,
+             K1_CONSTANT_BAND_10 = 774.8853, K2_CONSTANT_BAND_10 = 1321.0789,
+             K1_CONSTANT_BAND_11 = 480.8883, K2_CONSTANT_BAND_11 = 1201.1442)
+    if(!missing(MTL) && length(MTL)){
+      cal[] <- mtlValues(MTL, names(cal))
+    } else if(sat=="L9"){
+      stop("Landsat 9 needs MTL for the thermal calibration constants ",
+           "(or use Level-2 surface temperature, surf.temp in METRIC.EB())")
+    }
+    B10 <- if(!missing(thermalband)) thermalband else image.DN$Thermal1
+    L_b10 <- B10*cal[["RADIANCE_MULT_BAND_10"]]+cal[["RADIANCE_ADD_BAND_10"]]
+    bT_b10 <- cal[["K2_CONSTANT_BAND_10"]] / log((cal[["K1_CONSTANT_BAND_10"]]/L_b10)+1)
     if(method == "SC"){
       #atm.coeff from Jimenez-Munoz, 2014
       atm.coeff <- matrix(data=c(0.04019, 0.02916, 1.01523,
@@ -431,8 +444,8 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
       Ts <- delta*((1/epsilon_NB)*(AF.m[1]*L_b10+AF.m[2])+AF.m[3])+gama
     }
     if(method=="SW"){
-      L_b11 <- image.DN$Thermal2*3.3420E-04+0.1
-      bT_b11 <- TIRS_THERMAL_CONSTANTS[4] / log((TIRS_THERMAL_CONSTANTS[2]/L_b11)+1)
+      L_b11 <- image.DN$Thermal2*cal[["RADIANCE_MULT_BAND_11"]]+cal[["RADIANCE_ADD_BAND_11"]]
+      bT_b11 <- cal[["K2_CONSTANT_BAND_11"]] / log((cal[["K1_CONSTANT_BAND_11"]]/L_b11)+1)
       SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238, -129.20, 16.40)
       w <- 1.2 #Atm water vapor content in g cm-2
       delta_e <- 0 # emissivity difference 

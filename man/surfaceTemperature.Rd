@@ -11,7 +11,8 @@ surfaceTemperature(
   aoi,
   method = "SC",
   WeatherStation,
-  thermalband
+  thermalband,
+  MTL
 )
 }
 \arguments{
@@ -26,11 +27,15 @@ waterOptions("autoAoi") == TRUE will look for any
 object called aoi on .GlobalEnv}
 
 \item{method}{"SC" for single channel or "SW" for split window 
-algorithm. "SW" is only available for L8}
+algorithm. "SW" is only available for L8 and L9}
 
 \item{WeatherStation}{Weather Station data}
 
 \item{thermalband}{Satellite thermal band. For L8 this should be band 10. Deprecated argument}
+
+\item{MTL}{Landsat metadata file. For L8 and L9 the thermal
+calibration constants are read from it. Required
+for L9; without it L8 uses Landsat 8 defaults}
 }
 \description{
 Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
@@ -51,17 +56,17 @@ infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10),
 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}}
 }
 \author{
 Guillermo Federico Olmedo

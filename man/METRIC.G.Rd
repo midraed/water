@@ -16,20 +16,26 @@ METRIC.G(
   G.method = "Tasumi",
   plain = TRUE,
   DEM,
-  aoi
+  aoi,
+  image.SR,
+  surf.temp
 )
 }
 \arguments{
-\item{image.DN}{raw imagen in digital counts to evaluate}
+\item{image.DN}{Raw image in digital counts. Optional if image.SR and
+surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
+reflectance (LAI) and, without surf.temp, for surface temperature.}
 
 \item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
 
 \item{MTL}{Landsat metadata file}
 
-\item{sat}{Landsat satellite version. "L7" or "L8"}
+\item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
+detect it from the MTL file}
 
-\item{thermalband}{Landsat low gain thermalband}
+\item{thermalband}{Landsat low gain thermalband. Not needed if
+surf.temp is supplied}
 
 \item{Rn}{Net radiation in W/m2, e.g. from METRIC.Rn(). If
 missing it is computed as in METRIC.Rn()}
@@ -49,17 +55,26 @@ See Details.}
 if plain = TRUE}
 
 \item{aoi}{sf polygon object with limits of Area of interest}
+
+\item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
+SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
+computed from image.DN if missing.}
+
+\item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
+same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
+supplied it is used as Ts and surfaceTemperature() is not called.}
 }
 \description{
-Estimates Soil Heat Flux as in METRIC Model
+Inputs are the same as in METRIC.Rn(). For Landsat 8 and 9, use Collection 2
+Level-2 surface reflectance as image.SR and surface temperature as surf.temp.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
 \seealso{
 Other METRIC model functions:
-\code{\link{METRIC.EB}()},
-\code{\link{METRIC.Rn}()}
+\code{\link[=METRIC.EB]{METRIC.EB()}},
+\code{\link[=METRIC.Rn]{METRIC.Rn()}}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}

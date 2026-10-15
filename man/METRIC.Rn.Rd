@@ -14,25 +14,31 @@ METRIC.Rn(
   LAI.method = "metric2010",
   plain = TRUE,
   DEM,
-  aoi
+  aoi,
+  image.SR,
+  surf.temp
 )
 }
 \arguments{
-\item{image.DN}{raw imagen in digital counts to evaluate}
+\item{image.DN}{Raw image in digital counts. Optional if image.SR and
+surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
+reflectance (LAI) and, without surf.temp, for surface temperature.}
 
-\item{WeatherStation}{Weather Station data, can be a waterWeatherStation 
+\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
 object}
 
 \item{MTL}{Landsat metadata file}
 
-\item{sat}{Landsat satellite version. "L7" or "L8"}
+\item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
+detect it from the MTL file}
 
-\item{thermalband}{Landsat low gain thermalband}
+\item{thermalband}{Landsat low gain thermalband. Not needed if
+surf.temp is supplied}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{LAI.method}{Method used to estimate LAI from spectral data. 
+\item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}
 
 \item{plain}{Logical. If TRUE surface is assumed plain}
@@ -40,18 +46,28 @@ See Details.}
 \item{DEM}{Digital Elevation Model of the study area. Not needed
 if plain = TRUE}
 
-\item{aoi}{SpatialPolygon object with limits of Area of interest}
+\item{aoi}{sf polygon object with limits of Area of interest}
+
+\item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
+SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
+computed from image.DN if missing.}
+
+\item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
+same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
+supplied it is used as Ts and surfaceTemperature() is not called.}
 }
 \description{
-Estimates Net Radiation as in METRIC Model
+For Landsat 8 and 9, use Collection 2 Level-2 products: surface reflectance
+as image.SR and surface temperature as surf.temp (both from loadImageSR()).
+For Landsat 7, image.SR and Ts can also be computed from image.DN.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
 \seealso{
-Other METRIC model functions: 
-\code{\link{METRIC.EB}()},
-\code{\link{METRIC.G}()}
+Other METRIC model functions:
+\code{\link[=METRIC.EB]{METRIC.EB()}},
+\code{\link[=METRIC.G]{METRIC.G()}}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}

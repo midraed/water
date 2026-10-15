@@ -1,75 +1,18 @@
 #' Estimates Net Radiation as in METRIC Model
-#' @param image.DN         raw imagen in digital counts to evaluate
-#' @param WeatherStation   Weather Station data, can be a waterWeatherStation 
-#' object
-#' @param MTL              Landsat metadata file
-#' @param sat              Landsat satellite version. "L7" or "L8"
-#' @param thermalband      Landsat low gain thermalband
-#' @param plain            Logical. If TRUE surface is assumed plain
-#' @param DEM              Digital Elevation Model of the study area. Not needed
-#' if plain = TRUE
-#' @param aoi              sf polygon object with limits of Area of interest
-#' @param alb.coeff        coefficient to transform narrow to broad band albedo.
-#' See Details.
-#' @param LAI.method       Method used to estimate LAI from spectral data. 
-#' See Details.
-#' @family METRIC model functions
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
-#' @references
-#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
-#' @export
-METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
-                      alb.coeff = "Tasumi", LAI.method = "metric2010", 
-                      plain = TRUE, DEM, aoi){
-  path=getwd()
-  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
-  #pb <- txtProgressBar(min = 0, max = 100, style = 3)
-  if(plain==TRUE){
-    DEM <- rast(image.DN[[1]])
-    values(DEM) <- WeatherStation$location$elev
-  }
-  surface.model <-METRICtopo(DEM)
-  #setTxtProgressBar(pb, 3)
-  solar.angles.r <- solarAngles(surface.model = surface.model, 
-                                WeatherStation = WeatherStation, MTL = MTL)
-  Rs.inc <- incSWradiation(surface.model = surface.model, 
-                           solar.angles = solar.angles.r, 
-                           WeatherStation = WeatherStation)
-  if(sat=="L7" | sat=="L8"){
-  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL, 
-                         incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat, 
-                     surface.model=surface.model, 
-                     incidence.hor = solar.angles.r$incidence.hor, 
-                     WeatherStation=WeatherStation)}
-  if(sat=="MODIS"){image.SR <- image.DN}
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
-  #setTxtProgressBar(pb, 6)
-  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
-                                           # and some LAI models, use SR
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
-  if(sat=="L7" | sat=="L8"){
-  Ts <- surfaceTemperature(LAI=LAI, sat = sat, thermalband = thermalband,
-                           WeatherStation = WeatherStation)}
-  if(sat=="MODIS"){Ts <- image.DN$LST}
-  #setTxtProgressBar(pb, 35)
-  Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
-  Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
-                           solar.angles = solar.angles.r, Ts= Ts)
-  Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
-  plot(Rn, main="METRIC Net Radiation")
-  return(Rn)
-}
-
-#' Estimates Soil Heat Flux as in METRIC Model
-#' @param image.DN         raw imagen in digital counts to evaluate
+#' @description
+#' For Landsat 8 and 9, use Collection 2 Level-2 products: surface reflectance
+#' as image.SR and surface temperature as surf.temp (both from loadImageSR()).
+#' For Landsat 7, image.SR and Ts can also be computed from image.DN.
+#' @param image.DN         Raw image in digital counts. Optional if image.SR and
+#' surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
+#' reflectance (LAI) and, without surf.temp, for surface temperature.
 #' @param WeatherStation   Weather Station data, can be a waterWeatherStation
 #' object
 #' @param MTL              Landsat metadata file
-#' @param sat              Landsat satellite version. "L7" or "L8"
-#' @param thermalband      Landsat low gain thermalband
-#' @param Rn               Net radiation in W/m2, e.g. from METRIC.Rn(). If
-#' missing it is computed as in METRIC.Rn()
+#' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
+#' detect it from the MTL file
+#' @param thermalband      Landsat low gain thermalband. Not needed if
+#' surf.temp is supplied
 #' @param plain            Logical. If TRUE surface is assumed plain
 #' @param DEM              Digital Elevation Model of the study area. Not needed
 #' if plain = TRUE
@@ -78,6 +21,39 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
+#' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
+#' SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
+#' computed from image.DN if missing.
+#' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
+#' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
+#' supplied it is used as Ts and surfaceTemperature() is not called.
+#' @family METRIC model functions
+#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @references
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
+                      alb.coeff = "Tasumi", LAI.method = "metric2010",
+                      plain = TRUE, DEM, aoi, image.SR, surf.temp){
+  path=getwd()
+  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
+                           WeatherStation = WeatherStation, MTL = MTL, sat = sat,
+                           thermalband = thermalband, surf.temp = surf.temp,
+                           alb.coeff = alb.coeff, LAI.method = LAI.method,
+                           plain = plain, DEM = DEM)
+  Rn <- metricRn(surface, WeatherStation)
+  plot(Rn, main="METRIC Net Radiation")
+  return(Rn)
+}
+
+#' Estimates Soil Heat Flux as in METRIC Model
+#' @description
+#' Inputs are the same as in METRIC.Rn(). For Landsat 8 and 9, use Collection 2
+#' Level-2 surface reflectance as image.SR and surface temperature as surf.temp.
+#' @inheritParams METRIC.Rn
+#' @param Rn               Net radiation in W/m2, e.g. from METRIC.Rn(). If
+#' missing it is computed as in METRIC.Rn()
 #' @param G.method         method used for the G estimation. Currently implemeted are
 #' "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
@@ -87,62 +63,101 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' @export
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
-                     G.method = "Tasumi", plain = TRUE, DEM, aoi){
+                     G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
+                     surf.temp){
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
-  if(plain==TRUE){
-    DEM <- rast(image.DN[[1]])
-    values(DEM) <- WeatherStation$location$elev
-  }
-  surface.model <-METRICtopo(DEM)
-  solar.angles.r <- solarAngles(surface.model = surface.model,
-                                WeatherStation = WeatherStation, MTL = MTL)
-  if(sat=="L7" | sat=="L8"){
-  image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
-                         incidence.rel = solar.angles.r$incidence.rel)
-  image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat,
-                     surface.model=surface.model,
-                     incidence.hor = solar.angles.r$incidence.hor,
-                     WeatherStation=WeatherStation)}
-  if(sat=="MODIS"){image.SR <- image.DN}
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
-  if(sat=="MODIS"){image.TOAr <- image.DN} # Only used for LAI estimation,
-                                           # and some LAI models, use SR
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L=0.1)
-  if(sat=="L7" | sat=="L8"){
-  Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN = image.DN,
-                           thermalband = thermalband,
-                           WeatherStation = WeatherStation)}
-  if(sat=="MODIS"){Ts <- image.DN$LST}
-  if(missing(Rn)){
-    Rs.inc <- incSWradiation(surface.model = surface.model,
-                             solar.angles = solar.angles.r,
-                             WeatherStation = WeatherStation)
-    Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
-    Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM,
-                             solar.angles = solar.angles.r, Ts= Ts)
-    Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
-  }
-  G <- soilHeatFlux(image = image.SR, Ts=Ts, albedo=albedo, Rn=Rn, LAI=LAI,
+  surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
+                           WeatherStation = WeatherStation, MTL = MTL, sat = sat,
+                           thermalband = thermalband, surf.temp = surf.temp,
+                           alb.coeff = alb.coeff, LAI.method = LAI.method,
+                           plain = plain, DEM = DEM)
+  if(missing(Rn)){Rn <- metricRn(surface, WeatherStation)}
+  G <- soilHeatFlux(image = surface$image.SR, Ts = surface$Ts,
+                    albedo = surface$albedo, Rn = Rn, LAI = surface$LAI,
                     method = G.method)
   plot(G, main="METRIC Soil Heat Flux")
   return(G)
 }
 
+# Surface inputs shared by METRIC.Rn() and METRIC.G(). Same priority as
+# METRIC.EB(): supplied image.SR > SR derived from image.DN (L7, MODIS), and
+# supplied surf.temp > surfaceTemperature()
+metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
+                          thermalband, surf.temp, alb.coeff, LAI.method,
+                          plain, DEM){
+  if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
+    stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
+         "MODIS; for L8/L9 provide it (e.g., loadImageSR()).")
+  }
+  if(missing(surf.temp) && missing(image.DN)){
+    stop("Provide surf.temp (e.g., image.SR$Band_10 from loadImageSR()) or ",
+         "image.DN with a thermal band.")
+  }
+  if(plain==TRUE){
+    DEM <- rast(if(missing(image.SR)) image.DN[[1]] else image.SR[[1]])
+    values(DEM) <- WeatherStation$location$elev
+  }
+  surface.model <- METRICtopo(DEM)
+  solar.angles <- solarAngles(surface.model = surface.model,
+                              WeatherStation = WeatherStation, MTL = MTL)
+  if(!missing(image.DN) && sat %in% c("L7", "L8", "L9")){
+    image.TOAr <- calcTOAr(image.DN = image.DN, sat = sat, MTL = MTL,
+                           incidence.rel = solar.angles$incidence.rel)
+  }
+  if(missing(image.SR)){
+    if(sat=="L7"){
+      image.SR <- calcSR(image.TOAr = image.TOAr, sat = sat,
+                         surface.model = surface.model,
+                         incidence.hor = solar.angles$incidence.hor,
+                         WeatherStation = WeatherStation)
+    } else {
+      image.SR <- image.DN  # MODIS
+    }
+  }
+  # Without DN (or for MODIS) LAI uses SR instead of TOAr
+  if(missing(image.DN) || sat=="MODIS"){image.TOAr <- image.SR}
+  albedo <- albedo(image.SR = image.SR, coeff = alb.coeff, sat = sat)
+  LAI <- LAI(method = LAI.method, image = image.TOAr, L = 0.1)
+  if(!missing(surf.temp)){
+    Ts <- surf.temp
+  } else if(sat %in% c("L7", "L8", "L9")){
+    Ts <- surfaceTemperature(LAI = LAI, sat = sat, image.DN = image.DN,
+                             thermalband = thermalband, MTL = MTL,
+                             WeatherStation = WeatherStation)
+  } else {
+    Ts <- image.DN$LST  # MODIS
+  }
+  list(surface.model = surface.model, solar.angles = solar.angles,
+       image.SR = image.SR, albedo = albedo, LAI = LAI, Ts = Ts)
+}
+
+# Net radiation from the output of metricSurface()
+metricRn <- function(surface, WeatherStation){
+  Rs.inc <- incSWradiation(surface.model = surface$surface.model,
+                           solar.angles = surface$solar.angles,
+                           WeatherStation = WeatherStation)
+  Rl.out <- outLWradiation(LAI = surface$LAI, Ts = surface$Ts)
+  Rl.inc <- incLWradiation(WeatherStation, DEM = surface$surface.model$DEM,
+                           solar.angles = surface$solar.angles, Ts = surface$Ts)
+  netRadiation(surface$LAI, surface$albedo, Rs.inc, Rl.inc, Rl.out)
+}
+
 
 #' Estimates Energy Balance using METRIC2010 Model
 #' @param image.DN         Raw image in digital counts. Optional if image.SR is
-#' supplied. If supplied (L7/L8) it is used for TOA reflectance (LAI and
+#' supplied. If supplied (L7/L8/L9) it is used for TOA reflectance (LAI and
 #' anchors) and for surface temperature; if missing, image.SR is used instead.
 #' Needed for LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).
 #' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
 #' SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
 #' missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
-#' Required for L8.
+#' Required for L8 and L9.
 #' @param WeatherStation   Weather Station data, can be a waterWeatherStation
 #' object
 #' @param MTL              Landsat metadata file
-#' @param sat              Landsat satellite version. "L7" or "L8"
+#' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
+#' detect it from the MTL file
 #' @param thermalband      Landsat low gain thermalband. Not needed if
 #' surf.temp is supplied
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
@@ -239,7 +254,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
          "MODIS; provide it (e.g., loadImageSR()).")
   }
 
-  if(missing(surf.temp) && missing(thermalband) && sat %in% c("L7", "L8")){
+  if(missing(surf.temp) && missing(thermalband) && sat %in% c("L7", "L8", "L9")){
     if(missing(image.DN)){
       stop("Provide surf.temp, thermalband or image.DN with a thermal layer.")
     }
@@ -250,7 +265,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     thermalband <- image.DN[[thermal.layer[1]]]
   }
 
-  if(missing(surf.temp) && sat %in% c("L7", "L8") && is.null(thermalband)){
+  if(missing(surf.temp) && sat %in% c("L7", "L8", "L9") && is.null(thermalband)){
     stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
   }
 
@@ -267,7 +282,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   Rs.inc <- incSWradiation(surface.model = surface.model, 
                            solar.angles = solar.angles.r, 
                            WeatherStation = WeatherStation)
-  if(!missing(image.DN) && sat %in% c("L7", "L8")){
+  if(!missing(image.DN) && sat %in% c("L7", "L8", "L9")){
     image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
                            incidence.rel = solar.angles.r$incidence.rel)
   }
@@ -295,11 +310,11 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   if (LAI.method != "vineyard" & LAI.method != "turner"){LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)}
   if(!missing(surf.temp)){
     Ts <- surf.temp
-  } else if(sat=="L7" | sat=="L8"){
+  } else if(sat %in% c("L7", "L8", "L9")){
     Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=image.DN,
                              WeatherStation = WeatherStation,
                              method = LST.method,
-                             thermalband = thermalband)
+                             thermalband = thermalband, MTL = MTL)
   } else if(sat=="MODIS"){Ts <- image.DN$LST}
   #setTxtProgressBar(pb, 35)
   Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)

@@ -15,16 +15,24 @@ getSat <- function(path = getwd(), MTL = NULL){
   if(length(num) > 1){
     stop("Files from more than one Landsat satellite in ", path, ". Set sat.")
   }
-  if(length(num) == 1 && !is.na(num)){
-    if(num == "7"){return("L7")}
-    if(num == "8"){return("L8")}
-    if(num == "9"){
-      stop("Landsat 9 is not supported (TIRS-2 thermal constants differ from ",
-           "Landsat 8). Set sat = \"L8\" and supply surf.temp to METRIC.EB().")
-    }
+  if(length(num) == 1 && !is.na(num) && num %in% c("7", "8", "9")){
+    return(paste0("L", num))
   }
   stop("Can't establish satellite from MTL file or file names in ", path,
-       ". Set sat = \"L7\", \"L8\" or \"MODIS\".")
+       ". Set sat = \"L7\", \"L8\", \"L9\" or \"MODIS\".")
+}
+
+# Numeric values from a Landsat MTL file, e.g. mtlValues(MTL, "K1_CONSTANT_BAND_10")
+mtlValues <- function(MTL, keys){
+  lines <- readLines(MTL[1], warn = FALSE)
+  values <- vapply(keys, function(key){
+    line <- grep(paste0("^\\s*", key, " = "), lines, value = TRUE)[1]
+    as.numeric(gsub("\"", "", sub(".*= *", "", line)))
+  }, numeric(1))
+  if(anyNA(values)){
+    stop("Not found in MTL file: ", paste(keys[is.na(values)], collapse = ", "))
+  }
+  values
 }
 
 

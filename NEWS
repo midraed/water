@@ -14,6 +14,11 @@ VERSION 0.8.5
 * Fixed automatic anchor selection after the migration to terra: the "best"
   method failed to find cold pixels, and all methods returned only one hot
   and one cold pixel regardless of n. See calcAnchors()
+* Landsat 9 support. getSat() returns "L9", and L9 is handled like L8
+  (same bands). surfaceTemperature() reads the thermal calibration constants
+  from the MTL file (new MTL argument), required for L9
+* METRIC.Rn() and METRIC.G() work with Landsat 8/9 Level-2 products: new
+  image.SR and surf.temp arguments, same priority as METRIC.EB()
 * METRIC.G() rewritten to match METRIC.Rn(): it can now run, takes MTL,
   sat, thermalband, G.method and an optional Rn, and returns the same G as
   METRIC.EB()
