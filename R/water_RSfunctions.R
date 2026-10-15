@@ -167,9 +167,9 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
                     pattern="([0-9]{1,5})([.]+)([0-9]+)(E-)([0-9]+)"))[[1]][1])
   
    }
-  image <- image.DN * MULT + ADD
   bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
   if(sat %in% c("L8", "L9")){bandnames <- c(bandnames, "Thermal2")}
+  image <- landsatBands(image.DN, bandnames) * MULT + ADD
   image <- saveLoadClean(imagestack = image, 
                             stack.names = bandnames, 
                             file = "image_Rad", 
@@ -200,8 +200,8 @@ calcTOAr <- function(image.DN, sat="auto",
   if(sat %in% c("L8", "L9")){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(sat %in% c("L8", "L9")){
-    image_TOA <- ((2.0000E-05 * image.DN[[1:6]]) + -0.100000) / incidence.rel  ### There is a small difference with ESPA TOA of less than 0.02
-    names(image_TOA) <- names(image.DN[[1:6]])
+    refl <- landsatBands(image.DN, c("B", "G", "R", "NIR", "SWIR1", "SWIR2"))
+    image_TOA <- ((2.0000E-05 * refl) + -0.100000) / cos(incidence.rel)
   }
   ### Ro TOA L7
   if(sat=="L7"){
@@ -224,9 +224,10 @@ calcTOAr <- function(image.DN, sat="auto",
     DOY <-  sat.datetime$yday +1
     d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))
     dr <- 1 + 0.033 * cos(DOY * (2 * pi / 365))
+    refl <- landsatBands(image.DN, c("B", "G", "R", "NIR", "SWIR1", "SWIR2"))
     Ro.TOAr <- list()
     for(i in 1:6){
-      Ro.TOAr[i] <- (pi * (Gain[i] * image.DN[[i]] + Bias[i])) / (ESUN[i] * cos(incidence.rel) * dr)
+      Ro.TOAr[[i]] <- (pi * (Gain[i] * refl[[i]] + Bias[i])) / (ESUN[i] * cos(incidence.rel) * dr)
     }
     image_TOA <- do.call(c, Ro.TOAr)
   }

@@ -91,8 +91,14 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 METRICtopo <- function(DEM){
-  aspect <- terrain(DEM, v="aspect") 
-  slope <- terrain(DEM, v="slope") 
+  aspect <- terrain(DEM, v="aspect", unit="radians")
+  slope <- terrain(DEM, v="slope", unit="radians")
+  # terrain() leaves the outer cells NA; a constant DEM (plain = TRUE) is flat
+  # there too, so use the values terrain() gives inside a flat surface
+  if(isTRUE(diff(as.numeric(global(DEM, "range", na.rm = TRUE))) == 0)){
+    slope <- ifel(is.na(DEM), NA, 0)
+    aspect <- ifel(is.na(DEM), NA, 3*pi/2)
+  }
   aspect_metric <- aspect-pi  #METRIC expects aspect - 1 pi
   surface.model <- c(DEM, slope, aspect_metric)
   surface.model <- saveLoadClean(imagestack = surface.model, 
@@ -161,7 +167,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
   time.hours <- strptime(time.hours, format = "%H:%M:%S", tz="GMT")
   Sc <- (0.1645*sin(4*pi*(DOY-81)/364)-0.1255*cos(2*pi*(DOY-81)/364)-0.025*sin(2*pi*(DOY-81)/364))*60
   time.hours <- (time.hours$hour*3600+time.hours$min*60+time.hours$sec+WeatherStation$long/15*3600)/60 + Sc
-  values(hour.angle) <- abs((12-as.numeric(time.hours)/60)*15/180*pi)
+  values(hour.angle) <- (as.numeric(time.hours)/60-12)*15/180*pi
   #hour.angle <- asin(-1*(cos(sun.elevation)*sin(sun.azimuth)/cos(declination))) first
   
   ## solar incidence angle, for horizontal surface
@@ -304,8 +310,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   }
   if(method=="metric"){
     SAVI_ID <- (1 + L)*(toa.4.5[[2]] - toa.4.5[[1]])/(L + toa.4.5[[1]] + toa.4.5[[2]])
-    LAI <- log((0.69-SAVI_ID)/0.59)/0.91 *-1
-    LAI[SAVI_ID > 0.817] <- 6
+    LAI <- ifel(SAVI_ID > 0.687, 6, log((0.69-SAVI_ID)/0.59)/0.91 *-1)
   }
   if(method=="vineyard"){
     # image must be the DN image

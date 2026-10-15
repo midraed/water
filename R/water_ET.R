@@ -35,6 +35,7 @@
 #' Allen 2005 ASCE
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
                      ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
+  ET <- match.arg(ET, c("ETr", "ETo"))
   if(class(WeatherStation)== "waterWeatherStation"){
     if(!is.null(WeatherStation$at.sat)){
       WeatherStation <- getDataWS(WeatherStation)
@@ -72,8 +73,7 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
   b <- 2*pi*(DOY-81)/364
   Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
   if(ET.instantaneous==TRUE){hours <- hours +0.5}
-  hour.angle <- (pi/12)*((hours-0.5+0.06667*(WeatherStation$long*
-                                               pi/180-long.z*pi/180)+Sc)-12)
+  hour.angle <- (pi/12)*((hours-0.5+0.06667*(WeatherStation$long-long.z)+Sc)-12)
   w1 <- hour.angle-((pi)/24)
   w2 <- hour.angle+((pi)/24)
   hour.angle.s <- acos(-tan(phi)*tan(delta))

@@ -141,7 +141,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                  found", cold.n, "cold pixels and", hot.n, "hot pixels."))
     }
     # First cold sample
-    try(cold <- sample(which(cold.candidates),1), silent=TRUE)
+    try(cold <- sampleOne(which(cold.candidates)), silent=TRUE)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts, vals = NA)
@@ -163,7 +163,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
         }
-        try(newAnchor <- sample(which(cold.candidates),1), silent = FALSE)
+        try(newAnchor <- sampleOne(which(cold.candidates)), silent = FALSE)
         if(!is.na(newAnchor)){cold <- c(cold, newAnchor)}
       }}
 
@@ -172,7 +172,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     if(length(hot.pool) == 0){
       hot.pool <- which(hot.candidates)
     }
-    try(hot <- sample(hot.pool, 1), silent=TRUE)
+    try(hot <- sampleOne(hot.pool), silent=TRUE)
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
         distbuffer <- rast(Ts, vals = NA)
@@ -191,7 +191,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
         }
-        try(newAnchor <- sample(which(hot.candidates),1), silent = FALSE)
+        try(newAnchor <- sampleOne(which(hot.candidates)), silent = FALSE)
         if(!is.na(newAnchor)){hot <- c(hot, newAnchor)}
       }}
   }
@@ -219,7 +219,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     }
     # Cold samples
     Ts.cold <- Ts
-    values(Ts.cold)[!cold.candidates] <- NA
+    values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
     cold <- which.min(values(Ts.cold))[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
@@ -237,7 +237,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
           values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
-        values(Ts.cold)[!cold.candidates] <- NA
+        values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
         if(length(which(cold.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
@@ -248,7 +248,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
     # hot samples
     Ts.hot <- Ts
-    values(Ts.hot)[!hot.candidates] <- NA
+    values(Ts.hot)[!(hot.candidates %in% TRUE)] <- NA
     hot <- terra::which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
@@ -264,7 +264,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
           values(NDVI>=0.1) & values(NDVI<=0.28) & values(distbuffer==1) &
           values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
-        values(Ts.hot)[!hot.candidates] <- NA
+        values(Ts.hot)[!(hot.candidates %in% TRUE)] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
@@ -414,7 +414,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     }
     # Cold samples
     Ts.cold <- Ts
-    values(Ts.cold)[!cold.candidates] <- NA
+    values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
     cold <- terra::which.min(values(Ts.cold))[1]
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
@@ -434,7 +434,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer)) &
           values(distbuffer==1)
 
-        values(Ts.cold)[!cold.candidates] <- NA
+        values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
         if(length(which(cold.candidates))<=2){
           warning(paste("I can only find ", nsample, " anchors with cold pixel conditions"))
           break
@@ -445,7 +445,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
     # hot samples
     Ts.hot <- Ts
-    values(Ts.hot)[!hot.candidates] <- NA
+    values(Ts.hot)[!(hot.candidates %in% TRUE)] <- NA
     hot <- which.max(values(Ts.hot))
     if(n>1){  ## Next samples...
       for(nsample in 1:(n-1)){
@@ -462,7 +462,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
           values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1) &
           values(distbuffer==1)
-        values(Ts.hot)[!hot.candidates] <- NA
+        values(Ts.hot)[!(hot.candidates %in% TRUE)] <- NA
         if(length(which(hot.candidates))<2){
           warning(paste("I can only find ", nsample, " anchors with hot pixel conditions"))
           break
@@ -595,7 +595,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   
   ETo.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours,
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
-                         ET= "ETor")
+                         ET= "ETo")
   
   Ts.datum <- Ts + (DEM - WeatherStation$elev) * 6.49 / 1000
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26

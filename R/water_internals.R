@@ -22,6 +22,17 @@ getSat <- function(path = getwd(), MTL = NULL){
        ". Set sat = \"L7\", \"L8\", \"L9\" or \"MODIS\".")
 }
 
+# Bands by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, ...) when the image has
+# them, so the layer order does not matter; otherwise the first layers in order
+landsatBands <- function(image, bands){
+  if(all(bands %in% names(image))) image[[bands]] else image[[seq_along(bands)]]
+}
+
+# One element of x at random; sample(x, 1) samples from 1:x when length(x) == 1
+sampleOne <- function(x){
+  x[sample.int(length(x), 1)]
+}
+
 # Numeric values from a Landsat MTL file, e.g. mtlValues(MTL, "K1_CONSTANT_BAND_10")
 mtlValues <- function(MTL, keys){
   lines <- readLines(MTL[1], warn = FALSE)

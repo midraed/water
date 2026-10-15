@@ -163,7 +163,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     sat.date <-regmatches(date.line,regexec(text=date.line,
                         pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
     sat.datetime <- strptime(paste(sat.date, sat.time), 
-                             format = "%Y-%m-%d %H:%M:%S", tz="Europe/London")
+                             format = "%Y-%m-%d %H:%M:%S", tz="UTC")
     WS.prev<-suppressWarnings(WSdata[WSdata$datetime == tail(datetime[datetime < 
                                                        sat.datetime],1),])
     WS.after <- suppressWarnings(WSdata[WSdata$datetime == datetime[datetime > 
