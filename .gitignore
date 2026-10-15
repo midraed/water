@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-./inst/extdata/L8
+/inst/extdata/L8
+/vignettes/descargas/

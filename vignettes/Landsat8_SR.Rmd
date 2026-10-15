@@ -9,6 +9,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include=FALSE}
+# The scene used here is not shipped with the package, so code is not run
+# when building the vignette.
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 USGS distributes Landsat 8 Collection 2 Level-2 products with surface reflectance (SR) and surface temperature (ST) already computed. In this vignette we run METRIC directly from those products: no raw digital numbers (DN) are needed, surface reflectance is read with `loadImageSR()` and surface temperature is taken from the `ST_B10` band (loaded by `loadImageSR()` as `Band_10`) through the `surf.temp` argument of `METRIC.EB()`.
 
 ## Simple procedure
@@ -20,7 +26,7 @@ library(water)
 aoi <- createAoi(topleft = c(500000, -3644000), bottomright = c(526000, -3660000))
 ```
 
-The Level-2 scene folder contains the SR bands (`*_SR_B2.TIF` to `*_SR_B7.TIF`), the ST band (`*_ST_B10.TIF`) and the metadata file (`*_MTL.txt`). `loadImageSR()` reads the SR bands, names them by band number and rescales them to reflectance (DN * 0.0000275 - 0.2). For Landsat 8 it also adds the surface temperature as the last layer, `Band_10`, rescaled to Kelvin (DN * 0.00341802 + 149):
+The Level-2 scene is not included in **water**; download it first (e.g., from [Earth Explorer](https://earthexplorer.usgs.gov/)) and set `scene_folder` to its location. The Level-2 scene folder contains the SR bands (`*_SR_B2.TIF` to `*_SR_B7.TIF`), the ST band (`*_ST_B10.TIF`) and the metadata file (`*_MTL.txt`). `loadImageSR()` reads the SR bands, names them by band number and rescales them to reflectance (DN * 0.0000275 - 0.2). For Landsat 8 it also adds the surface temperature as the last layer, `Band_10`, rescaled to Kelvin (DN * 0.00341802 + 149):
 
 ```{r, warning=FALSE, fig.width = 7}
 scene_folder <- "../../L8/LC08_L2SP_232083_20160209_20200907_02_T1"

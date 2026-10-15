@@ -82,7 +82,8 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled as
 #' DN * 0.0000275 - 0.2, fill value 0 set to NA) or old ESPA files
 #' (\code{*_sr_band2.tif} to \code{*_sr_band7.tif}, scaled as DN / 10000).
-#' Layers are named by band number, so missing bands are simply skipped.
+#' All six bands (2 to 7) are required, as other functions use them by
+#' position.
 #' For Landsat 8/9 Collection 2, if \code{*_ST_B10.TIF} is present it is added
 #' as the last layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value
 #' 0 set to NA). It can be passed to METRIC.EB() as surf.temp.
@@ -97,6 +98,10 @@ loadImageSR <-  function(path = getwd(),  aoi){
   if(!length(files)) stop("No surface reflectance bands (SR_B2-7 or sr_band2-7) found in ", path)
   band <- sub(".*_(SR_B|sr_band)([2-7])\\.(TIF|tif)$", "\\2", basename(files))
   if(anyDuplicated(band)) stop("More than 1 image present on path: ", path)
+  if(!setequal(band, as.character(2:7))){
+    stop("Missing surface reflectance bands in ", path, ": ",
+         paste(setdiff(as.character(2:7), band), collapse = ", "))
+  }
   bandnames <- c("2" = "B", "3" = "G", "4" = "R", "5" = "NIR", "6" = "SWIR1", "7" = "SWIR2")
   ord <- order(band)
   image_SR <- rast(files[ord])

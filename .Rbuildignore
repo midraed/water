@@ -5,3 +5,5 @@
 ^Procedimiento\.md$
 ^revdep$
 ^cran-comments\.md$
+^vignettes/.*\.qmd$
+^vignettes/descargas$
