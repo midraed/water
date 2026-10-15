@@ -12,7 +12,7 @@ stack <- function(...) {
     args <- args[[1]]
   }
   rasters <- lapply(args, terra::rast)
-  do.call(terra::c, rasters)
+  do.call(c, rasters)
 }
 
 brick <- stack
@@ -50,10 +50,3 @@ rasterOptions <- function(...) {
   invisible(list(...))
 }
 
-raster_which_min <- function(x) {
-  as.integer(terra::which.minmax(x, "min"))
-}
-
-raster_which_max <- function(x) {
-  as.integer(terra::which.minmax(x, "max"))
-}

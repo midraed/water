@@ -234,7 +234,7 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @param ...      additional parameters to pass to plot()
 #' @author Guillermo Federico Olmedo
 #' @importFrom utils read.csv
-#' @importFrom graphics abline axis axis.POSIXct mtext par points
+#' @importFrom graphics abline axis axis.POSIXct mtext par
 #' @export
 #' @family Weather station related functions
 #' @method plot waterWeatherStation
