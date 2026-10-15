@@ -53,37 +53,51 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
                         cf = c(1, 1, 1), MTL){
-  if(tz==""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))}
+  if(tz==""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))
+  } else if(!tz %in% OlsonNames()){
+    stop("Unknown time zone: \"", tz, "\". Use a name from OlsonNames(), e.g. ",
+         "\"America/Santiago\", or \"Etc/GMT+6\" for 6 hours behind UTC")
+  }
   if("temp" %in% columns){warning("The parameter columns has changed and the old
   sintaxis is now deprecated. In future versions of water package ONLY the 
   new (numeric and simple!) sintaxis will work.")}
   if("pp" %in% columns){columns[columns == "pp"] <- "rain"}  ## TODO: deprecated "pp"
-  if(class(WSdata) == "character"){WSdata <- utils::read.csv(WSdata, ...)}
-  else if(class(WSdata) == "data.frame"){WSdata <- WSdata}
-  else stop("WSdata should be a character string with the name of the csv file
+  if(is.character(WSdata)){
+    if(!file.exists(WSdata)){stop("Weather station file not found: ", WSdata)}
+    WSdata <- utils::read.csv(WSdata, ...)
+  } else if(is.data.frame(WSdata)){
+    WSdata <- as.data.frame(WSdata)  # e.g. a tibble
+  } else stop("WSdata should be a character string with the name of the csv file
   or a data.frame with the WS data")
+  num <- function(x, name){
+    if(!is.numeric(x)){
+      stop("The weather station column for ", name, " is not numeric (first ",
+           "value: \"", x[1], "\"). If the file uses decimal commas, use ",
+           "read.WSdata2() or pass dec = \",\"")
+    }
+    x
+  }
   result <- list()
   result$location <- data.frame(lat=lat, long=long, elev=elev, height=height)
   
   ### Old method for columns : the character method!
-  if(class(columns) == "character"){
+  if(is.character(columns)){
     if("date" %in% columns & "time" %in% columns){
-      datetime  <- paste(WSdata[, which(columns == "date")], 
-                         WSdata[, which(columns == "time")])
-      datetime <- strptime(datetime, format = paste(date.format, time.format), 
-                           tz = tz)
+      raw  <- paste(WSdata[, which(columns == "date")],
+                    WSdata[, which(columns == "time")])
+      fmt <- paste(date.format, time.format)
     } else {
       if("datetime" %in% columns){
-        datetime  <- WSdata[, which(columns == "datetime")]
-        datetime <- strptime(datetime, format = datetime.format, tz = tz)
-      } else {message("ERROR: date and time or datetime are needed columns")}
+        raw  <- WSdata[, which(columns == "datetime")]
+        fmt <- datetime.format
+      } else {stop("date and time or datetime are needed columns")}
     }
-    if("rain" %in% columns){rain = WSdata[, which(columns == "rain")]}
+    if("rain" %in% columns){rain = num(WSdata[, which(columns == "rain")], "rain")}
     else rain = NA
-    radiation = WSdata[, which(columns == "radiation")] * cf[1]
-    wind =  WSdata[, which(columns == "wind")] * cf[2]
-    RH =  WSdata[, which(columns == "RH")]
-    temp =  WSdata[, which(columns == "temp")] * cf[3]  
+    radiation = num(WSdata[, which(columns == "radiation")], "radiation") * cf[1]
+    wind =  num(WSdata[, which(columns == "wind")], "wind") * cf[2]
+    RH =  num(WSdata[, which(columns == "RH")], "RH")
+    temp =  num(WSdata[, which(columns == "temp")], "temp") * cf[3]
   }
   
   ### New method for columns : the numeric method!
@@ -91,23 +105,37 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   # date, time, radiation, wind, RH, temp and rain. If 
   # date and time are in the same column, the column 
   # number has to be the same.
-  if(class(columns)== "numeric"){
+  if(is.numeric(columns)){
     if(columns[1] != columns[2]){
-      datetime  <- paste(WSdata[, columns[1]], 
-                         WSdata[, columns[2]])
-      datetime <- strptime(datetime, format = paste(date.format, time.format), 
-                           tz = tz)
+      raw  <- paste(WSdata[, columns[1]],
+                    WSdata[, columns[2]])
+      fmt <- paste(date.format, time.format)
     } else {
-        datetime  <- WSdata[, columns[1]]
-        datetime <- strptime(datetime, format = datetime.format, tz = tz)
+      raw  <- WSdata[, columns[1]]
+      fmt <- datetime.format
     }
-    if(!is.na(columns[7])){rain = WSdata[, columns[7]]}
+    if(!is.na(columns[7])){rain = num(WSdata[, columns[7]], "rain")}
     else rain = NA
-    radiation = WSdata[, columns[3]] * cf[1]
-    wind =  WSdata[, columns[4]] * cf[2]
-    RH =  WSdata[, columns[5]]
-    temp =  WSdata[, columns[6]] * cf[3]
-    
+    radiation = num(WSdata[, columns[3]], "radiation") * cf[1]
+    wind =  num(WSdata[, columns[4]], "wind") * cf[2]
+    RH =  num(WSdata[, columns[5]], "RH")
+    temp =  num(WSdata[, columns[6]], "temp") * cf[3]
+
+  }
+  datetime <- strptime(raw, format = fmt, tz = tz)
+  bad <- is.na(datetime)
+  if(all(bad)){
+    stop("No date could be read with the format \"", fmt, "\" (first value: \"",
+         raw[1], "\"). Check date.format, time.format or datetime.format ",
+         "(see strptime)")
+  }
+  if(any(bad)){
+    warning(sum(bad), " records with dates that could not be read with the ",
+            "format \"", fmt, "\" were removed (first: \"", raw[bad][1], "\")")
+    datetime <- datetime[!bad]
+    radiation <- radiation[!bad]; wind <- wind[!bad]; RH <- RH[!bad]
+    temp <- temp[!bad]
+    if(length(rain) > 1){rain <- rain[!bad]}
   }
   
   ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
@@ -153,8 +181,8 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                temp = tempFun(sequence),
                                rain = rainFun(sequence))
     ## Join with satellite data
-  if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-  if(length(MTL)!=0){
+  MTL <- findMTL(if(!missing(MTL)) MTL, required = FALSE)
+  if(!is.null(MTL)){
     MTL <- readLines(MTL, warn=FALSE)
     time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
     date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
@@ -162,8 +190,18 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
            pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
     sat.date <-regmatches(date.line,regexec(text=date.line,
                         pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-    sat.datetime <- strptime(paste(sat.date, sat.time), 
+    sat.datetime <- strptime(paste(sat.date, sat.time),
                              format = "%Y-%m-%d %H:%M:%S", tz="UTC")
+    records <- range(WSdata$datetime)
+    if(!(sat.datetime > records[1] && sat.datetime < records[2])){
+      warning("The satellite overpass (", format(sat.datetime, usetz = TRUE),
+              ") is outside the weather station records (",
+              format(records[1], usetz = TRUE), " to ",
+              format(records[2], usetz = TRUE), "), so the conditions at the ",
+              "overpass (at.sat) were not computed")
+      class(result) <- "waterWeatherStation"
+      return(result)
+    }
     WS.prev<-suppressWarnings(WSdata[WSdata$datetime == tail(datetime[datetime < 
                                                        sat.datetime],1),])
     WS.after <- suppressWarnings(WSdata[WSdata$datetime == datetime[datetime > 
@@ -215,11 +253,15 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                    "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8),
                          date.format = "%d/%m/%Y", time.format = "%H:%M:%S", 
                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
-                         cf = c(1, 3.6, 1, 1), MTL){
-  read.WSdata(WSdata, ..., height = 2.2, lat = lat, long = long, elev = elev,
-              columns = columns, date.format = date.format, 
+                         cf = c(1, 1, 1), MTL){
+  if(is.character(WSdata)){
+    if(!file.exists(WSdata)){stop("Weather station file not found: ", WSdata)}
+    WSdata <- utils::read.csv2(WSdata, ...)
+  }
+  read.WSdata(WSdata, height = height, lat = lat, long = long, elev = elev,
+              columns = columns, date.format = date.format,
               time.format = time.format, datetime.format = datetime.format,
-              tz = tz, cf = cf, MTL)
+              tz = tz, cf = cf, MTL = MTL)
 }
 
 
@@ -338,6 +380,11 @@ print.waterWeatherStation <- function(x, ...){
 #' @author Guillermo Federico Olmedo
 #' @export
 getDataWS <- function(WeatherStation){
+  if(is.null(WeatherStation$at.sat)){
+    stop("The weather station data has no conditions at the satellite overpass ",
+         "(at.sat): use read.WSdata(..., MTL = <Landsat MTL file>) with records ",
+         "that include the overpass")
+  }
   date <- as.POSIXlt(WeatherStation$at.sat$datetime, format="%Y-%m-%d %H:%M:%S")
   WeatherStation2 <- data.frame(wind=WeatherStation$at.sat$wind, 
                                RH=WeatherStation$at.sat$RH, 

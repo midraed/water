@@ -2,34 +2,45 @@
 % Please edit documentation in R/water_RSfunctions.R
 \name{cfmask}
 \alias{cfmask}
-\title{mask clouds}
+\title{Mask clouds using a quality band}
 \usage{
-cfmask(path = getwd(), image, cfmask, keep = 0, buffer = 60)
+cfmask(path = getwd(), image, cfmask, keep, buffer = 60)
 }
 \arguments{
-\item{path}{folder where band files are stored}
+\item{path}{folder where the quality band is searched when cfmask is
+missing: a Collection 2 \code{*_QA_PIXEL.TIF} file or, for older products,
+a \code{*_cfmask.tif} or \code{*_BQA.TIF} file}
 
-\item{image}{L8 raw image}
+\item{image}{SpatRaster to mask, e.g. from loadImageSR() or loadImage()}
 
-\item{cfmask}{Raster layer with the cfmask}
+\item{cfmask}{SpatRaster with the quality band. If missing, it is read
+from path}
 
-\item{keep}{values in cfmask to preserve in the final output. 
-Use 0 for cfmask files, and 2720 for bqa files. For Landsat 7
-BQA images, the value should be 672.}
+\item{keep}{For older quality bands only: values to keep (all other
+pixels are masked). Use 0 for cfmask files, 2720 for Landsat 8 Collection 1
+BQA files and 672 for Landsat 7 Collection 1 BQA files. If missing, a
+Collection 2 QA_PIXEL band is decoded by bits: pixels flagged as fill,
+dilated cloud, cirrus, cloud or cloud shadow (bits 0 to 4) are masked.}
 
-\item{buffer}{buffer width around excluded values, numeric > 0. Unit is meter
-if x has a longitude/latitude CRS, or mapunits in other cases}
+\item{buffer}{distance (in map units, usually meters) around clouds and
+cloud shadows that is also masked. Use 0 for no buffer}
+}
+\value{
+The image (SpatRaster) with the masked pixels set to NA.
 }
 \description{
-This function mask clouds and other values using the cfmask
+Masks clouds, cloud shadows and fill pixels of an image using its quality
+band. Use it after loading the image (e.g. with loadImageSR()) and before
+METRIC.EB(), so that cloudy pixels are not used as anchor pixels. All layers
+of the image are masked, including the surface temperature (Band_10).
 }
 \seealso{
-Other remote sensing support functions: 
-\code{\link{calcRadiance}()},
-\code{\link{calcSR}()},
-\code{\link{calcTOAr}()},
-\code{\link{loadImageSR}()},
-\code{\link{loadImage}()}
+Other remote sensing support functions:
+\code{\link[=calcRadiance]{calcRadiance()}},
+\code{\link[=calcSR]{calcSR()}},
+\code{\link[=calcTOAr]{calcTOAr()}},
+\code{\link[=loadImage]{loadImage()}},
+\code{\link[=loadImageSR]{loadImageSR()}}
 }
 \author{
 Guillermo Federico Olmedo

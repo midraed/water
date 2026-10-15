@@ -16,7 +16,9 @@ METRIC.Rn(
   DEM,
   aoi,
   image.SR,
-  surf.temp
+  surf.temp,
+  L = 0.1,
+  LST.method = "SC"
 )
 }
 \arguments{
@@ -55,6 +57,12 @@ computed from image.DN if missing.}
 \item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
 same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 supplied it is used as Ts and surfaceTemperature() is not called.}
+
+\item{L}{L value for SAVI calculation. See LAI()}
+
+\item{LST.method}{Method for land surface temperature estimation: "SC"
+for single channel or "SW" for split window (only for L8 and L9). Ignored
+if surf.temp is supplied. See surfaceTemperature()}
 }
 \description{
 For Landsat 8 and 9, use Collection 2 Level-2 products: surface reflectance

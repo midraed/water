@@ -1,6 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^test_*
+^test_
 ^README*       # An Rmarkdown file used to generate README.md
 ^Procedimiento\.md$
 ^revdep$

@@ -20,15 +20,24 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   if(sat=="MODIS"){bands <- c(1:7)}
   ## Check for more than 1 image on the same folder
   if(sat %in% c("L7", "L8", "L9")){
-    image_list <- list.files(path=path, pattern = paste0("^L[EC]\\d+\\w+\\d+_(b|B|band)",
-                                                         bands[1] ,".(TIF|tif)$"))
-    if(length(image_list) > 1) {  ## Check if there are more images present on folder
-      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
-      warning(paste("More than 1 image present on path. Using", 
-                    substr(image_pattern, 0, nchar(image_pattern)-2)))
-    } else {
-      image_pattern <- substr(image_list[[1]], 0, nchar(image_list[[1]])-5)
+    # Level-1 band files: <scene>_B<n>.TIF (Collection 1/2, any tier) or
+    # <scene>_band<n>.tif (pre-collection); Level-2 SR/ST files are skipped
+    image_list <- list.files(path=path, pattern = paste0("^L[CEOT]0?[789].*_(b|B|band)",
+                                                         bands[1], "\\.(TIF|tif)$"))
+    image_list <- image_list[!grepl("_(SR|ST)_B|_sr_band", image_list)]
+    if(length(image_list) == 0){
+      stop("No Landsat Level-1 band files found in ", path, ". Expected names ",
+           "like LC08_L1TP_232083_20160209_20200907_02_T1_B2.TIF or ",
+           "LC82320832016040LGN00_band2.tif. For Landsat 8/9 Collection 2 ",
+           "Level-2 surface reflectance use loadImageSR()")
     }
+    # scene prefix, including the "B"/"band" before the band number
+    image_pattern <- sub(paste0(bands[1], "\\.(TIF|tif)$"), "", image_list)
+    if(length(image_list) > 1) {  ## Check if there are more images present on folder
+      warning(paste("More than 1 image present on path. Using",
+                    sub("_(b|B|band)$", "", image_pattern[1])))
+    }
+    image_pattern <- image_pattern[1]
     bandnames <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "Thermal1")
     if(sat %in% c("L8", "L9")){bandnames <- c(bandnames, "Thermal2")}
   }
@@ -46,18 +55,23 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   }
   
   stack1 <- list()
+  files <- list.files(path = path)
   for(i in 1:length(bands)){
-    stack1[i] <- rast(list.files(path=path, 
-                                   pattern = paste0(image_pattern, bands[i], "(_1)?", "(_VCID_1)?",
-                                                    ".(TIF|tif)$"), full.names = T))
+    band.file <- files[startsWith(files, image_pattern) &
+                         grepl(paste0("^", bands[i], "(_1)?(_VCID_1)?\\.(TIF|tif)$"),
+                               substring(files, nchar(image_pattern) + 1))]
+    if(length(band.file) == 0){
+      stop("Band ", bands[i], " not found for ", image_pattern, " in ", path)
+    }
+    stack1[[i]] <- rast(file.path(path, band.file[1]))
   }
   if(sat == "MODIS"){
     thermal <- list.files(path=path, pattern = paste0(".LST_Day_1km",
                                                       ".(TIF|tif)$"), full.names = T)[1]
-    stack1[8] <- rast(thermal)
+    stack1[[8]] <- rast(thermal)
     time <- list.files(path=path, pattern = paste0(".Day_view_time",
                                                       ".(TIF|tif)$"), full.names = T)[1]
-    stack1[9] <- rast(time)
+    stack1[[9]] <- rast(time)
   }
   raw.image <- do.call(c, stack1)
   raw.image <- aoiCrop(raw.image, aoi)
@@ -146,9 +160,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
-  if(missing(MTL)){MTL <- list.files(path = getwd(), pattern = "MTL.txt", full.names = T)}
- 
-  MTL <- readLines(MTL, warn=FALSE)
+  MTL <- readLines(findMTL(if(!missing(MTL)) MTL), warn=FALSE)
   ADD <- vector()
   MULT <- vector()
  
@@ -205,8 +217,7 @@ calcTOAr <- function(image.DN, sat="auto",
   }
   ### Ro TOA L7
   if(sat=="L7"){
-    if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-    MTL <- readLines(MTL, warn=FALSE)
+    MTL <- readLines(findMTL(if(!missing(MTL)) MTL, path = path), warn=FALSE)
     ESUN <- c(1997, 1812, 1533, 1039, 230.8, 84.90) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
     ## O using DN - QCALMIN with METRIC 2010 formula.
@@ -259,7 +270,7 @@ calcTOAr <- function(image.DN, sat="auto",
 # incidence hor from TML?? 
 calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor, 
                    WeatherStation, surface.model){
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   path <- getwd()
@@ -283,21 +294,21 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
     tau_in <- list()
     tau_out <- list()
     for(i in 1:6){
-      tau_in[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(incidence.hor)))-
+      tau_in[[i]] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(incidence.hor)))-
                                     ((Cnb[3,i]*W+Cnb[4,i])/cos(incidence.hor)))+Cnb[5,i]
     }
     eta = 0 # eta it's the satellite nadir angle
     for(i in 1:6){
-      tau_out[i] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(eta)))-
+      tau_out[[i]] <- Cnb[1,i] * exp((Cnb[2,i]*P/(Kt*cos(eta)))-
                                      ((Cnb[3,i]*W+Cnb[4,i])/cos(eta)))+Cnb[5,i]
     }
     path_refl <- list()
     for(i in 1:6){
-      path_refl[i] <- Cnb[6,i] * (1 - tau_in[[i]])
+      path_refl[[i]] <- Cnb[6,i] * (1 - tau_in[[i]])
     }
     stack_SR <- list()
     for(i in 1:6){
-      stack_SR[i] <- (image.TOAr[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
+      stack_SR[[i]] <- (image.TOAr[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
     }
     image_SR <- do.call(c, stack_SR)
   }
@@ -309,31 +320,62 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
 }  
 
 
-#' mask clouds
+#' Mask clouds using a quality band
 #' @description
-#' This function mask clouds and other values using the cfmask
-#' @param path     folder where band files are stored
-#' @param image    L8 raw image
-#' @param cfmask   Raster layer with the cfmask
-#' @param keep     values in cfmask to preserve in the final output. 
-#'                 Use 0 for cfmask files, and 2720 for bqa files. For Landsat 7
-#'                 BQA images, the value should be 672. 
-#' @param buffer buffer width around excluded values, numeric > 0. Unit is meter
-#'              if x has a longitude/latitude CRS, or mapunits in other cases
+#' Masks clouds, cloud shadows and fill pixels of an image using its quality
+#' band. Use it after loading the image (e.g. with loadImageSR()) and before
+#' METRIC.EB(), so that cloudy pixels are not used as anchor pixels. All layers
+#' of the image are masked, including the surface temperature (Band_10).
+#' @param path     folder where the quality band is searched when cfmask is
+#' missing: a Collection 2 \code{*_QA_PIXEL.TIF} file or, for older products,
+#' a \code{*_cfmask.tif} or \code{*_BQA.TIF} file
+#' @param image    SpatRaster to mask, e.g. from loadImageSR() or loadImage()
+#' @param cfmask   SpatRaster with the quality band. If missing, it is read
+#' from path
+#' @param keep     For older quality bands only: values to keep (all other
+#' pixels are masked). Use 0 for cfmask files, 2720 for Landsat 8 Collection 1
+#' BQA files and 672 for Landsat 7 Collection 1 BQA files. If missing, a
+#' Collection 2 QA_PIXEL band is decoded by bits: pixels flagged as fill,
+#' dilated cloud, cirrus, cloud or cloud shadow (bits 0 to 4) are masked.
+#' @param buffer   distance (in map units, usually meters) around clouds and
+#' cloud shadows that is also masked. Use 0 for no buffer
+#' @return The image (SpatRaster) with the masked pixels set to NA.
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
-cfmask <-  function(path = getwd(), image, cfmask, keep = 0,
-                    buffer = 60){
+cfmask <-  function(path = getwd(), image, cfmask, keep, buffer = 60){
   if(missing(cfmask)){
-    file <- list.files(pattern="_cfmask.tif$")
-    if(length(file) != 1){file <- list.files(pattern="_bqa.tif$|_BQA.TIF$")}
+    file <- list.files(path = path, pattern = "_QA_PIXEL\\.(TIF|tif)$", full.names = TRUE)
+    if(length(file) == 0){
+      file <- list.files(path = path, pattern = "_cfmask\\.tif$|_(bqa|BQA)\\.(TIF|tif)$",
+                         full.names = TRUE)
+    }
+    if(length(file) != 1){
+      stop("Expected one quality band (*_QA_PIXEL.TIF, *_cfmask.tif or ",
+           "*_BQA.TIF) in ", path, ", found ", length(file))
+    }
     cfmask <- rast(file)
   }
   cfmask <- crop(cfmask, image)
-  values(cfmask)[!values(cfmask) %in% keep] <- NA
-  values(cfmask)[!is.na(values(cfmask))] <- 1
-  image <- mask(image, cfmask)
+  if(missing(keep)){
+    if(!any(grepl("QA_PIXEL", c(names(cfmask), sources(cfmask))))){
+      keep <- 0  # pre-collection cfmask files
+    }
+  }
+  if(missing(keep)){
+    # Collection 2 QA_PIXEL: bit 0 fill; bits 1 to 4 dilated cloud, cirrus,
+    # cloud and cloud shadow
+    fill <- (cfmask %% 2) == 1
+    cloudy <- ((cfmask %/% 2) %% 16) != 0
+  } else {
+    fill <- is.na(cfmask)
+    cloudy <- !(cfmask %in% keep)
+  }
+  if(buffer > 0){
+    cloudy <- terra::buffer(ifel(cloudy, 1, NA), width = buffer)
+  }
+  clear <- ifel(fill | cloudy, NA, 1)
+  image <- mask(image, clear)
   return(image)
 }
 

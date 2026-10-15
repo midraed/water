@@ -71,7 +71,7 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
   }
   setOutputFolder <- function(tmpdir) {
     if (!missing(tmpdir)) {
-      tmpdir <- trim(tmpdir)
+      tmpdir <- trimws(tmpdir)
       if (tmpdir != "") {
         lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
         if (lastchar != "/" & lastchar != "\\") {
@@ -83,7 +83,7 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
   }
   setSRTMrepo <- function(srtmDir) {
     if (!missing(srtmDir)) {
-      srtmDir <- trim(srtmDir)
+      srtmDir <- trimws(srtmDir)
       if (srtmDir != "") {
         lastchar = substr(srtmDir, nchar(srtmDir), nchar(srtmDir))
         if (lastchar != "/" & lastchar != "\\") {

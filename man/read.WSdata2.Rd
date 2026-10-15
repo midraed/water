@@ -16,7 +16,7 @@ read.WSdata2(
   time.format = "\%H:\%M:\%S",
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S",
   tz = "",
-  cf = c(1, 3.6, 1, 1),
+  cf = c(1, 1, 1),
   MTL
 )
 }
@@ -65,10 +65,10 @@ For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 temperature), cf should be: cf = c(1,0.2777778,1)
 }
 \seealso{
-Other Weather station related functions: 
-\code{\link{plot.waterWeatherStation}()},
-\code{\link{print.waterWeatherStation}()},
-\code{\link{read.WSdata}()}
+Other Weather station related functions:
+\code{\link[=plot.waterWeatherStation]{plot.waterWeatherStation()}},
+\code{\link[=print.waterWeatherStation]{print.waterWeatherStation()}},
+\code{\link[=read.WSdata]{read.WSdata()}}
 }
 \author{
 Guillermo Federico Olmedo

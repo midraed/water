@@ -70,11 +70,23 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
   stack1 <- list()
   for(i in 1:length(files)){
     stack1[[i]] <- rast(files[i])}
-  stack1$fun <- mean
+  stack1$fun <- "mean"
   if(length(files)>1){SRTMmosaic <- do.call(mosaic, stack1)}
   if(length(files)==1){SRTMmosaic <- stack1[[1]]}
-  destino <- rast(ext = ext(extent), crs = terra::crs(extent))
-  mosaicp <- project(SRTMmosaic, destino)
+  # Target grid: the image grid, or a 30 m grid in the CRS of a polygon
+  if(inherits(extent, "SpatRaster")){
+    destino <- rast(extent[[1]])
+  } else if(inherits(extent, c("sf", "sfc", "SpatVector"))){
+    extent <- terra::vect(extent)
+    if(terra::crs(extent) == ""){
+      stop("extent has no CRS; use createAoi(..., EPSG = ) or pass the image")
+    }
+    destino <- rast(ext(extent), crs = terra::crs(extent), resolution = 30)
+  } else {
+    stop("extent must be a SpatRaster (e.g. the Landsat image) or an sf / ",
+         "SpatVector polygon with a CRS")
+  }
+  mosaicp <- project(SRTMmosaic, destino, method = "bilinear")
   mosaicp <- saveLoadClean(imagestack = mosaicp, stack.names = "DEM", 
                            file = "DEM", overwrite=TRUE)
   return(mosaicp)
@@ -128,11 +140,10 @@ METRICtopo <- function(DEM){
 ### Change to look in metadata for keyword instead of using line #
 solarAngles <- function(surface.model, MTL, WeatherStation){
   path = getwd()
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-  MTL <- readLines(MTL, warn=FALSE)
+  MTL <- readLines(findMTL(if(!missing(MTL)) MTL, path = path), warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- (90 - as.numeric(regmatches(Elev.line, 
                                                regexec(text=Elev.line ,
@@ -204,7 +215,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 incSWradiation <- function(surface.model, solar.angles, WeatherStation){
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
@@ -403,7 +414,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi, 
                                method = "SC", WeatherStation, thermalband, MTL){
   path=getwd()
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   epsilon_NB <- rast(LAI)
@@ -518,7 +529,7 @@ outLWradiation <- function(LAI, Ts){
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/

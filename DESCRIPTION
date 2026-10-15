@@ -24,6 +24,11 @@ Depends:
     terra (>= 1.7-0),
     sf (>= 1.0-0)
 Imports:
+    methods,
+    grDevices,
+    graphics,
+    stats,
+    utils
 License: GPL (>= 2)
 URL: https://midraed.github.io/water/
 BugReports: https://github.com/midraed/water/issues/

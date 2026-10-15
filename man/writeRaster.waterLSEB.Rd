@@ -2,22 +2,24 @@
 % Please edit documentation in R/water_LSEBclass.R
 \name{writeRaster.waterLSEB}
 \alias{writeRaster.waterLSEB}
-\title{writeRaster method for waterLSEB S3 class}
-\usage{
-\method{writeRaster}{waterLSEB}(x, ...)
-}
+\alias{writeRaster,waterLSEB,character-method}
+\title{writeRaster method for waterLSEB objects}
 \arguments{
-\item{x}{waterLSEB object.}
+\item{x}{waterLSEB object, from METRIC.EB().}
 
-\item{...}{additional parameters to pass to writeRaster()}
+\item{filename}{output file name, e.g. "EB.tif"}
+
+\item{...}{additional arguments passed to terra::writeRaster(), e.g.
+overwrite}
 }
 \description{
-writeRaster method for waterLSEB S3 class
+Writes the energy balance layers (\code{x$EB}) of a
+METRIC.EB() result to a file.
 }
 \seealso{
-Other LSEB objects related functions: 
-\code{\link{plot.waterLSEB}()},
-\code{\link{print.waterLSEB}()}
+Other LSEB objects related functions:
+\code{\link[=plot.waterLSEB]{plot.waterLSEB()}},
+\code{\link[=print.waterLSEB]{print.waterLSEB()}}
 }
 \author{
 María Victoria Munafó

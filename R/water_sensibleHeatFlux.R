@@ -101,22 +101,15 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     WSloc <- WeatherStation$location
     WSloc <- sf::st_as_sf(WSloc, coords = c("long", "lat"), crs = 4326)
     WSloc <- sf::st_transform(WSloc, crs = terra::crs(Ts))
-    ## Longer but avoids to use rgeos
-    WScell <- terra::extract(Ts, terra::vect(WSloc), cells = TRUE)[1, "cell"]
-    WS.buffer <- rast(Ts, vals = NA)
-    values(WS.buffer)[WScell] <- 1
-
-
-
-    # BUG in raster package
-    # workaround https://gis.stackexchange.com/questions/264133/raster-buffer-error-with-package-updates/264154
-    WS.buffer <- buffer(WS.buffer, width = WSbuffer)
-    
-    
-    
+    # Cells within WSbuffer of the station, also when it lies outside the image
+    WS.buffer <- terra::distance(Ts, terra::vect(WSloc)) <= WSbuffer
+    if(!isTRUE(global(WS.buffer, "max", na.rm = TRUE)[1, 1] == 1)){
+      warning("No pixel is within WSbuffer (", WSbuffer, " m) of the weather ",
+              "station; searching anchors in the whole image")
+      WS.buffer <- rast(Ts, vals = 1)
+    }
   } else {
-    WS.buffer <- rast(Ts)
-    values(WS.buffer)<- 1
+    WS.buffer <- rast(Ts, vals = 1)
   }
   if(anchors.method=="random"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
@@ -137,8 +130,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
     if(cold.n < 1 | hot.n < 1){
-      stop(paste("Not enough pixels with the conditions for anchor pixels. I
-                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+      stop("Not enough pixels with the conditions for anchor pixels: found ",
+           cold.n, " cold and ", hot.n, " hot candidates. ", anchorHint(albedo))
     }
     # First cold sample
     try(cold <- sampleOne(which(cold.candidates)), silent=TRUE)
@@ -214,8 +207,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
     hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
     if(cold.n < 1 | hot.n < 1){
-      stop(paste("Not enough pixels with the conditions for anchor pixels. I
-                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+      stop("Not enough pixels with the conditions for anchor pixels: found ",
+           cold.n, " cold and ", hot.n, " hot candidates. ", anchorHint(albedo))
     }
     # Cold samples
     Ts.cold <- Ts
@@ -280,138 +273,68 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     minT <- quantile(Ts[LAI>=2.8&LAI<=6&albedo>=0.15&albedo<=0.25&Z.om>=0.03&
                           Z.om<=0.08], 0.05, na.rm=TRUE)
     if(minT+deltaTemp<288 | is.na(minT)){minT = 288 + deltaTemp}
-    maxT <- max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
-                     Z.om<=0.005], na.rm=TRUE)
-    if(is.na(maxT)){maxT <- quantile(Ts, 0.95, na.rm = T)}
+    maxT <- suppressWarnings(max(Ts[albedo>=0.13&albedo<=0.15&NDVI>=0.1&NDVI<=0.28&
+                     Z.om<=0.005], na.rm=TRUE))
+    if(!is.finite(maxT)){maxT <- stats::quantile(values(Ts), 0.95, na.rm = TRUE)}
     ### create data.frames with optimal values for anchors
     optValCold <- data.frame(LAI = c(3,6), albedo = c(0.18, 0.25),
                                 Z.om = c(0.03, 0.08))
     optValHot <- data.frame(albedo = c(0.13, 0.15), NDVI = c(0.1, 0.28),
                                Z.om = c(NA, 0.005), Ts = c(maxT-deltaTemp, NA))
-    ### Search for colds!
-    cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-      values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-      values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-      values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
-    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-    useBuffer <- TRUE
-    flex <- 0
-    optValColdBck <- optValCold
-    while(cold.n <= n){        ## relax cold criteria
-      useBuffer <- !useBuffer
-      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
-      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      useBuffer <- !useBuffer
-      flex <- flex + 0.01
-      print(paste0("relaxing criteria for cold pixels: ", flex, "%"))
-      optValCold[1,] <- optValColdBck[1,] * c((1-flex), 1, 1)
-      optValCold[2,] <- optValColdBck[2,] * c((1+flex), 1, 1)
-      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
-      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValColdBck[1,] * c(1, (1-flex), 1)
-      optValCold[2,] <- optValColdBck[2,] * c(1, (1+flex), 1)
-      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
-      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValColdBck[1,] * c(1, 1, (1-flex))
-      optValCold[2,] <- optValColdBck[2,] * c(1, 1, (1+flex))
-      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
-      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      optValCold[1,] <- optValColdBck[1,] * (1-flex)
-      optValCold[2,] <- optValColdBck[2,] * (1+flex)
-      cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
-        values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-        values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
-        values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-        values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer))
-      cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-      if(flex >= 1){stop("Automatic selection of cold anchors FAILED")}
+    NDVI.cold <- max(values(NDVI), na.rm=T)-0.15
+    coldCandidates <- function(opt, inBuffer){
+      values(LAI>=opt$LAI[1]) & values(LAI<=opt$LAI[2]) &
+        values(albedo>=opt$albedo[1]) & values(albedo<=opt$albedo[2]) &
+        values(NDVI>=NDVI.cold) &
+        values(Z.om>=opt$Z.om[1]) & values(Z.om<=opt$Z.om[2]) &
+        values(Ts<(minT+deltaTemp)) & inBuffer
     }
-    if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for cold pixels was:
-    LAI:", optValCold[1,1], "to", optValCold[2,1], "
-    albedo:", optValCold[1,2], "to", optValCold[2,2], "
-    Z.om:", optValCold[1,3], "to", optValCold[2,3], "
-    and buffer ==", useBuffer))}
-    flex.cold <- flex
-    ### Search for hots !
-    hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-      values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-      values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-    useBuffer <- TRUE
-    flex <- 0
-    optValHotBck <- optValHot
-    while(hot.n <= n){        ## relax hot criteria
-      useBuffer <- !useBuffer
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      useBuffer <- !useBuffer
-      flex <- flex + 0.01
-      print(paste0("relaxing criteria for hot pixels: ", flex, "%"))
-      optValHot[1,] <- optValHotBck[1,] * c((1-flex), 1, 1, 1)
-      optValHot[2,] <- optValHotBck[2,] * c((1+flex), 1, 1, 1)
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHotBck[1,] * c(1, (1-flex), 1, 1)
-      optValHot[2,] <- optValHotBck[2,] * c(1, (1+flex), 1, 1)
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHotBck[1,] * c(1, 1, (1-flex), 1)
-      optValHot[2,] <- optValHotBck[2,] * c(1, 1, (1+flex), 1)
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHotBck[1,] * c(1, 1, 1, (1-flex))
-      optValHot[2,] <- optValHotBck[2,] * c(1, 1, 1, (1+flex))
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      optValHot[1,] <- optValHotBck[1,] * (1-flex)
-      optValHot[2,] <- optValHotBck[2,] * (1+flex)
-      hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
-        values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-        values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1)
-      hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-      if(flex >= 1){stop("Automatic selection of hot anchors FAILED")}
+    hotCandidates <- function(opt, inBuffer){
+      values(albedo>=opt$albedo[1]) & values(albedo<=opt$albedo[2]) &
+        values(NDVI>=opt$NDVI[1]) & values(NDVI<=opt$NDVI[2]) &
+        values(Z.om<=opt$Z.om[2]) & values(Ts>(opt$Ts[1])) & inBuffer
     }
-    if(flex != 0 | useBuffer != TRUE){warning(paste("Criteria used for hot pixels was:
-    albedo:", optValHot[1,1], "to", optValHot[2,1], "
-    NDVI:", optValHot[1,2], "to", optValHot[2,2], "
-    max Z.om:", optValHot[2,3], "
-    min Ts:", optValHot[1,4], "
-    and buffer ==", useBuffer))}
-    flex.hot <- flex
-    ### Test # anchors
-    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
-    if(cold.n < 1 | hot.n < 1){
-      stop(paste("Not enough pixels with the conditions for anchor pixels. I
-                 found", cold.n, "cold pixels and", hot.n, "hot pixels."))
+    ### Relax the criteria in 1% steps (up to 100%) until more than n candidates
+    ### are found: first near the weather station, then in the whole image
+    relaxCriteria <- function(candidates, opt, type){
+      for(useBuffer in c(TRUE, FALSE)){
+        inBuffer <- if(useBuffer) values(WS.buffer == 1) else TRUE
+        optRelaxed <- opt
+        flex <- 0
+        found <- candidates(optRelaxed, inBuffer)
+        while(sum(found, na.rm = TRUE) <= n && flex < 1){
+          flex <- flex + 0.01
+          print(paste0("relaxing criteria for ", type, " pixels: ", round(flex*100), "%"))
+          optRelaxed[1,] <- opt[1,] * (1-flex)
+          optRelaxed[2,] <- opt[2,] * (1+flex)
+          found <- candidates(optRelaxed, inBuffer)
+        }
+        if(sum(found, na.rm = TRUE) > n){
+          if(!useBuffer){
+            warning("Not enough ", type, " anchor candidates within WSbuffer (",
+                    WSbuffer, " m) of the weather station; searched the whole image")
+          }
+          if(flex != 0 || !useBuffer){
+            warning(paste0("Criteria used for ", type, " pixels: ",
+                           paste(names(optRelaxed), sapply(optRelaxed, function(x)
+                             paste(round(x, 4), collapse = " to ")), collapse = "; "),
+                           if(!useBuffer) " (whole image)"))
+          }
+          return(list(candidates = found, flex = flex, opt = optRelaxed,
+                      inBuffer = inBuffer))
+        }
+      }
+      stop("Automatic selection of ", type, " anchors FAILED even after relaxing ",
+           "the criteria by 100% in the whole image. ", anchorHint(albedo))
     }
+    coldSearch <- relaxCriteria(coldCandidates, optValCold, "cold")
+    cold.candidates <- coldSearch$candidates
+    flex.cold <- coldSearch$flex
+    optValCold <- coldSearch$opt  # criteria used, also for the next anchors
+    hotSearch <- relaxCriteria(hotCandidates, optValHot, "hot")
+    hot.candidates <- hotSearch$candidates
+    flex.hot <- hotSearch$flex
+    optValHot <- hotSearch$opt
     # Cold samples
     Ts.cold <- Ts
     values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
@@ -431,7 +354,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
           values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
           values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
           values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
-          values(Ts<(minT+deltaTemp)) & values(WS.buffer == as.numeric(useBuffer)) &
+          values(Ts<(minT+deltaTemp)) & coldSearch$inBuffer &
           values(distbuffer==1)
 
         values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
@@ -460,7 +383,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         newAnchor <- NA
         hot.candidates <- values(albedo>=optValHot$albedo[1]) & values(albedo<=optValHot$albedo[2]) &
           values(NDVI>=optValHot$NDVI[1]) & values(NDVI<=optValHot$NDVI[2]) &
-          values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & values(WS.buffer == 1) &
+          values(Z.om<=optValHot$Z.om[2]) & values(Ts>(optValHot$Ts[1])) & hotSearch$inBuffer &
           values(distbuffer==1)
         values(Ts.hot)[!(hot.candidates %in% TRUE)] <- NA
         if(length(which(hot.candidates))<2){
@@ -494,7 +417,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     plot(LAI, main="LAI and hot and cold pixels")
     graphics::points(terra::xyFromCell(LAI, sanitizeCellIndex(hot)), col="red", pch=3)
     graphics::points(terra::xyFromCell(LAI, sanitizeCellIndex(cold)), col="blue", pch=4)
-    graphics::points(WSloc, pch=13)
+    if(!missing(WeatherStation)){graphics::points(WSloc, pch=13)}
   }
   hot.and.cold <- data.frame(pixel=integer(),  X=integer(),
                              Y=integer(), Ts=double(), LAI=double(), NDVI=double(),
@@ -582,7 +505,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     mean(cell_vals(r, cells), na.rm = na.rm)
   }
   
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   
@@ -760,9 +683,10 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     
     npairs <- min(c(length(cold), length(hot)))
     for(pair in 1:npairs){
-      
+
       converge <- FALSE
       last.loop <- FALSE
+      i <- 1  # maxit applies to each pair
       
       while(!converge){
         
@@ -846,8 +770,9 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         }
         
         if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-        if(i == maxit){
-          warning(paste0("No convergence after ", i, " iterations: try different anchor values?"))
+        if(i >= maxit){
+          warning(paste0("No convergence after ", i, " iterations for anchor pair ",
+                         pair, ": try different anchor values?"))
           converge <- TRUE
         }
       }

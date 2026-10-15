@@ -27,6 +27,10 @@
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
 #' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 #' supplied it is used as Ts and surfaceTemperature() is not called.
+#' @param L                L value for SAVI calculation. See LAI()
+#' @param LST.method       Method for land surface temperature estimation: "SC"
+#' for single channel or "SW" for split window (only for L8 and L9). Ignored
+#' if surf.temp is supplied. See surfaceTemperature()
 #' @family METRIC model functions
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references
@@ -34,14 +38,17 @@
 #' @export
 METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
-                      plain = TRUE, DEM, aoi, image.SR, surf.temp){
+                      plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
+                      LST.method = "SC"){
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
                            thermalband = thermalband, surf.temp = surf.temp,
-                           alb.coeff = alb.coeff, LAI.method = LAI.method,
-                           plain = plain, DEM = DEM)
+                           alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
+                           LST.method = LST.method, plain = plain, DEM = DEM,
+                           aoi = aoi)
   Rn <- metricRn(surface, WeatherStation)
   plot(Rn, main="METRIC Net Radiation")
   return(Rn)
@@ -64,14 +71,16 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
-                     surf.temp){
+                     surf.temp, L = 0.1, LST.method = "SC"){
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
                            thermalband = thermalband, surf.temp = surf.temp,
-                           alb.coeff = alb.coeff, LAI.method = LAI.method,
-                           plain = plain, DEM = DEM)
+                           alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
+                           LST.method = LST.method, plain = plain, DEM = DEM,
+                           aoi = aoi)
   if(missing(Rn)){Rn <- metricRn(surface, WeatherStation)}
   G <- soilHeatFlux(image = surface$image.SR, Ts = surface$Ts,
                     albedo = surface$albedo, Rn = Rn, LAI = surface$LAI,
@@ -80,12 +89,12 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   return(G)
 }
 
-# Surface inputs shared by METRIC.Rn() and METRIC.G(). Same priority as
-# METRIC.EB(): supplied image.SR > SR derived from image.DN (L7, MODIS), and
-# supplied surf.temp > surfaceTemperature()
+# Surface inputs shared by METRIC.EB(), METRIC.Rn() and METRIC.G(): supplied
+# image.SR > SR derived from image.DN (L7, MODIS), and supplied surf.temp >
+# surfaceTemperature()
 metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
                           thermalband, surf.temp, alb.coeff, LAI.method,
-                          plain, DEM){
+                          L = 0.1, LST.method = "SC", plain, DEM, aoi){
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
          "MODIS; for L8/L9 provide it (e.g., loadImageSR()).")
@@ -93,6 +102,13 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
   if(missing(surf.temp) && missing(image.DN)){
     stop("Provide surf.temp (e.g., image.SR$Band_10 from loadImageSR()) or ",
          "image.DN with a thermal band.")
+  }
+  if(!missing(aoi)){
+    if(!missing(image.DN)){image.DN <- crop(image.DN, aoi)}
+    if(!missing(image.SR)){image.SR <- crop(image.SR, aoi)}
+    if(!missing(surf.temp)){surf.temp <- crop(surf.temp, aoi)}
+    if(!missing(thermalband)){thermalband <- crop(thermalband, aoi)}
+    if(!plain){DEM <- crop(DEM, aoi)}
   }
   if(plain==TRUE){
     DEM <- rast(if(missing(image.SR)) image.DN[[1]] else image.SR[[1]])
@@ -117,19 +133,30 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
   }
   # Without DN (or for MODIS) LAI uses SR instead of TOAr
   if(missing(image.DN) || sat=="MODIS"){image.TOAr <- image.SR}
-  albedo <- albedo(image.SR = image.SR, coeff = alb.coeff, sat = sat)
-  LAI <- LAI(method = LAI.method, image = image.TOAr, L = 0.1)
+  # aoi = extent of image.SR, so albedo() does not crop to a global aoi object
+  albedo <- albedo(image.SR = image.SR, aoi = ext(image.SR), coeff = alb.coeff,
+                   sat = sat)
+  if(LAI.method == "vineyard"){
+    if(missing(image.DN)){stop("LAI.method = 'vineyard' needs image.DN.")}
+    LAI <- LAI(method = LAI.method, L = L,
+               image = calcRadiance(image.DN, sat = sat, MTL = MTL))
+  } else if(LAI.method == "turner"){
+    LAI <- LAI(method = LAI.method, image = image.SR, L = L)
+  } else {
+    LAI <- LAI(method = LAI.method, image = image.TOAr, L = L)
+  }
   if(!missing(surf.temp)){
     Ts <- surf.temp
   } else if(sat %in% c("L7", "L8", "L9")){
     Ts <- surfaceTemperature(LAI = LAI, sat = sat, image.DN = image.DN,
-                             thermalband = thermalband, MTL = MTL,
-                             WeatherStation = WeatherStation)
+                             method = LST.method, thermalband = thermalband,
+                             MTL = MTL, WeatherStation = WeatherStation)
   } else {
     Ts <- image.DN$LST  # MODIS
   }
-  list(surface.model = surface.model, solar.angles = solar.angles,
-       image.SR = image.SR, albedo = albedo, LAI = LAI, Ts = Ts)
+  list(DEM = DEM, surface.model = surface.model, solar.angles = solar.angles,
+       image.TOAr = image.TOAr, image.SR = image.SR, albedo = albedo,
+       LAI = LAI, Ts = Ts)
 }
 
 # Net radiation from the output of metricSurface()
@@ -269,58 +296,21 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
   }
 
-  #pb <- txtProgressBar(min = 0, max = 100, style = 3)
-  if(plain==TRUE){
-    DEM <- rast(if(missing(image.SR)) image.DN[[1]] else image.SR[[1]])
-    values(DEM) <- WeatherStation$location$elev
-  }
-  surface.model <-METRICtopo(DEM)
-  #setTxtProgressBar(pb, 3)
-  if(missing(MTL)){MTL <- list.files(path = path, pattern = "MTL.txt", full.names = T)}
-  solar.angles.r <- solarAngles(surface.model = surface.model, 
-                                WeatherStation = WeatherStation, MTL = MTL)
-  Rs.inc <- incSWradiation(surface.model = surface.model, 
-                           solar.angles = solar.angles.r, 
-                           WeatherStation = WeatherStation)
-  if(!missing(image.DN) && sat %in% c("L7", "L8", "L9")){
-    image.TOAr <- calcTOAr(image.DN = image.DN, sat=sat, MTL = MTL,
-                           incidence.rel = solar.angles.r$incidence.rel)
-  }
-  # Priority: supplied image.SR > SR derived from image.DN
-  if(missing(image.SR)){
-    if(sat=="L7"){
-      image.SR <- calcSR(image.TOAr=image.TOAr, sat = sat,
-                         surface.model=surface.model,
-                         incidence.hor = solar.angles.r$incidence.hor,
-                         WeatherStation=WeatherStation)
-    } else {
-      image.SR <- image.DN  # MODIS; other sats stopped at the top
-    }
-  }
-  # Without DN (or for MODIS) LAI and anchors use SR instead of TOAr
-  if(missing(image.DN) || sat=="MODIS"){image.TOAr <- image.SR}
-  albedo <- albedo(image.SR = image.SR,  coeff=alb.coeff, sat=sat)
-  #setTxtProgressBar(pb, 6)
-  if(LAI.method == "vineyard"){
-    if(missing(image.DN)){stop("LAI.method = 'vineyard' needs image.DN.")}
-    image.rad <- calcRadiance(image.DN, sat = sat, MTL = MTL)
-    LAI <- LAI(method = LAI.method, image = image.rad, L=L)
-    }
-  if(LAI.method == "turner"){LAI <- LAI(method = LAI.method, image = image.SR, L=L)}
-  if (LAI.method != "vineyard" & LAI.method != "turner"){LAI <- LAI(method = LAI.method, image = image.TOAr, L=L)}
-  if(!missing(surf.temp)){
-    Ts <- surf.temp
-  } else if(sat %in% c("L7", "L8", "L9")){
-    Ts <- surfaceTemperature(LAI=LAI, sat = sat, image.DN=image.DN,
-                             WeatherStation = WeatherStation,
-                             method = LST.method,
-                             thermalband = thermalband, MTL = MTL)
-  } else if(sat=="MODIS"){Ts <- image.DN$LST}
-  #setTxtProgressBar(pb, 35)
-  Rl.out <- outLWradiation(LAI = LAI, Ts=Ts)
-  Rl.inc <- incLWradiation(WeatherStation,DEM = surface.model$DEM, 
-                           solar.angles = solar.angles.r, Ts= Ts)
-  Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
+  surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
+                           WeatherStation = WeatherStation, MTL = MTL, sat = sat,
+                           thermalband = thermalband, surf.temp = surf.temp,
+                           alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
+                           LST.method = LST.method, plain = plain, DEM = DEM,
+                           aoi = aoi)
+  DEM <- surface$DEM
+  surface.model <- surface$surface.model
+  image.TOAr <- surface$image.TOAr
+  image.SR <- surface$image.SR
+  albedo <- surface$albedo
+  LAI <- surface$LAI
+  Ts <- surface$Ts
+  Rn <- metricRn(surface, WeatherStation)
   # Rn[Rn < 0]  <-  0 # see H
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
@@ -332,7 +322,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                     surface.model = surface.model)
   }
   if(Zom.method == "custom"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
+    NDVI <- (image.TOAr$NIR - image.TOAr$R) / (image.TOAr$NIR + image.TOAr$R)
+    Z.om <- momentumRoughnessLength(LAI=LAI, NDVI = NDVI, albedo = albedo,
+                                    mountainous = !plain,
                                     method = Zom.method, a = extraParameters["a"],
                                     b = extraParameters["b"],
                                     surface.model = surface.model)
@@ -362,7 +354,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     print(anchors)
   }
   #setTxtProgressBar(pb, 45)
-  if(anchors.method == "flexible"){
+  if(anchors.method == "flexible" && !is.null(anchors$flex)){
      flex.cold <- anchors$flex[anchors$type == "cold"][1]
      NDVIcold <- mean(as.numeric(anchors$NDVI[anchors$type == "cold"]))
      if(flex.cold > 0 & NDVIcold < 0.8){

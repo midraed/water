@@ -36,7 +36,7 @@
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
                      ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
   ET <- match.arg(ET, c("ETr", "ETo"))
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     if(!is.null(WeatherStation$at.sat)){
       WeatherStation <- getDataWS(WeatherStation)
       ET.instantaneous = TRUE
@@ -122,7 +122,7 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
 #' @importFrom grDevices colorRampPalette
 #' @export
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   LE = Rn - G - H
@@ -172,15 +172,15 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
                     long.z=WeatherStation$long, date = "auto", MTL){
-  if(class(WeatherStation)== "waterWeatherStation"){
+  if(inherits(WeatherStation, "waterWeatherStation")){
     if(missing(height)){height <- WeatherStation$location$height}
     if(missing(lat)){lat <- WeatherStation$location$lat}
     if(missing(long)){long <- WeatherStation$location$long}
     if(missing(elev)){elev <- WeatherStation$location$elev}
     
     ## Join with satellite data
-    if(missing(MTL)){MTL <- list.files(pattern = "MTL.txt", full.names = T)}
-    if(length(MTL)!=0){  ## TODO: Check if MTL date is inside WS data
+    MTL <- findMTL(if(!missing(MTL)) MTL, required = FALSE)
+    if(!is.null(MTL)){  ## TODO: Check if MTL date is inside WS data
       MTL <- readLines(MTL, warn=FALSE)
       date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
       sat.date <-regmatches(date.line,regexec(text=date.line,
