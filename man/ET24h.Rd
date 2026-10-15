@@ -7,28 +7,42 @@
 ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 }
 \arguments{
-\item{Rn}{Net radiation. See netRadiation()}
+\item{Rn}{Net radiation (W/m2). See netRadiation()}
 
-\item{G}{Soil Heat Flux. See soilHeatFlux()}
+\item{G}{Soil Heat Flux (W/m2). See soilHeatFlux()}
 
-\item{H}{Sensible Heat Flux. See calcH()}
+\item{H}{Sensible Heat Flux (W/m2). See calcH()}
 
-\item{Ts}{Land surface temperature. See surfaceTemperature()}
+\item{Ts}{Land surface temperature (K). See surfaceTemperature()}
 
-\item{WeatherStation}{WeatherStation data at the flyby from the satellite. 
-Can be a waterWeatherStation object calculate using read.WSdata and MTL file}
+\item{WeatherStation}{WeatherStation data at the satellite overpass.
+Can be a waterWeatherStation object calculated using read.WSdata and MTL file}
 
-\item{ETr.daily}{hourly ETr for every hour of the day. See dailyET()}
+\item{ETr.daily}{daily reference ET (mm/day) for the day of the image,
+e.g. from dailyET() (whose default is the alfalfa reference, ETr)}
 
 \item{C.rad}{correction term used in sloping terrain to correct for 
 variation in 24 h versus instantaneous energy availability. See Allen (2007)}
 }
+\value{
+SpatRaster with daily (24 h) actual evapotranspiration (mm/day);
+negative values are set to 0. The result is also plotted.
+}
 \description{
-Calculates daily ET from a surface energy balance and Weather Station
+Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
+(from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see
+hourlyET()) at the satellite overpass gives the reference ET fraction, which
+is multiplied by the daily reference ET.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
+\seealso{
+Other ET functions:
+\code{\link[=dailyET]{dailyET()}},
+\code{\link[=hourlyET]{hourlyET()}}
+}
 \author{
 Guillermo Federico Olmedo
 }
+\concept{ET functions}

@@ -9,35 +9,37 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette presents the procedure to estimate the Land Surface Energy Balance (LSEB) using lansat imagery and The
-**water** package. There are two version of this vignette: simple and advanced version. In the first one the procedure is simpler but most of the parameters are selected automatically by the package. In the second aproach, the procedure is longer because the user has more control on all input parameters and coefficent. Both vignettes follow the METRIC model methodology (Allen et la., 2007) in order to estimate the LSEB using landasat 7 and 8 satellite images. 
+This vignette presents the procedure to estimate the Land Surface Energy Balance (LSEB) using Landsat imagery and the
+**water** package. There are two versions of this vignette: a simple and an advanced one. In the first one the procedure is simpler and most of the parameters are selected automatically by the package. In the second approach the procedure is longer, because the user has more control over all input parameters and coefficients. Both vignettes follow the METRIC model methodology (Allen et al., 2007) to estimate the LSEB from Landsat images. The examples use Landsat 7 data; for Landsat 8 and 9 see the vignette "Landsat 8 and 9".
 
-Also, on the simple procedure we are going to assume flat terrain, but in the advanced procedure we are going to use a digital elevation model (DEM). However, is possible to use a digital elevation model in the simple procedure, changing the parameter `flat` to `FALSE` and providing a DEM.
+Also, in the simple procedure we assume flat terrain, while in the advanced procedure we use a digital elevation model (DEM). However, it is possible to use a DEM in the simple procedure by setting the argument `plain` to `FALSE` and providing a `DEM`.
 
 ## Introduction
 
-One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al., (2007) based on the well-known SEBAL model (Bastiaanssen, 1998). It has been widely applied in many countries arround the world to estimate crops evapotranspiration (ET) at field scales and over large areas using satellite images. The model it has been apply in different vegetation and crops types such us, wheat, corn, soybean and alfalfa with good results (3 - 20% of error) and also in recent years over sparce woody canopies such us vineyards, and olive orchards, in both plain and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
+One of the most cited models to estimate land surface evapotranspiration from satellite-based energy balance is the *Mapping EvapoTranspiration at high Resolution with Internalized Calibration* (**METRIC**). This model was developed by Allen et al. (2007) based on the well-known SEBAL model (Bastiaanssen et al., 1998). It has been widely applied in many countries around the world to estimate crop evapotranspiration (ET) at field scale and over large areas using satellite images. The model has been applied to different vegetation and crop types, such as wheat, corn, soybean and alfalfa, with good results (3-20% error), and in recent years also over sparse woody canopies such as vineyards and olive orchards, in both flat and mountainous terrain. Thus, ET is estimated as a residual of the surface energy equation:
 \begin{equation}
 \label{eq:EB}
 LE = R_n - G - H
 \end{equation}
-where $LE$ is latent energy consumed by ET ($W \cdot m^{-2}$); $Rn$ is net radiation ($W \cdot m^{-2}$); $G$ is sensible heat flux conducted into the ground ($W \cdot m^{-2}$); and $H$ = sensible heat flux convected to the air ($W \cdot m^{-2}$).
+where $LE$ is the latent energy consumed by ET; $R_n$ is the net radiation; $G$ is the soil heat flux (sensible heat conducted into the ground); and $H$ is the sensible heat flux convected to the air (all in $W \cdot m^{-2}$).
 
-We estimate $Rn$, $G$ and $H$ for each pixel into a *Landsat satellite scene*, supported by one weather station. Then we estimate $LE$ fluxes using previous equation, and after that the instantaneous evapotranspiration values as:
+We estimate $R_n$, $G$ and $H$ for each pixel of a *Landsat scene*, supported by one weather station. Then we estimate $LE$ with the previous equation and, after that, the instantaneous evapotranspiration as:
 
 \begin{equation}
 ET_{inst} = 3600 \cdot \frac{LE}{\lambda \rho_w}
 \end{equation}
 
-where $ET_{inst}$ is the instantaneous ET at the satellite flyby ($mm \cdot h^{-1}$); 3600 is the convert factor from seconds to hours; $\rho_w$ is density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the water latent heat of vaporization ($J\cdot kg^{-1}$).
+where $ET_{inst}$ is the instantaneous ET at the satellite overpass ($mm \cdot h^{-1}$); 3600 is the conversion factor from seconds to hours; $\rho_w$ is the density of water = 1000 $kg\cdot m^{-3}$; and $\lambda$ is the latent heat of vaporization of water ($J\cdot kg^{-1}$).
 
-Finally the daily ET is computed pixel by pixel (30 x 30 m) as:
+Finally, the daily ET is computed pixel by pixel (30 x 30 m) as:
 \begin{equation}
 ET_{24} = \frac{ET_{inst}}{ET_r} ET_{r\_24}
 \label{eq:et24}
 \end{equation}
 
-To begin this procedure, first load **water** package: 
+where $ET_r$ is the hourly reference ET at the time of the satellite overpass and $ET_{r\_24}$ is the daily reference ET.
+
+To begin, load the **water** package:
 
 ```{r, message=FALSE}
 library(water)
@@ -46,19 +48,19 @@ library(water)
 
 ## Base data preparation
 
-To calculate METRIC crops Evapotranspiration using **water** package, and the simple procedure we're going to use three sources:
+To estimate crop evapotranspiration with METRIC, the **water** package and the simple procedure, we use three inputs:
 
-- A raw Landsat 7-8 satellite image (original .TIF data from glovis USGS).
-- A Weather Station data (.CSV file).
-- A polygon with our Area-of-interest (AOI) Spatial-Polygon object (if we won`t estimate corp ET for the entire landsat scene).
+- A raw (Level-1) Landsat 7, 8 or 9 image (original .TIF files from USGS EarthExplorer or GloVis).
+- Weather station data (a .csv file).
+- A polygon (an sf object) with our area of interest (AOI), if we do not want to estimate crop ET for the entire Landsat scene.
 
-First, we create the AOI as a polygon using bottomright and topleft points:
+First, we create the AOI as a polygon from its top-left and bottom-right corners:
 ```{r}
 aoi <- createAoi(topleft = c(272955, 6085705), 
                  bottomright = c( 288195, 6073195), EPSG = 32719)
 ```
 
-Then, we load the weather station data. For that we are going to use the function called `read.WSdata`. This function converts our .csv file into a `waterWeatherStation` object. Then, if we provide a Landsat metadata file (.MTL file) we will be able to calculate the time-specific weather conditions at the time of satellite overpass.
+Then, we load the weather station data with `read.WSdata()`, which converts our .csv file into a `waterWeatherStation` object. If we provide a Landsat metadata (MTL) file, it also computes the weather conditions at the time of the satellite overpass. Always set `tz`, the time zone of the weather station clock, because the overpass time in the MTL file is UTC.
 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -66,11 +68,11 @@ MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
 WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
                               lat=-35.42222, long= -71.38639, elev=201, height= 2.2,
                               columns=c("date" = 1, "time" = 2, "radiation" = 3,
-                              "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
-                              MTL = MTLfile)
+                              "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8),
+                              MTL = MTLfile, tz = "America/Santiago")
 ```
 
-We can visualize our weather station data as: 
+We can visualize our weather station data with:
 ```{r, fig.width = 5}
 print(WeatherStation)
 
@@ -78,10 +80,10 @@ plot(WeatherStation, hourly=TRUE)
 ```
 
 
-After that, we need to load the Landast satellite image. Usually, using `water` we can use the 
-function called `loadImage` to load a Landsat image from `.TIF files` were downloaded directly
-from [Earth Explorer](https://earthexplorer.usgs.gov/). In this vignette we are
-going to use some Landsat 7 as example data which, by the way comes with **water** package as a demo.
+After that, we load the Landsat image. Usually we use `loadImage()` to load a
+Landsat image from the `.TIF` files downloaded from
+[EarthExplorer](https://earthexplorer.usgs.gov/). In this vignette we use the
+Landsat 7 example data included in **water**, stored as a packed terra object, so we unpack it with `rast()`:
 ```{r, fig.width = 5}
 image.DN <- rast(L7_Talca)
 plot(image.DN)
@@ -90,15 +92,15 @@ plot(image.DN)
 
 ## Surface Energy Balance estimation
 
-We are going to use the function called `METRIC.EB` to estimate the land surface energy balance. This function has many parameters to choose from the different METRIC model equations. e.g., you can change:
+We use the function `METRIC.EB()` to estimate the land surface energy balance. This function has many parameters to choose among the different METRIC model equations. For example, you can change:
 
 - coefficients used to estimate broadband albedo.
 - Model to estimate Leaf Area Index (LAI) from satellite data.
-- Model to estimate momentum roughness lenght (Zom)
-- Automatic method to select anchors pixels
-- ETr coefficient and momentum roughness lenght for the weather station
+- Model to estimate momentum roughness length (Zom)
+- Automatic method to select anchor pixels
+- ETr coefficient and momentum roughness length for the weather station
 
-When we run `METRIC.EB`, the energy balance and the surface temperature (Ts) used are assigned to `Energy.Balance` object. Also the function prints the position and some other data from the anchors pixels, and finally plots the values of the aerodinamic resistance during the iterative process. Here is a parameter `verbose` to control how much information we want to see in the output.
+When we run `METRIC.EB()`, the energy balance and the surface temperature (Ts) are stored in the `Energy.Balance` object (class `waterLSEB`). The function also prints the position and other data of the anchor pixels and plots the aerodynamic resistance during the iterative process. The argument `verbose` controls how much information is printed.
 
 ```{r, fig.width = 5, warning=FALSE}
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
@@ -115,7 +117,7 @@ plot(Energy.Balance$EB)
 
 ## Daily Crop Evapotranspiration (ET_24) estimation
 
-To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) for our weather station, so we can calculate the daily ETr with:
+To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) at the weather station, which we calculate with:
 
 ```{r}
 ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
@@ -132,6 +134,6 @@ ET.24 <- ET24h(Rn=Energy.Balance$EB$NetRadiation, G=Energy.Balance$EB$SoilHeat,
 
 ## References
 
-Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC)-Model. Journal of Irrigation and Drainage Engineering, 133, 380.
+Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC)-Model. Journal of Irrigation and Drainage Engineering, 133(4), 380-394. https://doi.org/10.1061/(ASCE)0733-9437(2007)133:4(380)
 
-Bastiaanssen, W. G. M., Menenti, M., Feddes, R. a., & Holtslag, A. a. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. https://doi.org/10.1016/S0022-1694(98)00253-4
+Bastiaanssen, W. G. M., Menenti, M., Feddes, R. A., & Holtslag, A. A. M. (1998). A remote sensing surface energy balance algorithm for land (SEBAL). 1. Formulation. Journal of Hydrology, 212-213, 198–212. https://doi.org/10.1016/S0022-1694(98)00253-4

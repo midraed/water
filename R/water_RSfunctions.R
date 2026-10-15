@@ -1,13 +1,26 @@
-#' Load Landsat data from folder
+#' Load Landsat data from a folder
 #' @description
-#' This function loads Landsat bands from a specific folder. 
+#' Loads Landsat 7, 8 or 9 Level-1 bands (digital numbers), or MODIS bands,
+#' from a folder. Landsat file names can follow the Collection 1/2 naming
+#' (e.g. \code{LC08_L1TP_232083_20160209_20200907_02_T1_B2.TIF}, any tier) or
+#' the pre-Collection naming (e.g. \code{LC82320832016040LGN00_band2.tif});
+#' Level-2 surface reflectance files are skipped (use loadImageSR()). If the
+#' folder holds more than one image, the first one is used, with a warning.
 #' @param path  folder where band files are stored
-#' @param sat   "L7" for Landsat 7, "L8" for Landsat 8, "MODIS" for MODIS or 
-#' "auto" to guess from filenames
-#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") == 
-#' TRUE will look for any object called aoi on .GlobalEnv
+#' @param sat   "L7" for Landsat 7, "L8" for Landsat 8, "L9" for Landsat 9,
+#' "MODIS" for MODIS or "auto" to detect the Landsat satellite from the
+#' SPACECRAFT_ID of an MTL file in path or, failing that, from the Landsat file
+#' names
+#' @param aoi   area of interest (e.g. from createAoi()) to crop the image. If
+#' missing and waterOptions("autoAoi") is TRUE, an object called aoi in
+#' .GlobalEnv is used if it exists
+#' @return SpatRaster in digital numbers. Landsat 8/9: layers B, G, R, NIR,
+#' SWIR1, SWIR2, Thermal1 and Thermal2 (bands 2 to 7, 10 and 11). Landsat 7: B,
+#' G, R, NIR, SWIR1, SWIR2 and Thermal1 (bands 1 to 5, 7 and 6 low gain).
+#' MODIS: R, NIR, B, G, SWIR1, SWIR2, SWIR3 (reflectance), LST (K) and Time
+#' (hours).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family remote sensing support functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -90,20 +103,26 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 
 
 
-#' Load Landsat 8 surface reflectance data from folder
+#' Load Landsat 8/9 surface reflectance (and surface temperature) from a folder
 #' @description
-#' This function loads Landsat bands from a specific folder. Reads Collection 2
-#' Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled as
-#' DN * 0.0000275 - 0.2, fill value 0 set to NA) or old ESPA files
-#' (\code{*_sr_band2.tif} to \code{*_sr_band7.tif}, scaled as DN / 10000).
-#' All six bands (2 to 7) are required, as other functions use them by
-#' position.
-#' For Landsat 8/9 Collection 2, if \code{*_ST_B10.TIF} is present it is added
-#' as the last layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value
-#' 0 set to NA). It can be passed to METRIC.EB() as surf.temp.
+#' Loads Landsat 8 or 9 surface reflectance bands 2 to 7 from a folder. Reads
+#' Collection 2 Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled
+#' as DN * 0.0000275 - 0.2, fill value 0 set to NA) or legacy pre-Collection
+#' files produced by the now retired USGS ESPA system (\code{*_sr_band2.tif} to
+#' \code{*_sr_band7.tif}, scaled as DN / 10000). All six bands are required, as
+#' other functions use them by position.
+#' For Collection 2, if \code{*_ST_B10.TIF} is present it is added as the last
+#' layer, "Band_10", in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
+#' It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
+#' Landsat 7 Level-2 products are not supported (different band numbers).
 #' @param path  folder where band files are stored
-#' @param aoi   area of interest to crop images, if waterOptions("autoAoi") ==
-#' TRUE will look for any object called aoi on .GlobalEnv
+#' @param aoi   area of interest (e.g. from createAoi()) to crop the image. If
+#' missing and waterOptions("autoAoi") is TRUE, an object called aoi in
+#' .GlobalEnv is used if it exists
+#' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
+#' NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). For Collection 2 files, if
+#' \code{*_ST_B10.TIF} is present, a seventh layer Band_10 with surface
+#' temperature (K) is added.
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
@@ -142,18 +161,29 @@ loadImageSR <-  function(path = getwd(),  aoi){
   return(image_SR)}  
 
 
-#' Calculates radiance
+#' Calculates at-sensor radiance
 #' @description
-#' This function calculates radiance
-#' @param image.DN      raw image in digital numbers
-#' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param MTL           Landsat Metadata File
+#' Converts digital numbers to at-sensor spectral radiance using the
+#' RADIANCE_MULT_BAND_x and RADIANCE_ADD_BAND_x values of the MTL file.
+#' @param image.DN      raw image in digital numbers, e.g. from loadImage().
+#' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, Thermal2)
+#' when present
+#' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
+#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
+#' working directory)
+#' @param MTL           path to the Landsat metadata (MTL) file. If missing,
+#' the only *MTL.txt file in the working directory is used
+#' @return SpatRaster with at-sensor spectral radiance (W m-2 sr-1 um-1) in
+#' layers B, G, R, NIR, SWIR1, SWIR2, Thermal1 and, for Landsat 8/9, Thermal2.
 #' @author Guillermo Federico Olmedo
 #' @author María Victoria Munafó
 #' @family remote sensing support functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+#'
+#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
 #' @export
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   path <- getwd()
@@ -189,21 +219,36 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
   return(image)
 }
 
-#' Calculates Top of atmosphere reflectance
+#' Calculates top-of-atmosphere reflectance
 #' @description
-#' This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
-#' @param image.DN      raw image in digital numbers
-#' @param sat           "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param aoi           area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
-#' @param incidence.rel solar incidence angle, considering the relief
-#' @param MTL           Landsat Metadata File
+#' Calculates the TOA (top-of-atmosphere) reflectance, divided by the cosine of
+#' the solar incidence angle of each pixel. For Landsat 8 and 9 the reflectance
+#' rescaling coefficients of the Level-1 products (2e-05 and -0.1) are used; for
+#' Landsat 7, the gains, biases and ESUN values of the Landsat 7 handbook and
+#' the acquisition date in the MTL file.
+#' @param image.DN      raw image in digital numbers, e.g. from loadImage().
+#' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present
+#' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
+#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
+#' working directory)
+#' @param aoi           Not used; kept for backward compatibility. Crop the
+#' inputs beforehand (e.g. loadImage(..., aoi = aoi))
+#' @param incidence.rel solar incidence angle (radians) considering the relief,
+#' from solarAngles()
+#' @param MTL           path to the Landsat metadata (MTL) file, needed for
+#' Landsat 7 and for sat = "auto". If missing, the only *MTL.txt file in the
+#' working directory is used
+#' @return SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,
+#' G, R, NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family remote sensing support functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #'
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+#'
+#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
 #' @export
 calcTOAr <- function(image.DN, sat="auto", 
                      aoi, incidence.rel, MTL){
@@ -250,20 +295,31 @@ calcTOAr <- function(image.DN, sat="auto",
   return(image_TOA)
 }  
 
-#' Calculates surface reflectance for L7
+#' Calculates surface reflectance for Landsat 7
 #' @description
-#' Calculates surface reflectance from top of atmosphere radiance using the model developed by Tasumi et al. (2008) and Allen et al. (2007), which considers a band-by-band basis.
-#' @param image.TOAr      raster stack. top of atmosphere reflectance image
-#' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param aoi             area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
-#' @param incidence.hor   solar incidence angle, considering plain surface
-#' @param WeatherStation  Weather Station data
-#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
+#' Calculates surface reflectance from top-of-atmosphere reflectance using the
+#' model developed by Tasumi et al. (2008) and Allen et al. (2007), applied band
+#' by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
+#' Level-2 surface reflectance (see loadImageSR()).
+#' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance (B, G,
+#' R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()
+#' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
+#' error. "auto" detects the satellite from an MTL file or Landsat file names
+#' in the working directory
+#' @param aoi             Not used; kept for backward compatibility
+#' @param incidence.hor   solar incidence angle (radians) on a horizontal
+#' surface, from solarAngles()
+#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' data.frame returned by getDataWS()
+#' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
+#' METRICtopo()
+#' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
+#' NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David 
+#' @author David Fonseca-Luengo
 #' @family remote sensing support functions
-#' @references 
-#' Tasumi M.; Allen R.G. and Trezza, R. At-surface albedo from Landsat and MODIS satellites for use in energy balance studies of evapotranspiration Journal of Hydrolog. Eng., 2008, 13, (51-63) \cr
+#' @references
+#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
 #'
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export

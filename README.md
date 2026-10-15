@@ -1,32 +1,38 @@
-Repository for the development version of water package.
+# water
 
-[![](http://cranlogs.r-pkg.org/badges/grand-total/water)](https://cran.r-project.org/package=water)
+Actual Evapotranspiration with Energy Balance Models. Repository for the
+development version of the water package.
 
+[![](https://cranlogs.r-pkg.org/badges/grand-total/water)](https://cran.r-project.org/package=water)
 
-water package is available at [CRAN network](https://cran.r-project.org/package=water)
+water package is available at [CRAN](https://cran.r-project.org/package=water).
 
-You can install development version with: 
-
+You can install the development version with:
 
     install.packages("remotes")
     remotes::install_github("midraed/water")
 
+## Overview
 
-#Package: water#
-Title: Actual Evapotranspiration with Surface Energy Balance models
+water implements the METRIC surface energy balance model (Allen et al., 2007)
+for Landsat 7, 8 and 9 images, including Landsat 8/9 Collection 2 Level-2
+surface reflectance and surface temperature products, together with weather
+station data processing and reference evapotranspiration (ASCE
+Penman-Monteith). It uses the terra and sf packages.
 
-Author: Guillermo Federico Olmedo, Samuel Ortega-Farías, David Fonseca-Luengo,
-  Daniel de la Fuente-Saiz and Fernando Fuentes-Peñailillo
+The vignettes show the workflow (`vignette(package = "water")`):
+
+- "METRIC simple" and "METRIC advanced": Landsat 7 example data.
+- "Landsat 8 and 9": Landsat 8 Collection 2 Level-2 example data.
+
+Authors: Guillermo Federico Olmedo, Samuel Ortega-Farías, David Fonseca-Luengo,
+Daniel de la Fuente-Sáiz and Fernando Fuentes-Peñailillo. Contributors: María
+Victoria Munafó and Francisco Martín Corvalán.
 
 Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
-
-Description: Tools and functions to calculate actual evapotranspiration using surface energy balance models. 
-Depends: R (>= 3.2.1), raster (>= 2.1), sf (>= 1.0-0), proj4, stringr
 
 License: GPL (>= 2)
 
 ## Contributing
 
 Contributions are accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
-
-

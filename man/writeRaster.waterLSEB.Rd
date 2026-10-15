@@ -12,6 +12,10 @@
 \item{...}{additional arguments passed to terra::writeRaster(), e.g.
 overwrite}
 }
+\value{
+The SpatRaster written to the file (x$EB), invisibly, as returned by
+terra::writeRaster().
+}
 \description{
 Writes the energy balance layers (\code{x$EB}) of a
 METRIC.EB() result to a file.

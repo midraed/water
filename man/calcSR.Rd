@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_RSfunctions.R
 \name{calcSR}
 \alias{calcSR}
-\title{Calculates surface reflectance for L7}
+\title{Calculates surface reflectance for Landsat 7}
 \usage{
 calcSR(
   image.TOAr,
@@ -14,37 +14,50 @@ calcSR(
 )
 }
 \arguments{
-\item{image.TOAr}{raster stack. top of atmosphere reflectance image}
+\item{image.TOAr}{SpatRaster with top-of-atmosphere reflectance (B, G,
+R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
+\item{sat}{Only "L7" is supported; "L8" and "L9" stop with an
+error. "auto" detects the satellite from an MTL file or Landsat file names
+in the working directory}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility}
 
-\item{incidence.hor}{solar incidence angle, considering plain surface}
+\item{incidence.hor}{solar incidence angle (radians) on a horizontal
+surface, from solarAngles()}
 
-\item{WeatherStation}{Weather Station data}
+\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+data.frame returned by getDataWS()}
 
-\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
+\item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
+METRICtopo()}
+}
+\value{
+SpatRaster with surface reflectance (unitless) in layers B, G, R,
+NIR, SWIR1 and SWIR2.
 }
 \description{
-Calculates surface reflectance from top of atmosphere radiance using the model developed by Tasumi et al. (2008) and Allen et al. (2007), which considers a band-by-band basis.
+Calculates surface reflectance from top-of-atmosphere reflectance using the
+model developed by Tasumi et al. (2008) and Allen et al. (2007), applied band
+by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
+Level-2 surface reflectance (see loadImageSR()).
 }
 \references{
-Tasumi M.; Allen R.G. and Trezza, R. At-surface albedo from Landsat and MODIS satellites for use in energy balance studies of evapotranspiration Journal of Hydrolog. Eng., 2008, 13, (51-63) \cr
+Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
 
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other remote sensing support functions: 
-\code{\link{calcRadiance}()},
-\code{\link{calcTOAr}()},
-\code{\link{cfmask}()},
-\code{\link{loadImageSR}()},
-\code{\link{loadImage}()}
+Other remote sensing support functions:
+\code{\link[=calcRadiance]{calcRadiance()}},
+\code{\link[=calcTOAr]{calcTOAr()}},
+\code{\link[=cfmask]{cfmask()}},
+\code{\link[=loadImage]{loadImage()}},
+\code{\link[=loadImageSR]{loadImageSR()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{remote sensing support functions}

@@ -7,42 +7,53 @@
 solarAngles(surface.model, MTL, WeatherStation)
 }
 \arguments{
-\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
+\item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
+METRICtopo()}
 
-\item{MTL}{Landsat Metadata File}
+\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
+the only *MTL.txt file in the working directory is used}
 
-\item{WeatherStation}{Weather Station data}
+\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+data.frame returned by getDataWS()}
+}
+\value{
+SpatRaster with layers (radians) latitude, declination, hour.angle
+(negative before solar noon), incidence.hor (solar incidence angle on a
+horizontal surface) and incidence.rel (incidence angle on the sloping
+surface).
 }
 \description{
 Metadata, aspect and slope maps are combined to estimate solar angles for the entire image.
 }
 \details{
-Narrowband transmittances,are calculated considering some radiation transfer models operated 
-over a wide range of climates and locations across the world, this parameter vary with the cosine of 
-the solar angle, atmospheric pressure and precipitable water vapor in the atmosphere, so the author must 
-obtain accurate values of these three parameters.
+Latitude is computed for each row of the grid; declination and hour
+angle are computed from the acquisition date and scene centre time in the
+MTL file and the weather station longitude. Solar incidence angles are
+computed for a horizontal surface (incidence.hor) and for the sloping
+surface given by Slope and Aspect (incidence.rel), following Allen et al.
+(2007).
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 
-Fernando Fuentes Peñailillo
+Fernando Fuentes-Peñailillo
 }
 \concept{net radiation related functions}

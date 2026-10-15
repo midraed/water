@@ -19,7 +19,7 @@ Instalar una vez en R:
 install.packages(c("rstac", "sf", "knitr"))
 ```
 
-1. Editar polígono, fechas y destino en el primer bloque de código, con `ids <- character()`, y renderizar.
+1. Editar polígono, fechas y destino en el primer bloque de código y renderizar. Con `ids <- character()`, este ejemplo descarga la primera escena de la tabla (ver «Selección de la escena de interés»).
 2. Revisar la tabla y el gráfico. Copiar el **id_producto** elegido.
 3. Asignar, por ejemplo, `ids <- "LC08_L2SP_232083_20160209_20200907_02_T1"`
    y renderizar nuevamente. Se pueden incluir varios IDs de la tabla.
@@ -109,18 +109,18 @@ text(as.Date(tabla$fecha), tabla$nubes_pct, labels = seq_len(nrow(tabla)), pos =
 
 Los números sobre los puntos corresponden a las filas de la tabla y del CSV.
 
-## Seleccion de la escena de interés
+## Selección de la escena de interés
 
-En este caso, selecciono solo la primer y unica escena:
+Si `ids` quedó vacío en el primer bloque, en este ejemplo se selecciona la primera (y única) escena de la tabla:
 
 ```{r}
-ids <- tabla$id_producto[1]
+if (!length(ids)) ids <- tabla$id_producto[1]
 ```
 
 
 ## Descargar los productos elegidos
 
-```{r, }
+```{r}
 stopifnot(all(ids %in% tabla$id_producto))
 options(timeout = 3600)  # download.file corta a los 60 s por defecto
 
@@ -143,7 +143,6 @@ for (x in firmadas) {
   }
   cat("Descargado:", id, "-", length(list.files(carpeta)), "archivos.\n")
 }
-if (!length(ids)) cat("Solo consulta. Para descargar, completar `ids` con IDs de la tabla.")
 ```
 
 ```{r}

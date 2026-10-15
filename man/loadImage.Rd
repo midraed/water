@@ -2,36 +2,51 @@
 % Please edit documentation in R/water_RSfunctions.R
 \name{loadImage}
 \alias{loadImage}
-\title{Load Landsat data from folder}
+\title{Load Landsat data from a folder}
 \usage{
 loadImage(path = getwd(), sat = "auto", aoi)
 }
 \arguments{
 \item{path}{folder where band files are stored}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8, "MODIS" for MODIS or 
-"auto" to guess from filenames}
+\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8, "L9" for Landsat 9,
+"MODIS" for MODIS or "auto" to detect the Landsat satellite from the
+SPACECRAFT_ID of an MTL file in path or, failing that, from the Landsat file
+names}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == 
-TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{area of interest (e.g. from createAoi()) to crop the image. If
+missing and waterOptions("autoAoi") is TRUE, an object called aoi in
+.GlobalEnv is used if it exists}
+}
+\value{
+SpatRaster in digital numbers. Landsat 8/9: layers B, G, R, NIR,
+SWIR1, SWIR2, Thermal1 and Thermal2 (bands 2 to 7, 10 and 11). Landsat 7: B,
+G, R, NIR, SWIR1, SWIR2 and Thermal1 (bands 1 to 5, 7 and 6 low gain).
+MODIS: R, NIR, B, G, SWIR1, SWIR2, SWIR3 (reflectance), LST (K) and Time
+(hours).
 }
 \description{
-This function loads Landsat bands from a specific folder.
+Loads Landsat 7, 8 or 9 Level-1 bands (digital numbers), or MODIS bands,
+from a folder. Landsat file names can follow the Collection 1/2 naming
+(e.g. \code{LC08_L1TP_232083_20160209_20200907_02_T1_B2.TIF}, any tier) or
+the pre-Collection naming (e.g. \code{LC82320832016040LGN00_band2.tif});
+Level-2 surface reflectance files are skipped (use loadImageSR()). If the
+folder holds more than one image, the first one is used, with a warning.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other remote sensing support functions: 
-\code{\link{calcRadiance}()},
-\code{\link{calcSR}()},
-\code{\link{calcTOAr}()},
-\code{\link{cfmask}()},
-\code{\link{loadImageSR}()}
+Other remote sensing support functions:
+\code{\link[=calcRadiance]{calcRadiance()}},
+\code{\link[=calcSR]{calcSR()}},
+\code{\link[=calcTOAr]{calcTOAr()}},
+\code{\link[=cfmask]{cfmask()}},
+\code{\link[=loadImageSR]{loadImageSR()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{remote sensing support functions}

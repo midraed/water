@@ -9,9 +9,24 @@ getDataWS(WeatherStation)
 \arguments{
 \item{WeatherStation}{waterWeatherStation object. See read.WSdata()}
 }
+\value{
+A one-row data.frame with the conditions at the satellite overpass:
+wind (m/s), RH (\%), temp (Celsius), radiation (W/m2), height (m), lat, long,
+elev (m), DOY (day of year) and hours (decimal hour of the overpass in the
+weather station time zone). An error is given if the object has no
+conditions at the overpass (at.sat).
+}
 \description{
-Export weather conditions at satellite flyby from waterWeatherStation object
+Export weather conditions at the satellite overpass from a waterWeatherStation object
+}
+\seealso{
+Other Weather station related functions:
+\code{\link[=plot.waterWeatherStation]{plot.waterWeatherStation()}},
+\code{\link[=print.waterWeatherStation]{print.waterWeatherStation()}},
+\code{\link[=read.WSdata]{read.WSdata()}},
+\code{\link[=read.WSdata2]{read.WSdata2()}}
 }
 \author{
 Guillermo Federico Olmedo
 }
+\concept{Weather station related functions}

@@ -1,24 +1,35 @@
-#' Calculates ET using Penman Monteith hourly formula
-#' @param WeatherStation     a data frame with all the needed fields (see 
-#' example)
-#' @param hours              time of the day in hours in 24hs format
+#' Calculates hourly reference ET with the ASCE Penman-Monteith equation
+#' @description
+#' Calculates the hourly (or instantaneous) reference evapotranspiration with
+#' the ASCE standardized Penman-Monteith equation, for a short (ETo, grass) or a
+#' tall (ETr, alfalfa) reference crop.
+#' @param WeatherStation     data.frame with the needed fields (see example),
+#' or a waterWeatherStation object with the conditions at the satellite
+#' overpass; in that case they are used and ET.instantaneous is set to TRUE
+#' @param hours              time of the day in decimal hours (24 h clock),
+#' e.g. 10.5 for 10:30
 #' @param DOY                day of year
-#' @param long.z             longitude for local time
-#' @param ET.instantaneous   Logical. True if you want to calculate 
-#' instantaneous ET instead of hourly ET. See Details.
+#' @param long.z             longitude of the centre of the local time zone, in
+#' decimal degrees (negative west). Defaults to the weather station longitude
+#' (no longitude correction)
+#' @param ET.instantaneous   Logical. TRUE to calculate instantaneous ET
+#' instead of hourly ET. See Details.
 #' @param ET       "ETo" for short crops, similar to clipped, cool-season
-#' grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.
+#' grass; or "ETr" (default) for tall crops, similar to 0.5 m tall full-cover
+#' alfalfa.
 #' @param height             weather station sensors height in meters
 #' @param lat                latitude of weather station in decimal degrees. 
 #' Negative values for south latitude
 #' @param long               longitude of weather station in decimal degrees. 
 #' Negative values for west longitude
 #' @param elev               elevation of weather station in meters
-#' @details 
-#' The only difference on instantaneous ET is how the hour is interpreted. On 
-#' FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00, 
-#' on TRUE Et is calculated at 11:00 hs.
-#' @return ET hourly in mm.h-1
+#' @details
+#' The only difference on instantaneous ET is how the hour is interpreted. With
+#' FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00;
+#' with TRUE, ET is calculated at 11:00.
+#' @return Numeric. Hourly (or, with ET.instantaneous = TRUE, instantaneous)
+#' reference ET (mm/h).
+#' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @examples 
 #' WeatherStation  <- data.frame(wind=4.72,
@@ -27,12 +38,14 @@
 #'                               radiation=675, 
 #'                               height=2.2, 
 #'                               lat=-35.37, 
-#'                               long=71.5946, 
+#'                               long=-71.5946,
 #'                               elev=124)
-#'   hourlyET(WeatherStation, hours=10.5, DOY=363, long.z=71.635)
+#'   hourlyET(WeatherStation, hours=10.5, DOY=363, long.z=-71.635)
 #' @export
-#' @references 
-#' Allen 2005 ASCE
+#' @references
+#' ASCE-EWRI (2005). The ASCE Standardized Reference Evapotranspiration
+#' Equation. Report of the ASCE-EWRI Task Committee on Standardization of
+#' Reference Evapotranspiration.
 hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
                      ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
   ET <- match.arg(ET, c("ETr", "ETo"))
@@ -107,15 +120,24 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
 }
 
 #' Calculates daily ET from a surface energy balance and Weather Station 
-#' @param Rn             Net radiation. See netRadiation()
-#' @param G              Soil Heat Flux. See soilHeatFlux()
-#' @param H              Sensible Heat Flux. See calcH()
-#' @param Ts             Land surface temperature. See surfaceTemperature()
-#' @param WeatherStation WeatherStation data at the flyby from the satellite. 
-#' Can be a waterWeatherStation object calculate using read.WSdata and MTL file
-#' @param ETr.daily      hourly ETr for every hour of the day. See dailyET()
+#' @description
+#' Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
+#' (from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see
+#' hourlyET()) at the satellite overpass gives the reference ET fraction, which
+#' is multiplied by the daily reference ET.
+#' @param Rn             Net radiation (W/m2). See netRadiation()
+#' @param G              Soil Heat Flux (W/m2). See soilHeatFlux()
+#' @param H              Sensible Heat Flux (W/m2). See calcH()
+#' @param Ts             Land surface temperature (K). See surfaceTemperature()
+#' @param WeatherStation WeatherStation data at the satellite overpass.
+#' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
+#' @param ETr.daily      daily reference ET (mm/day) for the day of the image,
+#' e.g. from dailyET() (whose default is the alfalfa reference, ETr)
 #' @param C.rad          correction term used in sloping terrain to correct for 
 #' variation in 24 h versus instantaneous energy availability. See Allen (2007)
+#' @return SpatRaster with daily (24 h) actual evapotranspiration (mm/day);
+#' negative values are set to 0. The result is also plotted.
+#' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
@@ -141,34 +163,46 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 }
 
 
-#' Calculates daily ET using Penman Monteith hourly formula for every hour
-#' @param WeatherStation a data frame with all the needed fields (see example)
-#' @param DOY      day of year
-#' @param height   weather station sensors height in meters
-#' @param lat      latitude in decimal degrees of the weather station
-#' @param long     longitude in decimal degrees of the weather station
-#' @param elev     elevation in meters of the weather station
+#' Calculates daily reference ET as the sum of hourly Penman-Monteith values
+#' @param WeatherStation waterWeatherStation object, see read.WSdata(). Other
+#' inputs are not implemented
+#' @param DOY      Not used
+#' @param height   weather station sensors height in meters. If missing, taken
+#' from WeatherStation
+#' @param lat      latitude in decimal degrees of the weather station. If
+#' missing, taken from WeatherStation
+#' @param long     longitude in decimal degrees of the weather station. If
+#' missing, taken from WeatherStation
+#' @param elev     elevation in meters of the weather station. If missing,
+#' taken from WeatherStation
 #' @param ET       "ETo" for short crops, similar to clipped, cool-season
-#' grass; or "ETr" for tall crops, similar to 0.5 m tall full-cover alfalfa.
-#' @param long.z   longitude for local time
-#' @param MTL      Metadata file. If not provided will look for one on
-#' working directory. If provided or present will calculate weather conditions
-#' on satellite overpass.
-#' @param date     if date == "auto" will use a MTL file provided or present in 
-#' the working folder to select the date.
-#' @return ET      daily in mm.h-1
+#' grass; or "ETr" (default) for tall crops, similar to 0.5 m tall full-cover
+#' alfalfa.
+#' @param long.z   Not used
+#' @param MTL      path to the Landsat metadata (MTL) file. If missing, the only
+#' *MTL.txt file in the working directory is used, if any. Its acquisition date
+#' selects the day (see date)
+#' @param date     "auto" (default) uses the acquisition date in the MTL file;
+#' otherwise a date (e.g. "2016-02-09") present in the weather station data.
+#' Without an MTL file, the first 24 hourly records are used and date is
+#' ignored
+#' @return Numeric. Daily reference ET (mm/day): the sum of the 24 hourly values
+#' computed with hourlyET().
+#' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @export
-#' @references 
-#' Allen 2005 ASCE
-#' @examples 
+#' @references
+#' ASCE-EWRI (2005). The ASCE Standardized Reference Evapotranspiration
+#' Equation. Report of the ASCE-EWRI Task Committee on Standardization of
+#' Reference Evapotranspiration.
+#' @examples
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
-#' 
-#' WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
-#' lat=-35.42222, long= -71.38639, elev=201, height= 2.2, cf=c(1,0.2777778,1,1))
-#' 
-#' dailyET(WeatherStation = WeatherStation, lat=-35.422, long=-71.386, elev=124, 
-#' ET="ETo")
+#'
+#' WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y",
+#' lat=-35.42222, long= -71.38639, elev=201, height= 2.2, cf=c(1,0.2777778,1),
+#' tz = "America/Santiago")
+#'
+#' dailyET(WeatherStation = WeatherStation, ET="ETo")
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
                     long.z=WeatherStation$long, date = "auto", MTL){

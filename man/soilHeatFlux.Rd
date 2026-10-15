@@ -7,43 +7,52 @@
 soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi")
 }
 \arguments{
-\item{image}{surface reflectance image}
+\item{image}{surface reflectance SpatRaster with bands B, G, R, NIR, ...
+(the third and fourth layers, R and NIR, are used for NDVI)}
 
-\item{Ts}{Land surface temperature. See surfaceTemperature()}
+\item{Ts}{land surface temperature (K), from surfaceTemperature()}
 
-\item{albedo}{broadband surface albedo. See albedo()}
+\item{albedo}{broadband surface albedo, from albedo()}
 
-\item{LAI}{raster layer with leaf area index. See LAI()}
+\item{LAI}{SpatRaster with leaf area index, from LAI()}
 
-\item{Rn}{Net radiation. See netRadiation()}
+\item{Rn}{net radiation (W/m2), from netRadiation()}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility}
 
-\item{method}{method used for the G estimation. Currently implemeted are 
-"Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
+\item{method}{method used for the G estimation: "Tasumi" (Tasumi, 2003;
+default) or "Bastiaanssen" (Bastiaanssen, 2000)}
+}
+\value{
+SpatRaster with soil heat flux (W/m2).
 }
 \description{
-This function implements models to estimate soil heat flux for different surfaces and considering different inputs.
+This function implements models to estimate soil heat flux for different
+surfaces and considering different inputs.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+
+Tasumi, M. (2003). Progress in operational estimation of regional evapotranspiration using satellite imagery. Ph.D. dissertation, University of Idaho, Moscow, Idaho. \cr
+
+Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

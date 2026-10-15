@@ -11,14 +11,21 @@
 
 \item{...}{additional parameters to pass to print()}
 }
+\value{
+Called for its side effect: prints the station location, a summary
+of the records and, if available, the conditions at the satellite overpass.
+The last printed object (the conditions at the overpass, or the summary) is
+returned invisibly.
+}
 \description{
 Print method for waterWeatherStation S3 class
 }
 \seealso{
-Other Weather station related functions: 
-\code{\link{plot.waterWeatherStation}()},
-\code{\link{read.WSdata2}()},
-\code{\link{read.WSdata}()}
+Other Weather station related functions:
+\code{\link[=getDataWS]{getDataWS()}},
+\code{\link[=plot.waterWeatherStation]{plot.waterWeatherStation()}},
+\code{\link[=read.WSdata]{read.WSdata()}},
+\code{\link[=read.WSdata2]{read.WSdata2()}}
 }
 \author{
 Guillermo Federico Olmedo

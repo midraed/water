@@ -11,10 +11,14 @@ createAoi(topleft, bottomright, EPSG)
 
 \item{bottomright}{a vector with bottomright x,y coordinates}
 
-\item{EPSG}{Coordinate reference system EPSG code}
+\item{EPSG}{EPSG code of the coordinate reference system of the
+coordinates (e.g. 32619 for WGS 84 / UTM zone 19N). Optional: if missing,
+the CRS is not set}
 }
 \value{
-object of class sf
+An sf data frame with a single POLYGON geometry (the rectangle
+defined by topleft and bottomright). Its CRS is set only when EPSG is
+supplied.
 }
 \description{
 An AOI (Area of Interest) is created based on two points (topleft and bottomright) using a coordinate reference system.
@@ -26,13 +30,14 @@ aoi <- createAoi(topleft = tl, bottomright=br, EPSG=32619)
 plot(aoi)
 }
 \seealso{
-Other support functions: 
-\code{\link{checkSRTMgrids}()},
-\code{\link{prepareSRTMdata}()}
+Other support functions:
+\code{\link[=checkSRTMgrids]{checkSRTMgrids()}},
+\code{\link[=prepareSRTMdata]{prepareSRTMdata()}},
+\code{\link[=waterOptions]{waterOptions()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{support functions}

@@ -7,36 +7,44 @@
 incSWradiation(surface.model, solar.angles, WeatherStation)
 }
 \arguments{
-\item{surface.model}{rasterStack with DEM, Slope and Aspect. See surface.model()}
+\item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
+METRICtopo()}
 
-\item{solar.angles}{rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()}
+\item{solar.angles}{SpatRaster with layers latitude, declination,
+hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 
-\item{WeatherStation}{Weather Station data}
+\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+data.frame returned by getDataWS()}
+}
+\value{
+SpatRaster with incoming short-wave radiation (W/m2) at the time of
+the satellite overpass.
 }
 \description{
-This function calculates incoming solar radiation from surface model and solar angles.
+This function calculates incoming solar radiation from the surface model,
+the solar angles and the weather station data.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Daniel de la Fuente Saiz
+Daniel de la Fuente-Sáiz
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

@@ -7,50 +7,55 @@
 albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
 }
 \arguments{
-\item{image.SR}{surface reflectance image with bands B, R, G, NIR, SWIR1, 
-SWIR2}
+\item{image.SR}{surface reflectance SpatRaster with bands B, G, R, NIR,
+SWIR1 and SWIR2 (only the first six layers are used, by position)}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi")
-== TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{area of interest (e.g. from createAoi()) to crop the
+result. If missing and waterOptions("autoAoi") is TRUE, an object called aoi
+in .GlobalEnv is used if it exists}
 
-\item{coeff}{coefficient to transform narrow to broad band albedo. 
+\item{coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
-from filenames}
+\item{sat}{"L7", "L8", "L9", "MODIS" or "auto" to detect the Landsat
+satellite from an MTL file or Landsat file names in the working directory}
+}
+\value{
+SpatRaster with broadband surface albedo (unitless).
 }
 \description{
-Broadband surface Albedo is estimated considering the integration of all 
-narrowband at-surface reflectances following a weighting function with 
-empirical coefficients (Tasumi et al., 2007).
+Broadband surface albedo is estimated considering the integration of all
+narrowband at-surface reflectances following a weighting function with
+empirical coefficients (Tasumi et al., 2008).
 }
 \details{
-There are differents models to convert narrowband data to broadband albedo. 
-You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, 
-calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients 
-or "Olmedo" to use Olmedo coefficients for Landsat 8.
+There are different models to convert narrowband data to broadband albedo.
+You can choose coeff = "Tasumi" to use Tasumi et al. (2008) coefficients,
+calculated for Landsat 7; coeff = "Liang" to use Liang (2001) Landsat 7
+coefficients or coeff = "Olmedo" to use Olmedo coefficients for Landsat 8
+and 9.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
-Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
+Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
+Liang, S. (2001). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(2), 213-238. \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

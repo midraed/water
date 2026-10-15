@@ -1,22 +1,28 @@
 #' Estimates Net Radiation as in METRIC Model
 #' @description
+#' Estimates the net radiation (Rn) as in the METRIC model, with the same
+#' inputs and steps as METRIC.EB().
 #' For Landsat 8 and 9, use Collection 2 Level-2 products: surface reflectance
 #' as image.SR and surface temperature as surf.temp (both from loadImageSR()).
 #' For Landsat 7, image.SR and Ts can also be computed from image.DN.
 #' @param image.DN         Raw image in digital counts. Optional if image.SR and
 #' surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
 #' reflectance (LAI) and, without surf.temp, for surface temperature.
-#' @param WeatherStation   Weather Station data, can be a waterWeatherStation
-#' object
-#' @param MTL              Landsat metadata file
+#' @param WeatherStation   waterWeatherStation object with the conditions at
+#' the satellite overpass (from read.WSdata() with the MTL file)
+#' @param MTL              path to the Landsat metadata (MTL) file. If missing,
+#' the only *MTL.txt file in the working directory is used
 #' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 #' detect it from the MTL file
-#' @param thermalband      Landsat low gain thermalband. Not needed if
+#' @param thermalband      Thermal band in digital numbers (L7: band 6 low gain;
+#' L8/L9: band 10). If missing, image.DN$Thermal1 is used. Not needed if
 #' surf.temp is supplied
-#' @param plain            Logical. If TRUE surface is assumed plain
-#' @param DEM              Digital Elevation Model of the study area. Not needed
-#' if plain = TRUE
-#' @param aoi              sf polygon object with limits of Area of interest
+#' @param plain            Logical. If TRUE (default) the surface is assumed
+#' flat: DEM is replaced by a constant raster at the weather station elevation
+#' @param DEM              SpatRaster with a digital elevation model (m) of the
+#' study area, on the same grid as the image. Not needed if plain = TRUE
+#' @param aoi              Optional sf polygon or SpatVector. If given, the
+#' inputs are cropped to it
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data.
@@ -31,6 +37,19 @@
 #' @param LST.method       Method for land surface temperature estimation: "SC"
 #' for single channel or "SW" for split window (only for L8 and L9). Ignored
 #' if surf.temp is supplied. See surfaceTemperature()
+#' @details
+#' There are different models to convert narrowband data to broadband albedo.
+#' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
+#' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
+#' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
+#' coefficients for Landsat 8 and 9. See \code{\link{albedo}}.
+#'
+#' LAI.method can be "metric2010" (default), "metric", "MCB", "turner" or
+#' "vineyard". See \code{\link{LAI}}. Without image.DN, the leaf area index is
+#' computed from the surface reflectance (image.SR), although the "metric",
+#' "metric2010" and "MCB" equations were described for top-of-atmosphere
+#' reflectance.
+#' @return SpatRaster with net radiation (W/m2). The result is also plotted.
 #' @family METRIC model functions
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @references
@@ -56,13 +75,16 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 
 #' Estimates Soil Heat Flux as in METRIC Model
 #' @description
+#' Estimates the soil heat flux (G) as in the METRIC model.
 #' Inputs are the same as in METRIC.Rn(). For Landsat 8 and 9, use Collection 2
 #' Level-2 surface reflectance as image.SR and surface temperature as surf.temp.
 #' @inheritParams METRIC.Rn
+#' @inherit METRIC.Rn details
 #' @param Rn               Net radiation in W/m2, e.g. from METRIC.Rn(). If
 #' missing it is computed as in METRIC.Rn()
-#' @param G.method         method used for the G estimation. Currently implemeted are
-#' "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
+#' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
+#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()
+#' @return SpatRaster with soil heat flux G (W/m2). The result is also plotted.
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
 #' @references
@@ -172,6 +194,11 @@ metricRn <- function(surface, WeatherStation){
 
 
 #' Estimates Energy Balance using METRIC2010 Model
+#' @description
+#' Estimates the instantaneous land surface energy balance (Rn, G, H and LE)
+#' with the METRIC model (Allen et al., 2007). For Landsat 8 and 9 use
+#' Collection 2 Level-2 surface reflectance (image.SR) and, optionally, surface
+#' temperature (surf.temp), both from loadImageSR().
 #' @param image.DN         Raw image in digital counts. Optional if image.SR is
 #' supplied. If supplied (L7/L8/L9) it is used for TOA reflectance (LAI and
 #' anchors) and for surface temperature; if missing, image.SR is used instead.
@@ -180,60 +207,96 @@ metricRn <- function(surface, WeatherStation){
 #' SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
 #' missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
 #' Required for L8 and L9.
-#' @param WeatherStation   Weather Station data, can be a waterWeatherStation
-#' object
-#' @param MTL              Landsat metadata file
+#' @param WeatherStation   waterWeatherStation object with the conditions at
+#' the satellite overpass (from read.WSdata() with the MTL file)
+#' @param MTL              path to the Landsat metadata (MTL) file. If missing,
+#' the only *MTL.txt file in the working directory is used
 #' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 #' detect it from the MTL file
-#' @param thermalband      Landsat low gain thermalband. Not needed if
+#' @param thermalband      Thermal band in digital numbers (L7: band 6 low gain;
+#' L8/L9: band 10). If missing, image.DN$Thermal1 is used. Not needed if
 #' surf.temp is supplied
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
-#' same grid as image.SR (e.g. Landsat C2 ST_B10 * 0.00341802 + 149). If
+#' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 #' supplied it is used as Ts and surfaceTemperature() is not called.
-#' @param plain            Logical. If TRUE surface is assumed plain
-#' @param DEM              Digital Elevation Model of the study area. Not needed
-#' if plain = TRUE
-#' @param aoi              sf polygon object with limits of Area of interest
-#' @param G.method         method used for the G estimation. Currently implemeted are 
-#'                         "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
-
+#' @param plain            Logical. If TRUE (default) the surface is assumed
+#' flat: DEM is replaced by a constant raster at the weather station elevation
+#' @param DEM              SpatRaster with a digital elevation model (m) of the
+#' study area, on the same grid as the image. Not needed if plain = TRUE
+#' @param aoi              Optional sf polygon or SpatVector. If given, the
+#' inputs are cropped to it
+#' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
+#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
-#' @param LST.method       Method for land surface temperature estimation. "SC" 
-#' for single channel or "SW" for split window algorithm. 
-#' "SW" is only available for L8. See \code{water::surfaceTemperature}
-#' @param LAI.method       Method used to estimate LAI from spectral data. 
+#' @param LST.method       Method for land surface temperature estimation: "SC"
+#' for single channel or "SW" for split window (only for L8 and L9). Ignored
+#' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
+#' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
-#' @param L                L value for SAVI calculation
-#' @param Zom.method       method selected to calculate momentum roughness 
-#' length. Use "short.crops" for short crops methods from Allen et al (2007); 
-#' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
+#' @param L                L value for SAVI calculation. See LAI()
+#' @param Zom.method       method selected to calculate momentum roughness
+#' length. Use "short.crops" for short crops methods from Allen et al (2007);
+#' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
-#' @param anchors.method   method for the automatic selection of the anchor pixels. 
-#' @param anchors          data.frame or sf POINT object with the anchor
-#'                         pixels. The data frame must include a "type" column 
-#'                         with "hot" and "cold" values.
-#' @param n                number of pair of anchors pixels to calculate
-#' @param ETp.coef         ETp coefficient usually 1.05 or 1.2 for alfalfa
-#' @param Z.om.ws          momentum roughness lenght for WeatherStation. Usually
-#' 0.0018 or 0.03 for long grass
-#' @param verbose          Logical. If TRUE will print aditional data to console
-#' @param extraParameters  Extra parameters for the non default methods. i.e. 
-#' Zom.method = "Perrier", needs two extra parameters: fLAI, h. See 
-#' help(momentumRoughnessLength).
+#' @param anchors.method   method for the automatic selection of the anchor
+#' pixels: "flexible" (default), "best" or "random". See calcAnchors()
+#' @param anchors          data.frame with X, Y (coordinates in the CRS of the
+#' image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
+#' POINT object with a type column. If missing, the anchors are selected
+#' automatically with calcAnchors()
+#' @param n                number of pairs of anchor pixels to select
+#' @param ETp.coef         coefficient for the ET of the cold pixels: calcH()
+#' multiplies it by the hourly grass reference ET (ETo) at the satellite
+#' overpass. Usually 1.05, or 1.2 for alfalfa. It can be updated with
+#' anchors.method = "flexible" (see Details)
+#' @param Z.om.ws          momentum roughness length (m) of the weather station
+#' surface. The default is 0.0018 here and 0.03 in calcH(); see calcH() for
+#' typical values
+#' @param verbose          Logical. If TRUE will print additional data to console
+#' @param extraParameters  Extra parameters for the non default methods, e.g.
+#' Zom.method = "Perrier" needs two extra parameters: fLAI, h. See
+#' \code{\link{momentumRoughnessLength}} and the Extra Parameters section.
 #' @details
-#' There are differents models to convert narrowband data to broadband albedo. 
-#' You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
-#' calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
-#' coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
+#' There are different models to convert narrowband data to broadband albedo.
+#' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
+#' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
+#' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
+#' coefficients for Landsat 8 and 9. See \code{\link{albedo}}.
+#'
+#' LAI.method can be "metric2010" (default), "metric", "MCB", "turner" or
+#' "vineyard". See \code{\link{LAI}}. Without image.DN, the leaf area index is
+#' computed and the anchor pixels are selected from the surface reflectance
+#' (image.SR), although the "metric", "metric2010" and "MCB" LAI equations were
+#' described for top-of-atmosphere reflectance.
+#'
+#' The ET of the cold pixels is ETp.coef times the hourly grass reference ET
+#' (ETo) at the satellite overpass (see calcH()), while ET24h() and dailyET()
+#' use the alfalfa reference ET (ETr) by default. With anchors.method =
+#' "flexible", if the cold-pixel criteria had to be relaxed and the mean NDVI of
+#' the cold pixels is below 0.8, ETp.coef is replaced by 2.11 * NDVI - 0.4989
+#' (Gonzalez et al., 2015).
 #' @section Extra Parameters:
-#' Extra Paramenters for functions inside METRIC.EB() include:
-#' * for momentumRoughness when Zom.method = "Perrier": fLAI, h.
-#' * for calcAnchors(): minDist, WSbuffer, deltaTemp
+#' Extra parameters for functions inside METRIC.EB() include:
+#' \itemize{
+#'   \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
+#'   \item for momentumRoughnessLength() when Zom.method = "custom": a, b;
+#'   \item for calcAnchors(): minDist (default 500), WSbuffer (default 30000)
+#'     and deltaTemp (default 5).
+#' }
+#' @return An object of class \code{waterLSEB}, a list with:
+#' \describe{
+#'   \item{EB}{SpatRaster with layers NetRadiation, SoilHeat, SensibleHeat and
+#'     LatentHeat (W/m2), and surfaceTemperature (K).}
+#'   \item{WeatherStation}{the weather station data used.}
+#'   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
+#'   \item{methods}{named character vector with the methods and parameters used.}
+#' }
 #' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
 #' @family METRIC model functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#'
 #' González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
 #' @examples
 #' ### Data preparation: Landsat 8 Collection 2 Level-2 example crop

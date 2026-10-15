@@ -41,81 +41,122 @@ SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
 missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
 Required for L8 and L9.}
 
-\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
-object}
+\item{WeatherStation}{waterWeatherStation object with the conditions at
+the satellite overpass (from read.WSdata() with the MTL file)}
 
-\item{MTL}{Landsat metadata file}
+\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
+the only *MTL.txt file in the working directory is used}
 
 \item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 detect it from the MTL file}
 
-\item{thermalband}{Landsat low gain thermalband. Not needed if
+\item{thermalband}{Thermal band in digital numbers (L7: band 6 low gain;
+L8/L9: band 10). If missing, image.DN$Thermal1 is used. Not needed if
 surf.temp is supplied}
 
-\item{plain}{Logical. If TRUE surface is assumed plain}
+\item{plain}{Logical. If TRUE (default) the surface is assumed
+flat: DEM is replaced by a constant raster at the weather station elevation}
 
-\item{DEM}{Digital Elevation Model of the study area. Not needed
-if plain = TRUE}
+\item{DEM}{SpatRaster with a digital elevation model (m) of the
+study area, on the same grid as the image. Not needed if plain = TRUE}
 
-\item{aoi}{sf polygon object with limits of Area of interest}
+\item{aoi}{Optional sf polygon or SpatVector. If given, the
+inputs are cropped to it}
 
-\item{G.method}{method used for the G estimation. Currently implemeted are 
-"Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000}
+\item{G.method}{method used for the G estimation: "Tasumi" (Tasumi,
+2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{LST.method}{Method for land surface temperature estimation. "SC" 
-for single channel or "SW" for split window algorithm. 
-"SW" is only available for L8. See \code{water::surfaceTemperature}}
+\item{LST.method}{Method for land surface temperature estimation: "SC"
+for single channel or "SW" for split window (only for L8 and L9). Ignored
+if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
 
-\item{LAI.method}{Method used to estimate LAI from spectral data. 
+\item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}
 
-\item{L}{L value for SAVI calculation}
+\item{L}{L value for SAVI calculation. See LAI()}
 
-\item{Zom.method}{method selected to calculate momentum roughness 
-length. Use "short.crops" for short crops methods from Allen et al (2007); 
-"custom" for custom method also in Allen et al (2007); Or "Perrier" to use 
+\item{Zom.method}{method selected to calculate momentum roughness
+length. Use "short.crops" for short crops methods from Allen et al (2007);
+"custom" for custom method also in Allen et al (2007); Or "Perrier" to use
 Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
-\item{anchors.method}{method for the automatic selection of the anchor pixels.}
+\item{anchors.method}{method for the automatic selection of the anchor
+pixels: "flexible" (default), "best" or "random". See calcAnchors()}
 
-\item{anchors}{data.frame or sf POINT object with the anchor
-pixels. The data frame must include a "type" column 
-with "hot" and "cold" values.}
+\item{anchors}{data.frame with X, Y (coordinates in the CRS of the
+image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
+POINT object with a type column. If missing, the anchors are selected
+automatically with calcAnchors()}
 
-\item{n}{number of pair of anchors pixels to calculate}
+\item{n}{number of pairs of anchor pixels to select}
 
-\item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
+\item{ETp.coef}{coefficient for the ET of the cold pixels: calcH()
+multiplies it by the hourly grass reference ET (ETo) at the satellite
+overpass. Usually 1.05, or 1.2 for alfalfa. It can be updated with
+anchors.method = "flexible" (see Details)}
 
-\item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
-0.0018 or 0.03 for long grass}
+\item{Z.om.ws}{momentum roughness length (m) of the weather station
+surface. The default is 0.0018 here and 0.03 in calcH(); see calcH() for
+typical values}
 
-\item{verbose}{Logical. If TRUE will print aditional data to console}
+\item{verbose}{Logical. If TRUE will print additional data to console}
 
-\item{extraParameters}{Extra parameters for the non default methods. i.e. 
-Zom.method = "Perrier", needs two extra parameters: fLAI, h. See 
-help(momentumRoughnessLength).}
+\item{extraParameters}{Extra parameters for the non default methods, e.g.
+Zom.method = "Perrier" needs two extra parameters: fLAI, h. See
+\code{\link{momentumRoughnessLength}} and the Extra Parameters section.}
 
 \item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
-same grid as image.SR (e.g. Landsat C2 ST_B10 * 0.00341802 + 149). If
+same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 supplied it is used as Ts and surfaceTemperature() is not called.}
 }
+\value{
+An object of class \code{waterLSEB}, a list with:
+\describe{
+  \item{EB}{SpatRaster with layers NetRadiation, SoilHeat, SensibleHeat and
+    LatentHeat (W/m2), and surfaceTemperature (K).}
+  \item{WeatherStation}{the weather station data used.}
+  \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
+  \item{methods}{named character vector with the methods and parameters used.}
+}
+}
 \description{
-Estimates Energy Balance using METRIC2010 Model
+Estimates the instantaneous land surface energy balance (Rn, G, H and LE)
+with the METRIC model (Allen et al., 2007). For Landsat 8 and 9 use
+Collection 2 Level-2 surface reflectance (image.SR) and, optionally, surface
+temperature (surf.temp), both from loadImageSR().
 }
 \details{
-There are differents models to convert narrowband data to broadband albedo. 
-You can choose alb.coeff ="Tasumi" to use Tasumi et al (2008) coefficients, 
-calculated for Landsat 7; alb.coeff ="Liang" to use Liang Landsat 7 
-coefficients or "Olmedo" to use Olmedo coefficients for Landsat 8.
+There are different models to convert narrowband data to broadband albedo.
+You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
+coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
+(2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
+coefficients for Landsat 8 and 9. See \code{\link{albedo}}.
+
+LAI.method can be "metric2010" (default), "metric", "MCB", "turner" or
+"vineyard". See \code{\link{LAI}}. Without image.DN, the leaf area index is
+computed and the anchor pixels are selected from the surface reflectance
+(image.SR), although the "metric", "metric2010" and "MCB" LAI equations were
+described for top-of-atmosphere reflectance.
+
+The ET of the cold pixels is ETp.coef times the hourly grass reference ET
+(ETo) at the satellite overpass (see calcH()), while ET24h() and dailyET()
+use the alfalfa reference ET (ETr) by default. With anchors.method =
+"flexible", if the cold-pixel criteria had to be relaxed and the mean NDVI of
+the cold pixels is below 0.8, ETp.coef is replaced by 2.11 * NDVI - 0.4989
+(Gonzalez et al., 2015).
 }
 \section{Extra Parameters}{
 
-Extra Paramenters for functions inside METRIC.EB() include:
-* for momentumRoughness when Zom.method = "Perrier": fLAI, h.
-* for calcAnchors(): minDist, WSbuffer, deltaTemp
+Extra parameters for functions inside METRIC.EB() include:
+\itemize{
+  \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
+  \item for momentumRoughnessLength() when Zom.method = "custom": a, b;
+  \item for calcAnchors(): minDist (default 500), WSbuffer (default 30000)
+    and deltaTemp (default 5).
+}
 }
 
 \examples{
@@ -148,6 +189,7 @@ Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+
 González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105.
 }
 \seealso{

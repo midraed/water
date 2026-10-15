@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_netRadiation.G.R
 \name{SWtrasmisivity}
 \alias{SWtrasmisivity}
-\title{Calculates short wave transmisivity}
+\title{Calculates broadband short-wave transmissivity}
 \usage{
 SWtrasmisivity(Kt = 1, ea, dem, incidence.hor)
 }
@@ -11,12 +11,19 @@ SWtrasmisivity(Kt = 1, ea, dem, incidence.hor)
 
 \item{ea}{near-surface vapor pressure (kPa)}
 
-\item{dem}{digital elevation model}
+\item{dem}{SpatRaster with a digital elevation model (m)}
 
-\item{incidence.hor}{solar incidence angle, considering plain surface}
+\item{incidence.hor}{solar incidence angle (radians) on a horizontal surface,
+from solarAngles()}
+}
+\value{
+SpatRaster with broadband short-wave atmospheric transmissivity
+(unitless).
 }
 \description{
-Short wave transmisivity is estimated for broad-band considering an extended equation developed by Allen (1996), based from Majumdar et al.(1972), using coefficients developed by ASCE-EWRI (2005).
+Short-wave transmissivity is estimated for broad-band considering an
+extended equation developed by Allen (1996), based on Majumdar et al.
+(1972), using coefficients developed by ASCE-EWRI (2005).
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -26,21 +33,21 @@ Majumdar, N.; Mathur, B. & Kaushik, S. Prediction of direct solar radiation for 
 ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

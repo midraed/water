@@ -14,34 +14,45 @@ waterOptions(
 )
 }
 \arguments{
-\item{overwrite}{Logical. If TRUE and writeResults is TRUE it will 
-overwrite results. If FALSE, results are save with a name with name_datetime.}
+\item{overwrite}{Logical. If TRUE and writeResults is TRUE it will
+overwrite results. If FALSE, results are saved with a time stamp appended to
+the file name (name_YYYYmmddHHMMSS.tif).}
 
-\item{writeResults}{Logical. If TRUE it'll write result to disk. This is 
-slower but if FALSE you can have out-of-memory problems.}
+\item{writeResults}{Logical. If TRUE (default FALSE) results are written as
+GeoTIFF files to outputFolder. This is slower, but avoids out-of-memory
+problems with large images.}
 
-\item{outputFolder}{Name of a folder to save files, relative to workind
-folder.}
+\item{outputFolder}{Name of a folder to save files, relative to the working
+directory.}
 
-\item{SRTMrepo}{A folder where SRTM grids are stored, to create DEM. See
-prepareSRTMdata()}
+\item{SRTMrepo}{A folder where SRTM grids are stored. Currently not
+used by prepareSRTMdata(); use its path argument}
 
-\item{autoAoi}{Logical. If TRUE it'll look for a object called aoi on 
-.GlobalEnv and use it as aoi. See createAoi()}
+\item{autoAoi}{Logical. If TRUE (default), functions with an aoi
+argument that is missing (loadImage(), loadImageSR(), albedo()) use an
+object called aoi in .GlobalEnv if it exists. See createAoi()}
 
-\item{default}{Logical. If TRUE will revert all options to defaults 
+\item{default}{Logical. If TRUE will revert all options to default
 values}
 }
 \value{
 list of the current options (invisibly). If no arguments are provided the options are printed.
 }
 \description{
-This function is based on raster::rasterOptions by Robert Hijmans.
+Sets or shows the global options of the water package. Inspired by
+rasterOptions() of the raster package (Robert J. Hijmans).
 }
 \references{
 Robert J. Hijmans (2015). raster: Geographic Data Analysis and Modeling. R
-package version 2.4-18. http://CRAN.R-project.org/package=raster
+package version 2.4-18. https://CRAN.R-project.org/package=raster
+}
+\seealso{
+Other support functions:
+\code{\link[=checkSRTMgrids]{checkSRTMgrids()}},
+\code{\link[=createAoi]{createAoi()}},
+\code{\link[=prepareSRTMdata]{prepareSRTMdata()}}
 }
 \author{
 Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
 }
+\concept{support functions}

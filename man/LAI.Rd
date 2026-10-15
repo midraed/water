@@ -7,49 +7,64 @@
 LAI(method = "metric2010", image, aoi, L = 0.1, sat)
 }
 \arguments{
-\item{method}{Method used to estimate LAI from spectral data.}
+\item{method}{Method used to estimate LAI from spectral data: "metric2010"
+(default), "metric", "MCB", "vineyard" or "turner". See Details.}
 
-\item{image}{image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Radiance for method = "vineyard".}
+\item{image}{SpatRaster with bands B, G, R, NIR, ... (the third and fourth
+layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
+"metric2010" and "MCB"; surface reflectance for "turner"; radiance for
+"vineyard" (see calcRadiance())}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility}
 
 \item{L}{L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1}
 
-\item{sat}{Landsat satellite version. "L7" or "L8"}
+\item{sat}{Not used; kept for backward compatibility}
+}
+\value{
+SpatRaster with leaf area index (m2/m2) in a layer named LAI;
+negative values are set to 0.
 }
 \description{
-This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
+This function implements empirical models to estimate LAI (Leaf Area Index)
+from satellite images. Models were extracted from METRIC publications and
+other works developed on different crops.
 }
 \details{
-LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
-LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
-depending on preferences of the user.
+LAI is computed from top-of-atmosphere reflectance ("metric",
+"metric2010" and "MCB"), surface reflectance ("turner") or radiance
+("vineyard"). LAI and other indices such as NDVI and SAVI are used to
+describe the vegetation, depending on the preferences of the user.
 Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner".
+
+When METRIC.EB(), METRIC.Rn() or METRIC.G() run without image.DN, the
+"metric", "metric2010" and "MCB" methods receive surface reflectance,
+although their equations were described for top-of-atmosphere reflectance.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
-Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
+Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
 Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 
-Fernando Fuentes Peñailillo
+Fernando Fuentes-Peñailillo
 }
 \concept{net radiation related functions}

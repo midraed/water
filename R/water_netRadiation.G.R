@@ -1,13 +1,17 @@
 #' Create aoi polygon from topleft and bottomright coordinates
 #' @description
 #' An AOI (Area of Interest) is created based on two points (topleft and bottomright) using a coordinate reference system.
-#' @param topleft     a vector with topleft x,y coordinates 
+#' @param topleft     a vector with topleft x,y coordinates
 #' @param bottomright a vector with bottomright x,y coordinates
-#' @param EPSG        Coordinate reference system EPSG code
-#' @return object of class sf polygon
+#' @param EPSG        EPSG code of the coordinate reference system of the
+#' coordinates (e.g. 32619 for WGS 84 / UTM zone 19N). Optional: if missing,
+#' the CRS is not set
+#' @return An sf data frame with a single POLYGON geometry (the rectangle
+#' defined by topleft and bottomright). Its CRS is set only when EPSG is
+#' supplied.
 #' @family support functions
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @examples 
 #' tl <- c(493300, -3592700)
 #' br <- c(557200, -3700000) 
@@ -26,7 +30,12 @@ createAoi <- function(topleft, bottomright, EPSG){
 }
 
 #' Check needed SRTM grids from image extent
-#' @param raw.image  image to calculate extent
+#' @description
+#' Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image.
+#' @param raw.image  SpatRaster whose extent (and CRS) is used to find the SRTM
+#' tiles needed
+#' @return Character vector with one EarthExplorer URL per 1 x 1 degree SRTM
+#' tile needed to cover the image. The number of tiles is also printed.
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions
@@ -53,10 +62,18 @@ checkSRTMgrids <-function(raw.image){
   return(unlist(result))
 }
 
-#' Create a mosaic with SRTM grid from image extent
-#' @param format  format of SRTM grid files
-#' @param extent  minimal extent of mosaic
+#' Create a DEM mosaic from SRTM grids for the image extent
+#' @description
+#' Mosaics the SRTM 1 arc-second tiles found in path (see checkSRTMgrids()) and
+#' projects the result to the grid of the image.
+#' @param format  file extension of the SRTM grid files (default "tif"); files
+#' must be named like s34_w069_1arc_v3.tif
+#' @param extent  SpatRaster (e.g. the Landsat image) whose grid is used for the
+#' output DEM, or an sf / SpatVector polygon with a CRS, in which case a 30 m
+#' grid in that CRS is used
 #' @param path  folder where SRTM files are stored
+#' @return SpatRaster with one layer named DEM (m), on the grid defined by
+#' extent.
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions
@@ -94,10 +111,17 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 
 #' Calculates surface model used in METRIC
 #' @description
-#' DEM map is used to generate the surface representation of the image through of aspect and slope maps. This procedure helps to avoid differences in the surface temperature (and finally Evapotranspiration) caused by different incidence angles and/or elevations in mountainous areas.
-#' @param DEM  raster with Digital elevation model 
+#' The DEM is used to generate the surface representation of the image through
+#' aspect and slope maps. This procedure helps to avoid differences in the
+#' surface temperature (and finally evapotranspiration) caused by different
+#' incidence angles and/or elevations in mountainous areas. A constant DEM
+#' (plain = TRUE in METRIC.EB()) gives a flat surface everywhere, without an NA
+#' border.
+#' @param DEM  SpatRaster with a digital elevation model (m)
+#' @return SpatRaster with layers DEM (m), Slope and Aspect (radians; Aspect is
+#' shifted by -pi, as METRIC expects).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -123,16 +147,25 @@ METRICtopo <- function(DEM){
 #' Calculates solar angles
 #' @description
 #' Metadata, aspect and slope maps are combined to estimate solar angles for the entire image. 
-#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
-#' @param MTL             Landsat Metadata File
-#' @param WeatherStation  Weather Station data
-#' @details Narrowband transmittances,are calculated considering some radiation transfer models operated 
-#' over a wide range of climates and locations across the world, this parameter vary with the cosine of 
-#' the solar angle, atmospheric pressure and precipitable water vapor in the atmosphere, so the author must 
-#' obtain accurate values of these three parameters.
+#' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
+#' METRICtopo()
+#' @param MTL             path to the Landsat metadata (MTL) file. If missing,
+#' the only *MTL.txt file in the working directory is used
+#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' data.frame returned by getDataWS()
+#' @details Latitude is computed for each row of the grid; declination and hour
+#' angle are computed from the acquisition date and scene centre time in the
+#' MTL file and the weather station longitude. Solar incidence angles are
+#' computed for a horizontal surface (incidence.hor) and for the sloping
+#' surface given by Slope and Aspect (incidence.rel), following Allen et al.
+#' (2007).
+#' @return SpatRaster with layers (radians) latitude, declination, hour.angle
+#' (negative before solar noon), incidence.hor (solar incidence angle on a
+#' horizontal surface) and incidence.rel (incidence angle on the sloping
+#' surface).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
-#' @author Fernando Fuentes Peñailillo
+#' @author David Fonseca-Luengo
+#' @author Fernando Fuentes-Peñailillo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -203,13 +236,19 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 
 #' Calculates Incoming Solar Radiation
 #' @description 
-#' This function calculates incoming solar radiation from surface model and solar angles.
-#' @param surface.model   rasterStack with DEM, Slope and Aspect. See surface.model()
-#' @param solar.angles    rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()
-#' @param WeatherStation  Weather Station data
+#' This function calculates incoming solar radiation from the surface model,
+#' the solar angles and the weather station data.
+#' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
+#' METRICtopo()
+#' @param solar.angles    SpatRaster with layers latitude, declination,
+#' hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()
+#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' data.frame returned by getDataWS()
+#' @return SpatRaster with incoming short-wave radiation (W/m2) at the time of
+#' the satellite overpass.
 #' @author Guillermo Federico Olmedo
-#' @author Daniel de la Fuente Saiz
-#' @author Fonseca-Luengo, David
+#' @author Daniel de la Fuente-Sáiz
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -230,29 +269,32 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 
 #' Calculates Broadband Albedo from Landsat data
 #' @description 
-#' Broadband surface Albedo is estimated considering the integration of all 
-#' narrowband at-surface reflectances following a weighting function with 
-#' empirical coefficients (Tasumi et al., 2007).
-#' @param image.SR   surface reflectance image with bands B, R, G, NIR, SWIR1, 
-#' SWIR2
-#' @param aoi        area of interest to crop images, if waterOptions("autoAoi")
-#'  == TRUE will look for any object called aoi on .GlobalEnv
-#' @param coeff      coefficient to transform narrow to broad band albedo. 
+#' Broadband surface albedo is estimated considering the integration of all
+#' narrowband at-surface reflectances following a weighting function with
+#' empirical coefficients (Tasumi et al., 2008).
+#' @param image.SR   surface reflectance SpatRaster with bands B, G, R, NIR,
+#' SWIR1 and SWIR2 (only the first six layers are used, by position)
+#' @param aoi        area of interest (e.g. from createAoi()) to crop the
+#' result. If missing and waterOptions("autoAoi") is TRUE, an object called aoi
+#' in .GlobalEnv is used if it exists
+#' @param coeff      coefficient to transform narrow to broad band albedo.
 #' See Details.
-#' @param sat        "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess 
-#' from filenames 
-#' @details 
-#' There are differents models to convert narrowband data to broadband albedo. 
-#' You can choose coeff="Tasumi" to use Tasumi et al (2008) coefficients, 
-#' calculated for Landsat 7; coeff="Liang" to use Liang Landsat 7 coefficients 
-#' or "Olmedo" to use Olmedo coefficients for Landsat 8.
+#' @param sat        "L7", "L8", "L9", "MODIS" or "auto" to detect the Landsat
+#' satellite from an MTL file or Landsat file names in the working directory
+#' @details
+#' There are different models to convert narrowband data to broadband albedo.
+#' You can choose coeff = "Tasumi" to use Tasumi et al. (2008) coefficients,
+#' calculated for Landsat 7; coeff = "Liang" to use Liang (2001) Landsat 7
+#' coefficients or coeff = "Olmedo" to use Olmedo coefficients for Landsat 8
+#' and 9.
+#' @return SpatRaster with broadband surface albedo (unitless).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-#' M. Tasumi, Allen, R. G., and Trezza, R. 2007. "Estimation of at-surface reflection albedo from satellite for routine operational calculation of land surface energy balance". J. Hydrol. Eng. \cr
-#' Liang, S. (2000). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(1), 213-238. \cr
+#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
+#' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(2), 213-238. \cr
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
   path <- getwd()
@@ -278,24 +320,37 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 
 #' Estimate LAI from Landsat Data
 #' @description
-#' This function implements empirical models to estimate LAI (Leaf Area Index) for satellital images. Models were extracted from METRIC publications and other works developed on different crops.
-#' @param method   Method used to estimate LAI from spectral data. 
-#' @param image    image. top-of-atmosphere reflectance for method=="metric" | method=="metric2010" | method=="MCB"; surface reflectance for method = "turner". Radiance for method = "vineyard".
-#' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
+#' This function implements empirical models to estimate LAI (Leaf Area Index)
+#' from satellite images. Models were extracted from METRIC publications and
+#' other works developed on different crops.
+#' @param method   Method used to estimate LAI from spectral data: "metric2010"
+#' (default), "metric", "MCB", "vineyard" or "turner". See Details.
+#' @param image    SpatRaster with bands B, G, R, NIR, ... (the third and fourth
+#' layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
+#' "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
+#' "vineyard" (see calcRadiance())
+#' @param aoi      Not used; kept for backward compatibility
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
-#' @param sat      Landsat satellite version. "L7" or "L8"
-#' @details LAI is computed using the top-of atmosphere (at-satellite) reflectance value. 
-#' LAI and other indices such NDVI, SAVI are used to predict characteristics of vegetation, 
-#' depending on preferences of the user.
-#' Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner". 
+#' @param sat      Not used; kept for backward compatibility
+#' @details LAI is computed from top-of-atmosphere reflectance ("metric",
+#' "metric2010" and "MCB"), surface reflectance ("turner") or radiance
+#' ("vineyard"). LAI and other indices such as NDVI and SAVI are used to
+#' describe the vegetation, depending on the preferences of the user.
+#' Available methods are: "metric", "metric2010", "MCB", "vineyard" and "turner".
+#'
+#' When METRIC.EB(), METRIC.Rn() or METRIC.G() run without image.DN, the
+#' "metric", "metric2010" and "MCB" methods receive surface reflectance,
+#' although their equations were described for top-of-atmosphere reflectance.
+#' @return SpatRaster with leaf area index (m2/m2) in a layer named LAI;
+#' negative values are set to 0.
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
-#' @author Fernando Fuentes Peñailillo
+#' @author David Fonseca-Luengo
+#' @author Fernando Fuentes-Peñailillo
 #' @family net radiation related functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
-#' Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard, 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x
+#' Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
@@ -344,15 +399,20 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   return(LAI)
 }
 
-#' Calculates short wave transmisivity
+#' Calculates broadband short-wave transmissivity
 #' @description
-#' Short wave transmisivity is estimated for broad-band considering an extended equation developed by Allen (1996), based from Majumdar et al.(1972), using coefficients developed by ASCE-EWRI (2005).
+#' Short-wave transmissivity is estimated for broad-band considering an
+#' extended equation developed by Allen (1996), based on Majumdar et al.
+#' (1972), using coefficients developed by ASCE-EWRI (2005).
 #' @param Kt            unitless turbidity coefficient 0<Kt<=1.0, where Kt=1.0 for clean air and Kt=0.5 for extremely turbid, dusty, or polluted air
 #' @param ea            near-surface vapor pressure (kPa)
-#' @param dem           digital elevation model 
-#' @param incidence.hor solar incidence angle, considering plain surface
+#' @param dem           SpatRaster with a digital elevation model (m)
+#' @param incidence.hor solar incidence angle (radians) on a horizontal surface,
+#' from solarAngles()
+#' @return SpatRaster with broadband short-wave atmospheric transmissivity
+#' (unitless).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -378,23 +438,33 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 
 #' Estimates Land Surface Temperature from Landsat Data
 #' @description
-#' Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
-#' @param image.DN      raw image in digital numbers
-#' @param thermalband     Satellite thermal band. For L8 this should be band 10. Deprecated argument
-#' @param sat             "L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames 
-#' @param LAI             raster layer with leaf area index. See LAI()
-#' @param aoi             area of interest to crop images, if 
-#'                        waterOptions("autoAoi") == TRUE will look for any 
-#'                        object called aoi on .GlobalEnv
-#' @param method          "SC" for single channel or "SW" for split window 
+#' Surface temperature is estimated using a modified Planck equation
+#' considering empirical constants for Landsat images. In addition, this model
+#' implements a correction of thermal radiance following Wukelic et al.
+#' (1989). For Landsat 8 and 9, a single-channel (Jimenez-Munoz et al., 2014)
+#' or a split-window algorithm can be used. With Landsat 8/9 Collection 2
+#' Level-2 products, the surface temperature band can be used directly instead
+#' (surf.temp in METRIC.EB()).
+#' @param image.DN        raw image in digital numbers, e.g. from loadImage()
+#' @param thermalband     thermal band in digital numbers. Optional: if missing,
+#' image.DN$Thermal1 is used (L7: band 6 low gain; L8/L9: band 10)
+#' @param sat             "L7", "L8", "L9" or "auto" to detect it from the MTL
+#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
+#' working directory)
+#' @param LAI             SpatRaster with leaf area index, from LAI()
+#' @param aoi             Not used; kept for backward compatibility
+#' @param method          "SC" for single channel or "SW" for split window
 #'                        algorithm. "SW" is only available for L8 and L9
-#' @param WeatherStation  Weather Station data
-#' @param MTL             Landsat metadata file. For L8 and L9 the thermal
-#'                        calibration constants are read from it. Required
-#'                        for L9; without it L8 uses Landsat 8 defaults
+#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' data.frame returned by getDataWS()
+#' @param MTL             path to the Landsat metadata (MTL) file. For L8 and
+#'                        L9 the thermal calibration constants are read from
+#'                        it. Required for L9; without it L8 uses Landsat 8
+#'                        defaults
+#' @return SpatRaster with land surface temperature (K).
 #' @family net radiation related functions
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
 #' mapping evapotranspiration with internalized calibration (METRIC) - 
@@ -406,7 +476,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' Environment, 1989, 28, (339-347) \cr
 #'
 #' Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
-#' J. (2014). Land surface temperature retrieval methods from landsat-8 thermal 
+#' J. (2014). Land surface temperature retrieval methods from Landsat-8 thermal
 #' infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 #' 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr 
 #' @export
@@ -488,13 +558,15 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   return(Ts)
 }
 
-#' Calculates Long wave outgoing radiation
+#' Calculates outgoing long-wave radiation
 #' @description
-#' This function estimates the long wave outgoing radiation using the Stefan-Boltzmann equation.
-#' @param LAI  raster layer with leaf area index. See LAI()
-#' @param Ts   Land surface temperature. See surfaceTemperature()
+#' This function estimates the outgoing long-wave radiation using the
+#' Stefan-Boltzmann equation.
+#' @param LAI  SpatRaster with leaf area index, from LAI()
+#' @param Ts   land surface temperature (K), from surfaceTemperature()
+#' @return SpatRaster with outgoing long-wave radiation (W/m2).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
@@ -510,15 +582,22 @@ outLWradiation <- function(LAI, Ts){
   return(Rl.out)
 }
 
-#' Calculates long wave incoming radiation
+#' Calculates incoming long-wave radiation
 #' @description
-#' This function estimates the long wave incoming radiation using the Stefan-Boltzmann equation. In addition, empirical equation of Bastiaanssen (1995) with coefficients developed by Allen (2000) are used to estimate the effective atmospheric emissivity.
-#' @param WeatherStation   Weather Station data
-#' @param DEM              digital elevation model in meters.
-#' @param solar.angles     rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()
-#' @param Ts               Land surface temperature. See surfaceTemperature()
+#' This function estimates the incoming long-wave radiation using the
+#' Stefan-Boltzmann equation. In addition, the empirical equation of
+#' Bastiaanssen (1995) with coefficients developed by Allen (2000) is used to
+#' estimate the effective atmospheric emissivity.
+#' @param WeatherStation   waterWeatherStation object (see read.WSdata()) or the
+#' data.frame returned by getDataWS()
+#' @param DEM              SpatRaster with a digital elevation model (m)
+#' @param solar.angles     SpatRaster with layers latitude, declination,
+#' hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()
+#' @param Ts               land surface temperature (K), from
+#' surfaceTemperature()
+#' @return SpatRaster with incoming long-wave radiation (W/m2).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -548,14 +627,17 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
 
 #' Estimates net radiation
 #' @description
-#' This function estimates net radiation considering a surface radiation balance. Equations use the information from the image, in addition of measurements of actual vapor pressure and altitude.
-#' @param LAI     raster layer with leaf area index. See LAI()
-#' @param albedo  broadband surface albedo. See albedo()
-#' @param Rs.inc  incoming short-wave radiation
-#' @param Rl.inc  incomin long-wave radiation
-#' @param Rl.out  outgoing long-wave radiation
+#' This function estimates net radiation considering a surface radiation
+#' balance. Equations use the information from the image, in addition to
+#' measurements of actual vapor pressure and altitude.
+#' @param LAI     SpatRaster with leaf area index, from LAI()
+#' @param albedo  broadband surface albedo, from albedo()
+#' @param Rs.inc  incoming short-wave radiation (W/m2), from incSWradiation()
+#' @param Rl.inc  incoming long-wave radiation (W/m2), from incLWradiation()
+#' @param Rl.out  outgoing long-wave radiation (W/m2), from outLWradiation()
+#' @return SpatRaster with net radiation (W/m2).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -572,20 +654,27 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 
 #' Estimates Soil Heat Flux
 #' @description
-#' This function implements models to estimate soil heat flux for different surfaces and considering different inputs.
-#' @param image    surface reflectance image
-#' @param Ts       Land surface temperature. See surfaceTemperature()
-#' @param albedo   broadband surface albedo. See albedo()
-#' @param LAI      raster layer with leaf area index. See LAI()
-#' @param Rn       Net radiation. See netRadiation()
-#' @param aoi      area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv
-#' @param method   method used for the G estimation. Currently implemeted are 
-#'                 "Tasumi" for Tasumi,2003 or "Bastiaanssen" for Bastiaanssen, 2000
+#' This function implements models to estimate soil heat flux for different
+#' surfaces and considering different inputs.
+#' @param image    surface reflectance SpatRaster with bands B, G, R, NIR, ...
+#' (the third and fourth layers, R and NIR, are used for NDVI)
+#' @param Ts       land surface temperature (K), from surfaceTemperature()
+#' @param albedo   broadband surface albedo, from albedo()
+#' @param LAI      SpatRaster with leaf area index, from LAI()
+#' @param Rn       net radiation (W/m2), from netRadiation()
+#' @param aoi      Not used; kept for backward compatibility
+#' @param method   method used for the G estimation: "Tasumi" (Tasumi, 2003;
+#' default) or "Bastiaanssen" (Bastiaanssen, 2000)
+#' @return SpatRaster with soil heat flux (W/m2).
 #' @author Guillermo Federico Olmedo
-#' @author Fonseca-Luengo, David
+#' @author David Fonseca-Luengo
 #' @family net radiation related functions
-#' @references 
+#' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+#'
+#' Tasumi, M. (2003). Progress in operational estimation of regional evapotranspiration using satellite imagery. Ph.D. dissertation, University of Idaho, Moscow, Idaho. \cr
+#'
+#' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. \cr
 #' @export
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   sr.4.5 <- c(image[[3]], image[[4]])

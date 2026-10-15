@@ -2,21 +2,30 @@
 % Please edit documentation in R/water_netRadiation.G.R
 \name{incLWradiation}
 \alias{incLWradiation}
-\title{Calculates long wave incoming radiation}
+\title{Calculates incoming long-wave radiation}
 \usage{
 incLWradiation(WeatherStation, DEM, solar.angles, Ts)
 }
 \arguments{
-\item{WeatherStation}{Weather Station data}
+\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+data.frame returned by getDataWS()}
 
-\item{DEM}{digital elevation model in meters.}
+\item{DEM}{SpatRaster with a digital elevation model (m)}
 
-\item{solar.angles}{rasterStack with latitude, declination, hour.angle, incidence.hor and incidence.rel. See solarAngles()}
+\item{solar.angles}{SpatRaster with layers latitude, declination,
+hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 
-\item{Ts}{Land surface temperature. See surfaceTemperature()}
+\item{Ts}{land surface temperature (K), from
+surfaceTemperature()}
+}
+\value{
+SpatRaster with incoming long-wave radiation (W/m2).
 }
 \description{
-This function estimates the long wave incoming radiation using the Stefan-Boltzmann equation. In addition, empirical equation of Bastiaanssen (1995) with coefficients developed by Allen (2000) are used to estimate the effective atmospheric emissivity.
+This function estimates the incoming long-wave radiation using the
+Stefan-Boltzmann equation. In addition, the empirical equation of
+Bastiaanssen (1995) with coefficients developed by Allen (2000) is used to
+estimate the effective atmospheric emissivity.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -26,21 +35,21 @@ Bastiaanssen W. Regionalization of surface flux densities and moisture indicator
 Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incSWradiation}()},
-\code{\link{netRadiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=netRadiation]{netRadiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

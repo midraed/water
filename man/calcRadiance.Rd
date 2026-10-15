@@ -2,31 +2,44 @@
 % Please edit documentation in R/water_RSfunctions.R
 \name{calcRadiance}
 \alias{calcRadiance}
-\title{Calculates radiance}
+\title{Calculates at-sensor radiance}
 \usage{
 calcRadiance(image.DN, sat = "auto", MTL)
 }
 \arguments{
-\item{image.DN}{raw image in digital numbers}
+\item{image.DN}{raw image in digital numbers, e.g. from loadImage().
+Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, Thermal2)
+when present}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
+\item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
+file (or, if MTL is missing, from an MTL file or Landsat file names in the
+working directory)}
 
-\item{MTL}{Landsat Metadata File}
+\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
+the only *MTL.txt file in the working directory is used}
+}
+\value{
+SpatRaster with at-sensor spectral radiance (W m-2 sr-1 um-1) in
+layers B, G, R, NIR, SWIR1, SWIR2, Thermal1 and, for Landsat 8/9, Thermal2.
 }
 \description{
-This function calculates radiance
+Converts digital numbers to at-sensor spectral radiance using the
+RADIANCE_MULT_BAND_x and RADIANCE_ADD_BAND_x values of the MTL file.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+
 LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+
+U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
 }
 \seealso{
-Other remote sensing support functions: 
-\code{\link{calcSR}()},
-\code{\link{calcTOAr}()},
-\code{\link{cfmask}()},
-\code{\link{loadImageSR}()},
-\code{\link{loadImage}()}
+Other remote sensing support functions:
+\code{\link[=calcSR]{calcSR()}},
+\code{\link[=calcTOAr]{calcTOAr()}},
+\code{\link[=cfmask]{cfmask()}},
+\code{\link[=loadImage]{loadImage()}},
+\code{\link[=loadImageSR]{loadImageSR()}}
 }
 \author{
 Guillermo Federico Olmedo

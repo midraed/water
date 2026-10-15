@@ -16,29 +16,41 @@ surfaceTemperature(
 )
 }
 \arguments{
-\item{image.DN}{raw image in digital numbers}
+\item{image.DN}{raw image in digital numbers, e.g. from loadImage()}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
+\item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
+file (or, if MTL is missing, from an MTL file or Landsat file names in the
+working directory)}
 
-\item{LAI}{raster layer with leaf area index. See LAI()}
+\item{LAI}{SpatRaster with leaf area index, from LAI()}
 
-\item{aoi}{area of interest to crop images, if 
-waterOptions("autoAoi") == TRUE will look for any 
-object called aoi on .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility}
 
-\item{method}{"SC" for single channel or "SW" for split window 
+\item{method}{"SC" for single channel or "SW" for split window
 algorithm. "SW" is only available for L8 and L9}
 
-\item{WeatherStation}{Weather Station data}
+\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+data.frame returned by getDataWS()}
 
-\item{thermalband}{Satellite thermal band. For L8 this should be band 10. Deprecated argument}
+\item{thermalband}{thermal band in digital numbers. Optional: if missing,
+image.DN$Thermal1 is used (L7: band 6 low gain; L8/L9: band 10)}
 
-\item{MTL}{Landsat metadata file. For L8 and L9 the thermal
-calibration constants are read from it. Required
-for L9; without it L8 uses Landsat 8 defaults}
+\item{MTL}{path to the Landsat metadata (MTL) file. For L8 and
+L9 the thermal calibration constants are read from
+it. Required for L9; without it L8 uses Landsat 8
+defaults}
+}
+\value{
+SpatRaster with land surface temperature (K).
 }
 \description{
-Surface temperature is estimated using a modified Plank equation considering empirical constants for Landsat images. In addition, this model implements a correction of thermal radiance following to Wukelic et al. (1989).
+Surface temperature is estimated using a modified Planck equation
+considering empirical constants for Landsat images. In addition, this model
+implements a correction of thermal radiance following Wukelic et al.
+(1989). For Landsat 8 and 9, a single-channel (Jimenez-Munoz et al., 2014)
+or a split-window algorithm can be used. With Landsat 8/9 Collection 2
+Level-2 products, the surface temperature band can be used directly instead
+(surf.temp in METRIC.EB()).
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
@@ -51,7 +63,7 @@ calibration of Landsat thematic mapper thermal band Remote Sensing of
 Environment, 1989, 28, (339-347) \cr
 
 Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
-J. (2014). Land surface temperature retrieval methods from landsat-8 thermal 
+J. (2014). Land surface temperature retrieval methods from Landsat-8 thermal
 infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
 }
@@ -71,6 +83,6 @@ Other net radiation related functions:
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

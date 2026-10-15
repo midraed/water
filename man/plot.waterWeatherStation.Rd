@@ -20,14 +20,19 @@ overpass}
 
 \item{...}{additional parameters to pass to plot()}
 }
+\value{
+No return value, called for side effects (plots solar radiation,
+wind speed, temperature, vapor pressure and, if available, rain).
+}
 \description{
 Plot method for waterWeatherStation S3 class
 }
 \seealso{
-Other Weather station related functions: 
-\code{\link{print.waterWeatherStation}()},
-\code{\link{read.WSdata2}()},
-\code{\link{read.WSdata}()}
+Other Weather station related functions:
+\code{\link[=getDataWS]{getDataWS()}},
+\code{\link[=print.waterWeatherStation]{print.waterWeatherStation()}},
+\code{\link[=read.WSdata]{read.WSdata()}},
+\code{\link[=read.WSdata2]{read.WSdata2()}}
 }
 \author{
 Guillermo Federico Olmedo

@@ -1,21 +1,31 @@
 #' Calculates Momentum Roughness Length
-#' @description           this function estimates Momentum Roughness Length (Zom) from the average vegetation height around the weather station.
+#' @description           Estimates the momentum roughness length (Zom, m) for
+#' each pixel from LAI ("short.crops"), from NDVI and albedo ("custom") or from
+#' LAI and crop height ("Perrier").
 #' @param method          method selected to calculate momentum roughness length. Use
 #' "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
 #' method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in
 #' Santos et al (2012) and Pocas et al (2014).
-#' @param LAI             rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"
-#' @param NDVI            rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"
-#' @param albedo          broadband surface albedo. See albedo()
-#' @param a               "a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
-#' @param b               "b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
+#' @param LAI             SpatRaster with leaf area index, from LAI(). Needed for
+#' method = "short.crops" and "Perrier"
+#' @param NDVI            SpatRaster with the Normalized Difference Vegetation
+#' Index. Only needed for method = "custom"
+#' @param albedo          broadband surface albedo, from albedo(). Only needed
+#' for method = "custom"
+#' @param a               "a" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
+#' @param b               "b" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
 #' @param fLAI            proportion of LAI lying above h/2. Only needed for method = "Perrier"
 #' @param h               crop height in meters. Only needed for method = "Perrier"
-#' @param mountainous      empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)
-#' @param surface.model   surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()
-#' @details According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
+#' @param mountainous     Logical. If TRUE applies the empirical adjustment for
+#' the effects of general terrain roughness on momentum and heat transfer
+#' (Allen et al., 2007); needs surface.model
+#' @param surface.model   SpatRaster from METRICtopo() with a layer named Slope.
+#' Only needed if mountainous = TRUE
+#' @details According to Allen et al. (2010), Zom is a measure of the form drag
+#' and skin friction for the layer of air that interacts with the surface.
+#' @return SpatRaster with the momentum roughness length (m).
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Saiz, Daniel
+#' @author Daniel de la Fuente-Sáiz
 #' @family sensible heat flux functions
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -49,35 +59,61 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
   return(Z.om)
 }
 
-#' Select anchors pixels for H function
-#' @description            automatically search end members within the satellite scene (extreme wet and dry conditions).
-#' @param image            top-of-atmosphere landsat reflectance image
+#' Select anchor pixels for the H function
+#' @description            Automatically searches for end members (anchor
+#' pixels) within the satellite scene (extreme wet and dry conditions): cold
+#' pixels with well-watered full-cover vegetation and hot pixels with dry bare
+#' soil.
+#' @param image            reflectance SpatRaster (top-of-atmosphere
+#' reflectance, or surface reflectance when no DN image is available) with
+#' layers named R and NIR, used to compute NDVI
 #' @param Ts               land surface temperature in K. See surfaceTemperature()
-#' @param LAI              rasterLayer with Leaf Area Index. See LAI()
-#' @param albedo           broandband surface albedo. See albedo()
-#' @param Z.om             momentum roughness lenght. See momentumRoughnessLength()
-#' @param n                number of pair of anchors pixels to calculate
-#' @param aoi              area of interest to limit the search. If
-#' waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv
-#' @param anchors.method   method for the selection of anchor pixels. "random" for
-#' random selection of hot and cold candidates according to CITRA-MCB method, or
-#' "best" for selecting the best candidates. And "flexible" for method with soft
-#' limits to the anchor pixel conditions.
-#' @param WeatherStation Optional. WeatherStation data at the satellite overpass.
-#' Should be a waterWeatherStation object calculated using read.WSdata and MTL file.
+#' @param LAI              SpatRaster with leaf area index, from LAI()
+#' @param albedo           broadband surface albedo, from albedo()
+#' @param Z.om             momentum roughness length, from momentumRoughnessLength()
+#' @param n                number of pairs of anchor pixels to select
+#' @param aoi              Not used; kept for backward compatibility
+#' @param anchors.method   method for the selection of anchor pixels: "flexible"
+#' (default), "best" or "random". See Details.
+#' @param WeatherStation   Optional. waterWeatherStation object (see
+#' read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
+#' station
 #' @param plots            Logical. If TRUE will plot position of anchors points
 #' selected. Points in red are selected hot pixels, blue are the cold ones and the
-#' black represents the position of the Weather Station
-#' @param deltaTemp        deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"
-#' @param minDist           minimun distance allowed for two anchor pixels of the
-#' same type (in meters).
-#' @param WSbuffer         maximun distante to the Weather Station (in meters).
-#' @param verbose          Logical. If TRUE will print aditional data to console
+#' black represents the position of the Weather Station (if supplied)
+#' @param deltaTemp        temperature margin (K, default 5): cold candidates must
+#' be colder than the 5\% quantile of Ts over well-vegetated pixels plus
+#' deltaTemp, and hot candidates warmer than the maximum Ts over bare-soil
+#' pixels minus deltaTemp
+#' @param minDist          minimum distance (m) between two anchor pixels of the
+#' same type
+#' @param WSbuffer         maximum distance (m) to the weather station. If no
+#' pixel is within WSbuffer, the whole image is used, with a warning
+#' @param verbose          Logical. If TRUE will print additional data to console
+#' @details
+#' Cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
+#' within 0.15 of the maximum NDVI of the image and Ts below the threshold given
+#' by deltaTemp. Hot candidates have albedo 0.13 to 0.15, NDVI 0.1 to 0.28,
+#' Z.om up to 0.005 and Ts above the threshold given by deltaTemp.
+#'
+#' anchors.method = "best" selects the coldest and the hottest candidates;
+#' "random" selects them at random among the candidates (CITRA-MCB method);
+#' "flexible" (default) works like "best" but, when there are not enough
+#' candidates, relaxes the limits of the criteria (LAI, albedo and Z.om for cold
+#' pixels; albedo, NDVI, Z.om and Ts for hot pixels) in 1\% steps up to 100\%,
+#' first near the weather station (within WSbuffer) and then in the whole
+#' image, with a warning. The old names "CITRA-MCB" and "CITRA-MCBbc" (now
+#' "best") and "CITRA-MCBr" (now "random") are deprecated.
+#' @return A data.frame with one row per anchor pixel and columns pixel (cell
+#' number), X and Y (cell coordinates in the CRS of Ts), Ts (K), LAI, NDVI and
+#' type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
+#' added: the relaxation applied to the cold-pixel criteria (0 = none, 1 =
+#' 100\%). If plots = TRUE the anchors are also plotted over LAI.
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Saiz, Daniel
+#' @author Daniel de la Fuente-Sáiz
 #' @family sensible heat flux functions
 #' @references
-#' CITRA y MCB (com pers)
+#' CITRA and MCB (personal communication)
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "flexible", WeatherStation,
@@ -439,21 +475,26 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 
 
 #' Iterative function to estimate H and R.ah
-#' @description          generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
-#' @param anchors        anchors points. Can be the result from calcAnchors() or
-#' a spatialPointDataframe o Dataframe with X, Y, and type. type should be
-#' "cold" or "hot"
-#' @param method         Method when using more than 1 pair of anchor pixels.
-#' method = "mean" will use the mean value for the cold pixels vs the mean value
-#' for the hot pixels.
+#' @description          Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
+#' @param anchors        anchor pixels: the data.frame returned by calcAnchors(),
+#' another data.frame with X, Y (coordinates in the CRS of Ts) and type
+#' columns, or an sf POINT object with a type column. type must be "hot" or
+#' "cold"
+#' @param method         Method when using more than 1 pair of anchor pixels:
+#' "mean" (default) uses the mean values of the cold pixels and of the hot
+#' pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
+#' pair) and returns a and b of the last pair
 #' @param Ts             Land surface temperature in K. See surfaceTemperature()
-#' @param Z.om           momentum roughness lenght. See momentumRoughnessLength()
+#' @param Z.om           momentum roughness length, from momentumRoughnessLength()
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
-#' @param ETp.coef       ETp coefficient usually 1.05 or 1.2 for alfalfa
-#' @param Z.om.ws        momentum roughness lenght for WeatherStation. Usually
-#' a value of 0.03 might be reasonable for a typical agricultural weather station
-#' sited over vegetation that is about 0.3 m tall.  For clipped grass, use 0.015 m
+#' @param ETp.coef       coefficient for the ET of the cold pixels: it multiplies
+#' the hourly grass reference ET (ETo) at the satellite overpass (see Details).
+#' Usually 1.05, or 1.2 for alfalfa
+#' @param Z.om.ws        momentum roughness length (m) of the weather station
+#' surface (default 0.03 here; METRIC.EB() uses a default of 0.0018). A value
+#' of 0.03 might be reasonable for a typical agricultural weather station sited
+#' over vegetation that is about 0.3 m tall. For clipped grass, use 0.015 m
 #' @param mountainous    Logical. If TRUE heat transfer equation will be
 #' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
@@ -461,18 +502,30 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param G              Soil Heat Flux. See soilHeatFlux()
 #' @param verbose        Logical. If TRUE will print information about every
 #' iteration to console
-#' @param maxit          Maximun number of iteration. Default 20.
+#' @param maxit          Maximum number of iterations. Default 20.
 #' @details Sensible heat flux is the rate of heat loss to the air by convection
-#' and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
-#'aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because
-#'there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two "anchor"
-#'pixels  and solve for dT that satisfies eq. given the aerodynamic roughness and wind speed at a given height.
-#'Aerodynamic resistance, and heat transfer is impacted by buoyancy of heated, light air at the surface,
-#'especially when H is large. Therefore, correction to rah is needed to account for buoyancy effects. However,
-#'H is needed to make this correction. An iterative solution for both H and rah is used.
+#' and conduction, due to a temperature difference. This parameter is computed
+#' using a one-dimensional, aerodynamic, temperature-gradient-based equation for
+#' heat transport. This method is difficult to solve because there are two
+#' unknowns, rah and dT. To facilitate this computation, METRIC utilizes the two
+#' "anchor" pixels and solves for the dT that satisfies the equation given the
+#' aerodynamic roughness and wind speed at a given height. Aerodynamic
+#' resistance and heat transfer are impacted by buoyancy of heated, light air at
+#' the surface, especially when H is large. Therefore, correction to rah is
+#' needed to account for buoyancy effects. However, H is needed to make this
+#' correction. An iterative solution for both H and rah is used.
+#'
+#' The ET of the cold pixels is computed as ETp.coef times the hourly grass
+#' reference ET (ETo, ASCE standardized equation; see hourlyET()) at the
+#' satellite overpass, while ET24h() and dailyET() use the alfalfa reference ET
+#' (ETr) by default.
+#' @return A list with a and b (coefficients of dT = a * Ts_datum + b), dT
+#' (SpatRaster, near-surface temperature difference, K) and H (SpatRaster,
+#' sensible heat flux, W/m2). The aerodynamic resistance of the anchor pixels at
+#' each iteration is plotted.
 #' @author Guillermo Federico Olmedo
-#' @author de la Fuente-Saiz, Daniel
-#' @author Fernando Fuentes Peñailillo
+#' @author Daniel de la Fuente-Sáiz
+#' @author Fernando Fuentes-Peñailillo
 #' @family sensible heat flux functions
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr

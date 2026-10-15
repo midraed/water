@@ -7,15 +7,21 @@
 checkSRTMgrids(raw.image)
 }
 \arguments{
-\item{raw.image}{image to calculate extent}
+\item{raw.image}{SpatRaster whose extent (and CRS) is used to find the SRTM
+tiles needed}
+}
+\value{
+Character vector with one EarthExplorer URL per 1 x 1 degree SRTM
+tile needed to cover the image. The number of tiles is also printed.
 }
 \description{
-Check needed SRTM grids from image extent
+Lists the 1 x 1 degree SRTM tiles needed to cover the extent of an image.
 }
 \seealso{
-Other support functions: 
-\code{\link{createAoi}()},
-\code{\link{prepareSRTMdata}()}
+Other support functions:
+\code{\link[=createAoi]{createAoi()}},
+\code{\link[=prepareSRTMdata]{prepareSRTMdata()}},
+\code{\link[=waterOptions]{waterOptions()}}
 }
 \author{
 Guillermo Federico Olmedo

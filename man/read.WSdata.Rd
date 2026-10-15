@@ -23,7 +23,7 @@ read.WSdata(
 \arguments{
 \item{WSdata}{csv file with weather station data or data.frame}
 
-\item{...}{additional parameter to pass to read.csv()}
+\item{...}{additional parameters passed to read.csv()}
 
 \item{height}{weather station sensors height in meters}
 
@@ -48,26 +48,34 @@ examples only as a reference.}
 
 \item{datetime.format}{datetime format. See strptime format argument.}
 
-\item{tz}{timezone of the weather station dates. If not 
-present assumes the same timezone as the computer running the code. See 
-strptime for details.}
+\item{tz}{time zone of the weather station clock (e.g.
+"America/Santiago"; see OlsonNames()). If "" (default) the time zone of the
+computer is assumed, with a warning. Always set it: the overpass time in the
+MTL file is UTC and is converted to this time zone. See strptime for
+details.}
 
-\item{cf}{conversion factor to convert radiation, wind, and 
+\item{cf}{conversion factor to convert radiation, wind, and
 temperature to W/m2; m/s and Celsius. See Details.}
 
-\item{MTL}{Metadata file. If not provided will look for one on
-working directory. If provided or present will calculate weather conditions
-on satellite overpass.}
+\item{MTL}{path to the Landsat metadata (MTL) file. If
+missing, the only *MTL.txt file in the working directory is used, if any.
+When available, the weather conditions at the satellite overpass are
+interpolated (element at.sat); if the overpass is outside the records, a
+warning is given and at.sat is not computed.}
 }
 \value{
-waterWeatherStation object, with data.frames with all data, hourly
-data and conditions at satellite flyby.
+An object of class waterWeatherStation: a list with location (lat,
+long, elev, height), alldata (all records), daily (daily summaries), hourly
+(values interpolated every hour) and, when an MTL file is available, at.sat
+(conditions interpolated at the satellite overpass).
 }
 \description{
-Prepares weather station data
+Reads weather station records from a csv file or a data.frame, interpolates
+them every hour and, with a Landsat metadata (MTL) file, at the time of the
+satellite overpass.
 }
 \details{
-For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 temperature), cf should be: cf = c(1,0.2777778,1)
 }
 \examples{
@@ -79,20 +87,22 @@ WS <- read.WSdata(WSdata = csvfile, date.format = "\%d/\%m/\%Y",
                   "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
                   MTL = MTLfile, tz = "America/Santiago")
 print(WS)
-plot(WS, alldata=FALSE)
-plot(WS, alldata=TRUE)
+plot(WS, hourly=FALSE)
+plot(WS, hourly=TRUE)
 }
 \references{
 Landsat 7 Metadata example file available from the U.S. Geological Survey.
 Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
 }
 \seealso{
-\code{\link{read.WSdata2}} for the equivalent using read.csv2()
+\code{\link{read.WSdata2}} for files with semicolon separators and
+decimal commas (read.csv2())
 
-Other Weather station related functions: 
-\code{\link{plot.waterWeatherStation}()},
-\code{\link{print.waterWeatherStation}()},
-\code{\link{read.WSdata2}()}
+Other Weather station related functions:
+\code{\link[=getDataWS]{getDataWS()}},
+\code{\link[=plot.waterWeatherStation]{plot.waterWeatherStation()}},
+\code{\link[=print.waterWeatherStation]{print.waterWeatherStation()}},
+\code{\link[=read.WSdata2]{read.WSdata2()}}
 }
 \author{
 Guillermo Federico Olmedo

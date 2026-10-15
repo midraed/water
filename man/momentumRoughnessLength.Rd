@@ -18,34 +18,46 @@ momentumRoughnessLength(
 )
 }
 \arguments{
-\item{method}{method selected to calculate momentum roughness length. Use 
+\item{method}{method selected to calculate momentum roughness length. Use
 "short.crops" for short crops methods from Allen et al (2007); "custom" for custom
-method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in 
+method also in Allen et al (2007); Or "Perrier" to use Perrier equation as in
 Santos et al (2012) and Pocas et al (2014).}
 
-\item{LAI}{rasterLayer with Leaf Area Index. See LAI(). Only needed for method = "short.crops"}
+\item{LAI}{SpatRaster with leaf area index, from LAI(). Needed for
+method = "short.crops" and "Perrier"}
 
-\item{NDVI}{rasterLayer with Normalized Difference Vegetation Index. Only needed for method = "custom"}
+\item{NDVI}{SpatRaster with the Normalized Difference Vegetation
+Index. Only needed for method = "custom"}
 
-\item{albedo}{broadband surface albedo. See albedo()}
+\item{albedo}{broadband surface albedo, from albedo(). Only needed
+for method = "custom"}
 
-\item{a}{"a" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+\item{a}{"a" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
 
-\item{b}{"b" coefficients for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
+\item{b}{"b" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
 
 \item{fLAI}{proportion of LAI lying above h/2. Only needed for method = "Perrier"}
 
 \item{h}{crop height in meters. Only needed for method = "Perrier"}
 
-\item{mountainous}{empirical adjustment for effects of general terrain roughness on momentum and heat transfer. See Allen (2007)}
+\item{mountainous}{Logical. If TRUE applies the empirical adjustment for
+the effects of general terrain roughness on momentum and heat transfer
+(Allen et al., 2007); needs surface.model}
 
-\item{surface.model}{surface model with a RasterLayer called "Slope" needed is mountainous = TRUE. See surface.model()}
+\item{surface.model}{SpatRaster from METRICtopo() with a layer named Slope.
+Only needed if mountainous = TRUE}
+}
+\value{
+SpatRaster with the momentum roughness length (m).
 }
 \description{
-this function estimates Momentum Roughness Length (Zom) from the average vegetation height around the weather station.
+Estimates the momentum roughness length (Zom, m) for
+each pixel from LAI ("short.crops"), from NDVI and albedo ("custom") or from
+LAI and crop height ("Perrier").
 }
 \details{
-According Allen et al,. 2010 Zom is a measure of the form drag and skin friction for the layer of air that interacts with the surface.
+According to Allen et al. (2010), Zom is a measure of the form drag
+and skin friction for the layer of air that interacts with the surface.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -55,13 +67,13 @@ Pocas, I., Paco, T.A., Cunha, M., Andrade, J.A., Silvestre, J., Sousa, A., Santo
 Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267-3283. doi:10.1007/s11269-012-0071-8 \cr
 }
 \seealso{
-Other sensible heat flux functions: 
-\code{\link{calcAnchors}()},
-\code{\link{calcH}()}
+Other sensible heat flux functions:
+\code{\link[=calcAnchors]{calcAnchors()}},
+\code{\link[=calcH]{calcH()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-de la Fuente-Saiz, Daniel
+Daniel de la Fuente-Sáiz
 }
 \concept{sensible heat flux functions}

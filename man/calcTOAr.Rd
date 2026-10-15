@@ -2,40 +2,57 @@
 % Please edit documentation in R/water_RSfunctions.R
 \name{calcTOAr}
 \alias{calcTOAr}
-\title{Calculates Top of atmosphere reflectance}
+\title{Calculates top-of-atmosphere reflectance}
 \usage{
 calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
 }
 \arguments{
-\item{image.DN}{raw image in digital numbers}
+\item{image.DN}{raw image in digital numbers, e.g. from loadImage().
+Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present}
 
-\item{sat}{"L7" for Landsat 7, "L8" for Landsat 8 or "auto" to guess from filenames}
+\item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
+file (or, if MTL is missing, from an MTL file or Landsat file names in the
+working directory)}
 
-\item{aoi}{area of interest to crop images, if waterOptions("autoAoi") == TRUE will look for any object called aoi on .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility. Crop the
+inputs beforehand (e.g. loadImage(..., aoi = aoi))}
 
-\item{incidence.rel}{solar incidence angle, considering the relief}
+\item{incidence.rel}{solar incidence angle (radians) considering the relief,
+from solarAngles()}
 
-\item{MTL}{Landsat Metadata File}
+\item{MTL}{path to the Landsat metadata (MTL) file, needed for
+Landsat 7 and for sat = "auto". If missing, the only *MTL.txt file in the
+working directory is used}
+}
+\value{
+SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,
+G, R, NIR, SWIR1 and SWIR2.
 }
 \description{
-This function calculates the TOA (Top Of Atmosphere) reflectance considering only the image metadata.
+Calculates the TOA (top-of-atmosphere) reflectance, divided by the cosine of
+the solar incidence angle of each pixel. For Landsat 8 and 9 the reflectance
+rescaling coefficients of the Level-1 products (2e-05 and -0.1) are used; for
+Landsat 7, the gains, biases and ESUN values of the Landsat 7 handbook and
+the acquisition date in the MTL file.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 
 LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
+
+U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
 }
 \seealso{
-Other remote sensing support functions: 
-\code{\link{calcRadiance}()},
-\code{\link{calcSR}()},
-\code{\link{cfmask}()},
-\code{\link{loadImageSR}()},
-\code{\link{loadImage}()}
+Other remote sensing support functions:
+\code{\link[=calcRadiance]{calcRadiance()}},
+\code{\link[=calcSR]{calcSR()}},
+\code{\link[=cfmask]{cfmask()}},
+\code{\link[=loadImage]{loadImage()}},
+\code{\link[=loadImageSR]{loadImageSR()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{remote sensing support functions}

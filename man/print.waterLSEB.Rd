@@ -11,13 +11,17 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+x, invisibly (called for its side effect of printing the energy
+balance layers, the weather station, the anchor pixels and the methods).
+}
 \description{
 Print method for waterLSEB S3 class
 }
 \seealso{
-Other LSEB objects related functions: 
-\code{\link{plot.waterLSEB}()},
-\code{\link{writeRaster.waterLSEB}()}
+Other LSEB objects related functions:
+\code{\link[=plot.waterLSEB]{plot.waterLSEB()}},
+\code{\link{writeRaster.waterLSEB}}
 }
 \author{
 Guillermo Federico Olmedo

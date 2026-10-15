@@ -1,6 +1,8 @@
 #' Plot method for waterLSEB S3 class
 #' @param x       waterLSEB object.
-#' @param ...     further arguments passed to or from other methods. 
+#' @param ...     further arguments passed to or from other methods.
+#' @return No return value, called for side effects (plots the NetRadiation,
+#' SoilHeat, SensibleHeat and LatentHeat layers of x$EB).
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family LSEB objects related functions
@@ -13,6 +15,8 @@ plot.waterLSEB <- function(x, ...){
 #' Print method for waterLSEB S3 class
 #' @param x        waterLSEB object.
 #' @param ...      further arguments passed to or from other methods.
+#' @return x, invisibly (called for its side effect of printing the energy
+#' balance layers, the weather station, the anchor pixels and the methods).
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family LSEB objects related functions
@@ -33,6 +37,8 @@ print.waterLSEB <- function(x, ...){
 #' @param filename output file name, e.g. "EB.tif"
 #' @param ...      additional arguments passed to terra::writeRaster(), e.g.
 #' overwrite
+#' @return The SpatRaster written to the file (x$EB), invisibly, as returned by
+#' terra::writeRaster().
 #' @author  María Victoria Munafó
 #' @family LSEB objects related functions
 #' @name writeRaster.waterLSEB

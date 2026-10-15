@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_WeatherStation.R
 \name{read.WSdata2}
 \alias{read.WSdata2}
-\title{Prepares weather station data 2}
+\title{Prepares weather station data from csv2 files}
 \usage{
 read.WSdata2(
   WSdata,
@@ -21,9 +21,10 @@ read.WSdata2(
 )
 }
 \arguments{
-\item{WSdata}{csv file with weather station data}
+\item{WSdata}{csv2 file with weather station data, or a
+data.frame}
 
-\item{...}{additional parameter to pass to read.csv()}
+\item{...}{additional parameters passed to read.csv2()}
 
 \item{height}{weather station sensors height in meters}
 
@@ -35,10 +36,12 @@ Negative values for west longitude}
 
 \item{elev}{elevation of weather station in meters}
 
-\item{columns}{columns order of needed data. Vector containing 
-"date", "time", "radiation", "wind", "RH", "temp" and "rain". Other values are 
-ignored. If you have a column with date and time in the same column, you can
-include "datetime" and "date" and "time" are no longer needed.}
+\item{columns}{vector with the column numbers in WSdata for the 
+date, time, radiation, wind, RH, temperature and 
+rain. If date and time are in the same column, the 
+column number has to be the same. Names in this
+vector are ignored and are presented on Usage and 
+examples only as a reference.}
 
 \item{date.format}{date format. See strptime format argument.}
 
@@ -46,26 +49,36 @@ include "datetime" and "date" and "time" are no longer needed.}
 
 \item{datetime.format}{datetime format. See strptime format argument.}
 
-\item{tz}{timezone of the weather station dates. If not 
-present assumes the same timezone as the computer running the code. See 
-strptime for details.}
+\item{tz}{time zone of the weather station clock (e.g.
+"America/Santiago"; see OlsonNames()). If "" (default) the time zone of the
+computer is assumed, with a warning. Always set it: the overpass time in the
+MTL file is UTC and is converted to this time zone. See strptime for
+details.}
 
-\item{cf}{conversion factor to convert radiation, wind, and 
+\item{cf}{conversion factor to convert radiation, wind, and
 temperature to W/m2; m/s and Celsius. See Details.}
 
-\item{MTL}{Metadata file. If not provided will look for one on
-working directory. If provided or present will calculate weather conditions
-on satellite flyby.}
+\item{MTL}{path to the Landsat metadata (MTL) file. If
+missing, the only *MTL.txt file in the working directory is used, if any.
+When available, the weather conditions at the satellite overpass are
+interpolated (element at.sat); if the overpass is outside the records, a
+warning is given and at.sat is not computed.}
+}
+\value{
+A waterWeatherStation object, see read.WSdata().
 }
 \description{
-Prepares weather station data 2
+Like read.WSdata(), but reads the file with read.csv2() (semicolon
+separators and decimal commas). A data.frame is passed to read.WSdata()
+unchanged.
 }
 \details{
-For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 temperature), cf should be: cf = c(1,0.2777778,1)
 }
 \seealso{
 Other Weather station related functions:
+\code{\link[=getDataWS]{getDataWS()}},
 \code{\link[=plot.waterWeatherStation]{plot.waterWeatherStation()}},
 \code{\link[=print.waterWeatherStation]{print.waterWeatherStation()}},
 \code{\link[=read.WSdata]{read.WSdata()}}

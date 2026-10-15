@@ -21,28 +21,33 @@ calcH(
 )
 }
 \arguments{
-\item{anchors}{anchors points. Can be the result from calcAnchors() or
-a spatialPointDataframe o Dataframe with X, Y, and type. type should be 
-"cold" or "hot"}
+\item{anchors}{anchor pixels: the data.frame returned by calcAnchors(),
+another data.frame with X, Y (coordinates in the CRS of Ts) and type
+columns, or an sf POINT object with a type column. type must be "hot" or
+"cold"}
 
-\item{method}{Method when using more than 1 pair of anchor pixels. 
-method = "mean" will use the mean value for the cold pixels vs the mean value
-for the hot pixels.}
+\item{method}{Method when using more than 1 pair of anchor pixels:
+"mean" (default) uses the mean values of the cold pixels and of the hot
+pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
+pair) and returns a and b of the last pair}
 
 \item{Ts}{Land surface temperature in K. See surfaceTemperature()}
 
-\item{Z.om}{momentum roughness lenght. See momentumRoughnessLength()}
+\item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
 
-\item{WeatherStation}{WeatherStation data at the satellite overpass. 
+\item{WeatherStation}{WeatherStation data at the satellite overpass.
 Can be a waterWeatherStation object calculated using read.WSdata and MTL file}
 
-\item{ETp.coef}{ETp coefficient usually 1.05 or 1.2 for alfalfa}
+\item{ETp.coef}{coefficient for the ET of the cold pixels: it multiplies
+the hourly grass reference ET (ETo) at the satellite overpass (see Details).
+Usually 1.05, or 1.2 for alfalfa}
 
-\item{Z.om.ws}{momentum roughness lenght for WeatherStation. Usually
-a value of 0.03 might be reasonable for a typical agricultural weather station 
-sited over vegetation that is about 0.3 m tall.  For clipped grass, use 0.015 m}
+\item{Z.om.ws}{momentum roughness length (m) of the weather station
+surface (default 0.03 here; METRIC.EB() uses a default of 0.0018). A value
+of 0.03 might be reasonable for a typical agricultural weather station sited
+over vegetation that is about 0.3 m tall. For clipped grass, use 0.015 m}
 
-\item{mountainous}{Logical. If TRUE heat transfer equation will be 
+\item{mountainous}{Logical. If TRUE heat transfer equation will be
 adjusted for mountainous terrain}
 
 \item{DEM}{Digital Elevation Model in meters.}
@@ -51,23 +56,37 @@ adjusted for mountainous terrain}
 
 \item{G}{Soil Heat Flux. See soilHeatFlux()}
 
-\item{verbose}{Logical. If TRUE will print information about every 
+\item{verbose}{Logical. If TRUE will print information about every
 iteration to console}
 
-\item{maxit}{Maximun number of iteration. Default 20.}
+\item{maxit}{Maximum number of iterations. Default 20.}
+}
+\value{
+A list with a and b (coefficients of dT = a * Ts_datum + b), dT
+(SpatRaster, near-surface temperature difference, K) and H (SpatRaster,
+sensible heat flux, W/m2). The aerodynamic resistance of the anchor pixels at
+each iteration is plotted.
 }
 \description{
-generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
+Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
 }
 \details{
-Sensible heat flux is the rate of heat loss to the air by convection 
-and conduction, due to a temperature difference.This parameter is computed using the following one-dimensional,
-aerodynamic,temperature gradient based equation for heat transport, this method is difficult to solve because 
-there are two unknowns, rah and dT. To facilitate this computation, METRIC utilize the two "anchor" 
-pixels  and solve for dT that satisfies eq. given the aerodynamic roughness and wind speed at a given height.
-Aerodynamic resistance, and heat transfer is impacted by buoyancy of heated, light air at the surface, 
-especially when H is large. Therefore, correction to rah is needed to account for buoyancy effects. However, 
-H is needed to make this correction. An iterative solution for both H and rah is used.
+Sensible heat flux is the rate of heat loss to the air by convection
+and conduction, due to a temperature difference. This parameter is computed
+using a one-dimensional, aerodynamic, temperature-gradient-based equation for
+heat transport. This method is difficult to solve because there are two
+unknowns, rah and dT. To facilitate this computation, METRIC utilizes the two
+"anchor" pixels and solves for the dT that satisfies the equation given the
+aerodynamic roughness and wind speed at a given height. Aerodynamic
+resistance and heat transfer are impacted by buoyancy of heated, light air at
+the surface, especially when H is large. Therefore, correction to rah is
+needed to account for buoyancy effects. However, H is needed to make this
+correction. An iterative solution for both H and rah is used.
+
+The ET of the cold pixels is computed as ETp.coef times the hourly grass
+reference ET (ETo, ASCE standardized equation; see hourlyET()) at the
+satellite overpass, while ET24h() and dailyET() use the alfalfa reference ET
+(ETr) by default.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
@@ -75,15 +94,15 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 }
 \seealso{
-Other sensible heat flux functions: 
-\code{\link{calcAnchors}()},
-\code{\link{momentumRoughnessLength}()}
+Other sensible heat flux functions:
+\code{\link[=calcAnchors]{calcAnchors()}},
+\code{\link[=momentumRoughnessLength]{momentumRoughnessLength()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-de la Fuente-Saiz, Daniel
+Daniel de la Fuente-Sáiz
 
-Fernando Fuentes Peñailillo
+Fernando Fuentes-Peñailillo
 }
 \concept{sensible heat flux functions}

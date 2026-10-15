@@ -26,15 +26,17 @@ METRIC.Rn(
 surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
 reflectance (LAI) and, without surf.temp, for surface temperature.}
 
-\item{WeatherStation}{Weather Station data, can be a waterWeatherStation
-object}
+\item{WeatherStation}{waterWeatherStation object with the conditions at
+the satellite overpass (from read.WSdata() with the MTL file)}
 
-\item{MTL}{Landsat metadata file}
+\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
+the only *MTL.txt file in the working directory is used}
 
 \item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 detect it from the MTL file}
 
-\item{thermalband}{Landsat low gain thermalband. Not needed if
+\item{thermalband}{Thermal band in digital numbers (L7: band 6 low gain;
+L8/L9: band 10). If missing, image.DN$Thermal1 is used. Not needed if
 surf.temp is supplied}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
@@ -43,12 +45,14 @@ See Details.}
 \item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}
 
-\item{plain}{Logical. If TRUE surface is assumed plain}
+\item{plain}{Logical. If TRUE (default) the surface is assumed
+flat: DEM is replaced by a constant raster at the weather station elevation}
 
-\item{DEM}{Digital Elevation Model of the study area. Not needed
-if plain = TRUE}
+\item{DEM}{SpatRaster with a digital elevation model (m) of the
+study area, on the same grid as the image. Not needed if plain = TRUE}
 
-\item{aoi}{sf polygon object with limits of Area of interest}
+\item{aoi}{Optional sf polygon or SpatVector. If given, the
+inputs are cropped to it}
 
 \item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
 SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
@@ -64,10 +68,28 @@ supplied it is used as Ts and surfaceTemperature() is not called.}
 for single channel or "SW" for split window (only for L8 and L9). Ignored
 if surf.temp is supplied. See surfaceTemperature()}
 }
+\value{
+SpatRaster with net radiation (W/m2). The result is also plotted.
+}
 \description{
+Estimates the net radiation (Rn) as in the METRIC model, with the same
+inputs and steps as METRIC.EB().
 For Landsat 8 and 9, use Collection 2 Level-2 products: surface reflectance
 as image.SR and surface temperature as surf.temp (both from loadImageSR()).
 For Landsat 7, image.SR and Ts can also be computed from image.DN.
+}
+\details{
+There are different models to convert narrowband data to broadband albedo.
+You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
+coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
+(2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
+coefficients for Landsat 8 and 9. See \code{\link{albedo}}.
+
+LAI.method can be "metric2010" (default), "metric", "MCB", "turner" or
+"vineyard". See \code{\link{LAI}}. Without image.DN, the leaf area index is
+computed from the surface reflectance (image.SR), although the "metric",
+"metric2010" and "MCB" equations were described for top-of-atmosphere
+reflectance.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

@@ -7,38 +7,43 @@
 netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
 }
 \arguments{
-\item{LAI}{raster layer with leaf area index. See LAI()}
+\item{LAI}{SpatRaster with leaf area index, from LAI()}
 
-\item{albedo}{broadband surface albedo. See albedo()}
+\item{albedo}{broadband surface albedo, from albedo()}
 
-\item{Rs.inc}{incoming short-wave radiation}
+\item{Rs.inc}{incoming short-wave radiation (W/m2), from incSWradiation()}
 
-\item{Rl.inc}{incomin long-wave radiation}
+\item{Rl.inc}{incoming long-wave radiation (W/m2), from incLWradiation()}
 
-\item{Rl.out}{outgoing long-wave radiation}
+\item{Rl.out}{outgoing long-wave radiation (W/m2), from outLWradiation()}
+}
+\value{
+SpatRaster with net radiation (W/m2).
 }
 \description{
-This function estimates net radiation considering a surface radiation balance. Equations use the information from the image, in addition of measurements of actual vapor pressure and altitude.
+This function estimates net radiation considering a surface radiation
+balance. Equations use the information from the image, in addition to
+measurements of actual vapor pressure and altitude.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }
 \seealso{
-Other net radiation related functions: 
-\code{\link{LAI}()},
-\code{\link{METRICtopo}()},
-\code{\link{SWtrasmisivity}()},
-\code{\link{albedo}()},
-\code{\link{incLWradiation}()},
-\code{\link{incSWradiation}()},
-\code{\link{outLWradiation}()},
-\code{\link{soilHeatFlux}()},
-\code{\link{solarAngles}()},
-\code{\link{surfaceTemperature}()}
+Other net radiation related functions:
+\code{\link[=LAI]{LAI()}},
+\code{\link[=METRICtopo]{METRICtopo()}},
+\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=albedo]{albedo()}},
+\code{\link[=incLWradiation]{incLWradiation()}},
+\code{\link[=incSWradiation]{incSWradiation()}},
+\code{\link[=outLWradiation]{outLWradiation()}},
+\code{\link[=soilHeatFlux]{soilHeatFlux()}},
+\code{\link[=solarAngles]{solarAngles()}},
+\code{\link[=surfaceTemperature]{surfaceTemperature()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-Fonseca-Luengo, David
+David Fonseca-Luengo
 }
 \concept{net radiation related functions}

@@ -11,13 +11,17 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+No return value, called for side effects (plots the NetRadiation,
+SoilHeat, SensibleHeat and LatentHeat layers of x$EB).
+}
 \description{
 Plot method for waterLSEB S3 class
 }
 \seealso{
-Other LSEB objects related functions: 
-\code{\link{print.waterLSEB}()},
-\code{\link{writeRaster.waterLSEB}()}
+Other LSEB objects related functions:
+\code{\link[=print.waterLSEB]{print.waterLSEB()}},
+\code{\link{writeRaster.waterLSEB}}
 }
 \author{
 Guillermo Federico Olmedo

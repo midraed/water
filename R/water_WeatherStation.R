@@ -1,6 +1,10 @@
 #' Prepares weather station data
+#' @description
+#' Reads weather station records from a csv file or a data.frame, interpolates
+#' them every hour and, with a Landsat metadata (MTL) file, at the time of the
+#' satellite overpass.
 #' @param WSdata             csv file with weather station data or data.frame
-#' @param ...                additional parameter to pass to read.csv()
+#' @param ...                additional parameters passed to read.csv()
 #' @param height             weather station sensors height in meters
 #' @param lat                latitude of weather station in decimal degrees. 
 #' Negative values for south latitude
@@ -16,18 +20,22 @@
 #' @param date.format        date format. See strptime format argument.
 #' @param time.format        time format. See strptime format argument.
 #' @param datetime.format    datetime format. See strptime format argument.
-#' @param tz                 timezone of the weather station dates. If not 
-#' present assumes the same timezone as the computer running the code. See 
-#' strptime for details. 
-#' @param cf                 conversion factor to convert radiation, wind, and 
+#' @param tz                 time zone of the weather station clock (e.g.
+#' "America/Santiago"; see OlsonNames()). If "" (default) the time zone of the
+#' computer is assumed, with a warning. Always set it: the overpass time in the
+#' MTL file is UTC and is converted to this time zone. See strptime for
+#' details.
+#' @param cf                 conversion factor to convert radiation, wind, and
 #' temperature to W/m2; m/s and Celsius. See Details.
-#' @param MTL                Metadata file. If not provided will look for one on
-#' working directory. If provided or present will calculate weather conditions
-#' on satellite overpass.
-#' @details 
-#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' @param MTL                path to the Landsat metadata (MTL) file. If
+#' missing, the only *MTL.txt file in the working directory is used, if any.
+#' When available, the weather conditions at the satellite overpass are
+#' interpolated (element at.sat); if the overpass is outside the records, a
+#' warning is given and at.sat is not computed.
+#' @details
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
-#' @examples 
+#' @examples
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
 #' WS <- read.WSdata(WSdata = csvfile, date.format = "%d/%m/%Y", 
@@ -36,13 +44,16 @@
 #'                   "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8), 
 #'                   MTL = MTLfile, tz = "America/Santiago")
 #' print(WS)
-#' plot(WS, alldata=FALSE)
-#' plot(WS, alldata=TRUE)
+#' plot(WS, hourly=FALSE)
+#' plot(WS, hourly=TRUE)
 #' @author Guillermo Federico Olmedo
-#' @return waterWeatherStation object, with data.frames with all data, hourly
-#' data and conditions at satellite flyby.
+#' @return An object of class waterWeatherStation: a list with location (lat,
+#' long, elev, height), alldata (all records), daily (daily summaries), hourly
+#' (values interpolated every hour) and, when an MTL file is available, at.sat
+#' (conditions interpolated at the satellite overpass).
 #' @family Weather station related functions
-#' @seealso \code{\link{read.WSdata2}} for the equivalent using read.csv2()
+#' @seealso \code{\link{read.WSdata2}} for files with semicolon separators and
+#' decimal commas (read.csv2())
 #' @references 
 #' Landsat 7 Metadata example file available from the U.S. Geological Survey.
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
@@ -220,33 +231,19 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 }
 
 
-#' Prepares weather station data 2
-#' @param WSdata             csv file with weather station data
-#' @param ...                additional parameter to pass to read.csv()
-#' @param height             weather station sensors height in meters
-#' @param lat                latitude of weather station in decimal degrees. 
-#' Negative values for south latitude
-#' @param long               longitude of weather station in decimal degrees. 
-#' Negative values for west longitude
-#' @param elev               elevation of weather station in meters
-#' @param columns            columns order of needed data. Vector containing 
-#' "date", "time", "radiation", "wind", "RH", "temp" and "rain". Other values are 
-#' ignored. If you have a column with date and time in the same column, you can
-#' include "datetime" and "date" and "time" are no longer needed.
-#' @param date.format        date format. See strptime format argument.
-#' @param time.format        time format. See strptime format argument.
-#' @param datetime.format    datetime format. See strptime format argument.
-#' @param tz                 timezone of the weather station dates. If not 
-#' present assumes the same timezone as the computer running the code. See 
-#' strptime for details. 
-#' @param cf                 conversion factor to convert radiation, wind, and 
-#' temperature to W/m2; m/s and Celsius. See Details.
-#' @param MTL                Metadata file. If not provided will look for one on
-#' working directory. If provided or present will calculate weather conditions
-#' on satellite flyby.
-#' @details 
-#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind, 
+#' Prepares weather station data from csv2 files
+#' @description
+#' Like read.WSdata(), but reads the file with read.csv2() (semicolon
+#' separators and decimal commas). A data.frame is passed to read.WSdata()
+#' unchanged.
+#' @inheritParams read.WSdata
+#' @param WSdata             csv2 file with weather station data, or a
+#' data.frame
+#' @param ...                additional parameters passed to read.csv2()
+#' @details
+#' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
+#' @return A waterWeatherStation object, see read.WSdata().
 #' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -276,6 +273,8 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' overpass 
 #' @param date    When sat = FALSE, the date to plot in a multi-day object
 #' @param ...      additional parameters to pass to plot()
+#' @return No return value, called for side effects (plots solar radiation,
+#' wind speed, temperature, vapor pressure and, if available, rain).
 #' @author Guillermo Federico Olmedo
 #' @importFrom utils read.csv
 #' @importFrom graphics abline axis axis.POSIXct mtext par
@@ -355,7 +354,11 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
 
 #' Print method for waterWeatherStation S3 class
 #' @param x        waterWeatherStation object. See read.WSdata()
-#' @param ...      additional parameters to pass to print()    
+#' @param ...      additional parameters to pass to print()
+#' @return Called for its side effect: prints the station location, a summary
+#' of the records and, if available, the conditions at the satellite overpass.
+#' The last printed object (the conditions at the overpass, or the summary) is
+#' returned invisibly.
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family Weather station related functions
@@ -377,8 +380,14 @@ print.waterWeatherStation <- function(x, ...){
 
 #' Export data.frame from waterWeatherStation Object
 #' @description 
-#' Export weather conditions at satellite flyby from waterWeatherStation object
+#' Export weather conditions at the satellite overpass from a waterWeatherStation object
 #' @param WeatherStation    waterWeatherStation object. See read.WSdata()
+#' @return A one-row data.frame with the conditions at the satellite overpass:
+#' wind (m/s), RH (\%), temp (Celsius), radiation (W/m2), height (m), lat, long,
+#' elev (m), DOY (day of year) and hours (decimal hour of the overpass in the
+#' weather station time zone). An error is given if the object has no
+#' conditions at the overpass (at.sat).
+#' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
 getDataWS <- function(WeatherStation){

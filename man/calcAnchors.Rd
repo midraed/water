@@ -2,7 +2,7 @@
 % Please edit documentation in R/water_sensibleHeatFlux.R
 \name{calcAnchors}
 \alias{calcAnchors}
-\title{Select anchors pixels for H function}
+\title{Select anchor pixels for the H function}
 \usage{
 calcAnchors(
   image,
@@ -22,56 +22,85 @@ calcAnchors(
 )
 }
 \arguments{
-\item{image}{top-of-atmosphere landsat reflectance image}
+\item{image}{reflectance SpatRaster (top-of-atmosphere
+reflectance, or surface reflectance when no DN image is available) with
+layers named R and NIR, used to compute NDVI}
 
 \item{Ts}{land surface temperature in K. See surfaceTemperature()}
 
-\item{LAI}{rasterLayer with Leaf Area Index. See LAI()}
+\item{LAI}{SpatRaster with leaf area index, from LAI()}
 
-\item{albedo}{broandband surface albedo. See albedo()}
+\item{albedo}{broadband surface albedo, from albedo()}
 
-\item{Z.om}{momentum roughness lenght. See momentumRoughnessLength()}
+\item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
 
-\item{n}{number of pair of anchors pixels to calculate}
+\item{n}{number of pairs of anchor pixels to select}
 
-\item{aoi}{area of interest to limit the search. If 
-waterOptions(autoAOI) == TRUE, It'll use aoi object from .GlobalEnv}
+\item{aoi}{Not used; kept for backward compatibility}
 
-\item{anchors.method}{method for the selection of anchor pixels. "random" for
-random selection of hot and cold candidates according to CITRA-MCB method, or 
-"best" for selecting the best candidates. And "flexible" for method with soft
-limits to the anchor pixel conditions.}
+\item{anchors.method}{method for the selection of anchor pixels: "flexible"
+(default), "best" or "random". See Details.}
 
-\item{WeatherStation}{Optional. WeatherStation data at the satellite overpass. 
-Should be a waterWeatherStation object calculated using read.WSdata and MTL file.}
+\item{WeatherStation}{Optional. waterWeatherStation object (see
+read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
+station}
 
 \item{plots}{Logical. If TRUE will plot position of anchors points
-selected. Points in red are selected hot pixels, blue are the cold ones and the 
-black represents the position of the Weather Station}
+selected. Points in red are selected hot pixels, blue are the cold ones and the
+black represents the position of the Weather Station (if supplied)}
 
-\item{deltaTemp}{deltaTemp for method "CITRA-MCBs" or "CITRA-MCBr"}
+\item{deltaTemp}{temperature margin (K, default 5): cold candidates must
+be colder than the 5\% quantile of Ts over well-vegetated pixels plus
+deltaTemp, and hot candidates warmer than the maximum Ts over bare-soil
+pixels minus deltaTemp}
 
-\item{minDist}{minimun distance allowed for two anchor pixels of the 
-same type (in meters).}
+\item{minDist}{minimum distance (m) between two anchor pixels of the
+same type}
 
-\item{WSbuffer}{maximun distante to the Weather Station (in meters).}
+\item{WSbuffer}{maximum distance (m) to the weather station. If no
+pixel is within WSbuffer, the whole image is used, with a warning}
 
-\item{verbose}{Logical. If TRUE will print aditional data to console}
+\item{verbose}{Logical. If TRUE will print additional data to console}
+}
+\value{
+A data.frame with one row per anchor pixel and columns pixel (cell
+number), X and Y (cell coordinates in the CRS of Ts), Ts (K), LAI, NDVI and
+type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
+added: the relaxation applied to the cold-pixel criteria (0 = none, 1 =
+100\%). If plots = TRUE the anchors are also plotted over LAI.
 }
 \description{
-automatically search end members within the satellite scene (extreme wet and dry conditions).
+Automatically searches for end members (anchor
+pixels) within the satellite scene (extreme wet and dry conditions): cold
+pixels with well-watered full-cover vegetation and hot pixels with dry bare
+soil.
+}
+\details{
+Cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
+within 0.15 of the maximum NDVI of the image and Ts below the threshold given
+by deltaTemp. Hot candidates have albedo 0.13 to 0.15, NDVI 0.1 to 0.28,
+Z.om up to 0.005 and Ts above the threshold given by deltaTemp.
+
+anchors.method = "best" selects the coldest and the hottest candidates;
+"random" selects them at random among the candidates (CITRA-MCB method);
+"flexible" (default) works like "best" but, when there are not enough
+candidates, relaxes the limits of the criteria (LAI, albedo and Z.om for cold
+pixels; albedo, NDVI, Z.om and Ts for hot pixels) in 1\% steps up to 100\%,
+first near the weather station (within WSbuffer) and then in the whole
+image, with a warning. The old names "CITRA-MCB" and "CITRA-MCBbc" (now
+"best") and "CITRA-MCBr" (now "random") are deprecated.
 }
 \references{
-CITRA y MCB (com pers)
+CITRA and MCB (personal communication)
 }
 \seealso{
-Other sensible heat flux functions: 
-\code{\link{calcH}()},
-\code{\link{momentumRoughnessLength}()}
+Other sensible heat flux functions:
+\code{\link[=calcH]{calcH()}},
+\code{\link[=momentumRoughnessLength]{momentumRoughnessLength()}}
 }
 \author{
 Guillermo Federico Olmedo
 
-de la Fuente-Saiz, Daniel
+Daniel de la Fuente-Sáiz
 }
 \concept{sensible heat flux functions}

@@ -5,7 +5,8 @@
 \alias{DEM_Talca}
 \title{SRTM DEM from east of Talca, Chile}
 \format{
-An object of class \code{RasterLayer} of dimension 417 x 508 x 1.
+A \code{PackedSpatRaster}; \code{rast(DEM_Talca)} is a SpatRaster with
+417 rows, 508 columns and one layer (DEM, 131 to 643 m), WGS 84 / UTM zone 19S.
 }
 \source{
 \url{https://www.usgs.gov/}
@@ -14,11 +15,17 @@ An object of class \code{RasterLayer} of dimension 417 x 508 x 1.
 DEM_Talca
 }
 \description{
-A RasterLayer object with a a Digital Elevation Model.
+A SRTM digital elevation model (m) on the same grid as \code{L7_Talca},
+stored as a terra \code{PackedSpatRaster}. Unpack it with
+\code{rast(DEM_Talca)}.
 }
 \details{
 Original data is float. Example data is integer.
 
 Data available from the U.S. Geological Survey.
+}
+\examples{
+DEM <- rast(DEM_Talca)
+plot(DEM)
 }
 \keyword{datasets}
