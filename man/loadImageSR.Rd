@@ -13,7 +13,11 @@ loadImageSR(path = getwd(), aoi)
 TRUE will look for any object called aoi on .GlobalEnv}
 }
 \description{
-This function loads Landsat bands from a specific folder.
+This function loads Landsat bands from a specific folder. Reads Collection 2
+Level-2 files (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}, scaled as
+DN * 0.0000275 - 0.2, fill value 0 set to NA) or old ESPA files
+(\code{*_sr_band2.tif} to \code{*_sr_band7.tif}, scaled as DN / 10000).
+Layers are named by band number, so missing bands are simply skipped.
 }
 \seealso{
 Other remote sensing support functions: 
