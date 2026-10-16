@@ -7,13 +7,13 @@
 ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 }
 \arguments{
-\item{Rn}{Net radiation (W/m2). See netRadiation()}
+\item{Rn}{Net radiation (W/m2). See \code{\link{netRadiation}}}
 
-\item{G}{Soil Heat Flux (W/m2). See soilHeatFlux()}
+\item{G}{Soil Heat Flux (W/m2). See \code{\link{soilHeatFlux}}}
 
-\item{H}{Sensible Heat Flux (W/m2). See calcH()}
+\item{H}{Sensible Heat Flux (W/m2). See \code{\link{calcH}}}
 
-\item{Ts}{Land surface temperature (K). See surfaceTemperature()}
+\item{Ts}{Land surface temperature (K). See \code{\link{surfaceTemperature}}}
 
 \item{WeatherStation}{WeatherStation data at the satellite overpass.
 Can be a waterWeatherStation object calculated using read.WSdata and MTL file}

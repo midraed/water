@@ -47,6 +47,14 @@ Fixes that change results:
 * LAI(method = "turner"): Turner et al. (1999) predict NDVI from LAI, but the
   equation was applied as LAI = f(NDVI), so LAI never exceeded 0.75 and
   METRIC.EB() found no cold anchors. It is now inverted (LAI 0 to 6) (#70).
+* hourlyET(), dailyET(): the solar time correction used the station
+  longitude instead of the centre of its time zone, so it was always 0.
+  long.z now defaults to 15 degrees per hour of the UTC offset of the
+  station records (-45 for UTC-3), including daylight saving time; hourly
+  ETr at the overpass of the Talca example: -2.4% (#77). ET24h() now uses
+  the instantaneous ETr at the overpass, as calcH() does (ETrF =
+  instantaneous ET / instantaneous ETr).
+* albedo(): for MODIS only 6 of the 7 coefficients were used (#78).
 * Example data: the wind speed in apples.csv is in km/h, but the
   read.WSdata() example and the METRIC vignettes read it as m/s. The daily
   reference ET of the example was 10.2 instead of 7.0 mm, and the daily ET
@@ -117,10 +125,23 @@ Other changes and fixes:
 * ET24h() plots with terra instead of spplot.
 * Example data (L7_Talca, DEM_Talca) are terra PackedSpatRaster objects;
   use rast() to unpack them.
+* albedo(sat = "auto") and calcSR(sat = "auto", MTL = ) no longer look for
+  Landsat files in the working directory; mtlValues() stops for keys that
+  Level-2 MTL files repeat in several groups unless a group is given;
+  print() on weather station data returns it invisibly; LAI(sat = ) warns
+  that sat is not used; typos in messages (#78).
+* Help pages: references checked and completed with DOIs (#79); links
+  between help pages; examples for METRIC.Rn(), METRIC.G() and
+  loadImageSR() (#81).
+* The Planetary Computer download guide only lists the scenes when ids is
+  empty, and downloads the ones listed in ids (#80).
 * Regression tests in tests/.
 
 Behaviour changes to check in existing scripts:
 
+* sf moved from Depends to Imports: library(water) no longer attaches sf,
+  so call library(sf) to use its functions directly (#81).
+* hourlyET(), dailyET(): see the long.z default above (#77).
 * cfmask() now applies its buffer argument (60 m by default) around the
   masked clouds and shadows, also with keep; use buffer = 0 for the
   previous behaviour.

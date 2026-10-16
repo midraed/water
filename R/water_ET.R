@@ -9,9 +9,13 @@
 #' @param hours              time of the day in decimal hours (24 h clock),
 #' e.g. 10.5 for 10:30
 #' @param DOY                day of year
-#' @param long.z             longitude of the centre of the local time zone, in
-#' decimal degrees (negative west). Defaults to the weather station longitude
-#' (no longitude correction)
+#' @param long.z             longitude of the centre of the time zone of the
+#' weather station clock, in decimal degrees (negative west), for the solar
+#' time correction. By default it is computed from the UTC offset of the
+#' station records (15 degrees per hour, e.g. -45 for UTC-3, including daylight
+#' saving time): from WeatherStation$long.z (see \code{\link{getDataWS}}) or from the time
+#' zone of WeatherStation$datetime. If the time zone is unknown, the station
+#' longitude is used (no correction)
 #' @param ET.instantaneous   Logical. TRUE to calculate instantaneous ET
 #' instead of hourly ET. See Details.
 #' @param ET       "ETo" for short crops, similar to clipped, cool-season
@@ -46,7 +50,7 @@
 #' ASCE-EWRI (2005). The ASCE Standardized Reference Evapotranspiration
 #' Equation. Report of the ASCE-EWRI Task Committee on Standardization of
 #' Reference Evapotranspiration.
-hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long, 
+hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
                      ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
   ET <- match.arg(ET, c("ETr", "ETo"))
   if(inherits(WeatherStation, "waterWeatherStation")){
@@ -85,6 +89,13 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
   phi <- WeatherStation$lat*(pi/180)
   b <- 2*pi*(DOY-81)/364
   Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
+  if(is.null(long.z)){
+    long.z <- WeatherStation$long.z
+    if(is.null(long.z) && inherits(WeatherStation$datetime, "POSIXt")){
+      long.z <- tzLongitude(WeatherStation$datetime)
+    }
+    if(is.null(long.z)){long.z <- WeatherStation$long}  # time zone unknown
+  }
   if(ET.instantaneous==TRUE){hours <- hours +0.5}
   hour.angle <- (pi/12)*((hours-0.5+0.06667*(WeatherStation$long-long.z)+Sc)-12)
   w1 <- hour.angle-((pi)/24)
@@ -125,10 +136,10 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=WeatherStation$long,
 #' (from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see
 #' hourlyET()) at the satellite overpass gives the reference ET fraction, which
 #' is multiplied by the daily reference ET.
-#' @param Rn             Net radiation (W/m2). See netRadiation()
-#' @param G              Soil Heat Flux (W/m2). See soilHeatFlux()
-#' @param H              Sensible Heat Flux (W/m2). See calcH()
-#' @param Ts             Land surface temperature (K). See surfaceTemperature()
+#' @param Rn             Net radiation (W/m2). See \code{\link{netRadiation}}
+#' @param G              Soil Heat Flux (W/m2). See \code{\link{soilHeatFlux}}
+#' @param H              Sensible Heat Flux (W/m2). See \code{\link{calcH}}
+#' @param Ts             Land surface temperature (K). See \code{\link{surfaceTemperature}}
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
 #' @param ETr.daily      daily reference ET (mm/day) for the day of the image,
@@ -150,7 +161,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   LE = Rn - G - H
   ET.inst <- 3600*LE/((2.501 - 0.00236 * (Ts - 273.15)) * (1e6))
   ETr.hourly <- hourlyET(WeatherStation, WeatherStation$hours, WeatherStation$DOY,
-                         ET = "ETr")
+                         ET.instantaneous = TRUE, ET = "ETr")
   ETr.Fr <- ET.inst/ETr.hourly
   ET.24 <- ETr.Fr * ETr.daily * C.rad
   ET.24[ET.24 < 0]  <- 0
@@ -165,7 +176,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 
 
 #' Calculates daily reference ET as the sum of hourly Penman-Monteith values
-#' @param WeatherStation waterWeatherStation object, see read.WSdata(). Other
+#' @param WeatherStation waterWeatherStation object, see \code{\link{read.WSdata}}. Other
 #' inputs are not implemented
 #' @param DOY      Not used
 #' @param height   weather station sensors height in meters. If missing, taken
@@ -179,7 +190,9 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param ET       "ETo" for short crops, similar to clipped, cool-season
 #' grass; or "ETr" (default) for tall crops, similar to 0.5 m tall full-cover
 #' alfalfa.
-#' @param long.z   Not used
+#' @param long.z   longitude of the centre of the time zone of the weather
+#' station clock (decimal degrees, negative west). By default it is computed
+#' from the time zone of the records; see \code{\link{hourlyET}}
 #' @param MTL      path to the Landsat metadata (MTL) file. If missing, the only
 #' *MTL.txt file in the working directory is used, if any. Its acquisition date
 #' selects the day (see date)
@@ -206,7 +219,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' dailyET(WeatherStation = WeatherStation, ET="ETo")
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
-                    long.z=WeatherStation$long, date = "auto", MTL){
+                    long.z=NULL, date = "auto", MTL){
   if(inherits(WeatherStation, "waterWeatherStation")){
     if(missing(height)){height <- WeatherStation$location$height}
     if(missing(lat)){lat <- WeatherStation$location$lat}
@@ -230,18 +243,18 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
       }
       ET.daily <- vector()
       for(i in 1:24){
-          ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat, 
-                                           long = long, elev=elev, ET=ET, 
-                                           height = height))
+          ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat,
+                                           long = long, elev=elev, ET=ET,
+                                           height = height, long.z = long.z))
         }
     }
     if(length(MTL)==0){
       ET.daily <- vector()
       for(i in 1:24){
         date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
-        ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat, 
-                                         long = long, elev=elev, ET=ET, 
-                                         height = height))
+        ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat,
+                                         long = long, elev=elev, ET=ET,
+                                         height = height, long.z = long.z))
       }
   }} else {
     print("not implemented yet")}

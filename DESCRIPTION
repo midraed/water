@@ -10,13 +10,6 @@ Authors@R: c(
 	person("Fernando", "Fuentes-Peñailillo", role = "aut"),
 	person("María Victoria", "Munafó", role = "ctb"),
 	person("Francisco Martín", "Corvalán", role = "ctb"))
-Author: Guillermo Federico Olmedo [cre, aut] (<https://orcid.org/0000-0002-4482-3266>),
-    Samuel Ortega-Farías [aut],
-    David Fonseca-Luengo [aut], Daniel de la Fuente-Sáiz [aut], 
-    Fernando Fuentes-Peñailillo [aut], 
-    María Victoria Munafó [ctb], 
-    Francisco Martín Corvalán [ctb]
-Maintainer: Guillermo Federico Olmedo <guillermo.olmedo@gmail.com>
 Description: Tools and functions to estimate actual evapotranspiration with
     surface energy balance models. Implements the METRIC model (Allen et al.,
     2007, <doi:10.1061/(ASCE)0733-9437(2007)133:4(380)>) for Landsat 7, 8 and 9
@@ -25,9 +18,9 @@ Description: Tools and functions to estimate actual evapotranspiration with
     reference evapotranspiration (ASCE Penman-Monteith).
 Depends:
     R (>= 3.5.0),
-    terra (>= 1.7-0),
-    sf (>= 1.0-0)
+    terra (>= 1.7-0)
 Imports:
+    sf (>= 1.0-0),
     methods,
     grDevices,
     graphics,

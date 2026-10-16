@@ -61,7 +61,7 @@ checkSRTMgrids <-function(raw.image){
 #' ). The tiles are Cloud Optimized GeoTIFFs in the AWS Open Data registry,
 #' read over HTTPS: no account is needed, and only the area of the image is
 #' downloaded. It needs an internet connection. To use SRTM tiles already
-#' downloaded, see checkSRTMgrids() and prepareSRTMdata().
+#' downloaded, see \code{\link{checkSRTMgrids}} and prepareSRTMdata().
 #' @param image   SpatRaster (e.g. the Landsat image) that defines the extent,
 #' CRS and grid of the DEM
 #' @param source  DEM source. Currently only "copernicus" (Copernicus DEM
@@ -116,7 +116,7 @@ getDEM <- function(image, source = "copernicus"){
 
 #' Create a DEM mosaic from SRTM grids for the image extent
 #' @description
-#' Mosaics the SRTM 1 arc-second tiles found in path (see checkSRTMgrids()) and
+#' Mosaics the SRTM 1 arc-second tiles found in path (see \code{\link{checkSRTMgrids}}) and
 #' projects the result to the grid of the image.
 #' @param format  file extension of the SRTM grid files (default "tif"); files
 #' must be named like s34_w069_1arc_v3.tif
@@ -211,7 +211,7 @@ METRICtopo <- function(DEM){
 #' METRICtopo()
 #' @param MTL             path to the Landsat metadata (MTL) file. If missing,
 #' the only *MTL.txt file in the working directory is used
-#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @details Latitude is computed for each row of the grid; declination and hour
 #' angle are computed from the acquisition date and scene centre time in the
@@ -302,7 +302,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' METRICtopo()
 #' @param solar.angles    SpatRaster with layers latitude, declination,
 #' hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()
-#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @return SpatRaster with incoming short-wave radiation (W/m2) at the time of
 #' the satellite overpass.
@@ -353,12 +353,14 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' @family net radiation related functions
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
-#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
-#' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo: I. Algorithms. Remote Sensing of Environment, 76(2), 213-238. \cr
+#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. https://doi.org/10.1061/(ASCE)1084-0699(2008)13:2(51) \cr
+#' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo I: Algorithms. Remote Sensing of Environment, 76(2), 213-238. https://doi.org/10.1016/S0034-4257(00)00205-4 \cr
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
-  path <- getwd()
-  if(sat=="auto"){sat = getSat(path)}
+  if(sat=="auto"){
+    # L7, L8 and L9 use the same coefficients; MODIS images start with R and NIR
+    sat <- if(identical(names(image.SR)[1:2], c("R", "NIR"))) "MODIS" else "L8"
+  }
   if(sat %in% c("L7", "L8", "L9")){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)} # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
@@ -366,7 +368,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
   }
   if(sat=="MODIS"){wb <- c(0.037, 0.479, -0.068, 0.0976, 0.266, 0.0757, 0.107)} # Liang 2001 direct-NIR coefficients
   albedo <- app(image.SR[[1]], fun=function(x){x *wb[1]})
-    for(i in 2:6){
+    for(i in 2:length(wb)){
       albedo <- albedo + app(image.SR[[i]], fun=function(x){x *wb[i]})
   }
   albedo <- aoiCrop(albedo, aoi) 
@@ -388,7 +390,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @param image    SpatRaster with bands B, G, R, NIR, ... (the third and fourth
 #' layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
 #' "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
-#' "vineyard" (see calcRadiance())
+#' "vineyard" (see \code{\link{calcRadiance}})
 #' @param aoi      Not used; kept for backward compatibility
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @param sat      Not used; kept for backward compatibility
@@ -415,11 +417,12 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
-#' Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
+#' Johnson, L. F. (2003). Temporal stability of an NDVI-LAI relationship in a Napa Valley vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. https://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
+  if(!missing(sat)){warning("LAI(): the sat argument is not used")}
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- c(image[[3]], image[[4]])}
   if(method=="turner"){
@@ -525,7 +528,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param aoi             Not used; kept for backward compatibility
 #' @param method          "SC" for single channel or "SW" for split window
 #'                        algorithm. "SW" is only available for L8 and L9
-#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @param MTL             path to the Landsat metadata (MTL) file. For L8 and
 #'                        L9 the thermal calibration constants are read from
@@ -557,7 +560,6 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  epsilon_NB <- rast(LAI)
   epsilon_NB <- 0.97 + 0.0033 * LAI  
   epsilon_NB[LAI > 3] <- 0.98
   # Downwelling atm radiance
@@ -658,7 +660,7 @@ outLWradiation <- function(LAI, Ts){
 #' Stefan-Boltzmann equation. In addition, the empirical equation of
 #' Bastiaanssen (1995) with coefficients developed by Allen (2000) is used to
 #' estimate the effective atmospheric emissivity.
-#' @param WeatherStation   waterWeatherStation object (see read.WSdata()) or the
+#' @param WeatherStation   waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @param DEM              SpatRaster with a digital elevation model (m)
 #' @param solar.angles     SpatRaster with layers latitude, declination,
@@ -744,7 +746,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #'
 #' Tasumi, M. (2003). Progress in operational estimation of regional evapotranspiration using satellite imagery. Ph.D. dissertation, University of Idaho, Moscow, Idaho. \cr
 #'
-#' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. \cr
+#' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. https://doi.org/10.1016/S0022-1694(99)00202-4 \cr
 #' @export
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   sr.4.5 <- c(image[[3]], image[[4]])

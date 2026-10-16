@@ -21,7 +21,7 @@
 #' @param time.format        time format. See strptime format argument.
 #' @param datetime.format    datetime format. See strptime format argument.
 #' @param tz                 time zone of the weather station clock (e.g.
-#' "America/Santiago"; see OlsonNames()). If "" (default) the time zone of the
+#' "America/Santiago"; see \code{\link[base]{OlsonNames}}). If "" (default) the time zone of the
 #' computer is assumed, with a warning. Always set it: the overpass time in the
 #' MTL file is UTC and is converted to this time zone. See strptime for
 #' details.
@@ -71,8 +71,8 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
          "\"America/Santiago\", or \"Etc/GMT+6\" for 6 hours behind UTC")
   }
   if("temp" %in% columns){warning("The parameter columns has changed and the old
-  sintaxis is now deprecated. In future versions of water package ONLY the 
-  new (numeric and simple!) sintaxis will work.")}
+  syntax is now deprecated. In future versions of water package ONLY the
+  new (numeric and simple!) syntax will work.")}
   if("pp" %in% columns){columns[columns == "pp"] <- "rain"}  ## TODO: deprecated "pp"
   if(is.character(WSdata)){
     if(!isURL(WSdata) && !file.exists(WSdata)){
@@ -247,7 +247,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @details
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
-#' @return A waterWeatherStation object, see read.WSdata().
+#' @return A waterWeatherStation object, see \code{\link{read.WSdata}}.
 #' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -271,7 +271,7 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 
 
 #' Plot method for waterWeatherStation S3 class
-#' @param x       waterWeatherStation object. See read.WSdata()
+#' @param x       waterWeatherStation object. See \code{\link{read.WSdata}}
 #' @param hourly  If TRUE will plot only hourly data, instead of all data 
 #' from the waterWeatherStation object
 #' @param sat     If TRUE, and if the waterWeatherStation object was created
@@ -359,12 +359,11 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
 }
 
 #' Print method for waterWeatherStation S3 class
-#' @param x        waterWeatherStation object. See read.WSdata()
+#' @param x        waterWeatherStation object. See \code{\link{read.WSdata}}
 #' @param ...      additional parameters to pass to print()
 #' @return Called for its side effect: prints the station location, a summary
 #' of the records and, if available, the conditions at the satellite overpass.
-#' The last printed object (the conditions at the overpass, or the summary) is
-#' returned invisibly.
+#' Returns x invisibly.
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family Weather station related functions
@@ -381,18 +380,20 @@ print.waterWeatherStation <- function(x, ...){
     cat("Summary:\n")
     print(summary(x$alldata[,1:7]))
   }
+  invisible(x)
 }
 
 
 #' Export data.frame from waterWeatherStation Object
 #' @description 
 #' Export weather conditions at the satellite overpass from a waterWeatherStation object
-#' @param WeatherStation    waterWeatherStation object. See read.WSdata()
+#' @param WeatherStation    waterWeatherStation object. See \code{\link{read.WSdata}}
 #' @return A one-row data.frame with the conditions at the satellite overpass:
 #' wind (m/s), RH (\%), temp (Celsius), radiation (W/m2), height (m), lat, long,
-#' elev (m), DOY (day of year) and hours (decimal hour of the overpass in the
-#' weather station time zone). An error is given if the object has no
-#' conditions at the overpass (at.sat).
+#' elev (m), DOY (day of year), hours (decimal hour of the overpass in the
+#' weather station time zone) and long.z (longitude of the centre of that time
+#' zone, 15 degrees per hour of UTC offset, used by hourlyET()). An error is
+#' given if the object has no conditions at the overpass (at.sat).
 #' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -410,9 +411,10 @@ getDataWS <- function(WeatherStation){
                                height=WeatherStation$location$height,
                                lat=WeatherStation$location$lat, 
                                long=WeatherStation$location$long, 
-                               elev=WeatherStation$location$elev, 
-                               DOY=date$yday+1, hours=date$hour + date$min/60 + 
-                                 date$sec/3600)
+                               elev=WeatherStation$location$elev,
+                               DOY=date$yday+1, hours=date$hour + date$min/60 +
+                                 date$sec/3600,
+                               long.z=tzLongitude(WeatherStation$at.sat$datetime))
   return(WeatherStation2)
 }
 

@@ -64,7 +64,7 @@ study area, on the same grid as the image. Not needed if plain = TRUE}
 inputs are cropped to it}
 
 \item{G.method}{method used for the G estimation: "Tasumi" (Tasumi,
-2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()}
+2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
@@ -76,7 +76,7 @@ if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
 \item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}
 
-\item{L}{L value for SAVI calculation. See LAI()}
+\item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
 
 \item{Zom.method}{method selected to calculate momentum roughness
 length. Use "short.crops" for short crops methods from Allen et al (2007);
@@ -84,7 +84,7 @@ length. Use "short.crops" for short crops methods from Allen et al (2007);
 Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{anchors.method}{method for the automatic selection of the anchor
-pixels: "flexible" (default), "best" or "random". See calcAnchors()}
+pixels: "flexible" (default), "best" or "random". See \code{\link{calcAnchors}}}
 
 \item{anchors}{data.frame with X, Y (coordinates in the CRS of the
 image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
@@ -144,12 +144,12 @@ computed and the anchor pixels are selected from the surface reflectance
 described for top-of-atmosphere reflectance.
 
 The ET of the cold pixels is ETp.coef times the hourly alfalfa reference ET
-(ETr, ASCE standardized equation) at the satellite overpass (see calcH()),
+(ETr, ASCE standardized equation) at the satellite overpass (see \code{\link{calcH}}),
 the same reference used by ET24h() and dailyET(), as in Allen et al. (2007).
 With anchors.method = "flexible", if the cold-pixel criteria had to be
 relaxed and the mean NDVI of the cold pixels is below 0.8, ETp.coef is
 replaced by Kc * ETo / ETr, where Kc = 2.11 * NDVI - 0.4989 is a crop
-coefficient on a grass reference basis (Gonzalez et al., 2015) and ETo / ETr
+coefficient on a grass reference basis (Reyes-González et al., 2015) and ETo / ETr
 is the ratio of the grass and alfalfa reference ET at the overpass.
 }
 \section{Extra Parameters}{
@@ -195,7 +195,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 
 Allen, R. G., Pereira, L. S., Raes, D., & Smith, M. (1998). Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Rome.
 
-González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105.
+Reyes-González, A., Hay, C., Kjaersgaard, J., & Neale, C. M. U. (2015). Use of remote sensing to generate crop coefficient and estimate actual crop evapotranspiration. 2015 ASABE Annual International Meeting, New Orleans, Louisiana. https://doi.org/10.13031/aim.20152190105
 }
 \seealso{
 Other METRIC model functions:
@@ -203,6 +203,6 @@ Other METRIC model functions:
 \code{\link[=METRIC.Rn]{METRIC.Rn()}}
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \concept{METRIC model functions}

@@ -39,7 +39,7 @@ print.waterLSEB <- function(x, ...){
 #' overwrite
 #' @return The SpatRaster written to the file (x$EB), invisibly, as returned by
 #' terra::writeRaster().
-#' @author  María Victoria Munafó
+#' @author María Victoria Munafó
 #' @family LSEB objects related functions
 #' @name writeRaster.waterLSEB
 #' @aliases writeRaster,waterLSEB,character-method

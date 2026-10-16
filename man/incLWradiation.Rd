@@ -7,7 +7,7 @@
 incLWradiation(WeatherStation, DEM, solar.angles, Ts)
 }
 \arguments{
-\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
 
 \item{DEM}{SpatRaster with a digital elevation model (m)}

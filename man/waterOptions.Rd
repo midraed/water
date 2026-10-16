@@ -30,7 +30,7 @@ used by prepareSRTMdata(); use its path argument}
 
 \item{autoAoi}{Logical. If TRUE (default), functions with an aoi
 argument that is missing (loadImage(), loadImageSR(), albedo()) use an
-object called aoi in .GlobalEnv if it exists. See createAoi()}
+object called aoi in .GlobalEnv if it exists. See \code{\link{createAoi}}}
 
 \item{default}{Logical. If TRUE will revert all options to default
 values}
@@ -54,6 +54,6 @@ Other support functions:
 \code{\link[=prepareSRTMdata]{prepareSRTMdata()}}
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \concept{support functions}

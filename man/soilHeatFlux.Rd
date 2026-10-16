@@ -35,7 +35,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 
 Tasumi, M. (2003). Progress in operational estimation of regional evapotranspiration using satellite imagery. Ph.D. dissertation, University of Idaho, Moscow, Idaho. \cr
 
-Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. \cr
+Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. https://doi.org/10.1016/S0022-1694(99)00202-4 \cr
 }
 \seealso{
 Other net radiation related functions:

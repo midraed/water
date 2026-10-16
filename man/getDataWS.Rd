@@ -7,14 +7,15 @@
 getDataWS(WeatherStation)
 }
 \arguments{
-\item{WeatherStation}{waterWeatherStation object. See read.WSdata()}
+\item{WeatherStation}{waterWeatherStation object. See \code{\link{read.WSdata}}}
 }
 \value{
 A one-row data.frame with the conditions at the satellite overpass:
 wind (m/s), RH (\%), temp (Celsius), radiation (W/m2), height (m), lat, long,
-elev (m), DOY (day of year) and hours (decimal hour of the overpass in the
-weather station time zone). An error is given if the object has no
-conditions at the overpass (at.sat).
+elev (m), DOY (day of year), hours (decimal hour of the overpass in the
+weather station time zone) and long.z (longitude of the centre of that time
+zone, 15 degrees per hour of UTC offset, used by hourlyET()). An error is
+given if the object has no conditions at the overpass (at.sat).
 }
 \description{
 Export weather conditions at the satellite overpass from a waterWeatherStation object

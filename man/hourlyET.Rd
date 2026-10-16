@@ -8,7 +8,7 @@ hourlyET(
   WeatherStation,
   hours,
   DOY,
-  long.z = WeatherStation$long,
+  long.z = NULL,
   ET.instantaneous = FALSE,
   ET = "ETr",
   height = 2,
@@ -27,9 +27,13 @@ e.g. 10.5 for 10:30}
 
 \item{DOY}{day of year}
 
-\item{long.z}{longitude of the centre of the local time zone, in
-decimal degrees (negative west). Defaults to the weather station longitude
-(no longitude correction)}
+\item{long.z}{longitude of the centre of the time zone of the
+weather station clock, in decimal degrees (negative west), for the solar
+time correction. By default it is computed from the UTC offset of the
+station records (15 degrees per hour, e.g. -45 for UTC-3, including daylight
+saving time): from WeatherStation$long.z (see \code{\link{getDataWS}}) or from the time
+zone of WeatherStation$datetime. If the time zone is unknown, the station
+longitude is used (no correction)}
 
 \item{ET.instantaneous}{Logical. TRUE to calculate instantaneous ET
 instead of hourly ET. See Details.}

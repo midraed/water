@@ -62,11 +62,11 @@ computed from image.DN if missing.}
 same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 supplied it is used as Ts and surfaceTemperature() is not called.}
 
-\item{L}{L value for SAVI calculation. See LAI()}
+\item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
 
 \item{LST.method}{Method for land surface temperature estimation: "SC"
 for single channel or "SW" for split window (only for L8 and L9). Ignored
-if surf.temp is supplied. See surfaceTemperature()}
+if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
 }
 \value{
 SpatRaster with net radiation (W/m2). The result is also plotted.
@@ -91,6 +91,20 @@ computed from the surface reflectance (image.SR), although the "metric",
 "metric2010" and "MCB" equations were described for top-of-atmosphere
 reflectance.
 }
+\examples{
+scene_folder <- system.file("extdata", "L8_C2", package = "water")
+image.SR <- loadImageSR(path = scene_folder)
+MTLfile <- list.files(scene_folder, pattern = "MTL.txt$", full.names = TRUE)
+csvfile <- system.file("extdata", "INTA.csv", package = "water")
+WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "\%Y/\%m/\%d \%H:\%M",
+                              columns = c("date" = 1, "time" = 1, "radiation" = 5,
+                                          "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+                              lat = -33.00513, long = -68.86469, elev = 927, height = 2,
+                              tz = "America/Argentina/Mendoza", MTL = MTLfile)
+Rn <- METRIC.Rn(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                WeatherStation = WeatherStation, MTL = MTLfile,
+                alb.coeff = "Olmedo")
+}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 }
@@ -100,6 +114,6 @@ Other METRIC model functions:
 \code{\link[=METRIC.G]{METRIC.G()}}
 }
 \author{
-Guillermo F Olmedo, \email{guillermo.olmedo@gmail.com}
+Guillermo Federico Olmedo
 }
 \concept{METRIC model functions}

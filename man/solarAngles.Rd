@@ -13,7 +13,7 @@ METRICtopo()}
 \item{MTL}{path to the Landsat metadata (MTL) file. If missing,
 the only *MTL.txt file in the working directory is used}
 
-\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
 }
 \value{

@@ -82,6 +82,34 @@ ws2 <- read.WSdata2(WSdata = csv2, columns = c(1, 1, 2, 3, 4, 5, 6), lat = -33,
                     datetime.format = "%Y-%m-%d %H:%M:%S")
 stopifnot(all(ws2$alldata$temp == 20.5))
 
+## hourlyET(): solar time correction for the centre of the time zone of the
+## station clock, from its UTC offset (#77); it used the station longitude
+apples <- read.WSdata(WSdata = file.path(extdata, "apples.csv"), date.format = "%d/%m/%Y",
+                      lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+                      columns = c(1, 2, 3, 4, 6, 7, 8), cf = c(1, 0.2777778, 1),
+                      tz = "America/Santiago", MTL = file.path(extdata, "L7.MTL.txt"))
+overpass <- water:::getDataWS(apples)
+stopifnot(overpass$long.z == -45)  # UTC-3 in February (daylight saving time)
+et.default <- hourlyET(apples)
+stopifnot(all.equal(et.default, hourlyET(overpass, hours = overpass$hours, DOY = overpass$DOY,
+                                         ET.instantaneous = TRUE, long.z = -45)),
+          abs(et.default - hourlyET(overpass, hours = overpass$hours, DOY = overpass$DOY,
+                                    ET.instantaneous = TRUE, long.z = overpass$long)) > 0.005)
+stopifnot(all.equal(dailyET(apples, MTL = file.path(extdata, "L7.MTL.txt")),
+                    dailyET(apples, MTL = file.path(extdata, "L7.MTL.txt"), long.z = -45)))
+
+## print() returns the weather station invisibly
+printed <- withVisible(print(apples))
+stopifnot(!printed$visible, identical(printed$value, apples))
+
+## mtlValues(): keys repeated in several groups need a group (#78)
+mtl.l2 <- list.files(file.path(extdata, "L8_C2"), pattern = "MTL.txt$", full.names = TRUE)
+expect_error(water:::mtlValues(mtl.l2, "REFLECTANCE_MULT_BAND_4"), "more than once")
+stopifnot(water:::mtlValues(mtl.l2, "REFLECTANCE_MULT_BAND_4",
+                            group = "LEVEL2_SURFACE_REFLECTANCE_PARAMETERS") == 2.75e-05,
+          water:::mtlValues(mtl.l2, "REFLECTANCE_MULT_BAND_4",
+                            group = "LEVEL1_RADIOMETRIC_RESCALING") == 2e-05)
+
 ## hourlyET(): only "ETr" and "ETo"
 expect_error(hourlyET(ws, ET = "ETor"), "should be one of")
 

@@ -35,7 +35,7 @@
 #' used by prepareSRTMdata(); use its path argument
 #' @param autoAoi       Logical. If TRUE (default), functions with an aoi
 #' argument that is missing (loadImage(), loadImageSR(), albedo()) use an
-#' object called aoi in .GlobalEnv if it exists. See createAoi()
+#' object called aoi in .GlobalEnv if it exists. See \code{\link{createAoi}}
 #' @param default       Logical. If TRUE will revert all options to default
 #' values
 #' @return
@@ -44,7 +44,7 @@
 #' @references
 #' Robert J. Hijmans (2015). raster: Geographic Data Analysis and Modeling. R
 #' package version 2.4-18. https://CRAN.R-project.org/package=raster
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
 #' @export
 waterOptions <- function (overwrite, writeResults, outputFolder,
                           SRTMrepo, autoAoi, default = FALSE) 

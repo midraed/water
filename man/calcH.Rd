@@ -31,7 +31,7 @@ columns, or an sf POINT object with a type column. type must be "hot" or
 pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
 pair) and returns a and b of the last pair}
 
-\item{Ts}{Land surface temperature in K. See surfaceTemperature()}
+\item{Ts}{Land surface temperature in K. See \code{\link{surfaceTemperature}}}
 
 \item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
 
@@ -53,9 +53,9 @@ adjusted for mountainous terrain}
 
 \item{DEM}{Digital Elevation Model in meters.}
 
-\item{Rn}{Net radiation. See netRadiation()}
+\item{Rn}{Net radiation. See \code{\link{netRadiation}}}
 
-\item{G}{Soil Heat Flux. See soilHeatFlux()}
+\item{G}{Soil Heat Flux. See \code{\link{soilHeatFlux}}}
 
 \item{verbose}{Logical. If TRUE will print information about every
 iteration to console}
@@ -85,7 +85,7 @@ needed to account for buoyancy effects. However, H is needed to make this
 correction. An iterative solution for both H and rah is used.
 
 The ET of the cold pixels is computed as ETp.coef times the hourly alfalfa
-reference ET (ETr, ASCE standardized equation; see hourlyET()) at the
+reference ET (ETr, ASCE standardized equation; see \code{\link{hourlyET}}) at the
 satellite overpass, as in Allen et al. (2007). ET24h() and dailyET() use the
 same reference.
 }

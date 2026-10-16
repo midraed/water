@@ -33,10 +33,10 @@
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
 #' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 #' supplied it is used as Ts and surfaceTemperature() is not called.
-#' @param L                L value for SAVI calculation. See LAI()
+#' @param L                L value for SAVI calculation. See \code{\link{LAI}}
 #' @param LST.method       Method for land surface temperature estimation: "SC"
 #' for single channel or "SW" for split window (only for L8 and L9). Ignored
-#' if surf.temp is supplied. See surfaceTemperature()
+#' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -51,11 +51,24 @@
 #' reflectance.
 #' @return SpatRaster with net radiation (W/m2). The result is also plotted.
 #' @family METRIC model functions
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
-METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
+#' @examples
+#' scene_folder <- system.file("extdata", "L8_C2", package = "water")
+#' image.SR <- loadImageSR(path = scene_folder)
+#' MTLfile <- list.files(scene_folder, pattern = "MTL.txt$", full.names = TRUE)
+#' csvfile <- system.file("extdata", "INTA.csv", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "%Y/%m/%d %H:%M",
+#'                               columns = c("date" = 1, "time" = 1, "radiation" = 5,
+#'                                           "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+#'                               lat = -33.00513, long = -68.86469, elev = 927, height = 2,
+#'                               tz = "America/Argentina/Mendoza", MTL = MTLfile)
+#' Rn <- METRIC.Rn(image.SR = image.SR, surf.temp = image.SR$Band_10,
+#'                 WeatherStation = WeatherStation, MTL = MTLfile,
+#'                 alb.coeff = "Olmedo")
+METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
                       plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
                       LST.method = "SC"){
@@ -83,13 +96,26 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' @param Rn               Net radiation in W/m2, e.g. from METRIC.Rn(). If
 #' missing it is computed as in METRIC.Rn()
 #' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
-#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()
+#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
 #' @return SpatRaster with soil heat flux G (W/m2). The result is also plotted.
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
 #' @family METRIC model functions
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
+#' @examples
+#' scene_folder <- system.file("extdata", "L8_C2", package = "water")
+#' image.SR <- loadImageSR(path = scene_folder)
+#' MTLfile <- list.files(scene_folder, pattern = "MTL.txt$", full.names = TRUE)
+#' csvfile <- system.file("extdata", "INTA.csv", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "%Y/%m/%d %H:%M",
+#'                               columns = c("date" = 1, "time" = 1, "radiation" = 5,
+#'                                           "wind" = 6, "RH" = 3, "temp" = 2, "rain" = 4),
+#'                               lat = -33.00513, long = -68.86469, elev = 927, height = 2,
+#'                               tz = "America/Argentina/Mendoza", MTL = MTLfile)
+#' G <- METRIC.G(image.SR = image.SR, surf.temp = image.SR$Band_10,
+#'               WeatherStation = WeatherStation, MTL = MTLfile,
+#'               alb.coeff = "Olmedo")
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
@@ -235,7 +261,7 @@ metricRn <- function(surface, WeatherStation){
 #' @param aoi              Optional sf polygon or SpatVector. If given, the
 #' inputs are cropped to it
 #' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
-#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See soilHeatFlux()
+#' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
 #' @param LST.method       Method for land surface temperature estimation: "SC"
@@ -243,13 +269,13 @@ metricRn <- function(surface, WeatherStation){
 #' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
-#' @param L                L value for SAVI calculation. See LAI()
+#' @param L                L value for SAVI calculation. See \code{\link{LAI}}
 #' @param Zom.method       method selected to calculate momentum roughness
 #' length. Use "short.crops" for short crops methods from Allen et al (2007);
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method for the automatic selection of the anchor
-#' pixels: "flexible" (default), "best" or "random". See calcAnchors()
+#' pixels: "flexible" (default), "best" or "random". See \code{\link{calcAnchors}}
 #' @param anchors          data.frame with X, Y (coordinates in the CRS of the
 #' image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
 #' POINT object with a type column. If missing, the anchors are selected
@@ -282,12 +308,12 @@ metricRn <- function(surface, WeatherStation){
 #' described for top-of-atmosphere reflectance.
 #'
 #' The ET of the cold pixels is ETp.coef times the hourly alfalfa reference ET
-#' (ETr, ASCE standardized equation) at the satellite overpass (see calcH()),
+#' (ETr, ASCE standardized equation) at the satellite overpass (see \code{\link{calcH}}),
 #' the same reference used by ET24h() and dailyET(), as in Allen et al. (2007).
 #' With anchors.method = "flexible", if the cold-pixel criteria had to be
 #' relaxed and the mean NDVI of the cold pixels is below 0.8, ETp.coef is
 #' replaced by Kc * ETo / ETr, where Kc = 2.11 * NDVI - 0.4989 is a crop
-#' coefficient on a grass reference basis (Gonzalez et al., 2015) and ETo / ETr
+#' coefficient on a grass reference basis (Reyes-González et al., 2015) and ETo / ETr
 #' is the ratio of the grass and alfalfa reference ET at the overpass.
 #' @section Extra Parameters:
 #' Extra parameters for functions inside METRIC.EB() include:
@@ -305,14 +331,14 @@ metricRn <- function(surface, WeatherStation){
 #'   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
 #'   \item{methods}{named character vector with the methods and parameters used.}
 #' }
-#' @author Guillermo F Olmedo, \email{guillermo.olmedo@@gmail.com}
+#' @author Guillermo Federico Olmedo
 #' @family METRIC model functions
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #'
 #' Allen, R. G., Pereira, L. S., Raes, D., & Smith, M. (1998). Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Rome.
 #'
-#' González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
+#' Reyes-González, A., Hay, C., Kjaersgaard, J., & Neale, C. M. U. (2015). Use of remote sensing to generate crop coefficient and estimate actual crop evapotranspiration. 2015 ASABE Annual International Meeting, New Orleans, Louisiana. https://doi.org/10.13031/aim.20152190105
 #' @examples
 #' ### Data preparation: Landsat 8 Collection 2 Level-2 example crop
 #' library(water)
@@ -433,16 +459,15 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
      if(flex.cold > 0 & NDVIcold < 0.8){
        print(paste0("mean NDVI for cold pixel: ", NDVIcold))
        # NDVI and Kc relationship from:
-       #González, Arturo & Hay, Christopher & Kjaersgaard, Jeppe & Neale, 
-       #Christopher. (2015). Use of Remote Sensing to Generate Crop Coefficient 
-       #and Estimate Actual Crop Evapotranspiration. 10.13031/aim.20152190105. 
+       # Reyes-González, Hay, Kjaersgaard and Neale (2015), alfalfa in Mexico.
+       # doi:10.13031/aim.20152190105 
        # Kc on a grass reference (ETo) basis, converted to the alfalfa
        # reference (ETr) used for the cold pixels
        Kc <- 2.11 * NDVIcold - 0.4989
        ETp.coef <- Kc * hourlyET(WeatherStation, ET = "ETo") /
          hourlyET(WeatherStation, ET = "ETr")
        print(paste0("ETp.coef updated to: ", round(ETp.coef, 3), " (Kc = ",
-                    round(Kc, 3), " from Gonzalez et al, 2015, times ETo/ETr)"))
+                    round(Kc, 3), " from Reyes-Gonzalez et al, 2015, times ETo/ETr)"))
      }
   }
   H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,

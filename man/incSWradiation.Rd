@@ -13,7 +13,7 @@ METRICtopo()}
 \item{solar.angles}{SpatRaster with layers latitude, declination,
 hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 
-\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
 }
 \value{

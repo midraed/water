@@ -12,13 +12,13 @@ dailyET(
   long,
   elev,
   ET = "ETr",
-  long.z = WeatherStation$long,
+  long.z = NULL,
   date = "auto",
   MTL
 )
 }
 \arguments{
-\item{WeatherStation}{waterWeatherStation object, see read.WSdata(). Other
+\item{WeatherStation}{waterWeatherStation object, see \code{\link{read.WSdata}}. Other
 inputs are not implemented}
 
 \item{DOY}{Not used}
@@ -39,7 +39,9 @@ taken from WeatherStation}
 grass; or "ETr" (default) for tall crops, similar to 0.5 m tall full-cover
 alfalfa.}
 
-\item{long.z}{Not used}
+\item{long.z}{longitude of the centre of the time zone of the weather
+station clock (decimal degrees, negative west). By default it is computed
+from the time zone of the records; see \code{\link{hourlyET}}}
 
 \item{date}{"auto" (default) uses the acquisition date in the MTL file;
 otherwise a date (e.g. "2016-02-09") present in the weather station data.

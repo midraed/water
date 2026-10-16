@@ -7,7 +7,7 @@
 \method{plot}{waterWeatherStation}(x, hourly = FALSE, sat = TRUE, date, ...)
 }
 \arguments{
-\item{x}{waterWeatherStation object. See read.WSdata()}
+\item{x}{waterWeatherStation object. See \code{\link{read.WSdata}}}
 
 \item{hourly}{If TRUE will plot only hourly data, instead of all data 
 from the waterWeatherStation object}

@@ -7,15 +7,14 @@
 \method{print}{waterWeatherStation}(x, ...)
 }
 \arguments{
-\item{x}{waterWeatherStation object. See read.WSdata()}
+\item{x}{waterWeatherStation object. See \code{\link{read.WSdata}}}
 
 \item{...}{additional parameters to pass to print()}
 }
 \value{
 Called for its side effect: prints the station location, a summary
 of the records and, if available, the conditions at the satellite overpass.
-The last printed object (the conditions at the overpass, or the summary) is
-returned invisibly.
+Returns x invisibly.
 }
 \description{
 Print method for waterWeatherStation S3 class

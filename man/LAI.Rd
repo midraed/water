@@ -13,7 +13,7 @@ LAI(method = "metric2010", image, aoi, L = 0.1, sat)
 \item{image}{SpatRaster with bands B, G, R, NIR, ... (the third and fourth
 layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
 "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
-"vineyard" (see calcRadiance())}
+"vineyard" (see \code{\link{calcRadiance}})}
 
 \item{aoi}{Not used; kept for backward compatibility}
 
@@ -49,7 +49,7 @@ although their equations were described for top-of-atmosphere reflectance.
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 Carrasco-Benavides, M., Ortega-Farias, S., Lagos, L., Kleissl, J., Morales-Salinas, L., & Kilic, A. (2014). Parameterization of the Satellite-Based Model (METRIC) for the Estimation of Instantaneous Surface Energy Balance Components over a Drip-Irrigated Vineyard. Remote Sensing, 6(11), 11342-11371. http://doi.org/10.3390/rs61111342\cr
-Johnson, L. F. (2003). Temporal Stability of the NDVI-LAI Relationship in a Napa Valley Vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. http://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
+Johnson, L. F. (2003). Temporal stability of an NDVI-LAI relationship in a Napa Valley vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. https://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
 Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 }
 \seealso{

@@ -21,7 +21,7 @@ SpatRaster with one layer named DEM (m), on the grid defined by
 extent.
 }
 \description{
-Mosaics the SRTM 1 arc-second tiles found in path (see checkSRTMgrids()) and
+Mosaics the SRTM 1 arc-second tiles found in path (see \code{\link{checkSRTMgrids}}) and
 projects the result to the grid of the image.
 }
 \seealso{

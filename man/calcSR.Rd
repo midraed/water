@@ -10,7 +10,8 @@ calcSR(
   aoi,
   incidence.hor,
   WeatherStation,
-  surface.model
+  surface.model,
+  MTL
 )
 }
 \arguments{
@@ -26,11 +27,14 @@ in the working directory}
 \item{incidence.hor}{solar incidence angle (radians) on a horizontal
 surface, from solarAngles()}
 
-\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
 
 \item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
 METRICtopo()}
+
+\item{MTL}{Landsat metadata file, used to detect the satellite
+when sat = "auto"}
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,
@@ -40,10 +44,10 @@ NIR, SWIR1 and SWIR2.
 Calculates surface reflectance from top-of-atmosphere reflectance using the
 model developed by Tasumi et al. (2008) and Allen et al. (2007), applied band
 by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
-Level-2 surface reflectance (see loadImageSR()).
+Level-2 surface reflectance (see \code{\link{loadImageSR}}).
 }
 \references{
-Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
+Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. https://doi.org/10.1061/(ASCE)1084-0699(2008)13:2(51) \cr
 
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }

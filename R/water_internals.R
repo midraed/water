@@ -63,12 +63,25 @@ findMTL <- function(MTL = NULL, path = getwd(), required = TRUE){
   MTL
 }
 
-# Numeric values from a Landsat MTL file, e.g. mtlValues(MTL, "K1_CONSTANT_BAND_10")
-mtlValues <- function(MTL, keys){
+# Numeric values from a Landsat MTL file, e.g. mtlValues(MTL, "K1_CONSTANT_BAND_10").
+# Level-2 MTL files repeat some keys in several groups (e.g. REFLECTANCE_MULT_BAND_4
+# for the SR scaling and for TOA): such keys must be read from one group
+mtlValues <- function(MTL, keys, group = NULL){
   lines <- readLines(MTL[1], warn = FALSE)
+  if(!is.null(group)){
+    start <- grep(paste0("^\\s*GROUP = ", group, "\\s*$"), lines)
+    end <- grep(paste0("^\\s*END_GROUP = ", group, "\\s*$"), lines)
+    if(length(start) != 1 || length(end) != 1){
+      stop("Group ", group, " not found in MTL file")
+    }
+    lines <- lines[start:end]
+  }
   values <- vapply(keys, function(key){
-    line <- grep(paste0("^\\s*", key, " = "), lines, value = TRUE)[1]
-    as.numeric(gsub("\"", "", sub(".*= *", "", line)))
+    line <- grep(paste0("^\\s*", key, " = "), lines, value = TRUE)
+    if(length(line) > 1){
+      stop(key, " appears more than once in the MTL file; give its group")
+    }
+    as.numeric(gsub("\"", "", sub(".*= *", "", line[1])))
   }, numeric(1))
   if(anyNA(values)){
     stop("Not found in MTL file: ", paste(keys[is.na(values)], collapse = ", "))
@@ -131,6 +144,12 @@ knownTimezone <- function(tz){
 }
 
 isURL <- function(x){grepl("^(https?|ftp)://", x)}
+
+# Longitude (decimal degrees, negative west) of the centre of the time zone of
+# the times x: 15 degrees per hour of UTC offset, including daylight saving time
+tzLongitude <- function(x){
+  15 * as.POSIXlt(x)$gmtoff / 3600
+}
 
 # 1 x 1 degree DEM tiles (latitude and longitude of the south-west corner)
 # covering the extent of an image

@@ -28,6 +28,12 @@ in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
 It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
 Landsat 7 Level-2 products are not supported (different band numbers).
 }
+\examples{
+scene_folder <- system.file("extdata", "L8_C2", package = "water")
+image.SR <- loadImageSR(path = scene_folder)
+names(image.SR)
+plot(image.SR[["NIR"]])
+}
 \seealso{
 Other remote sensing support functions:
 \code{\link[=calcRadiance]{calcRadiance()}},

@@ -23,7 +23,7 @@ returns the DEM on the image grid, ready for METRIC.EB(plain = FALSE, DEM =
 ). The tiles are Cloud Optimized GeoTIFFs in the AWS Open Data registry,
 read over HTTPS: no account is needed, and only the area of the image is
 downloaded. It needs an internet connection. To use SRTM tiles already
-downloaded, see checkSRTMgrids() and prepareSRTMdata().
+downloaded, see \code{\link{checkSRTMgrids}} and prepareSRTMdata().
 }
 \examples{
 \dontrun{

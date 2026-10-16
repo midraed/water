@@ -29,7 +29,7 @@ working directory)}
 \item{method}{"SC" for single channel or "SW" for split window
 algorithm. "SW" is only available for L8 and L9}
 
-\item{WeatherStation}{waterWeatherStation object (see read.WSdata()) or the
+\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
 
 \item{thermalband}{thermal band in digital numbers. Optional: if missing,

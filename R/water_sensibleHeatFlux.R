@@ -67,7 +67,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param image            reflectance SpatRaster (top-of-atmosphere
 #' reflectance, or surface reflectance when no DN image is available) with
 #' layers named R and NIR, used to compute NDVI
-#' @param Ts               land surface temperature in K. See surfaceTemperature()
+#' @param Ts               land surface temperature in K. See \code{\link{surfaceTemperature}}
 #' @param LAI              SpatRaster with leaf area index, from LAI()
 #' @param albedo           broadband surface albedo, from albedo()
 #' @param Z.om             momentum roughness length, from momentumRoughnessLength()
@@ -124,7 +124,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   }
   ### old method names. Remove after version 0.8
   if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc", "CITRA-MCBr")){
-    warning("anchor method names has changed. Old names (CITRA-MCBx) are
+    warning("anchor method names have changed. Old names (CITRA-MCBx) are
             deprecated. Options now include 'best', 'random' and 'flexible'")
   }
   if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc")){anchors.method <- "best"}
@@ -489,7 +489,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' "mean" (default) uses the mean values of the cold pixels and of the hot
 #' pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
 #' pair) and returns a and b of the last pair
-#' @param Ts             Land surface temperature in K. See surfaceTemperature()
+#' @param Ts             Land surface temperature in K. See \code{\link{surfaceTemperature}}
 #' @param Z.om           momentum roughness length, from momentumRoughnessLength()
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
@@ -504,8 +504,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param mountainous    Logical. If TRUE heat transfer equation will be
 #' adjusted for mountainous terrain
 #' @param DEM            Digital Elevation Model in meters.
-#' @param Rn             Net radiation. See netRadiation()
-#' @param G              Soil Heat Flux. See soilHeatFlux()
+#' @param Rn             Net radiation. See \code{\link{netRadiation}}
+#' @param G              Soil Heat Flux. See \code{\link{soilHeatFlux}}
 #' @param verbose        Logical. If TRUE will print information about every
 #' iteration to console
 #' @param maxit          Maximum number of iterations. Default 20.
@@ -522,7 +522,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' correction. An iterative solution for both H and rah is used.
 #'
 #' The ET of the cold pixels is computed as ETp.coef times the hourly alfalfa
-#' reference ET (ETr, ASCE standardized equation; see hourlyET()) at the
+#' reference ET (ETr, ASCE standardized equation; see \code{\link{hourlyET}}) at the
 #' satellite overpass, as in Allen et al. (2007). ET24h() and dailyET() use the
 #' same reference.
 #' @return A list with a and b (coefficients of dT = a * Ts_datum + b), dT
@@ -651,7 +651,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     while(!converge){
       
       if(verbose==TRUE){
-        print(paste("iteraction #", i))
+        print(paste("iteration #", i))
       }
       i <-  i + 1
       
@@ -754,7 +754,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         
         i <-  i + 1
         if(verbose==TRUE){
-          print(paste("iteraction #", i))
+          print(paste("iteration #", i))
         }
         
         dT.cold <- H.cold * cell_vals(r.ah, cold[pair]) /

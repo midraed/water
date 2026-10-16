@@ -26,7 +26,7 @@ calcAnchors(
 reflectance, or surface reflectance when no DN image is available) with
 layers named R and NIR, used to compute NDVI}
 
-\item{Ts}{land surface temperature in K. See surfaceTemperature()}
+\item{Ts}{land surface temperature in K. See \code{\link{surfaceTemperature}}}
 
 \item{LAI}{SpatRaster with leaf area index, from LAI()}
 

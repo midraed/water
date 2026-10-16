@@ -31,7 +31,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 
 LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 
-U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
+U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 }
 \seealso{
 Other remote sensing support functions:

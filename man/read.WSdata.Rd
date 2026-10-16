@@ -49,7 +49,7 @@ examples only as a reference.}
 \item{datetime.format}{datetime format. See strptime format argument.}
 
 \item{tz}{time zone of the weather station clock (e.g.
-"America/Santiago"; see OlsonNames()). If "" (default) the time zone of the
+"America/Santiago"; see \code{\link[base]{OlsonNames}}). If "" (default) the time zone of the
 computer is assumed, with a warning. Always set it: the overpass time in the
 MTL file is UTC and is converted to this time zone. See strptime for
 details.}

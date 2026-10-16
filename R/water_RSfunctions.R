@@ -123,6 +123,11 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
+#' @examples
+#' scene_folder <- system.file("extdata", "L8_C2", package = "water")
+#' image.SR <- loadImageSR(path = scene_folder)
+#' names(image.SR)
+#' plot(image.SR[["NIR"]])
 loadImageSR <-  function(path = getwd(),  aoi){
   files <- list.files(path = path, pattern = "_SR_B[2-7]\\.(TIF|tif)$", full.names = T)
   if(!length(files)){
@@ -179,7 +184,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #'
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 #'
-#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
+#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   path <- getwd()
@@ -230,7 +235,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #'
 #' LPSO. (2004). Landsat 7 science data users handbook, Landsat Project Science Office, NASA Goddard Space Flight Center, Greenbelt, Md., (http://landsathandbook.gsfc.nasa.gov/) (Feb. 5, 2007) \cr
 #'
-#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574, version 5.0. EROS, Sioux Falls, South Dakota. \cr
+#' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
 calcTOAr <- function(image.DN, sat="auto", 
                      aoi, incidence.rel, MTL){
@@ -282,7 +287,7 @@ calcTOAr <- function(image.DN, sat="auto",
 #' Calculates surface reflectance from top-of-atmosphere reflectance using the
 #' model developed by Tasumi et al. (2008) and Allen et al. (2007), applied band
 #' by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
-#' Level-2 surface reflectance (see loadImageSR()).
+#' Level-2 surface reflectance (see \code{\link{loadImageSR}}).
 #' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance (B, G,
 #' R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()
 #' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
@@ -291,28 +296,30 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @param aoi             Not used; kept for backward compatibility
 #' @param incidence.hor   solar incidence angle (radians) on a horizontal
 #' surface, from solarAngles()
-#' @param WeatherStation  waterWeatherStation object (see read.WSdata()) or the
+#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
 #' METRICtopo()
+#' @param MTL             Landsat metadata file, used to detect the satellite
+#' when sat = "auto"
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
 #' NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
 #' @author David Fonseca-Luengo
 #' @family remote sensing support functions
 #' @references
-#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. \cr
+#' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. https://doi.org/10.1061/(ASCE)1084-0699(2008)13:2(51) \cr
 #'
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 # incidence hor from TML?? 
-calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor, 
-                   WeatherStation, surface.model){
+calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
+                   WeatherStation, surface.model, MTL){
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   path <- getwd()
-  if(sat=="auto"){sat = getSat(path)}
+  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){stop("water package does not include a model to calculate ",
     "surface reflectance for Landsat 8/9. Download Collection 2 Level-2 products ",
     "and load them with loadImageSR().")}

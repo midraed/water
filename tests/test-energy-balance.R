@@ -68,6 +68,12 @@ toa7 <- calcTOAr(image.DN = L7, sat = "L7", MTL = MTL.L7,
                  incidence.rel = angles7$incidence.rel)
 stopifnot(stats::median(terra::values(toa7$SWIR2), na.rm = TRUE) < 0.2)
 
+## calcSR() detects the satellite from the MTL file (#78)
+sr7 <- calcSR(image.TOAr = toa7, incidence.hor = angles7$incidence.hor,
+              WeatherStation = WS7, surface.model = METRICtopo(flatDEM(L7)),
+              MTL = MTL.L7)
+stopifnot(terra::nlyr(sr7) == 6)
+
 ## LAI(method = "metric"): LAI = 6 for dense vegetation (it was NaN)
 dense <- terra::rast(nrows = 1, ncols = 1, nlyrs = 6,
                      vals = c(0.03, 0.05, 0.05, 0.4786, 0.2, 0.1))
@@ -94,6 +100,8 @@ cloud <- terra::cellFromRowCol(sr, rep(60:70, each = 11), rep(100:110, 11))
 sr[cloud] <- NA
 Ts[cloud] <- 285  # cold cloud tops, not masked in the thermal band
 alb <- albedo(sr, coeff = "Olmedo", sat = "L8")
+# sat = "auto" no longer needs Landsat files in the working directory (#78)
+stopifnot(maxdiff(albedo(sr, coeff = "Olmedo"), alb) == 0)
 lai <- LAI(method = "metric2010", image = sr)
 zom <- momentumRoughnessLength(LAI = lai)
 anchors <- quiet(calcAnchors(image = sr, Ts = Ts, LAI = lai, albedo = alb, Z.om = zom,
