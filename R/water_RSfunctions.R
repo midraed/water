@@ -26,7 +26,7 @@
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 loadImage <-  function(path = getwd(), sat="auto", aoi){
-  ## TODO: For L8 i should load the sirfrefl directly, like in MODIS!
+  checkChoice(sat, waterChoices$sat, "sat")
   if(sat=="auto"){sat = getSat(path)} #DRY!
   if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
@@ -187,6 +187,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
 calcRadiance <- function(image.DN, sat = "auto", MTL){
+  checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   path <- getwd()
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
@@ -239,6 +240,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #' @export
 calcTOAr <- function(image.DN, sat="auto", 
                      aoi, incidence.rel, MTL){
+  checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   path = getwd()
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- 2:7}
@@ -315,6 +317,7 @@ calcTOAr <- function(image.DN, sat="auto",
 # incidence hor from TML?? 
 calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
                    WeatherStation, surface.model, MTL){
+  checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }

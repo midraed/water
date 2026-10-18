@@ -357,6 +357,8 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo I: Algorithms. Remote Sensing of Environment, 76(2), 213-238. https://doi.org/10.1016/S0034-4257(00)00205-4 \cr
 #' @export
 albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
+  checkChoice(coeff, waterChoices$alb.coeff, "coeff")
+  checkChoice(sat, waterChoices$sat, "sat")
   if(sat=="auto"){
     # L7, L8 and L9 use the same coefficients; MODIS images start with R and NIR
     sat <- if(identical(names(image.SR)[1:2], c("R", "NIR"))) "MODIS" else "L8"
@@ -422,6 +424,7 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
+  checkChoice(method, waterChoices$LAI.method, "method")
   if(!missing(sat)){warning("LAI(): the sat argument is not used")}
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
       toa.4.5 <- c(image[[3]], image[[4]])}
@@ -556,6 +559,9 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 ## Add Sobrino and Qin improvements to LST in ETM+
 surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi, 
                                method = "SC", WeatherStation, thermalband, MTL){
+  checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
+  checkChoice(method, waterChoices$LST.method, "method")
+  checkLSTmethod(method, sat, TRUE, "method")
   path=getwd()
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
@@ -571,6 +577,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   # atm transmissivity
   tau_NB <- 0.75+2e-5*WeatherStation$elev
   if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  checkLSTmethod(method, sat, TRUE, "method")
   if(sat %in% c("L8", "L9")){
     # Landsat 8 defaults; L9 (TIRS-2) constants differ, so read them from MTL
     cal <- c(RADIANCE_MULT_BAND_10 = 3.3420E-04, RADIANCE_ADD_BAND_10 = 0.1,
@@ -749,6 +756,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. https://doi.org/10.1016/S0022-1694(99)00202-4 \cr
 #' @export
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
+  checkChoice(method, waterChoices$G.method, "method")
   sr.4.5 <- c(image[[3]], image[[4]])
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   if(method == "Bastiaanssen"){

@@ -40,13 +40,28 @@
 momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
                                     albedo, a, b, fLAI, h,
                                     mountainous=FALSE, surface.model){
+  checkChoice(method, waterChoices$Zom.method, "method")
+  number <- function(x, name){
+    if(!is.numeric(x) || length(x) != 1 || !is.finite(x)){
+      stop(name, " must be a finite number", call. = FALSE)
+    }
+  }
   if(method=="short.crops"){
     Z.om <- (0.018*LAI)
   }
   if(method=="custom"){
+    if(missing(a) || missing(b)){stop("method = \"custom\" needs a and b", call. = FALSE)}
+    number(a, "a"); number(b, "b")
     Z.om <- exp((a*NDVI/albedo)+b)
   }
   if(method=="Perrier"){
+    if(missing(fLAI) || missing(h)){stop("method = \"Perrier\" needs fLAI and h", call. = FALSE)}
+    if(!is.numeric(fLAI) || length(fLAI) != 1 || !isTRUE(fLAI >= 0 && fLAI <= 1)){
+      stop("fLAI must be a number between 0 and 1", call. = FALSE)
+    }
+    if(!is.numeric(h) || length(h) != 1 || !isTRUE(h > 0)){
+      stop("h (crop height, m) must be a number above 0", call. = FALSE)
+    }
     if(fLAI <0.5){ a <- (2*(1-fLAI))^-1 }
     if(fLAI >=0.5){ a <- 2*fLAI }
     Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))*h
@@ -122,13 +137,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   sanitizeCellIndex <- function(index) {
     as.integer(stats::na.omit(unlist(index, use.names = FALSE)))
   }
-  ### old method names. Remove after version 0.8
-  if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc", "CITRA-MCBr")){
-    warning("anchor method names have changed. Old names (CITRA-MCBx) are
-            deprecated. Options now include 'best', 'random' and 'flexible'")
-  }
-  if(anchors.method %in% c("CITRA-MCB", "CITRA-MCBbc")){anchors.method <- "best"}
-  if(anchors.method %in% c("CITRA-MCBr")){anchors.method <- "random"}
+  # old method names (CITRA-MCBx) are mapped, with a warning
+  anchors.method <- checkAnchorsMethod(anchors.method)
   ### Some values used later
   NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
   NDVI[NDVI < -1]  <-  NA
@@ -543,7 +553,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20) {
-  
+  checkChoice(method, c("mean", "lm"), "method")
+
   # ---- helper: safe numeric values by cell (Option A) ----
   cell_vals <- function(r, cells) {
     x <- r[cells]

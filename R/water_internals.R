@@ -32,6 +32,91 @@ landsatBands <- function(image, bands){
   if(all(bands %in% names(image))) image[[bands]] else image[[seq_along(bands)]]
 }
 
+# x must be exactly one of choices: no partial matching (match.arg() takes
+# G.method = "T" as "Tasumi"), and a hint for typos and case changes
+checkChoice <- function(x, choices, name){
+  ok <- is.character(x) && length(x) == 1 && !is.na(x)
+  if(ok && x %in% choices){return(x)}
+  hint <- NULL
+  if(ok){
+    d <- utils::adist(tolower(x), tolower(choices))[1, ]
+    if(min(d) <= 2){hint <- choices[which.min(d)]}
+  }
+  stop("Unknown ", name, " = ",
+       if(ok) paste0("\"", x, "\"") else paste(deparse(x), collapse = " "),
+       ". Use one of: ", paste0("\"", choices, "\"", collapse = ", "),
+       if(!is.null(hint)) paste0(" (did you mean \"", hint, "\"?)"), call. = FALSE)
+}
+
+# Choices of the method arguments
+waterChoices <- list(
+  sat = c("auto", "L7", "L8", "L9", "MODIS"),
+  alb.coeff = c("Tasumi", "Olmedo", "Liang"),
+  LAI.method = c("metric2010", "metric", "MCB", "vineyard", "turner"),
+  LST.method = c("SC", "SW"),
+  G.method = c("Tasumi", "Bastiaanssen"),
+  Zom.method = c("short.crops", "custom", "Perrier"),
+  anchors.method = c("flexible", "best", "random")
+)
+
+# anchors.method, with the old CITRA names mapped (deprecated)
+checkAnchorsMethod <- function(anchors.method){
+  old <- c("CITRA-MCB" = "best", "CITRA-MCBbc" = "best", "CITRA-MCBr" = "random")
+  if(is.character(anchors.method) && length(anchors.method) == 1 &&
+     anchors.method %in% names(old)){
+    warning("anchor method names have changed. Old names (CITRA-MCBx) are ",
+            "deprecated. Options now include 'best', 'random' and 'flexible'")
+    anchors.method <- old[[anchors.method]]
+  }
+  checkChoice(anchors.method, waterChoices$anchors.method, "anchors.method")
+}
+
+# Method arguments of METRIC.EB(), METRIC.Rn() and METRIC.G(), checked before
+# any raster work
+checkMetricArgs <- function(sat, alb.coeff, LAI.method, LST.method,
+                            G.method = "Tasumi", Zom.method = "short.crops"){
+  checkChoice(sat, waterChoices$sat, "sat")
+  checkChoice(alb.coeff, waterChoices$alb.coeff, "alb.coeff")
+  checkChoice(LAI.method, waterChoices$LAI.method, "LAI.method")
+  checkChoice(LST.method, waterChoices$LST.method, "LST.method")
+  checkChoice(G.method, waterChoices$G.method, "G.method")
+  checkChoice(Zom.method, waterChoices$Zom.method, "Zom.method")
+  invisible(TRUE)
+}
+
+# The split window needs the two thermal bands of Landsat 8 and 9
+checkLSTmethod <- function(LST.method, sat, used, name = "LST.method"){
+  if(used && LST.method == "SW" && sat == "L7"){
+    stop(name, " = \"SW\" (split window) needs two thermal bands: only for ",
+         "Landsat 8 and 9", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+# extraParameters of METRIC.EB(): a named numeric vector with known names, and
+# the ones needed by Zom.method
+checkExtraParameters <- function(extraParameters, Zom.method){
+  allowed <- c("a", "b", "fLAI", "h", "deltaTemp", "minDist", "WSbuffer")
+  if(length(extraParameters) > 0){
+    if(!is.numeric(extraParameters) || is.null(names(extraParameters)) ||
+       any(names(extraParameters) == "")){
+      stop("extraParameters must be a named numeric vector, e.g. ",
+           "c(fLAI = 0.5, h = 1.8)", call. = FALSE)
+    }
+    unknown <- setdiff(names(extraParameters), allowed)
+    if(length(unknown)){
+      stop("Unknown extraParameters: ", paste(unknown, collapse = ", "),
+           ". Allowed: ", paste(allowed, collapse = ", "), call. = FALSE)
+    }
+  }
+  needed <- switch(Zom.method, custom = c("a", "b"), Perrier = c("fLAI", "h"), NULL)
+  if(length(needed) && !all(needed %in% names(extraParameters))){
+    stop("Zom.method = \"", Zom.method, "\" needs extraParameters ",
+         paste(needed, collapse = " and "), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 # One element of x at random; sample(x, 1) samples from 1:x when length(x) == 1
 sampleOne <- function(x){
   x[sample.int(length(x), 1)]

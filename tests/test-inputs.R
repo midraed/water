@@ -110,8 +110,40 @@ stopifnot(water:::mtlValues(mtl.l2, "REFLECTANCE_MULT_BAND_4",
           water:::mtlValues(mtl.l2, "REFLECTANCE_MULT_BAND_4",
                             group = "LEVEL1_RADIOMETRIC_RESCALING") == 2e-05)
 
-## hourlyET(): only "ETr" and "ETo"
-expect_error(hourlyET(ws, ET = "ETor"), "should be one of")
+## Method arguments: exact names (no partial matching), with a hint for
+## typos, checked before any raster work (#82)
+expect_error(hourlyET(ws, ET = "ETor"), "Unknown ET")
+expect_error(hourlyET(ws, ET = "ETR"), "did you mean \"ETr\"")
+expect_error(dailyET(ws, ET = "E"), "Unknown ET")
+one <- terra::rast(nrows = 2, ncols = 2, vals = 1)
+expect_error(momentumRoughnessLength(method = "short.crop", LAI = one),
+             "did you mean \"short.crops\"")
+expect_error(momentumRoughnessLength(method = "Perrier", LAI = one, fLAI = 2, h = 1),
+             "fLAI must be")
+expect_error(momentumRoughnessLength(method = "custom", LAI = one, NDVI = one, albedo = one),
+             "needs a and b")
+expect_error(soilHeatFlux(method = "T"), "Unknown method = \"T\"")
+expect_error(LAI(method = "METRIC2010", image = one), "did you mean \"metric2010\"")
+expect_error(albedo(one, coeff = "olmedo"), "did you mean \"Olmedo\"")
+expect_error(calcH(method = "LM"), "did you mean \"lm\"")
+expect_error(surfaceTemperature(sat = "L7", method = "SW"), "split window")
+# image.SR is never used: the errors come first
+for (a in list(list(alb.coeff = "olmedo"), list(LAI.method = "METRIC2010"),
+               list(Zom.method = "perrier"), list(anchors.method = "Best"),
+               list(LST.method = "sw"), list(G.method = "T"), list(sat = "L 8"))) {
+  expect_error(do.call(METRIC.EB, c(list(image.SR = "not used", MTL = MTL.L8), a)),
+               "Unknown")
+}
+expect_error(METRIC.EB(image.SR = "x", MTL = MTL.L8, Zom.method = "custom"),
+             "needs extraParameters a and b")
+expect_error(METRIC.EB(image.SR = "x", MTL = MTL.L8, extraParameters = c(minDist = "500")),
+             "named numeric")
+expect_error(METRIC.EB(image.SR = "x", MTL = MTL.L8, extraParameters = c(WSBuffer = 1000)),
+             "Unknown extraParameters: WSBuffer")
+expect_error(METRIC.Rn(image.SR = "x", MTL = MTL.L8, sat = "L7", LST.method = "SW"),
+             "split window")
+expect_error(METRIC.G(image.SR = "x", MTL = MTL.L8, G.method = "bastiaanssen"),
+             "did you mean \"Bastiaanssen\"")
 
 ## getSat(): satellite from the MTL file
 stopifnot(water:::getSat(MTL = MTL.L8) == "L8")

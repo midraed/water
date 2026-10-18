@@ -72,8 +72,11 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
                       plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
                       LST.method = "SC"){
+  checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
+                  LST.method = LST.method)
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  checkLSTmethod(LST.method, sat, missing(surf.temp))
   MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
@@ -120,8 +123,11 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
                      surf.temp, L = 0.1, LST.method = "SC"){
+  checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
+                  LST.method = LST.method, G.method = G.method)
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  checkLSTmethod(LST.method, sat, missing(surf.temp))
   MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
@@ -373,8 +379,14 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
                       verbose = FALSE, extraParameters = vector(), surf.temp){
+  checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
+                  LST.method = LST.method, G.method = G.method,
+                  Zom.method = Zom.method)
+  anchors.method <- checkAnchorsMethod(anchors.method)
+  checkExtraParameters(extraParameters, Zom.method)
   path=getwd()
   if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  checkLSTmethod(LST.method, sat, missing(surf.temp))
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
          "MODIS; provide it (e.g., loadImageSR()).")

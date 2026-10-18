@@ -52,7 +52,7 @@
 #' Reference Evapotranspiration.
 hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
                      ET.instantaneous=FALSE, ET="ETr", height=2, lat, long, elev){
-  ET <- match.arg(ET, c("ETr", "ETo"))
+  checkChoice(ET, c("ETr", "ETo"), "ET")
   if(inherits(WeatherStation, "waterWeatherStation")){
     if(!is.null(WeatherStation$at.sat)){
       WeatherStation <- getDataWS(WeatherStation)
@@ -220,6 +220,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
                     long.z=NULL, date = "auto", MTL){
+  checkChoice(ET, c("ETr", "ETo"), "ET")
   if(inherits(WeatherStation, "waterWeatherStation")){
     if(missing(height)){height <- WeatherStation$location$height}
     if(missing(lat)){lat <- WeatherStation$location$lat}

@@ -137,7 +137,22 @@ Other changes and fixes:
   empty, and downloads the ones listed in ids (#80).
 * Regression tests in tests/.
 
+Input checks:
+
+* Method arguments (sat, alb.coeff, LAI.method, LST.method, G.method,
+  Zom.method, anchors.method in the METRIC functions; method, coeff, sat
+  and ET in the others) must be one of the documented names, exactly. An
+  unknown name stops before any raster work, with the valid names and a
+  hint for typos (e.g. "did you mean \"Olmedo\"?"); before, it was ignored
+  or gave an unrelated error later. LST.method = "SW" with Landsat 7 stops.
+  METRIC.EB() checks extraParameters: a named numeric vector with known
+  names, and a and b for Zom.method = "custom", fLAI and h for "Perrier"
+  (#82).
+
 Behaviour changes to check in existing scripts:
+
+* Method names are matched exactly: partial or differently capitalised
+  names (e.g. ET = "ETR", G.method = "T") are errors (#82).
 
 * sf moved from Depends to Imports: library(water) no longer attaches sf,
   so call library(sf) to use its functions directly (#81).
