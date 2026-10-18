@@ -1,6 +1,6 @@
 # Scientific review of water 0.8.5 (master 70027b3) against Allen, Tasumi & Trezza (2007)
 
-Reviewer: S (land-surface energy balance, METRIC/SEBAL, ASCE-EWRI reference ET)
+Reviewer: Sam (land-surface energy balance, METRIC/SEBAL, ASCE-EWRI reference ET)
 
 **Scope and method.** I checked every METRIC step in `R/` against Allen et al. (2007, J. Irrig. Drain. Eng. 133(4):380–394; equation and page numbers below refer to it) and the hourly reference ET against ASCE-EWRI (2005). I used the full report text, which I downloaded. I verified the numbers by running the installed master (`lib_new`) on the shipped examples:
 

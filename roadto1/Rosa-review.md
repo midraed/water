@@ -1,6 +1,6 @@
 # Review of **water** 0.8.5 (master 70027b3) — usability for irrigation practice
 
-Reviewer: **R** (agricultural extensionist; agronomy, crop water use, basic R).
+Reviewer: **Rosa** (agricultural extensionist; agronomy, crop water use, basic R).
 
 ## What I did
 
@@ -518,7 +518,7 @@ On top of that:
 - The Landsat 8 vignette, 134 × 184 pixels and two METRIC.EB runs: 42 s.
 - 1.07 M pixels (40 × 24 km): METRIC.EB 1.2–1.6 min.
 - 4 M pixels (60 × 60 km): load 3 s, cfmask 2 s, **METRIC.EB 280 s**, ET24h 9 s. That is roughly linear, about 70 µs per pixel.
-- Full scene (60.4 M pixels): `loadImageSR()` 141 s (it already spills to disk), `cfmask()` 54 s. **My METRIC.EB run had not finished after about 50 hours** (16.8 GB working set, while other reviewers' jobs ran on the same machine), and I stopped it on 18 Oct. G, on the same machine (64 GB RAM) with his steps run one by one, measured about 58 min and a 33 GB peak (G.md finding 5). Either way, a full scene does not fit on a typical 8–16 GB extension-office laptop.
+- Full scene (60.4 M pixels): `loadImageSR()` 141 s (it already spills to disk), `cfmask()` 54 s. **My METRIC.EB run had not finished after about 50 hours** (16.8 GB working set, while other reviewers' jobs ran on the same machine), and I stopped it on 18 Oct. Gabe, on the same machine (64 GB RAM) with his steps run one by one, measured about 58 min and a 33 GB peak (Gabe.md finding 5). Either way, a full scene does not fit on a typical 8–16 GB extension-office laptop.
 - During METRIC.EB the only signs of progress are the iteration plot and the relaxation lines.
 
 *Why it matters.* Practitioners need to plan a season of images: 20 dates × full scene.

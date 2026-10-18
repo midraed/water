@@ -1,10 +1,10 @@
-# G: discussion round
+# Gabe: discussion round
 
 Effort to implement: S = under 1 day, M = a few days, L = a redesign or a week or more.
 
-## 1. Code-related findings from S and R
+## 1. Code-related findings from Sam and Rosa
 
-**S**
+**Sam**
 - **S1, anchor criteria hard-coded and site-specific:** agree, high, effort L.
   - Do this together with my finding 5 (calcAnchors rewrite). The new design would compute, for each pixel, the relaxation it needs. That makes configurable, scene-relative (percentile) criteria and relaxation in Kelvin almost free.
   - Put the criteria in one exported `anchorCriteria()` list instead of six hard-coded copies (my finding 21).
@@ -12,20 +12,20 @@ Effort to implement: S = under 1 day, M = a few days, L = a redesign or a week o
   - The changes are pure scalar functions and easy to unit-test against ASCE Appendix C.
   - Overlaps my finding 22 (273.16).
 - **S3, weather QC at the overpass:** agree, medium, effort M.
-  - Overlaps R R6 and R7. Use one `checkWS()` validator called inside `read.WSdata()`.
+  - Overlaps Rosa R6 and R7. Use one `checkWS()` validator called inside `read.WSdata()`.
 - **S4, Collection 2 SR valid range:** agree, raise to high, effort S. It is two lines in `loadImageSR()`, the same kind of fix as my finding 12 (DN = 0 fill in `loadImage()`).
 - **S5, τNB and the "SC" method:** agree; this is the same issue as my finding 15. Effort S to document, M to implement Jiménez-Muñoz.
 - **S6, hot-pixel ET always 0; S8, C_rad never computed; S12, other mountain-mode issues:** agree, medium, effort M.
   - Mountain mode has 0 % test coverage (my finding 18). Add a DEM_Talca test before touching it.
 - **S7, low-wind u200 floor and oscillation:** this is my findings 3 and 13, and I agree. Effort M: damping, a `converged` flag, and a continuous floor. My parity demonstration (LE 199 vs 208 W/m2 depending on `maxit`) supports it.
-- **S9, `dailyET()` uses the UTC date:** this is my finding 4 and R R8 and R9. Agree, high, effort S.
+- **S9, `dailyET()` uses the UTC date:** this is my finding 4 and Rosa R8 and R9. Agree, high, effort S.
   - The fix has three parts: select by the local date of `at.sat`, stop on a missing day, and warn when fewer than 24 hours are present.
 - **S10, MODIS albedo; S16-S18, minor constants:** agree, low, effort S.
 - **S11, z0m minimum 0.005 m:** agree, effort S. It also removes the `u* == 0 -> 0.1` hack in calcH.
 - **S13, energy-balance closure; S14, flexible ETrF update trigger:** agree, low.
 - **S20, `calcH(method = "lm")` uses only the last pair:** agree. Either deprecate it or fit the regression properly. Effort S to deprecate.
 
-**R**
+**Rosa**
 - **R5, names in `columns` are ignored:** agree, high, effort S. It is a silent wrong result, the same class as my finding 2. Match by name when names are present; otherwise check that the column count and types are plausible.
 - **R6/R7/R13, unit, time-zone and °C checks:** agree, effort M, through the same validator as S3.
   - Ts in °C is a one-line `stop()`: Ts minimum < 200 K.
@@ -43,19 +43,19 @@ Effort to implement: S = under 1 day, M = a few days, L = a redesign or a week o
 
 ## 2. Conflicts between perspectives and a proposed resolution
 
-1. **More diagnostics versus less console output.** S and R want calibration diagnostics and a QC summary; R and I want quieter output.
+1. **More diagnostics versus less console output.** Sam and Rosa want calibration diagnostics and a QC summary; Rosa and I want quieter output.
    - Resolution: do not print diagnostics. Return them in the result: `result$diagnostics` (anchor values, ETrF percentiles, share of ETrF > 1.1, ΔT between hot and cold, the `converged` flag, flex) and `result$warnings`.
    - `print.waterLSEB()` and `summary()` show them.
    - Real problems become `warning()`. Progress uses `message()`, gated by `verbose`.
-   - Plots go behind a `plots` argument (default `interactive()`), plus a separate `plotAnchors()` helper for R's R19.
+   - Plots go behind a `plots` argument (default `interactive()`), plus a separate `plotAnchors()` helper for Rosa's R19.
 2. **New arguments versus API consistency.** New criteria, Kt, QC thresholds and convergence settings would bloat METRIC.EB, which already has 23 arguments.
    - Resolution: group them into control lists with constructor functions, such as `anchorControl()` and `calcHControl(maxit, damping)`, and replace the untyped `extraParameters` vector.
    - Then fix the argument order once (image.SR first in all three METRIC wrappers) in the same release, with deprecation warnings.
-3. **Strict validation (`stop`) versus tolerant use.** My view and R's say stop on bad input; S's clear-sky ETr option would let questionable data through.
+3. **Strict validation (`stop`) versus tolerant use.** My view and Rosa's say stop on bad input; Sam's clear-sky ETr option would let questionable data through.
    - Resolution: stop on impossible values (units, Kelvin, missing day, NA or swapped anchors). Warn on unusual but possible values (Rs/Rso, ETrF > 1.1, low wind), and let an explicit option such as `ETr.inst = "clear-sky"` change the behaviour.
-4. **Changing the science versus reproducibility.** S's S1, S2 and S4 change results by 4-31 %.
+4. **Changing the science versus reproducibility.** Sam's S1, S2 and S4 change results by 4-31 %.
    - Resolution: first add regression tests that pin the current outputs. Then change the science one finding at a time, recording each change and its measured effect in NEWS, as the 0.8.5 NEWS already does.
-5. **Performance versus scientific changes to anchors.** Do not tune the anchor criteria inside the current 97-pass code. Rewrite `calcAnchors()` first (behaviour-preserving, with tests), then apply S's criteria.
+5. **Performance versus scientific changes to anchors.** Do not tune the anchor criteria inside the current 97-pass code. Rewrite `calcAnchors()` first (behaviour-preserving, with tests), then apply Sam's criteria.
 
 ## 3. Updated top 5 for the team
 

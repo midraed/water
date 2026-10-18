@@ -1,6 +1,6 @@
-# water 0.8.5 (master 70027b3): code review by G (R package developer)
+# water 0.8.5 (master 70027b3): code review by Gabe (R package developer)
 
-Scope: whether the code is correct, how it performs on full scenes, how consistent the API is, and package etiquette. Every finding below was reproduced with R 4.5.3, terra 1.9.11 and sf 1.1.0 on Windows 11 (16 cores, 64 GB RAM; other reviewers' jobs were running at the same time). Before testing I checked that the installed `lib_new` matches the repository: all 53 functions are identical. The reproduction scripts are in `scratchpad/review2/G/` (`rNN_*.R`; each sources `pre.R`). File:line references are to the repository.
+Scope: whether the code is correct, how it performs on full scenes, how consistent the API is, and package etiquette. Every finding below was reproduced with R 4.5.3, terra 1.9.11 and sf 1.1.0 on Windows 11 (16 cores, 64 GB RAM; other reviewers' jobs were running at the same time). Before testing I checked that the installed `lib_new` matches the repository: all 53 functions are identical. The reproduction scripts are in `scratchpad/review2/Gabe/` (`rNN_*.R`; each sources `pre.R`). File:line references are to the repository.
 
 ## R CMD check and tests
 
@@ -239,7 +239,7 @@ Give clear errors.
 
 A tiny increase in wind changes LE by 21 %. Combined with finding 3, the low-wind regime is ill-behaved.
 
-**Proposed change:** clamp to the threshold, `u200 <- max(u200, u_min)`. S can confirm the value.
+**Proposed change:** clamp to the threshold, `u200 <- max(u200, u_min)`. Sam can confirm the value.
 
 ### 14. MEDIUM. Bands are selected by position in some functions and by name in others
 **Evidence**
@@ -260,7 +260,7 @@ A tiny increase in wind changes LE by 21 %. Combined with finding 3, the low-win
 - The atmospheric functions actually used are METRIC's τNB, Rp = 0.91 and R_sky (Landsat 5/7 band-6 constants), applied to L8 band 10.
 - `delta_e` is also unused.
 
-**Proposed change:** either implement Jiménez-Muñoz (needs water vapour content in g/cm2) or document what is actually computed, and delete the dead code. **Flag for S.**
+**Proposed change:** either implement Jiménez-Muñoz (needs water vapour content in g/cm2) or document what is actually computed, and delete the dead code. **Flag for Sam.**
 
 ### 16. LOW. `getDEM()`: a tile that fails to download produces a partial DEM
 **Evidence:** R/water_netRadiation.G.R:101-105 uses `tryCatch(..., error = function(e) NULL)`.

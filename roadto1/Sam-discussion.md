@@ -1,6 +1,6 @@
-# S: discussion round
+# Sam: discussion round
 
-## 1. Science-relevant findings of G (G) and R (R)
+## 1. Science-relevant findings of Gabe (G) and Rosa (R)
 
 - **G3, calcH oscillation: agree, high.** Same mechanism as my finding 7. With u200 = 1 m/s I see r_ah,cold go 141 → 2.6 → 98 → … → 26.7 without converging. Damping is the real fix: average successive r_ah (or iterate on log r_ah), test convergence on a and b and on a high percentile of |Δr_ah| over all pixels, and return a `converged` flag.
 - **G13, u200 floor: agree, but do not rely on the floor alone.**
@@ -26,31 +26,31 @@
 - **R26, seasonal ET: agree.** This is Eq. 58–59 (my finding 13). Interpolate ETrF, never ET.
 - **R29, roughness for vines and orchards: agree, medium.**
   - Caution on Perrier: one scene-wide h applies tree height to bare soil and alfalfa too, and gives z0m = 0 at LAI = 0 (my finding 11).
-  - Recommend a land-cover mask (or an h raster), the 0.005 m floor, and the documentation table R asks for.
+  - Recommend a land-cover mask (or an h raster), the 0.005 m floor, and the documentation table Rosa asks for.
   - The −12% she measured is real sensitivity, not a correction to apply blindly.
 - **R12, cryptic u200 warning: agree.** It is resolved by the G13 and G3 fixes plus a plain-language message.
 - **R27, station choice: agree.** Add my overpass Rs/Rso check (finding 3) to that guidance.
 
 ## 2. Conflicts between perspectives and proposed resolutions
 
-- **Scene-percentile anchor criteria (S) vs simple defaults (R).**
+- **Scene-percentile anchor criteria (Sam) vs simple defaults (Rosa).**
   - No real conflict: percentiles are a simpler default for the user than the current hidden albedo windows.
   - Proposal:
     - one default (cold = NDVI ≥ 95th percentile and LAI ≥ 4, coldest 20% of those; hot = NDVI ≤ 10th percentile, hottest 20%; average of homogeneous candidates);
     - a single `anchors.control = list(...)` for experts (this also matches R21);
     - an always-printed QC line.
   - The windows stay available as `anchors.method = "citra"`.
-- **Failing loudly (R, G) vs a "flexible" method that never fails.**
+- **Failing loudly (Rosa, Gabe) vs a "flexible" method that never fails.**
   - Flexible relaxation hides exactly the cases where METRIC is invalid (R16, my findings 1 and 4).
   - Keep it, but make it warn with the reason and record it in `$methods` (flex, criteria used).
   - Stop when ΔTs < 5 K.
   - Make the ETrF,cold change depend on vegetation state, not on flex (my finding 14).
-- **Performance (G 5: iterate on anchors, then one pass) vs damping and an all-pixel convergence test (me).**
+- **Performance (Gabe 5: iterate on anchors, then one pass) vs damping and an all-pixel convergence test (me).**
   - Compatible: iterate the anchors to convergence, then iterate each pixel's stability locally with damping. This is cheap per pixel (vectorised, about 10 passes).
-- **Exposing physical knobs (my Kt, τNB, lapse rate, ETrF.hot) vs fewer arguments (R R21).**
+- **Exposing physical knobs (my Kt, τNB, lapse rate, ETrF.hot) vs fewer arguments (Rosa R21).**
   - Group them in `physics.control` with paper defaults: Kt = 1, τNB = 0.866, lapse 6.49 K/km, ETrF.hot = 0.
   - Only ETrF.hot gets a vignette mention ("after rain").
-- **Returning ETrF (R) vs closure (me).**
+- **Returning ETrF (Rosa) vs closure (me).**
   - Return ETrF and ET_inst unclipped for statistics, plus clipped maps for display.
   - Flag pixels where H > Rn − G.
 
