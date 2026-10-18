@@ -7,3 +7,4 @@
 ^vignettes/.*\.qmd$
 ^vignettes/descargas$
 ^inst/extdata/L8$
+^roadto1$
