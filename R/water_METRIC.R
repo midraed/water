@@ -27,19 +27,25 @@
 #' See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
-#' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
-#' SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
-#' computed from image.DN if missing.
+#' @param image.SR         Surface reflectance image with layers B, G, R, NIR,
+#' SWIR1 and SWIR2, e.g. from loadImageSR(). Required for L8 and L9; for L7
+#' it is computed from image.DN if missing.
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
 #' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 #' supplied it is used as Ts and surfaceTemperature() is not called.
+#' Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+#' cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+#' give a warning.
 #' @param L                L value for SAVI calculation. See \code{\link{LAI}}
 #' @param LST.method       Method for land surface temperature estimation: "SC"
 #' for single channel or "SW" for split window (only for L8 and L9). Ignored
 #' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -52,6 +58,11 @@
 #' computed from the surface reflectance (image.SR), although the "metric",
 #' "metric2010" and "MCB" equations were described for top-of-atmosphere
 #' reflectance.
+#'
+#' Method arguments (sat, alb.coeff, LAI.method, LST.method and, where they
+#' apply, G.method, Zom.method and anchors.method) must be one of the listed
+#' names, exactly (case included): an unknown name stops before any
+#' computation, with a hint for typos.
 #' @return SpatRaster with net radiation (W/m2). The result is also plotted.
 #' @family METRIC model functions
 #' @author Guillermo Federico Olmedo
@@ -247,10 +258,13 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' supplied. If supplied (L7/L8/L9) it is used for TOA reflectance (LAI and
 #' anchors) and for surface temperature; if missing, image.SR is used instead.
 #' Needed for LAI.method = "vineyard" and, without surf.temp, for MODIS (LST layer).
-#' @param image.SR         Surface reflectance image (B, G, R, NIR, SWIR1,
-#' SWIR2), e.g. from loadImageSR(). If supplied it is used directly; if
-#' missing it is computed from image.DN (L7 via calcSR(), MODIS uses image.DN).
-#' Required for L8 and L9.
+#' @param image.SR         Surface reflectance image with layers B, G, R, NIR,
+#' SWIR1 and SWIR2, e.g. from loadImageSR(). If supplied it is used directly;
+#' if missing it is computed from image.DN (L7 via calcSR(), MODIS uses
+#' image.DN). Required for L8 and L9.
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param WeatherStation   waterWeatherStation object with the conditions at
 #' the satellite overpass (from read.WSdata() with the MTL file)
 #' @param MTL              path to the Landsat metadata (*_MTL.txt) file.
@@ -263,6 +277,9 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @param surf.temp        Optional. Surface temperature raster in Kelvin, on the
 #' same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 #' supplied it is used as Ts and surfaceTemperature() is not called.
+#' Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+#' cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+#' give a warning.
 #' @param plain            Logical. If TRUE (default) the surface is assumed
 #' flat: DEM is replaced by a constant raster at the weather station elevation
 #' @param DEM              SpatRaster with a digital elevation model (m) of the
@@ -288,10 +305,12 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @param anchors          data.frame with X, Y (coordinates in the CRS of the
 #' image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
 #' POINT object with a type column. If missing, the anchors are selected
-#' automatically with calcAnchors()
+#' automatically with calcAnchors(). They are checked by calcH(): type "hot" or
+#' "cold" (case ignored), inside the image, inputs not NA there, and the hot
+#' anchors at least 5 K warmer than the cold ones
 #' @param n                number of pairs of anchor pixels to select
-#' @param ETp.coef         ratio of the ET of the cold pixels to the hourly
-#' alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)
+#' @param ETp.coef         ratio of the ET of the cold pixels to the
+#' instantaneous alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)
 #' use 1.05, the default. It can be updated with anchors.method = "flexible"
 #' (see Details)
 #' @param Z.om.ws          momentum roughness length (m) of the weather station
@@ -302,10 +321,11 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @param verbose          Logical. If TRUE will print additional data to console
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}
-#' @param extraParameters  Extra parameters for the non default methods, e.g.
-#' Zom.method = "Perrier" needs two extra parameters: fLAI, h. See
-#' \code{\link{momentumRoughnessLength}} and the Extra Parameters section.
+#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' @param extraParameters  named numeric vector with extra parameters for the
+#' non default methods, e.g. c(fLAI = 0.5, h = 1.8) for Zom.method =
+#' "Perrier". See \code{\link{momentumRoughnessLength}} and the Extra
+#' Parameters section.
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -319,7 +339,7 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' (image.SR), although the "metric", "metric2010" and "MCB" LAI equations were
 #' described for top-of-atmosphere reflectance.
 #'
-#' The ET of the cold pixels is ETp.coef times the hourly alfalfa reference ET
+#' The ET of the cold pixels is ETp.coef times the instantaneous alfalfa reference ET
 #' (ETr, ASCE standardized equation) at the satellite overpass (see \code{\link{calcH}}),
 #' the same reference used by ET24h() and dailyET(), as in Allen et al. (2007).
 #' With anchors.method = "flexible", if the cold-pixel criteria had to be
@@ -327,8 +347,15 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' replaced by Kc * ETo / ETr, where Kc = 2.11 * NDVI - 0.4989 is a crop
 #' coefficient on a grass reference basis (Reyes-González et al., 2015) and ETo / ETr
 #' is the ratio of the grass and alfalfa reference ET at the overpass.
+#'
+#' Method arguments (sat, alb.coeff, LAI.method, LST.method and, where they
+#' apply, G.method, Zom.method and anchors.method) must be one of the listed
+#' names, exactly (case included): an unknown name stops before any
+#' computation, with a hint for typos.
 #' @section Extra Parameters:
-#' Extra parameters for functions inside METRIC.EB() include:
+#' extraParameters must be a named numeric vector with these names (unknown
+#' names stop). a and b are required for Zom.method = "custom", and fLAI and h
+#' for "Perrier":
 #' \itemize{
 #'   \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
 #'   \item for momentumRoughnessLength() when Zom.method = "custom": a, b;

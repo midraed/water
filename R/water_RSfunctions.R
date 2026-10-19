@@ -184,8 +184,10 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' Converts digital numbers to at-sensor spectral radiance using the
 #' RADIANCE_MULT_BAND_x and RADIANCE_ADD_BAND_x values of the MTL file.
 #' @param image.DN      raw image in digital numbers, e.g. from loadImage().
-#' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, Thermal2)
-#' when present
+#' Bands B, G, R, NIR, SWIR1, SWIR2, Thermal1 and Thermal2 (L8/L9) are used.
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
 #' file (MTL is then required)
 #' @param MTL           path to the Landsat metadata (*_MTL.txt) file.
@@ -230,15 +232,18 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #' Landsat 7, the gains, biases and ESUN values of the Landsat 7 handbook and
 #' the acquisition date in the MTL file.
 #' @param image.DN      raw image in digital numbers, e.g. from loadImage().
-#' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present
+#' Bands B, G, R, NIR, SWIR1 and SWIR2 are used.
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
 #' file (MTL is then required)
 #' @param aoi           Not used; kept for backward compatibility. Crop the
 #' inputs beforehand (e.g. loadImage(..., aoi = aoi))
 #' @param incidence.rel solar incidence angle (radians) considering the relief,
 #' from solarAngles()
-#' @param MTL           path to the Landsat metadata (MTL) file, needed for
-#' Landsat 7 and for sat = "auto"
+#' @param MTL           path to the Landsat metadata (*_MTL.txt) file. Needed
+#' for Landsat 7 and for sat = "auto"
 #' @return SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,
 #' G, R, NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
@@ -305,8 +310,10 @@ calcTOAr <- function(image.DN, sat="auto",
 #' by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
 #' Level-2 surface reflectance (see \code{\link{loadImageSR}}).
 #' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance in
-#' layers named B, G, R, NIR, SWIR1 and SWIR2 (selected by name), e.g. from
-#' calcTOAr()
+#' layers B, G, R, NIR, SWIR1 and SWIR2, e.g. from calcTOAr().
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
 #' error. "auto" detects the satellite from the MTL file (MTL is then
 #' required)
@@ -317,11 +324,11 @@ calcTOAr <- function(image.DN, sat="auto",
 #' data.frame returned by getDataWS()
 #' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
 #' METRICtopo()
-#' @param MTL             Landsat metadata file, used to detect the satellite
-#' when sat = "auto"
+#' @param MTL             path to the Landsat metadata (*_MTL.txt) file.
+#' Needed for sat = "auto"
 #' @param Kt              clearness (turbidity) coefficient of the atmosphere,
-#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid air. See
-#' \code{\link{incSWradiation}}
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
 #' NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo

@@ -55,13 +55,19 @@ study area, on the same grid as the image. Not needed if plain = TRUE}
 \item{aoi}{Optional sf polygon or SpatVector. If given, the
 inputs are cropped to it}
 
-\item{image.SR}{Surface reflectance image (B, G, R, NIR, SWIR1,
-SWIR2), e.g. from loadImageSR(). Required for L8 and L9; for L7 it is
-computed from image.DN if missing.}
+\item{image.SR}{Surface reflectance image with layers B, G, R, NIR,
+SWIR1 and SWIR2, e.g. from loadImageSR(). Required for L8 and L9; for L7
+it is computed from image.DN if missing.
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
 \item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
 same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
-supplied it is used as Ts and surfaceTemperature() is not called.}
+supplied it is used as Ts and surfaceTemperature() is not called.
+Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+give a warning.}
 
 \item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
 
@@ -71,7 +77,7 @@ if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
 }
 \value{
 SpatRaster with net radiation (W/m2). The result is also plotted.
@@ -95,6 +101,11 @@ LAI.method can be "metric2010" (default), "metric", "MCB", "turner" or
 computed from the surface reflectance (image.SR), although the "metric",
 "metric2010" and "MCB" equations were described for top-of-atmosphere
 reflectance.
+
+Method arguments (sat, alb.coeff, LAI.method, LST.method and, where they
+apply, G.method, Zom.method and anchors.method) must be one of the listed
+names, exactly (case included): an unknown name stops before any
+computation, with a hint for typos.
 }
 \examples{
 scene_folder <- system.file("extdata", "L8_C2", package = "water")

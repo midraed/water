@@ -8,8 +8,10 @@ albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
 }
 \arguments{
 \item{image.SR}{surface reflectance SpatRaster with layers named B, G, R,
-NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3), selected
-by name. Layers without these names are used by position, with a warning}
+NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3).
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
 \item{aoi}{Optional area of interest (e.g. from createAoi()) to crop
 the result. If missing, the result is not cropped}

@@ -61,7 +61,7 @@ Fixes that change results:
   In the Landsat 8 example, 109 pixels (0.4%) were negative and raised the
   maximum NDVI from 0.923 to 1.88, which moved the NDVI threshold of the
   cold anchors: the cold anchors change, and mean LE and daily ET increase
-  by 4.4% on the cells valid before and after. Some masked pixels are
+  by 4.2% (4.4% on the cells valid before and after). Some masked pixels are
   dense crops with slightly negative blue reflectance (an atmospheric
   over-correction of the product), so the outputs have small holes over
   some of the best-watered fields. loadImage() sets the Level-1 fill (DN 0)
@@ -167,7 +167,9 @@ Input checks:
   aoi in the workspace was used by loadImage(), loadImageSR() and albedo()),
   and the MTL file is never searched in the working directory (an unrelated
   MTL file there changed the results or stopped read.WSdata()). Functions
-  that need it stop with "MTL is required", and sat = "auto" needs MTL.
+  that need it stop with "MTL is required", and sat = "auto" needs MTL
+  (loadImage(sat = "auto") still reads the MTL file in its path folder,
+  which defaults to the working directory).
   read.WSdata() without MTL says that the conditions at the overpass were
   not computed. dailyET() without MTL takes the day from date or from the
   overpass conditions (at.sat); it summed the first 24 records, another day

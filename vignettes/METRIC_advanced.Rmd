@@ -56,7 +56,7 @@ To estimate crop evapotranspiration with METRIC, the **water** package and the a
 - A polygon (an sf object) with our area of interest (AOI), if we do not want to estimate crop ET for the entire Landsat scene.
 - A digital elevation model (DEM) of the area.
 
-First, we create the AOI as a polygon from its top-left and bottom-right corners:
+First, we create the AOI as a polygon from its top-left and bottom-right corners. With a full scene, pass it when loading the image (`loadImage(path, aoi = aoi)`) or to `METRIC.EB(aoi = aoi)`; the example image used here is already cropped:
 ```{r}
 aoi <- createAoi(topleft = c(272955, 6085705), 
                  bottomright = c( 288195, 6073195), EPSG = 32719)

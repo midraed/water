@@ -142,8 +142,9 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' Calculates daily ET from a surface energy balance and Weather Station
 #' @description
 #' Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
-#' (from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see
-#' hourlyET()) at the satellite overpass gives the reference ET fraction, which
+#' (from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
+#' (ETr, see hourlyET()) at the satellite overpass gives the reference ET
+#' fraction, which
 #' is multiplied by the daily reference ET.
 #' @param Rn             Net radiation (W/m2). See \code{\link{netRadiation}}
 #' @param G              Soil Heat Flux (W/m2). See \code{\link{soilHeatFlux}}
@@ -151,6 +152,8 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' @param Ts             Land surface temperature (K). See \code{\link{surfaceTemperature}}
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
+#' (with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
+#' radiation is used, as in calcH())
 #' @param ETr.daily      daily reference ET (mm/day) for the day of the image,
 #' e.g. from dailyET() (whose default is the alfalfa reference, ETr)
 #' @param C.rad          correction term used in sloping terrain to correct for 
@@ -185,8 +188,13 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 
 
 #' Calculates daily reference ET as the sum of hourly Penman-Monteith values
-#' @param WeatherStation waterWeatherStation object, see \code{\link{read.WSdata}}. Other
-#' inputs are not implemented
+#' @description
+#' Sums the hourly reference ET (ASCE standardized Penman-Monteith equation,
+#' see \code{\link{hourlyET}}) of the hourly weather station values of one day,
+#' in the time zone of the station records: the day of the satellite overpass
+#' or another day.
+#' @param WeatherStation waterWeatherStation object, see \code{\link{read.WSdata}}.
+#' Required (other inputs stop)
 #' @param DOY      Not used
 #' @param height   weather station sensors height in meters. If missing, taken
 #' from WeatherStation
@@ -202,12 +210,14 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param long.z   longitude of the centre of the time zone of the weather
 #' station clock (decimal degrees, negative west). By default it is computed
 #' from the time zone of the records; see \code{\link{hourlyET}}
-#' @param MTL      Optional path to the Landsat metadata (MTL) file. The day
-#' of the overpass in the time zone of the station selects the day (see date)
+#' @param MTL      path to the Landsat metadata (*_MTL.txt) file. Optional:
+#' the day of the overpass in the time zone of the station selects the day
+#' (see date)
 #' @param date     "auto" (default) uses the acquisition date in the MTL file
 #' or, without MTL, the date of the conditions at the overpass of
 #' WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
-#' weather station data. Without MTL, date or at.sat it is an error
+#' weather station data, taken in the time zone of the station records.
+#' Without MTL, date or at.sat, dailyET() stops
 #' @return Numeric. Daily reference ET (mm/day): the sum of the hourly values
 #' of the day computed with hourlyET(). A warning is given when the day does
 #' not have 24 hourly values (incomplete records, or daylight saving time

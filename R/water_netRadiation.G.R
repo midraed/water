@@ -336,8 +336,10 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' narrowband at-surface reflectances following a weighting function with
 #' empirical coefficients (Tasumi et al., 2008).
 #' @param image.SR   surface reflectance SpatRaster with layers named B, G, R,
-#' NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3), selected
-#' by name. Layers without these names are used by position, with a warning
+#' NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3).
+#' Layers are selected by name; a stack without the standard names is used by
+#' position, with a warning, and a stack with these names that lacks a needed
+#' layer is an error.
 #' @param aoi        Optional area of interest (e.g. from createAoi()) to crop
 #' the result. If missing, the result is not cropped
 #' @param coeff      coefficient to transform narrow to broad band albedo.
@@ -397,8 +399,9 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' other works developed on different crops.
 #' @param method   Method used to estimate LAI from spectral data: "metric2010"
 #' (default), "metric", "MCB", "vineyard" or "turner". See Details.
-#' @param image    SpatRaster with layers named R and NIR, selected by name
-#' (layers without standard names: the third and fourth, with a warning):
+#' @param image    SpatRaster with layers named R and NIR (a stack without
+#' standard names: the third and fourth layers, with a warning; a named stack
+#' without R or NIR is an error):
 #' top-of-atmosphere reflectance for "metric",
 #' "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
 #' "vineyard" (see \code{\link{calcRadiance}})
@@ -682,8 +685,8 @@ outLWradiation <- function(LAI, Ts){
 #' @param Ts               land surface temperature (K), from
 #' surfaceTemperature()
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
-#' 0 < Kt <= 1, used for the short-wave transmissivity: 1 (default) for clean
-#' air. See \code{\link{incSWradiation}}
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
 #' @return SpatRaster with incoming long-wave radiation (W/m2).
 #' @author Guillermo Federico Olmedo
 #' @author David Fonseca-Luengo
@@ -747,8 +750,8 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' This function implements models to estimate soil heat flux for different
 #' surfaces and considering different inputs.
 #' @param image    surface reflectance SpatRaster with layers named R and NIR,
-#' used for NDVI (layers without standard names: the third and fourth, with a
-#' warning)
+#' used for NDVI (a stack without standard names: the third and fourth layers,
+#' with a warning; a named stack without R or NIR is an error)
 #' @param Ts       land surface temperature (K), from surfaceTemperature()
 #' @param albedo   broadband surface albedo, from albedo()
 #' @param LAI      SpatRaster with leaf area index, from LAI()

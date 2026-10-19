@@ -44,7 +44,11 @@ same column, give the same number twice (or use
 datetime). A named vector is matched by name, in
 any order: date and time (or datetime),
 radiation, wind, RH, temp and, optionally, rain.
-An unnamed vector is taken in that order.}
+An unnamed vector is taken in that order.
+Unknown or repeated names stop; pp is accepted
+for rain. A warning is given when the names give
+the vector another meaning than its order (before
+version 1.0 only the order was used).}
 
 \item{date.format}{date format. See strptime format argument.}
 
@@ -70,7 +74,9 @@ a message).}
 \item{timestamps}{"instant" (default) if each record is the value at
 its time; "end" or "start" if it is the mean over the period ending or
 starting at its time (e.g. hourly means). For period means, the conditions
-at the overpass are interpolated between the middles of the periods.}
+at the overpass are interpolated between the middles of the periods. The
+hourly and daily values are not shifted: hourlyET() and dailyET() already
+take hourly values as means over the hour ending at their time.}
 
 \item{overpass.radiation}{"measured" (default) uses the station radiation
 at the overpass; "clear-sky" uses the ASCE-EWRI (2005) clear-sky radiation
@@ -95,7 +101,9 @@ temperature), cf should be: cf = c(1,0.2777778,1)
 
 The records are sorted by time. Exact duplicates are removed, and records
 with the same time and different values (e.g. the repeated hour when
-daylight saving time ends) are averaged, with a warning.
+daylight saving time ends, within one clock hour) are averaged, with a
+warning. Many conflicting times outside one clock hour stop (a logger
+fault).
 
 The values (after cf) are checked. Impossible values stop: temperature
 outside -60 to 60 C (Kelvin and Fahrenheit are suggested), RH outside 0 to

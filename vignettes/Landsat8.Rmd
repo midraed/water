@@ -24,7 +24,7 @@ A full scene is almost 1 GB, so crop an area of interest when loading it, e.g. `
 
 ## Loading the data
 
-`loadImageSR()` reads the SR bands, rescales them to reflectance (DN * 0.0000275 - 0.2) and names them B, G, R, NIR, SWIR1 and SWIR2. It also adds the surface temperature as the last layer, `Band_10`, in Kelvin (DN * 0.00341802 + 149):
+`loadImageSR()` reads the SR bands, rescales them to reflectance (DN * 0.0000275 - 0.2) and names them B, G, R, NIR, SWIR1 and SWIR2. It also adds the surface temperature as the last layer, `Band_10`, in Kelvin (DN * 0.00341802 + 149). Pixels where any band is outside the valid range (reflectance 0 to 1) are masked in every layer: 109 pixels here, many of them dense crops with slightly negative blue reflectance.
 
 ```{r, message=FALSE, fig.width = 7}
 library(water)
@@ -53,6 +53,8 @@ WeatherStation <- read.WSdata(WSdata = csvfile, datetime.format = "%Y/%m/%d %H:%
                               tz = "America/Argentina/Mendoza", MTL = MTLfile)
 print(WeatherStation)
 ```
+
+`read.WSdata()` warns that the station radiation at the overpass (587 W/m2) is 68% of the clear-sky value. The cold anchor pixels are calibrated with it, so check the pyranometer, or use `overpass.radiation = "clear-sky"` if clouds shaded only the station. Here we keep the measured value.
 
 ## Energy balance
 

@@ -36,15 +36,20 @@ lacks the wet and dry extremes that METRIC needs}
 pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
 pair) and returns a and b of the last pair}
 
-\item{Ts}{Land surface temperature in K. See \code{\link{surfaceTemperature}}}
+\item{Ts}{Land surface temperature in K. See \code{\link{surfaceTemperature}}.
+Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+give a warning.}
 
 \item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
 
 \item{WeatherStation}{WeatherStation data at the satellite overpass.
-Can be a waterWeatherStation object calculated using read.WSdata and MTL file}
+Can be a waterWeatherStation object calculated using read.WSdata and MTL file
+(with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
+radiation is used)}
 
-\item{ETp.coef}{ratio of the ET of the cold pixels to the hourly alfalfa
-reference ET (ETr) at the satellite overpass (see Details). Allen et al.
+\item{ETp.coef}{ratio of the ET of the cold pixels to the instantaneous
+alfalfa reference ET (ETr) at the satellite overpass (see Details). Allen et al.
 (2007) use 1.05, the default}
 
 \item{Z.om.ws}{momentum roughness length (m) of the weather station
@@ -89,13 +94,13 @@ the surface, especially when H is large. Therefore, correction to rah is
 needed to account for buoyancy effects. However, H is needed to make this
 correction. An iterative solution for both H and rah is used.
 
-The ET of the cold pixels is computed as ETp.coef times the hourly alfalfa
+The ET of the cold pixels is computed as ETp.coef times the instantaneous alfalfa
 reference ET (ETr, ASCE standardized equation; see \code{\link{hourlyET}}) at the
 satellite overpass, as in Allen et al. (2007). ET24h() and dailyET() use the
 same reference.
 }
 \references{
-R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
+R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 
 Allen, R. G., Pereira, L. S., Raes, D., & Smith, M. (1998). Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Rome.
 

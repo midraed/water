@@ -16,7 +16,9 @@ ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 \item{Ts}{Land surface temperature (K). See \code{\link{surfaceTemperature}}}
 
 \item{WeatherStation}{WeatherStation data at the satellite overpass.
-Can be a waterWeatherStation object calculated using read.WSdata and MTL file}
+Can be a waterWeatherStation object calculated using read.WSdata and MTL file
+(with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
+radiation is used, as in calcH())}
 
 \item{ETr.daily}{daily reference ET (mm/day) for the day of the image,
 e.g. from dailyET() (whose default is the alfalfa reference, ETr)}
@@ -30,8 +32,9 @@ negative values are set to 0. The result is also plotted.
 }
 \description{
 Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
-(from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see
-hourlyET()) at the satellite overpass gives the reference ET fraction, which
+(from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
+(ETr, see hourlyET()) at the satellite overpass gives the reference ET
+fraction, which
 is multiplied by the daily reference ET.
 }
 \references{

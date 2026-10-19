@@ -24,9 +24,15 @@ calcAnchors(
 \arguments{
 \item{image}{reflectance SpatRaster (top-of-atmosphere
 reflectance, or surface reflectance when no DN image is available) with
-layers named R and NIR, used to compute NDVI}
+layers named R and NIR, used to compute NDVI.
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
-\item{Ts}{land surface temperature in K. See \code{\link{surfaceTemperature}}}
+\item{Ts}{land surface temperature in K. See \code{\link{surfaceTemperature}}.
+Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+give a warning.}
 
 \item{LAI}{SpatRaster with leaf area index, from LAI()}
 

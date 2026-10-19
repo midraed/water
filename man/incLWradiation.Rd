@@ -19,8 +19,8 @@ hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 surfaceTemperature()}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
-0 < Kt <= 1, used for the short-wave transmissivity: 1 (default) for clean
-air. See \code{\link{incSWradiation}}}
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
 }
 \value{
 SpatRaster with incoming long-wave radiation (W/m2).

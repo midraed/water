@@ -17,8 +17,10 @@ calcSR(
 }
 \arguments{
 \item{image.TOAr}{SpatRaster with top-of-atmosphere reflectance in
-layers named B, G, R, NIR, SWIR1 and SWIR2 (selected by name), e.g. from
-calcTOAr()}
+layers B, G, R, NIR, SWIR1 and SWIR2, e.g. from calcTOAr().
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
 \item{sat}{Only "L7" is supported; "L8" and "L9" stop with an
 error. "auto" detects the satellite from the MTL file (MTL is then
@@ -35,12 +37,12 @@ data.frame returned by getDataWS()}
 \item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
 METRICtopo()}
 
-\item{MTL}{Landsat metadata file, used to detect the satellite
-when sat = "auto"}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file.
+Needed for sat = "auto"}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
-0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid air. See
-\code{\link{incSWradiation}}}
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,

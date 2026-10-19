@@ -8,7 +8,10 @@ calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
 }
 \arguments{
 \item{image.DN}{raw image in digital numbers, e.g. from loadImage().
-Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present}
+Bands B, G, R, NIR, SWIR1 and SWIR2 are used.
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
 \item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
 file (MTL is then required)}
@@ -19,8 +22,8 @@ inputs beforehand (e.g. loadImage(..., aoi = aoi))}
 \item{incidence.rel}{solar incidence angle (radians) considering the relief,
 from solarAngles()}
 
-\item{MTL}{path to the Landsat metadata (MTL) file, needed for
-Landsat 7 and for sat = "auto"}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file. Needed
+for Landsat 7 and for sat = "auto"}
 }
 \value{
 SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,
