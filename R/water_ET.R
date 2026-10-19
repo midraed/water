@@ -202,14 +202,16 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param long.z   longitude of the centre of the time zone of the weather
 #' station clock (decimal degrees, negative west). By default it is computed
 #' from the time zone of the records; see \code{\link{hourlyET}}
-#' @param MTL      Optional path to the Landsat metadata (MTL) file. Its
-#' acquisition date selects the day (see date)
+#' @param MTL      Optional path to the Landsat metadata (MTL) file. The day
+#' of the overpass in the time zone of the station selects the day (see date)
 #' @param date     "auto" (default) uses the acquisition date in the MTL file
 #' or, without MTL, the date of the conditions at the overpass of
 #' WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
 #' weather station data. Without MTL, date or at.sat it is an error
-#' @return Numeric. Daily reference ET (mm/day): the sum of the 24 hourly values
-#' computed with hourlyET().
+#' @return Numeric. Daily reference ET (mm/day): the sum of the hourly values
+#' of the day computed with hourlyET(). A warning is given when the day does
+#' not have 24 hourly values (incomplete records, or daylight saving time
+#' changes).
 #' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -243,13 +245,19 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
       day <- as.character(as.Date(date))
     } else {
       if(!is.null(MTL)){
+        # local day of the overpass: DATE_ACQUIRED and SCENE_CENTER_TIME are
+        # UTC (east of about UTC+10 the local day is the next one)
         MTL <- readLines(MTL, warn=FALSE)
         date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+        time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
         sat.date <-regmatches(date.line,regexec(text=date.line,
                                                 pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-        sat.date <- strptime(sat.date,
-                             format = "%Y-%m-%d", tz="GMT")
-        day <- as.character(as.Date(sat.date))
+        sat.time <- regmatches(time.line, regexec(text = time.line,
+                                                  pattern = "([0-9]{2}):([0-9]{2}):([0-9]{2})"))[[1]][1]
+        sat.datetime <- as.POSIXct(paste(sat.date, sat.time), format = "%Y-%m-%d %H:%M:%S",
+                                   tz = "UTC")
+        day <- format(sat.datetime, "%Y-%m-%d",
+                      tz = attr(as.POSIXlt(hourly$datetime[1]), "tzone")[1])
       } else if(!is.null(WeatherStation$at.sat)){
         day <- format(WeatherStation$at.sat$datetime, "%Y-%m-%d")
       } else {
@@ -263,8 +271,12 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
     if(nrow(data) == 0){
       stop("No weather station records on ", day, call. = FALSE)
     }
+    if(nrow(data) != 24){
+      warning("The weather station has ", nrow(data), " hourly values on ", day,
+              " (not 24): daily ", ET, " is the sum of those hours")
+    }
     ET.daily <- vector()
-    for(i in 1:24){
+    for(i in seq_len(nrow(data))){
       ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat,
                                        long = long, elev=elev, ET=ET,
                                        height = height, long.z = long.z))

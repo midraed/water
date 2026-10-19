@@ -65,12 +65,13 @@ Fixes that change results:
   dense crops with slightly negative blue reflectance (an atmospheric
   over-correction of the product), so the outputs have small holes over
   some of the best-watered fields. loadImage() sets the Level-1 fill (DN 0)
-  to NA: it gave Ts = -53.6 K and entered the anchor search (#85).
+  to NA: it gave Ts = -53.6 K and entered the anchor search; for MODIS, the
+  land surface temperature fill (0) is set to NA (#85).
 * albedo(), LAI(), soilHeatFlux(), calcSR() and calcAnchors() select the
   bands by name, as calcTOAr() and calcRadiance() did: with the bands in
   another order, LAI and albedo were silently wrong. For MODIS stacks (R
   and NIR first), LAI() and soilHeatFlux() used the blue and green bands
-  for NDVI (#86).
+  for NDVI; albedo(sat = "auto") recognises MODIS by its SWIR3 layer (#86).
 * Example data: the wind speed in apples.csv is in km/h, but the
   read.WSdata() example and the METRIC vignettes read it as m/s. The daily
   reference ET of the example was 10.2 instead of 7.0 mm, and the daily ET
@@ -178,7 +179,8 @@ Input checks:
   failed, shuffled ones gave wrong overpass conditions), exact duplicates
   are removed and records with the same time and different values (e.g.
   the repeated hour when daylight saving time ends) are averaged, with a
-  warning; values are checked after cf: impossible ones stop and unusual
+  warning (many conflicting times outside one clock hour stop: a logger
+  fault); values are checked after cf: impossible ones stop and unusual
   ones warn with the likely unit problem (Kelvin or Fahrenheit, RH as a
   fraction, wind in km/h, radiation in MJ); a semicolon-separated file
   points to read.WSdata2().
@@ -215,8 +217,10 @@ Behaviour changes to check in existing scripts:
   names (e.g. ET = "ETR", G.method = "T") are errors (#82).
 * Pass MTL explicitly: it is no longer searched in the working directory;
   waterOptions(autoAoi) is ignored, with a warning: pass aoi instead (#87).
-* dailyET(date = ): the day is now taken in the time zone of the station
-  records, as with the MTL date (it was the UTC day, a few hours off) (#87).
+* dailyET(): the day is now taken in the time zone of the station records,
+  for date and for the MTL acquisition date (both used the UTC day: a few
+  hours off for date, and the previous day for stations east of about
+  UTC+10); a day without 24 hourly values gives a warning (#87, #90).
 * read.WSdata(): the names in columns are now used (they were ignored, and
   only the order counted): a warning is given when the names change the
   meaning of the vector. Check scripts whose names did not match the

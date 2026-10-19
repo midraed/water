@@ -90,6 +90,8 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   raw.image <- aoiCrop(raw.image, aoi)
   # Level-1 fill: DN 0 (it gave Ts of -53.6 K and entered the anchor search)
   if(sat %in% c("L7", "L8", "L9")){raw.image[raw.image == 0] <- NA}
+  # MODIS land surface temperature fill: 0
+  if(sat=="MODIS"){raw.image[[8]] <- classify(raw.image[[8]], cbind(0, NA))}
   if(sat=="MODIS"){for(i in 1:7){
     raw.image[[i]] <- raw.image[[i]]*0.0001
   }

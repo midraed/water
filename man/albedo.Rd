@@ -17,9 +17,9 @@ the result. If missing, the result is not cropped}
 \item{coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{sat}{"L7", "L8", "L9", "MODIS" or "auto": MODIS when the first
-two layers are R and NIR (as from loadImage()), Landsat otherwise (L7, L8
-and L9 use the same coefficients)}
+\item{sat}{"L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
+layer named SWIR3 (as from loadImage()), Landsat otherwise (L7, L8 and L9
+use the same coefficients)}
 }
 \value{
 SpatRaster with broadband surface albedo (unitless).

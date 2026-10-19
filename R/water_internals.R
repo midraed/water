@@ -140,6 +140,14 @@ checkKelvin <- function(Ts, name = "Ts"){
   invisible(FALSE)
 }
 
+# Run expr without the "below 200 K" warning of checkKelvin(), already given
+# once (METRIC.EB() checks Ts before calcAnchors() and calcH())
+muffleKelvin <- function(expr){
+  withCallingHandlers(expr, warning = function(w){
+    if(grepl("below 200 K", conditionMessage(w))){invokeRestart("muffleWarning")}
+  })
+}
+
 # x must be exactly one of choices: no partial matching (match.arg() takes
 # G.method = "T" as "Tasumi"), and a hint for typos and case changes
 checkChoice <- function(x, choices, name){
@@ -148,7 +156,8 @@ checkChoice <- function(x, choices, name){
   hint <- NULL
   if(ok){
     d <- utils::adist(tolower(x), tolower(choices))[1, ]
-    if(min(d) <= 2){hint <- choices[which.min(d)]}
+    # up to 2 edits, fewer for short names ("L8" is not a typo of "SC")
+    if(min(d) <= min(2, nchar(x) %/% 2)){hint <- choices[which.min(d)]}
   }
   stop("Unknown ", name, " = ",
        if(ok) paste0("\"", x, "\"") else paste(deparse(x), collapse = " "),
@@ -172,7 +181,7 @@ checkAnchorsMethod <- function(anchors.method){
   old <- c("CITRA-MCB" = "best", "CITRA-MCBbc" = "best", "CITRA-MCBr" = "random")
   if(is.character(anchors.method) && length(anchors.method) == 1 &&
      anchors.method %in% names(old)){
-    warning("anchor method names have changed. Old names (CITRA-MCBx) are ",
+    warn("anchor method names have changed. Old names (CITRA-MCBx) are ",
             "deprecated. Options now include 'best', 'random' and 'flexible'")
     anchors.method <- old[[anchors.method]]
   }
@@ -259,7 +268,7 @@ columnsByName <- function(columns){
   }
   positional <- unname(columns[roles])  # NA for a missing rain
   if(!identical(as.numeric(old), as.numeric(positional))){
-    warning("columns are matched by name (before version 1.0 only their ",
+    warn("columns are matched by name (before version 1.0 only their ",
             "order was used): check that the names are right")
   }
   positional
@@ -283,7 +292,7 @@ checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
            "Use Celsius, (F - 32) / 1.8 (see cf)", call. = FALSE)
     }
     if(t[2] > 45){
-      warning("Temperature up to ", signif(t[2], 4), " C: check that it is in Celsius")
+      warn("Temperature up to ", signif(t[2], 4), " C: check that it is in Celsius")
     }
   }
   h <- rng(RH)
@@ -302,7 +311,7 @@ checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
       stop("Wind speed ", span(w, "m/s"), " is outside 0 to 75 m/s", call. = FALSE)
     }
     if(w[2] > 20){
-      warning("Wind speed up to ", signif(w[2], 4), " m/s: in km/h? Use ",
+      warn("Wind speed up to ", signif(w[2], 4), " m/s: in km/h? Use ",
               "cf = c(1, 0.2777778, 1)")
     }
   }
@@ -313,11 +322,11 @@ checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
            "check the units (W/m2) and cf", call. = FALSE)
     }
     if(s[2] > 1400){
-      warning("Solar radiation up to ", signif(s[2], 4), " W/m2, above the ",
+      warn("Solar radiation up to ", signif(s[2], 4), " W/m2, above the ",
               "usual clear-sky maximum: check the units (W/m2) and the sensor")
     }
     if(s[2] < 50 && isTRUE(hours >= 12)){
-      warning("Solar radiation is at most ", signif(s[2], 4), " W/m2 over ",
+      warn("Solar radiation is at most ", signif(s[2], 4), " W/m2 over ",
               round(hours), " hours: in MJ m-2 h-1? Use W/m2 (multiply by ",
               "277.8, e.g. with cf)")
     }
@@ -336,7 +345,7 @@ checkOverpassRadiation <- function(Rs, Rso, overpass.radiation = "measured"){
   if(!isTRUE(Rso >= 200) || is.na(Rs)){return(invisible(NA))}
   ratio <- Rs / Rso
   if(ratio < 0.8){
-    warning("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
+    warn("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
             "% of the clear-sky value (", round(Rso), " W/m2): clouds near the ",
             "station, or a faulty or miscalibrated pyranometer. ",
             if(overpass.radiation == "measured") {
@@ -344,7 +353,7 @@ checkOverpassRadiation <- function(Rs, Rso, overpass.radiation = "measured"){
             } else "The clear-sky value is used (overpass.radiation = \"clear-sky\")")
   }
   if(ratio > 1.1){
-    warning("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
+    warn("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
             "% of the clear-sky value (", round(Rso), " W/m2): check the units ",
             "and the calibration of the pyranometer")
   }
@@ -469,6 +478,8 @@ cropToAoi <- function(x, aoi){
 
 # TRUE if R knows the time zone (unknown ones only give a warning and use UTC)
 knownTimezone <- function(tz){
+  # on some systems R accepts unknown names silently (as UTC)
+  if(length(OlsonNames()) && !tz %in% OlsonNames()){return(FALSE)}
   tryCatch({as.POSIXlt(Sys.time(), tz = tz); TRUE}, warning = function(w) FALSE)
 }
 
@@ -497,4 +508,9 @@ anchorHint <- function(albedo){
          ". Mask clouds, use an area with both well-watered full-cover vegetation and ",
          "dry bare soil, or try anchors.method = \"flexible\", a smaller n, a larger ",
          "WSbuffer, or provide anchors.")
+}
+
+# warning() without the call of the internal function that gives it
+warn <- function(...){
+  warning(..., call. = FALSE)
 }

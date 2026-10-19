@@ -342,9 +342,9 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' the result. If missing, the result is not cropped
 #' @param coeff      coefficient to transform narrow to broad band albedo.
 #' See Details.
-#' @param sat        "L7", "L8", "L9", "MODIS" or "auto": MODIS when the first
-#' two layers are R and NIR (as from loadImage()), Landsat otherwise (L7, L8
-#' and L9 use the same coefficients)
+#' @param sat        "L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
+#' layer named SWIR3 (as from loadImage()), Landsat otherwise (L7, L8 and L9
+#' use the same coefficients)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose coeff = "Tasumi" to use Tasumi et al. (2008) coefficients,
@@ -364,8 +364,8 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
   checkChoice(coeff, waterChoices$alb.coeff, "coeff")
   checkChoice(sat, waterChoices$sat, "sat")
   if(sat=="auto"){
-    # L7, L8 and L9 use the same coefficients; MODIS images start with R and NIR
-    sat <- if(identical(names(image.SR)[1:2], c("R", "NIR"))) "MODIS" else "L8"
+    # L7, L8 and L9 use the same coefficients; only MODIS has SWIR3
+    sat <- if("SWIR3" %in% names(image.SR)) "MODIS" else "L8"
   }
   if(sat %in% c("L7", "L8", "L9")){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008

@@ -153,6 +153,32 @@ stopifnot(all.equal(dailyET(apples), et.mtl),
           all.equal(dailyET(apples, date = "2013-02-15"), et.mtl))
 expect_error(dailyET(read.ws(ws.july(), tz = "UTC")), "needs the day")
 expect_error(dailyET(apples, date = "2001-01-01"), "No weather station records")
+# the MTL date is UTC: east of about UTC+10 the local day of the overpass is
+# the next one (New Zealand: 22:27 UTC is 10:27 the next day)
+mtl.nz <- file.path(tmp, "nz_MTL.txt")
+writeLines(sub("14:27:", "22:27:", sub("DATE_ACQUIRED = 2016-02-09", "DATE_ACQUIRED = 2016-07-08",
+                                      readLines(MTL.L8))), mtl.nz)
+ws.nz <- suppressWarnings(read.ws(ws.july(), tz = "Pacific/Auckland", MTL = mtl.nz))
+stopifnot(!is.null(ws.nz$at.sat),
+          all.equal(dailyET(ws.nz, MTL = mtl.nz), dailyET(ws.nz, date = "2016-07-09")),
+          all.equal(dailyET(ws.nz), dailyET(ws.nz, date = "2016-07-09")))
+# an incomplete day is summed with a warning
+part <- read.ws(ws.july()[1:38, ], tz = "UTC")
+invisible(expect_warning(dailyET(part, date = "2016-07-10"), "14 hourly values"))
+
+## read.WSdata(): sub-hourly records at the end of daylight saving time (the
+## repeated hour) are averaged, not an error
+utc <- seq(as.POSIXct("2016-05-13 12:00", tz = "UTC"), by = 600, length.out = 3 * 144)
+dst <- data.frame(datetime = format(utc, "%Y-%m-%d %H:%M:%S", tz = "America/Santiago"),
+                  radiation = 300, wind = 2, RH = 50, temp = 15 + seq_along(utc) %% 7, rain = 0)
+ws.dst <- expect_warning(read.ws(dst, tz = "America/Santiago"), "averaged")
+stopifnot(nrow(ws.dst$alldata) == 3 * 144 - 6)
+
+## Method arguments are checked without MTL too; no hint for unrelated short
+## names ("L8" is not a typo of "SC")
+expect_error(METRIC.EB(image.SR = "x", alb.coeff = "olmedo"), "Unknown alb.coeff")
+stopifnot(!grepl("did you mean", expect_error(METRIC.EB(image.SR = "x", LST.method = "L8"),
+                                              "Unknown LST.method")))
 
 ## print() returns the weather station invisibly
 printed <- withVisible(print(apples))

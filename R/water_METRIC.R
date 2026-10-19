@@ -462,13 +462,14 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
     if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
     if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
-    anchors <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
-                           albedo = albedo, Z.om = Z.om.sc, n = n, 
-                           anchors.method = anchors.method, WeatherStation = WeatherStation,
-                           deltaTemp = extraParameters['deltaTemp'],
-                           minDist = extraParameters['minDist'],
-                           WSbuffer = extraParameters['WSbuffer'],
-                           verbose = verbose)
+    anchors <- muffleKelvin(
+      calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
+                  albedo = albedo, Z.om = Z.om.sc, n = n,
+                  anchors.method = anchors.method, WeatherStation = WeatherStation,
+                  deltaTemp = extraParameters['deltaTemp'],
+                  minDist = extraParameters['minDist'],
+                  WSbuffer = extraParameters['WSbuffer'],
+                  verbose = verbose))
     print(anchors)
   }
   #setTxtProgressBar(pb, 45)
@@ -490,9 +491,10 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                     round(Kc, 3), " from Reyes-Gonzalez et al, 2015, times ETo/ETr)"))
      }
   }
-  H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
-             WeatherStation = WeatherStation, ETp.coef = ETp.coef,
-             Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose)
+  H <- muffleKelvin(
+    calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
+          WeatherStation = WeatherStation, ETp.coef = ETp.coef,
+          Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose))
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   H <-  H$H

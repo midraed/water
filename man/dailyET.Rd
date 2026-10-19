@@ -48,12 +48,14 @@ or, without MTL, the date of the conditions at the overpass of
 WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
 weather station data. Without MTL, date or at.sat it is an error}
 
-\item{MTL}{Optional path to the Landsat metadata (MTL) file. Its
-acquisition date selects the day (see date)}
+\item{MTL}{Optional path to the Landsat metadata (MTL) file. The day
+of the overpass in the time zone of the station selects the day (see date)}
 }
 \value{
-Numeric. Daily reference ET (mm/day): the sum of the 24 hourly values
-computed with hourlyET().
+Numeric. Daily reference ET (mm/day): the sum of the hourly values
+of the day computed with hourlyET(). A warning is given when the day does
+not have 24 hourly values (incomplete records, or daylight saving time
+changes).
 }
 \description{
 Calculates daily reference ET as the sum of hourly Penman-Monteith values

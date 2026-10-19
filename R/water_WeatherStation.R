@@ -219,8 +219,10 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   same <- duplicated(d$t) | duplicated(d$t, fromLast = TRUE)
   if(any(same)){
     # e.g. the repeated hour when daylight saving time ends
-    n.times <- length(unique(d$t[same]))
-    if(n.times > max(4, 0.01 * length(unique(d$t)))){
+    # all within one clock hour: the repeated hour of daylight saving time
+    times <- unique(d$t[same])
+    one.hour <- length(unique(format(datetime[same], "%Y-%m-%d %H"))) == 1
+    if(!one.hour && length(times) > max(4, 0.01 * length(unique(d$t)))){
       stop(sum(same), " records share their time with other records with ",
            "different values: check the logger clock and the date and time ",
            "columns", call. = FALSE)

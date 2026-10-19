@@ -133,7 +133,10 @@ sr0 <- suppressMessages(loadImageSR(c2))
 rev6 <- sr0[[c("NIR", "R", "G", "B", "SWIR2", "SWIR1")]]
 stopifnot(maxdiff(LAI(image = rev6), LAI(image = sr0)) == 0,
           maxdiff(albedo(rev6, coeff = "Olmedo", sat = "L8"),
-                  albedo(sr0, coeff = "Olmedo", sat = "L8")) == 0)
+                  albedo(sr0, coeff = "Olmedo", sat = "L8")) == 0,
+          # a Landsat stack that starts with R and NIR is not MODIS
+          maxdiff(albedo(sr0[[c("R", "NIR", "B", "G", "SWIR1", "SWIR2")]], coeff = "Olmedo"),
+                  albedo(sr0, coeff = "Olmedo")) == 0)
 noR <- sr0; names(noR)[3] <- "Red"
 expect_error(LAI(image = noR), "no layer named \"R\"")
 unnamed <- sr0[[1:6]]; names(unnamed) <- paste0("lyr", 1:6)
