@@ -642,6 +642,37 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 }
 
 
+# One iteration of the stability correction of calcH() for the pixels in p
+# (vectors Ts, Ts.datum, DEM, Z.om, u200, air.density, r.ah and fv): dT and
+# H with the current aerodynamic resistance r.ah and friction velocity fv,
+# then the new fv and r.ah (Allen et al., 2007)
+rahStep <- function(p, a, b, damping = 0){
+  dT <- a * p$Ts.datum + b
+  rho <- 349.467*((((p$Ts-dT)-0.0065*p$DEM)/(p$Ts-dT))^5.26)/p$Ts
+  H <- rho * 1004 * dT / p$r.ah
+  L <- (p$air.density * -1004 * p$fv^3 * p$Ts) / (0.41 * 9.807 * H)
+  phi.200 <- phi.2 <- phi.01 <- rep(NA_real_, length(L))
+  stable <- !is.na(L) & L > 0
+  phi.200[stable] <- (-5*(2/L))[stable]
+  phi.2[stable] <- (-5*(2/L))[stable]
+  phi.01[stable] <- (-5*(0.1/L))[stable]
+  x.200 <- (1- 16*(200/L))^0.25
+  x.2   <- (1- 16*(2/L))^0.25
+  x.01  <- (1- 16*(0.1/L))^0.25
+  unstable <- !is.na(L) & L < 0
+  phi.200[unstable] <- (2 * log((1+x.200)/2) + log((1 + x.200^2) /2) -
+                          2* atan(x.200) + 0.5 * pi)[unstable]
+  phi.2[unstable] <- (2 * log((1 + x.2^2) / 2))[unstable]
+  phi.01[unstable] <- (2 * log((1 + x.01^2) / 2))[unstable]
+  fv <- 0.41 * p$u200 / (log(200/p$Z.om) - phi.200)
+  fv[!is.na(fv) & fv == 0] <- 0.1
+  fv[!is.na(fv) & fv < 0] <- NA  # no valid stability correction
+  r.new <- (log(2/0.1) - phi.2 + phi.01) / (fv * 0.41)
+  r.ah <- if(damping > 0) (1 - damping) * r.new + damping * p$r.ah else r.new
+  list(dT = dT, H = H, fv = fv, r.ah = r.ah)
+}
+
+
 #' Iterative function to estimate H and R.ah
 #' @description          Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
 #' @param anchors        anchor pixels: the data.frame returned by calcAnchors(),
@@ -846,230 +877,115 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
     graphics::points(1, cell_mean(r.ah, cold), col="blue", pch=20)
   }
   
-  converge <- FALSE
-  last.loop <- FALSE
-  i <- 1
-  
-  if(method == "mean"){
-    
-    while(!converge){
-      
-      if(verbose==TRUE){
-        print(paste("iteration #", i))
-      }
-      i <-  i + 1
-      
-      dT.cold <- H.cold * cell_mean(r.ah, cold) / (cell_mean(air.density, cold)*1004)
-      
-      dT.hot <- (cell_mean(Rn, hot) - cell_mean(G, hot) - mean(LE.hot(hot))) *
-        cell_mean(r.ah, hot) / (cell_mean(air.density, hot)*1004)
-      
-      a <- (dT.hot - dT.cold) / (cell_mean(Ts.datum, hot) - cell_mean(Ts.datum, cold))
-      b <- -a * cell_mean(Ts.datum, cold) + dT.cold
-      checkIteration(a, b)
-      
-      if(verbose==TRUE){
-        print(paste("a",a))
-        print(paste("b",b))
-      }
-      
-      dT <- as.numeric(a) * Ts.datum + as.numeric(b)
-      rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts
-      H <- rho * 1004 * dT / r.ah
-      
-      Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) /
-        (0.41 * 9.807 * H)
-      
-      phi.200 <- Monin.Obukhov.L * NA  # empty rast() breaks [<- when no cell matches
-      phi.2   <- Monin.Obukhov.L * NA
-      phi.01  <- Monin.Obukhov.L * NA
-      
-      # stable condition = L > 0
-      phi.200[Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-      phi.2  [Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-      phi.01 [Monin.Obukhov.L > 0] <- (-5*(0.1/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-      
-      # unstable condition = L < 0
-      x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25
-      x.2   <- (1- 16*(2/Monin.Obukhov.L))^0.25
-      x.01  <- (1- 16*(0.1/Monin.Obukhov.L))^0.25
-      
-      phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) +
-                                         log((1 + x.200^2) /2) -
-                                         2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0]
-      phi.2  [Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
-      phi.01 [Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
-      
-      if(verbose==TRUE){
-        print(paste("r.ah cold", cell_mean(r.ah, cold)))
-        print(paste("r.ah hot",  cell_mean(r.ah, hot)))
-        print(paste("dT cold",   cell_mean(dT, cold)))
-        print(paste("dT hot",    cell_mean(dT, hot)))
-        print("##############")
-      }
-      
-      friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
-      friction.velocity[friction.velocity==0] <- 0.1
-      friction.velocity[friction.velocity < 0] <- NA  # no valid stability correction
-      
-      checkIteration(u = cell_vals(friction.velocity, c(hot, cold)))
-      r.ah.hot.previous  <- cell_mean(r.ah, hot)
-      r.ah.cold.previous <- cell_mean(r.ah, cold)
-      
-      r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
-      r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
-      
-      if(plots){
-        graphics::points(i, cell_mean(r.ah, hot),  col="red",  pch=20)
-        graphics::points(i, cell_mean(r.ah, cold), col="blue", pch=20)
-        lines(c(i, i-1), c(cell_mean(r.ah, hot),  r.ah.hot.previous),  col="red")
-        lines(c(i, i-1), c(cell_mean(r.ah, cold), r.ah.cold.previous), col="blue")
-      }
-      
-      if(last.loop == TRUE){
-        converge <- TRUE
-        if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
-      }
-      
-      delta.r.ah.hot  <- (cell_mean(r.ah, hot)  - r.ah.hot.previous)  / cell_mean(r.ah, hot)  * 100
-      delta.r.ah.cold <- (cell_mean(r.ah, cold) - r.ah.cold.previous) / cell_mean(r.ah, cold) * 100
-      
-      if(verbose==TRUE){
-        print (paste("delta rah hot",  delta.r.ah.hot))
-        print (paste("delta rah cold", delta.r.ah.cold))
-        print ("### -------")
-      }
-      
-      if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-      if(!converge && i - 1 >= maxit){
-        warning("No convergence after ", i - 1, " iterations: try calcH.control(",
-                "damping = 0.5), more iterations or other anchors", call. = FALSE)
-        break
-      }
-    }
-    
-    iterations <- i - 1
-    converged <- converge
-  } else if(method=="lm"){
-    
-    iterations <- integer()
-    converged <- TRUE
-    converge <- FALSE
-    last.loop <- FALSE
-    i <- 1
-    
+  # The iteration of each pixel depends only on its own values and on a and b,
+  # which depend only on the anchors: iterate on the anchor pixels, then
+  # replay the same sequence of a and b once for all the pixels
+  anchor <- unique(c(hot, cold))
+  pix <- function(r){cell_vals(r, anchor)}
+  state <- list(Ts = pix(Ts), Ts.datum = pix(Ts.datum), DEM = pix(DEM), Z.om = pix(Z.om),
+                u200 = pix(u200), air.density = pix(air.density),
+                r.ah = pix(r.ah), fv = pix(friction.velocity))
+  at <- function(x, cells){x[match(cells, anchor)]}
+  Rn.a <- cell_vals(Rn, anchor); G.a <- cell_vals(G, anchor)
+  ab <- list()
+  iterations <- integer()
+  converged <- TRUE
+  pairs <- if(method == "mean") list(list(hot = hot, cold = cold)) else {
     npairs <- min(c(length(cold), length(hot)))
     if(npairs > 10){
       warning("method = \"lm\" iterates each of the ", npairs, " pairs of anchors in ",
               "turn and uses the last one: slow and no better than \"mean\" with many ",
               "anchors (e.g. from anchors.method = \"percentile\")", call. = FALSE)
     }
-    for(pair in 1:npairs){
-
-      converge <- FALSE
-      last.loop <- FALSE
-      i <- 1  # maxit applies to each pair
-      
-      while(!converge){
-        
-        i <-  i + 1
-        if(verbose==TRUE){
-          print(paste("iteration #", i))
-        }
-        
-        dT.cold <- H.cold * cell_vals(r.ah, cold[pair]) /
-          (cell_vals(air.density, cold[pair]) * 1004)
-        
-        dT.hot <- (cell_vals(Rn, hot[pair]) - cell_vals(G, hot[pair]) - LE.hot(hot[pair])) *
-          cell_vals(r.ah, hot[pair]) / (cell_vals(air.density, hot[pair]) * 1004)
-        
-        a <- (dT.hot - dT.cold) / (cell_vals(Ts.datum, hot[pair]) - cell_vals(Ts.datum, cold[pair]))
-        b <- -a * cell_vals(Ts.datum, cold[pair]) + dT.cold
-        checkIteration(a, b)
-        
-        if(verbose==TRUE){
-          print(paste("a",a))
-          print(paste("b",b))
-        }
-        
-        dT <- as.numeric(a) * Ts.datum + as.numeric(b)
-        rho <- 349.467*((((Ts-dT)-0.0065*DEM)/(Ts-dT))^5.26)/Ts
-        H <- rho * 1004 * dT / r.ah
-        
-        Monin.Obukhov.L <- (air.density * -1004 * friction.velocity^3 * Ts) /
-          (0.41 * 9.807 * H)
-        
-        phi.200 <- Monin.Obukhov.L * NA  # empty rast() breaks [<- when no cell matches
-        phi.2   <- Monin.Obukhov.L * NA
-        phi.01  <- Monin.Obukhov.L * NA
-        
-        phi.200[Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-        phi.2  [Monin.Obukhov.L > 0] <- (-5*(2/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-        phi.01 [Monin.Obukhov.L > 0] <- (-5*(0.1/Monin.Obukhov.L))[Monin.Obukhov.L > 0]
-        
-        x.200 <- (1- 16*(200/Monin.Obukhov.L))^0.25
-        x.2   <- (1- 16*(2/Monin.Obukhov.L))^0.25
-        x.01  <- (1- 16*(0.1/Monin.Obukhov.L))^0.25
-        
-        phi.200[Monin.Obukhov.L < 0] <- (2 * log((1+x.200)/2) +
-                                           log((1 + x.200^2) /2) -
-                                           2* atan(x.200) + 0.5 * pi)[Monin.Obukhov.L < 0]
-        phi.2  [Monin.Obukhov.L < 0] <- (2 * log((1 + x.2^2) / 2))[Monin.Obukhov.L < 0]
-        phi.01 [Monin.Obukhov.L < 0] <- (2 * log((1 + x.01^2) / 2))[Monin.Obukhov.L < 0]
-        
-        if(verbose==TRUE){
-          print(paste("r.ah cold", cell_vals(r.ah, cold[pair])))
-          print(paste("r.ah hot",  cell_vals(r.ah, hot[pair])))
-          print(paste("dT cold",   cell_vals(dT, cold[pair])))
-          print(paste("dT hot",    cell_vals(dT, hot[pair])))
-          print("##############")
-        }
-        
-        friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
-        friction.velocity[friction.velocity==0] <- 0.1
-        friction.velocity[friction.velocity < 0] <- NA  # no valid stability correction
-        
-        checkIteration(u = cell_vals(friction.velocity, c(hot[pair], cold[pair])))
-        r.ah.hot.previous  <- cell_vals(r.ah, hot[pair])
-        r.ah.cold.previous <- cell_vals(r.ah, cold[pair])
-        
-        r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
-        r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
-        
-        if(plots){
-          graphics::points(i, cell_vals(r.ah, hot[pair]),  col="red",  pch=20)
-          graphics::points(i, cell_vals(r.ah, cold[pair]), col="blue", pch=20)
-          lines(c(i, i-1), c(cell_vals(r.ah, hot[pair]),  r.ah.hot.previous),  col="red")
-          lines(c(i, i-1), c(cell_vals(r.ah, cold[pair]), r.ah.cold.previous), col="blue")
-        }
-        
-        if(last.loop == TRUE){
-          converge <- TRUE
-          if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
-        }
-        
-        delta.r.ah.hot  <- (cell_vals(r.ah, hot[pair])  - r.ah.hot.previous)  / cell_vals(r.ah, hot[pair])  * 100
-        delta.r.ah.cold <- (cell_vals(r.ah, cold[pair]) - r.ah.cold.previous) / cell_vals(r.ah, cold[pair]) * 100
-        
-        if(verbose==TRUE){
-          print (paste("delta rah hot",  delta.r.ah.hot))
-          print (paste("delta rah cold", delta.r.ah.cold))
-          print ("### -------")
-        }
-        
-        if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-        if(!converge && i - 1 >= maxit){
-          warning("No convergence after ", i - 1, " iterations for anchor pair ",
-                  pair, ": try calcH.control(damping = 0.5), more iterations or ",
-                  "other anchors", call. = FALSE)
-          converged <- FALSE
-          converge <- TRUE
-        }
-      }
-      iterations <- c(iterations, i - 1)
-    }
+    lapply(1:npairs, function(k) list(hot = hot[k], cold = cold[k]))
   }
-  
+  step <- 1
+  for(pair in seq_along(pairs)){
+    h <- pairs[[pair]]$hot; k <- pairs[[pair]]$cold
+    converge <- FALSE
+    last.loop <- FALSE
+    i <- 1  # maxit applies to each pair
+    while(!converge){
+      if(verbose==TRUE){
+        print(paste("iteration #", i))
+      }
+      i <-  i + 1
+      step <- step + 1
+      dT.cold <- H.cold * mean(at(state$r.ah, k), na.rm = TRUE) /
+        (mean(at(state$air.density, k), na.rm = TRUE)*1004)
+      dT.hot <- (mean(at(Rn.a, h), na.rm = TRUE) - mean(at(G.a, h), na.rm = TRUE) -
+                   mean(LE.hot(h))) *
+        mean(at(state$r.ah, h), na.rm = TRUE) / (mean(at(state$air.density, h), na.rm = TRUE)*1004)
+      a <- (dT.hot - dT.cold) / (mean(at(state$Ts.datum, h), na.rm = TRUE) -
+                                   mean(at(state$Ts.datum, k), na.rm = TRUE))
+      b <- -a * mean(at(state$Ts.datum, k), na.rm = TRUE) + dT.cold
+      checkIteration(a, b)
+      if(verbose==TRUE){
+        print(paste("a",a))
+        print(paste("b",b))
+      }
+      ab[[length(ab) + 1]] <- c(a, b)
+      r.ah.hot.previous  <- mean(at(state$r.ah, h), na.rm = TRUE)
+      r.ah.cold.previous <- mean(at(state$r.ah, k), na.rm = TRUE)
+      new <- rahStep(state, a, b, damping)
+      if(verbose==TRUE){
+        print(paste("r.ah cold", r.ah.cold.previous))
+        print(paste("r.ah hot",  r.ah.hot.previous))
+        print(paste("dT cold",   mean(at(new$dT, k), na.rm = TRUE)))
+        print(paste("dT hot",    mean(at(new$dT, h), na.rm = TRUE)))
+        print("##############")
+      }
+      checkIteration(u = at(new$fv, c(h, k)))
+      state$r.ah <- new$r.ah; state$fv <- new$fv
+      r.ah.hot  <- mean(at(state$r.ah, h), na.rm = TRUE)
+      r.ah.cold <- mean(at(state$r.ah, k), na.rm = TRUE)
+      if(plots){
+        graphics::points(step, r.ah.hot,  col="red",  pch=20)
+        graphics::points(step, r.ah.cold, col="blue", pch=20)
+        lines(c(step, step-1), c(r.ah.hot,  r.ah.hot.previous),  col="red")
+        lines(c(step, step-1), c(r.ah.cold, r.ah.cold.previous), col="blue")
+      }
+      if(last.loop == TRUE){
+        converge <- TRUE
+        if(verbose==TRUE){print (paste0("convergence reached at iteration #", i))}
+      }
+      delta.r.ah.hot  <- (r.ah.hot  - r.ah.hot.previous)  / r.ah.hot  * 100
+      delta.r.ah.cold <- (r.ah.cold - r.ah.cold.previous) / r.ah.cold * 100
+      if(verbose==TRUE){
+        print (paste("delta rah hot",  delta.r.ah.hot))
+        print (paste("delta rah cold", delta.r.ah.cold))
+        print ("### -------")
+      }
+      if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
+      if(!converge && i - 1 >= maxit){
+        warning("No convergence after ", i - 1, " iterations",
+                if(method == "lm") paste0(" for anchor pair ", pair),
+                ": try calcH.control(damping = 0.5), more iterations or other anchors",
+                call. = FALSE)
+        converged <- FALSE
+        break
+      }
+    }
+    iterations <- c(iterations, i - 1)
+  }
+  # all the pixels: the same iterations, in one pass by blocks
+  replay <- function(Ts, Ts.datum, DEM, Z.om, u200, air.density){
+    fv <- 0.41 * u200 / log(200/Z.om)
+    fv[!is.na(fv) & fv == 0] <- 0.1
+    p <- list(Ts = Ts, Ts.datum = Ts.datum, DEM = DEM, Z.om = Z.om, u200 = u200,
+              air.density = air.density, r.ah = log(2/0.1)/(fv*0.41), fv = fv)
+    for(j in seq_along(ab)){
+      new <- rahStep(p, ab[[j]][1], ab[[j]][2], damping)
+      p$r.ah <- new$r.ah; p$fv <- new$fv
+    }
+    cbind(dT = new$dT, H = new$H)
+  }
+  inputs <- c(Ts, Ts.datum, DEM, Z.om, u200, air.density)
+  names(inputs) <- c("Ts", "Ts.datum", "DEM", "Z.om", "u200", "air.density")
+  out <- terra::lapp(inputs, replay, usenames = TRUE)
+  dT <- out[[1]]
+  H <- out[[2]]
+
   dT <- saveLoadClean(imagestack = dT, file = "dT", overwrite=TRUE)
   H  <- saveLoadClean(imagestack = H,  file = "H",  overwrite=TRUE)
   

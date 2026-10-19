@@ -338,6 +338,13 @@ stopifnot(all(terra::res(DEM.aoi) == 30), terra::xmin(DEM.aoi) %% 30 == 15)
 expect_error(prepareSRTMdata(path = srtm.dir, extent = sf::st_transform(aoi.utm, 4326)),
              "longitude/latitude")
 
+## getDEM(): tiles that do not exist (ocean) are skipped; other errors (e.g.
+## no connection) stop instead of being taken as ocean (#101)
+tiles <- water:::readDEMtiles(file.path(tmp, "no_such_tile.tif"), terra::ext(0, 1, 0, 1))
+stopifnot(length(tiles$parts) == 0, tiles$missing == 1)
+not.tile <- file.path(tmp, "not_a_tile.tif"); writeLines("x", not.tile)
+expect_error(water:::readDEMtiles(not.tile, terra::ext(0, 1, 0, 1)), "could not be read")
+
 ## calcRadiance(): Landsat 7 MTL values have no "E-" notation (they gave NaN)
 rad7 <- calcRadiance(terra::rast(L7_Talca), sat = "L7",
                      MTL = file.path(extdata, "L7.MTL.txt"))

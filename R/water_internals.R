@@ -198,6 +198,27 @@ unusedAoi <- function(missing.aoi){
   }
 }
 
+# DEM tiles from their URLs, cropped to area. A tile that does not exist
+# (HTTP 404: the ocean) is skipped; any other error (e.g. no connection) stops
+readDEMtiles <- function(url, area){
+  parts <- list()
+  missing <- integer()
+  for(i in seq_along(url)){
+    tile <- tryCatch(crop(rast(url[i]), area), error = function(e) e)
+    if(inherits(tile, "error")){
+      if(grepl("404|does not exist|No such file", conditionMessage(tile))){
+        missing <- c(missing, i)
+      } else {
+        stop("The DEM tile ", url[i], " could not be read (internet connection?): ",
+             conditionMessage(tile), call. = FALSE)
+      }
+    } else {
+      parts[[length(parts) + 1]] <- tile
+    }
+  }
+  list(parts = parts, missing = missing)
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){

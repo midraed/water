@@ -97,18 +97,20 @@ getDEM <- function(image, source = "copernicus"){
   area <- ext(terra::project(terra::as.polygons(ext(image), crs = terra::crs(image)),
                              "EPSG:4326"))
   area <- ext(area[1] - 0.01, area[2] + 0.01, area[3] - 0.01, area[4] + 0.01)
-  parts <- list()
-  for(u in url){
-    # tiles over the ocean do not exist
-    tile <- tryCatch(crop(rast(u), area), error = function(e) NULL)
-    if(!is.null(tile)){parts[[length(parts) + 1]] <- tile}
-  }
+  tiles <- readDEMtiles(url, area)
+  parts <- tiles$parts
   if(!length(parts)){
-    stop("No Copernicus DEM tiles could be read for the image (only ocean, or ",
-         "no internet connection)")
+    stop("No Copernicus DEM tiles exist for the image (only ocean?): ",
+         paste(name, collapse = ", "), call. = FALSE)
+  }
+  if(length(tiles$missing)){
+    message("Copernicus DEM tiles that do not exist (ocean): ",
+            paste(name[tiles$missing], collapse = ", "))
   }
   DEM <- if(length(parts) == 1) parts[[1]] else terra::merge(terra::sprc(parts))
   DEM <- project(DEM, image[[1]], method = "bilinear")
+  na <- global(is.na(DEM), "mean")[1, 1]
+  if(na > 0){message(round(100 * na, 1), "% of the DEM cells are NA (no tile)")}
   DEM <- saveLoadClean(imagestack = DEM, stack.names = "DEM", file = "DEM",
                        overwrite = TRUE)
   return(DEM)

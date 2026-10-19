@@ -180,6 +180,13 @@ New:
   (cold anchors too warm; 15.8% in the Landsat 8 example with "flexible").
   New summary() method and plotAnchors() (anchors over a false-colour
   composite or Ts); print() includes the summary.
+* Faster (#101): calcH() iterates on the anchor pixels and then computes
+  all the pixels in one pass by blocks (terra::lapp()), instead of passing
+  over the whole raster in every iteration: about 9 times faster on the
+  example crop, with the same results (within 1e-12 W/m2). getDEM() treats
+  only a tile that does not exist as ocean (other errors, e.g. no
+  connection, stop instead of returning a DEM with holes), and reports the
+  missing tiles and the share of NA cells.
 * Consistent arguments (#102): METRIC.Rn() and METRIC.G() take their
   arguments in the order of METRIC.EB() (image.DN, image.SR,
   WeatherStation, MTL, ...); LAI(image, method), albedo(image.SR, coeff,
