@@ -422,10 +422,13 @@ stopifnot(!any(grepl("WSbuffer", w)))
 half <- terra::ext(image.SR); half[2] <- (half[1] + half[2]) / 2
 aoi.ll <- sf::st_transform(sf::st_as_sf(terra::as.polygons(half, crs = terra::crs(image.SR))),
                            4326)
+# (with plots: par() is restored afterwards, #100)
+mfrow.before <- par("mfrow")
 EBaoi <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                         n = 1, Z.om.ws = 0.03, aoi = aoi.ll))
-stopifnot(terra::ncell(EBaoi$EB) < terra::ncell(EB$EB))
+                         n = 1, Z.om.ws = 0.03, aoi = aoi.ll, plots = TRUE))
+stopifnot(terra::ncell(EBaoi$EB) < terra::ncell(EB$EB),
+          identical(par("mfrow"), mfrow.before))
 
 ## METRIC.EB(): manual anchors with the default anchors.method, and
 ## Zom.method = "custom"
@@ -433,10 +436,15 @@ EBman <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
                          anchors = EB$anchors, Z.om.ws = 0.03))
 stopifnot(maxdiff(EBman$EB$LatentHeat, EB$EB$LatentHeat) < 1e-6)
-EBturner <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
-                            WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                            LAI.method = "turner", Z.om.ws = 0.03))
-stopifnot(inherits(EBturner, "waterLSEB"))
+# (nothing printed without verbose and plots, #100)
+printed <- utils::capture.output(EBturner <- suppressWarnings(suppressMessages(
+  METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10, WeatherStation = WS,
+            MTL = MTL.L2, alb.coeff = "Olmedo", LAI.method = "turner", Z.om.ws = 0.03,
+            plots = FALSE))))
+stopifnot(inherits(EBturner, "waterLSEB"), length(printed) == 0)
+mar.before <- par("mar")
+plot(WS)
+stopifnot(identical(par("mar"), mar.before))
 EBzom <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
                          Zom.method = "custom", extraParameters = c(a = 0.1, b = -5),

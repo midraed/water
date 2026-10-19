@@ -19,7 +19,8 @@ METRIC.Rn(
   surf.temp,
   L = 0.1,
   LST.method = "auto",
-  Kt = 1
+  Kt = 1,
+  plots = interactive()
 )
 }
 \arguments{
@@ -81,6 +82,9 @@ METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+
+\item{plots}{Logical. If TRUE the results are plotted (default:
+only in interactive sessions)}
 }
 \value{
 SpatRaster with net radiation (W/m2). The result is also plotted.

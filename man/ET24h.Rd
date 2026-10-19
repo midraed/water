@@ -4,7 +4,16 @@
 \alias{ET24h}
 \title{Calculates daily ET from a surface energy balance and Weather Station}
 \usage{
-ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
+ET24h(
+  Rn,
+  G,
+  H,
+  Ts,
+  WeatherStation,
+  ETr.daily,
+  C.rad = 1,
+  plots = interactive()
+)
 }
 \arguments{
 \item{Rn}{Net radiation (W/m2), see \code{\link{netRadiation}}; or
@@ -31,6 +40,9 @@ variation in 24 h versus instantaneous energy availability (Allen et al.,
 2007, Eq. 56): a number or a SpatRaster. With a METRIC.EB() result computed
 with a DEM (plain = FALSE) it is computed with \code{\link{Crad}}; 1
 otherwise}
+
+\item{plots}{Logical. If TRUE (default: only in interactive sessions)
+ET24 is plotted}
 }
 \value{
 With Rn, G, H and Ts: a SpatRaster with daily (24 h) actual
@@ -38,8 +50,7 @@ evapotranspiration (mm/day) in a layer named ET24; negative values are set
 to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
 (instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
 unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
-Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM. ET24
-is also plotted.
+Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM.
 }
 \description{
 Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET

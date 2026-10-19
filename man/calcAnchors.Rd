@@ -14,7 +14,7 @@ calcAnchors(
   aoi,
   anchors.method = "percentile",
   WeatherStation,
-  plots = TRUE,
+  plots = interactive(),
   deltaTemp = 5,
   minDist = 500,
   WSbuffer = 30000,
@@ -54,9 +54,9 @@ by "percentile")}
 read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
 station}
 
-\item{plots}{Logical. If TRUE will plot position of anchors points
-selected. Points in red are selected hot pixels, blue are the cold ones and the
-black represents the position of the Weather Station (if supplied)}
+\item{plots}{Logical. If TRUE (default: only in interactive
+sessions) the anchors are plotted over LAI: hot in red, cold in blue and the
+weather station (if supplied) in black}
 
 \item{deltaTemp}{temperature margin (K, default 5): cold candidates must
 be colder than the 5\% quantile of Ts over well-vegetated pixels plus

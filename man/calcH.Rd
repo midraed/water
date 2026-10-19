@@ -21,7 +21,8 @@ calcH(
   u200.min = 2,
   damping = 0,
   ETrF.hot = 0,
-  lapse = 6.49
+  lapse = 6.49,
+  plots = interactive()
 )
 }
 \arguments{
@@ -87,6 +88,9 @@ See \code{\link{calcH.control}}}
 
 \item{lapse}{lapse rate (K/km) used to refer Ts to the elevation of
 the weather station (default 6.49). See \code{\link{calcH.control}}}
+
+\item{plots}{Logical. If TRUE (default: only in interactive sessions)
+the aerodynamic resistance of the anchors is plotted at each iteration}
 }
 \value{
 A list with a and b (coefficients of dT = a * Ts_datum + b), dT

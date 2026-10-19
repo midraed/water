@@ -188,6 +188,8 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' 2007, Eq. 56): a number or a SpatRaster. With a METRIC.EB() result computed
 #' with a DEM (plain = FALSE) it is computed with \code{\link{Crad}}; 1
 #' otherwise
+#' @param plots          Logical. If TRUE (default: only in interactive sessions)
+#' ET24 is plotted
 #' @details
 #' ETrF is a crop coefficient on the alfalfa reference basis. To compare it
 #' with a crop coefficient on the grass reference basis (Kc, FAO-56), multiply
@@ -202,15 +204,15 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
 #' (instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
 #' unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
-#' Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM. ET24
-#' is also plotted.
+#' Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM.
 #' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @importFrom grDevices colorRampPalette
 #' @export
-ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
+ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1,
+                  plots = interactive()){
   full <- inherits(Rn, "waterLSEB")  # a METRIC.EB() result
   if(full){
     EB <- Rn
@@ -241,10 +243,12 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   ET.24 <- ETr.Fr * ETr.daily * C.rad
   ET.24[ET.24 < 0]  <- 0
   #ET.24[ET.24 > quantile(ET.24, 0.9)] <- quantile(ET.24, 0.9)
-  rgb.palette <- grDevices::colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
-  plot(ET.24, col = rgb.palette(50), range = c(0, ceiling(ETr.daily*1.5)),
-       fill_range = TRUE, xlab = "Easting", ylab = "Northing",
-       main = "24-Hour Evapotranspiration (mm/day)", maxcell = ncell(ET.24) * 0.3)
+  if(plots){
+    rgb.palette <- grDevices::colorRampPalette(c("red3","snow2","blue"),  space = "rgb")
+    plot(ET.24, col = rgb.palette(50), range = c(0, ceiling(ETr.daily*1.5)),
+         fill_range = TRUE, xlab = "Easting", ylab = "Northing",
+         main = "24-Hour Evapotranspiration (mm/day)")
+  }
   if(!full){
     return(saveLoadClean(imagestack = ET.24, file = "ET24", overwrite=TRUE))
   }

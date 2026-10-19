@@ -427,6 +427,8 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   }
   WSp <- WSp[order(WSp$datetime),]
   time <- WSp$datetime
+  op <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(op), add = TRUE)
   graphics::par(mar=c(5, 7, 4, 9.5) + 0.1)
   plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", xlim=range(time), ...)

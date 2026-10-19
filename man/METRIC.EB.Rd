@@ -30,7 +30,8 @@ METRIC.EB(
   surf.temp,
   Kt = 1,
   anchors.control = NULL,
-  calcH.control = NULL
+  calcH.control = NULL,
+  plots = interactive()
 )
 }
 \arguments{
@@ -117,7 +118,8 @@ Eq. 32). It is about 0.123 times the height of the vegetation around the
 station (Allen et al., 1998): 0.015 m (the default) for a standard station
 over clipped grass 0.12 m tall, 0.03 m for vegetation about 0.25 m tall}
 
-\item{verbose}{Logical. If TRUE will print additional data to console}
+\item{verbose}{Logical. If TRUE, the anchors and other details are
+shown (as messages)}
 
 \item{extraParameters}{named numeric vector with extra parameters for the
 non default methods, e.g. c(fLAI = 0.5, h = 1.8) for Zom.method =
@@ -141,6 +143,9 @@ some of its elements)}
 
 \item{calcH.control}{parameters of the iteration of H: a list from
 \code{\link{calcH.control}} (or a plain list with some of its elements)}
+
+\item{plots}{Logical. If TRUE the anchors and the iteration of H are plotted (default:
+only in interactive sessions)}
 }
 \value{
 An object of class \code{waterLSEB}, a list with the elements

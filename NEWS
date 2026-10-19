@@ -346,6 +346,11 @@ Behaviour changes to check in existing scripts:
   ASCE (before it was about 57 times too small); longitudes are negative
   for west.
 * read.WSdata2(): the default cf is now c(1, 1, 1), as in read.WSdata().
+* No side effects (#100): METRIC.EB(), METRIC.Rn(), METRIC.G(), calcAnchors(),
+  calcH() and ET24h() plot only with plots = TRUE (default: only in
+  interactive sessions), METRIC.EB() and plot() of weather station data
+  restore par(), and progress output is given with message() (the anchors
+  only with verbose = TRUE) instead of print(). ET24h() plots all the cells.
 * waterOptions(writeResults = TRUE): only the final outputs (EB, ET24, DEM)
   are written to outputFolder; intermediate results go to terra's temporary
   files with unique names (#99).

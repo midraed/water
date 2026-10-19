@@ -49,6 +49,8 @@
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 #' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' @param plots            Logical. If TRUE the results are plotted (default:
+#' only in interactive sessions)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -88,7 +90,7 @@
 METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
                       plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
-                      LST.method = "auto", Kt = 1){
+                      LST.method = "auto", Kt = 1, plots = interactive()){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method)
   checkKt(Kt)
@@ -102,7 +104,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                            LST.method = LST.method, plain = plain, DEM = DEM,
                            aoi = aoi, Kt = Kt)
   Rn <- metricRn(surface, WeatherStation, Kt = Kt)
-  plot(Rn, main="METRIC Net Radiation")
+  if(plots){plot(Rn, main="METRIC Net Radiation")}
   return(Rn)
 }
 
@@ -139,7 +141,8 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
-                     surf.temp, L = 0.1, LST.method = "auto", Kt = 1){
+                     surf.temp, L = 0.1, LST.method = "auto", Kt = 1,
+                     plots = interactive()){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method)
   checkKt(Kt)
@@ -156,7 +159,7 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
   G <- soilHeatFlux(image = surface$image.SR, Ts = surface$Ts,
                     albedo = surface$albedo, Rn = Rn, LAI = surface$LAI,
                     method = G.method)
-  plot(G, main="METRIC Soil Heat Flux")
+  if(plots){plot(G, main="METRIC Soil Heat Flux")}
   return(G)
 }
 
@@ -332,7 +335,10 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' Eq. 32). It is about 0.123 times the height of the vegetation around the
 #' station (Allen et al., 1998): 0.015 m (the default) for a standard station
 #' over clipped grass 0.12 m tall, 0.03 m for vegetation about 0.25 m tall
-#' @param verbose          Logical. If TRUE will print additional data to console
+#' @param verbose          Logical. If TRUE, the anchors and other details are
+#' shown (as messages)
+#' @param plots            Logical. If TRUE the anchors and the iteration of H are plotted (default:
+#' only in interactive sessions)
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 #' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
@@ -445,7 +451,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       Zom.method = "short.crops", anchors.method = "percentile",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
                       verbose = FALSE, extraParameters = vector(), surf.temp,
-                      Kt = 1, anchors.control = NULL, calcH.control = NULL){
+                      Kt = 1, anchors.control = NULL, calcH.control = NULL,
+                      plots = interactive()){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method,
                   Zom.method = Zom.method)
@@ -514,7 +521,10 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                                              method = "short.crops", 
                                                              surface.model = surface.model)
   } else {Z.om.sc <- Z.om}
-  par(mfrow=c(1,2))
+  if(plots){
+    op <- par(mfrow=c(1,2))
+    on.exit(par(op), add = TRUE)
+  }
   auto.anchors <- missing(anchors)
   # in mountain mode the anchors are chosen on Ts referred to the elevation of
   # the weather station, as the dT calibration of calcH()
@@ -523,7 +533,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   if(auto.anchors){
     anchors <- muffleKelvin(
-      calcAnchors(image = image.TOAr, Ts = Ts.anchors, LAI = LAI, plots = T,
+      calcAnchors(image = image.TOAr, Ts = Ts.anchors, LAI = LAI, plots = plots,
                   albedo = albedo, Z.om = Z.om.sc, n = n,
                   anchors.method = anchors.method, WeatherStation = WeatherStation,
                   deltaTemp = anchors.control$deltaTemp,
@@ -532,13 +542,16 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                   min.candidates = anchors.control$min.candidates,
                   control = anchors.control,
                   verbose = verbose))
-    if(nrow(anchors) > 20){
+    if(verbose){
       # many anchors ("percentile"): their number and mean values
-      print(do.call(rbind, lapply(split(anchors, anchors$type), function(a){
-        data.frame(type = a$type[1], n = nrow(a), Ts = mean(a$Ts),
-                   LAI = mean(a$LAI), NDVI = mean(a$NDVI))
-      })), row.names = FALSE)
-    } else print(anchors)
+      shown <- if(nrow(anchors) > 20){
+        do.call(rbind, lapply(split(anchors, anchors$type), function(a){
+          data.frame(type = a$type[1], n = nrow(a), Ts = mean(a$Ts),
+                     LAI = mean(a$LAI), NDVI = mean(a$NDVI))
+        }))
+      } else anchors
+      message(paste(utils::capture.output(print(shown, row.names = FALSE)), collapse = "\n"))
+    }
   }
   #setTxtProgressBar(pb, 45)
   if(!isTRUE(calcH.control$cold.NDVI.rule) && anchors.method == "flexible" &&
@@ -547,7 +560,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
      flex.cold <- anchors$flex[is.cold][1]
      NDVIcold <- mean(as.numeric(anchors$NDVI[is.cold]))
      if(flex.cold > 0 & NDVIcold < 0.8){
-       print(paste0("mean NDVI for cold pixel: ", NDVIcold))
+       message("Mean NDVI of the cold anchors: ", round(NDVIcold, 3))
        # NDVI and Kc relationship from:
        # Reyes-González, Hay, Kjaersgaard and Neale (2015), alfalfa in Mexico.
        # doi:10.13031/aim.20152190105 
@@ -556,8 +569,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
        Kc <- 2.11 * NDVIcold - 0.4989
        ETp.coef <- Kc * hourlyET(WeatherStation, ET = "ETo") /
          hourlyET(WeatherStation, ET = "ETr")
-       print(paste0("ETp.coef updated to: ", round(ETp.coef, 3), " (Kc = ",
-                    round(Kc, 3), " from Reyes-Gonzalez et al, 2015, times ETo/ETr)"))
+       message("ETp.coef updated to ", round(ETp.coef, 3), " (Kc = ", round(Kc, 3),
+               " from Reyes-Gonzalez et al. 2015, times ETo/ETr)")
      }
   } else if(auto.anchors && isTRUE(calcH.control$cold.NDVI.rule)){
     # cold anchors that are not full cover: ET fraction from their NDVI, for
@@ -577,10 +590,10 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
           WeatherStation = WeatherStation, ETp.coef = ETp.coef,
           Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose,
+          plots = plots,
           maxit = calcH.control$maxit, u200.min = calcH.control$u200.min,
           ETrF.hot = calcH.control$ETrF.hot, lapse = calcH.control$lapse,
           damping = calcH.control$damping))
-  par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   calibration <- H[c("a", "b", "converged", "iterations", "u200")]
   calibration$candidates <- attr(anchors, "candidates")

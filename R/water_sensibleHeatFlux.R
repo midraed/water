@@ -110,9 +110,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param WeatherStation   Optional. waterWeatherStation object (see
 #' read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
 #' station
-#' @param plots            Logical. If TRUE will plot position of anchors points
-#' selected. Points in red are selected hot pixels, blue are the cold ones and the
-#' black represents the position of the Weather Station (if supplied)
+#' @param plots            Logical. If TRUE (default: only in interactive
+#' sessions) the anchors are plotted over LAI: hot in red, cold in blue and the
+#' weather station (if supplied) in black
 #' @param deltaTemp        temperature margin (K, default 5): cold candidates must
 #' be colder than the 5\% quantile of Ts over well-vegetated pixels plus
 #' deltaTemp, and hot candidates warmer than the maximum Ts over bare-soil
@@ -180,7 +180,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "percentile", WeatherStation,
-                         plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
+                         plots=interactive(), deltaTemp=5, minDist = 500, WSbuffer = 30000,
                          verbose=FALSE, min.candidates = 20, control = NULL) {
   control <- controlList(control, "anchors.control")
   sanitizeCellIndex <- function(index) {
@@ -412,7 +412,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
         found <- candidates(optRelaxed, inBuffer)
         while(sum(found, na.rm = TRUE) <= n && flex < 1){
           flex <- flex + 0.01
-          print(paste0("relaxing criteria for ", type, " pixels: ", round(flex*100), "%"))
+          if(verbose){message("Relaxing the criteria for ", type, " pixels: ", round(flex*100), "%")}
           optRelaxed[1,] <- opt[1,] * (1-flex)
           optRelaxed[2,] <- opt[2,] * (1+flex)
           found <- candidates(optRelaxed, inBuffer)
@@ -665,6 +665,8 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 #' iteration (default 0, no damping). See \code{\link{calcH.control}}
 #' @param ETrF.hot       reference ET fraction of the hot anchors (default 0).
 #' See \code{\link{calcH.control}}
+#' @param plots          Logical. If TRUE (default: only in interactive sessions)
+#' the aerodynamic resistance of the anchors is plotted at each iteration
 #' @param lapse          lapse rate (K/km) used to refer Ts to the elevation of
 #' the weather station (default 6.49). See \code{\link{calcH.control}}
 #' @details Sensible heat flux is the rate of heat loss to the air by convection
@@ -703,7 +705,7 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,
-                   damping = 0, ETrF.hot = 0, lapse = 6.49) {
+                   damping = 0, ETrF.hot = 0, lapse = 6.49, plots = interactive()) {
   checkChoice(method, c("mean", "lm"), "method")
   control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping,
                            ETrF.hot = ETrF.hot)
@@ -808,9 +810,11 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     )))
   }
   
-  plot(1, cell_mean(r.ah, hot), xlim=c(0, maxit + 1), ylim=c(0, cell_mean(r.ah, hot)),
-       col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
-  graphics::points(1, cell_mean(r.ah, cold), col="blue", pch=20)
+  if(plots){
+    plot(1, cell_mean(r.ah, hot), xlim=c(0, maxit + 1), ylim=c(0, cell_mean(r.ah, hot)),
+         col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
+    graphics::points(1, cell_mean(r.ah, cold), col="blue", pch=20)
+  }
   
   converge <- FALSE
   last.loop <- FALSE
@@ -884,10 +888,12 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
       r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
       
-      graphics::points(i, cell_mean(r.ah, hot),  col="red",  pch=20)
-      graphics::points(i, cell_mean(r.ah, cold), col="blue", pch=20)
-      lines(c(i, i-1), c(cell_mean(r.ah, hot),  r.ah.hot.previous),  col="red")
-      lines(c(i, i-1), c(cell_mean(r.ah, cold), r.ah.cold.previous), col="blue")
+      if(plots){
+        graphics::points(i, cell_mean(r.ah, hot),  col="red",  pch=20)
+        graphics::points(i, cell_mean(r.ah, cold), col="blue", pch=20)
+        lines(c(i, i-1), c(cell_mean(r.ah, hot),  r.ah.hot.previous),  col="red")
+        lines(c(i, i-1), c(cell_mean(r.ah, cold), r.ah.cold.previous), col="blue")
+      }
       
       if(last.loop == TRUE){
         converge <- TRUE
@@ -993,10 +999,12 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
         r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
         
-        graphics::points(i, cell_vals(r.ah, hot[pair]),  col="red",  pch=20)
-        graphics::points(i, cell_vals(r.ah, cold[pair]), col="blue", pch=20)
-        lines(c(i, i-1), c(cell_vals(r.ah, hot[pair]),  r.ah.hot.previous),  col="red")
-        lines(c(i, i-1), c(cell_vals(r.ah, cold[pair]), r.ah.cold.previous), col="blue")
+        if(plots){
+          graphics::points(i, cell_vals(r.ah, hot[pair]),  col="red",  pch=20)
+          graphics::points(i, cell_vals(r.ah, cold[pair]), col="blue", pch=20)
+          lines(c(i, i-1), c(cell_vals(r.ah, hot[pair]),  r.ah.hot.previous),  col="red")
+          lines(c(i, i-1), c(cell_vals(r.ah, cold[pair]), r.ah.cold.previous), col="blue")
+        }
         
         if(last.loop == TRUE){
           converge <- TRUE
