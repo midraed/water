@@ -40,7 +40,7 @@ Needed for sat = "auto"}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}}
 
 \item{aoi}{Not used (a warning is given when it is passed); kept for
 backward compatibility}

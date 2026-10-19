@@ -169,10 +169,10 @@ checkRecentRain <- function(WeatherStation, days = 3, limit = 5){
 }
 
 # Albedo coefficients for alb.coeff = "auto": Olmedo for Landsat 8 and 9,
-# Tasumi et al. (2008) for Landsat 7 and Liang (2001) for MODIS
+# Tasumi et al. (2008) for Landsat 7 and MODIS
 albedoCoeff <- function(coeff, sat){
   if(coeff != "auto"){return(coeff)}
-  switch(sat, L7 = "Tasumi", L8 = , L9 = "Olmedo", MODIS = "Liang", "Olmedo")
+  switch(sat, L7 = "Tasumi", L8 = , L9 = "Olmedo", MODIS = "Tasumi", "Olmedo")
 }
 
 # The inputs of the METRIC functions must be on the grid of the first one

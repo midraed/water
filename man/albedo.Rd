@@ -15,7 +15,7 @@ layer is an error.}
 
 \item{coeff}{coefficient to transform narrow to broad band albedo:
 "Tasumi" (default), "Olmedo", "Liang" or "auto" ("Olmedo" for Landsat 8 and
-9, "Tasumi" for Landsat 7, "Liang" for MODIS; with sat = "auto", Landsat
+9, "Tasumi" for Landsat 7 and MODIS; with sat = "auto", Landsat
 images are taken as Landsat 8/9). See Details.}
 
 \item{sat}{"L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
@@ -50,7 +50,7 @@ Liang, S. (2001). Narrowband to broadband conversions of land surface albedo I: 
 Other net radiation related functions:
 \code{\link[=LAI]{LAI()}},
 \code{\link[=METRICtopo]{METRICtopo()}},
-\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=SWtransmissivity]{SWtransmissivity()}},
 \code{\link[=incLWradiation]{incLWradiation()}},
 \code{\link[=incSWradiation]{incSWradiation()}},
 \code{\link[=netRadiation]{netRadiation()}},

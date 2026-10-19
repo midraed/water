@@ -18,7 +18,7 @@ data.frame returned by getDataWS()}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}}
 }
 \value{
 SpatRaster with incoming short-wave radiation (W/m2) at the time of
@@ -36,7 +36,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 Other net radiation related functions:
 \code{\link[=LAI]{LAI()}},
 \code{\link[=METRICtopo]{METRICtopo()}},
-\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=SWtransmissivity]{SWtransmissivity()}},
 \code{\link[=albedo]{albedo()}},
 \code{\link[=incLWradiation]{incLWradiation()}},
 \code{\link[=netRadiation]{netRadiation()}},

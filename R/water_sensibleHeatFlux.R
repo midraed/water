@@ -642,13 +642,21 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 }
 
 
+# Air density (kg m-3) at the temperature of the air, Ts - dT, and elevation
+# DEM (Allen et al., 2007, Eq. 37): 1000 P / (1.01 (Ts - dT) 287), with the
+# pressure P (kPa) of the standard atmosphere for that temperature
+airDensity <- function(Ts, dT, DEM){
+  Ta <- Ts - dT
+  349.467*(((Ta-0.0065*DEM)/Ta)^5.26)/Ta
+}
+
 # One iteration of the stability correction of calcH() for the pixels in p
 # (vectors Ts, Ts.datum, DEM, Z.om, u200, air.density, r.ah and fv): dT and
 # H with the current aerodynamic resistance r.ah and friction velocity fv,
 # then the new fv and r.ah (Allen et al., 2007)
 rahStep <- function(p, a, b, damping = 0){
   dT <- a * p$Ts.datum + b
-  rho <- 349.467*((((p$Ts-dT)-0.0065*p$DEM)/(p$Ts-dT))^5.26)/p$Ts
+  rho <- airDensity(p$Ts, dT, p$DEM)
   H <- rho * 1004 * dT / p$r.ah
   L <- (p$air.density * -1004 * p$fv^3 * p$Ts) / (0.41 * 9.807 * H)
   phi.200 <- phi.2 <- phi.01 <- rep(NA_real_, length(L))
@@ -884,6 +892,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
   anchor <- unique(c(hot, cold))
   pix <- function(r){cell_vals(r, anchor)}
   state <- list(Ts = pix(Ts), Ts.datum = pix(Ts.datum), DEM = pix(DEM), Z.om = pix(Z.om),
+                dT = rep(0, length(anchor)),
                 u200 = pix(u200), air.density = pix(air.density),
                 r.ah = pix(r.ah), fv = pix(friction.velocity))
   at <- function(x, cells){x[match(cells, anchor)]}
@@ -912,11 +921,13 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
       }
       i <-  i + 1
       step <- step + 1
+      # density at the temperature of the air, with dT of the previous iteration
+      rhoA <- airDensity(state$Ts, state$dT, state$DEM)
       dT.cold <- H.cold * mean(at(state$r.ah, k), na.rm = TRUE) /
-        (mean(at(state$air.density, k), na.rm = TRUE)*1004)
+        (mean(at(rhoA, k), na.rm = TRUE)*1004)
       dT.hot <- (mean(at(Rn.a, h), na.rm = TRUE) - mean(at(G.a, h), na.rm = TRUE) -
                    mean(LE.hot(h))) *
-        mean(at(state$r.ah, h), na.rm = TRUE) / (mean(at(state$air.density, h), na.rm = TRUE)*1004)
+        mean(at(state$r.ah, h), na.rm = TRUE) / (mean(at(rhoA, h), na.rm = TRUE)*1004)
       a <- (dT.hot - dT.cold) / (mean(at(state$Ts.datum, h), na.rm = TRUE) -
                                    mean(at(state$Ts.datum, k), na.rm = TRUE))
       b <- -a * mean(at(state$Ts.datum, k), na.rm = TRUE) + dT.cold
@@ -937,7 +948,7 @@ calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
         print("##############")
       }
       checkIteration(u = at(new$fv, c(h, k)))
-      state$r.ah <- new$r.ah; state$fv <- new$fv
+      state$r.ah <- new$r.ah; state$fv <- new$fv; state$dT <- new$dT
       r.ah.hot  <- mean(at(state$r.ah, h), na.rm = TRUE)
       r.ah.cold <- mean(at(state$r.ah, k), na.rm = TRUE)
       if(plots){

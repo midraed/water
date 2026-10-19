@@ -329,7 +329,7 @@ calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
 #' Needed for sat = "auto"
 #' @param Kt              clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
 #' NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo

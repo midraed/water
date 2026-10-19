@@ -18,7 +18,7 @@ data.frame returned by getDataWS(); its vapour pressure at the overpass is
 used for the transmissivity}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
-0 < Kt <= 1: 1 (default) for clean air. See \code{\link{SWtrasmisivity}}}
+0 < Kt <= 1: 1 (default) for clean air. See \code{\link{SWtransmissivity}}}
 }
 \value{
 SpatRaster with C_rad (unitless) in a layer named C.rad.

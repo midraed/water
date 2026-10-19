@@ -20,7 +20,7 @@ surfaceTemperature()}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}}
 }
 \value{
 SpatRaster with incoming long-wave radiation (W/m2).
@@ -42,7 +42,7 @@ Allen R. RAPID long-wave radiation calculations and model comparisons Internal r
 Other net radiation related functions:
 \code{\link[=LAI]{LAI()}},
 \code{\link[=METRICtopo]{METRICtopo()}},
-\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=SWtransmissivity]{SWtransmissivity()}},
 \code{\link[=albedo]{albedo()}},
 \code{\link[=incSWradiation]{incSWradiation()}},
 \code{\link[=netRadiation]{netRadiation()}},

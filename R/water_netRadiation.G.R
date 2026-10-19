@@ -309,7 +309,7 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' data.frame returned by getDataWS()
 #' @param Kt              clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
 #' @return SpatRaster with incoming short-wave radiation (W/m2) at the time of
 #' the satellite overpass. Slopes facing away from the sun (cosine of the
 #' incidence angle below 0) get no direct radiation.
@@ -326,7 +326,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
-  tau.sw <- SWtrasmisivity(Kt = Kt, ea, surface.model$DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtransmissivity(Kt = Kt, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
   # slopes facing away from the sun (cos < 0) get no direct radiation
@@ -353,7 +353,7 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' data.frame returned by getDataWS(); its vapour pressure at the overpass is
 #' used for the transmissivity
 #' @param Kt              clearness (turbidity) coefficient of the atmosphere,
-#' 0 < Kt <= 1: 1 (default) for clean air. See \code{\link{SWtrasmisivity}}
+#' 0 < Kt <= 1: 1 (default) for clean air. See \code{\link{SWtransmissivity}}
 #' @details
 #' C_rad = (Rso_inst horizontal / Rso_inst pixel) * (Rso_24 pixel / Rso_24
 #' horizontal), with the clear-sky radiation of Eq. 3 integrated over the day
@@ -389,7 +389,7 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
   # Rso of Eq. 3 without the constant Gsc / d2, which cancels
   rso <- function(cos.surface, cos.hor){
     lit <- cos.hor > 0.01
-    tau <- SWtrasmisivity(Kt = Kt, ea, surface.model$DEM, acos(ifel(lit, cos.hor, 1)))
+    tau <- SWtransmissivity(Kt = Kt, ea, surface.model$DEM, acos(ifel(lit, cos.hor, 1)))
     ifel(lit & cos.surface > 0, cos.surface * tau, 0)
   }
   pixel.24 <- horizontal.24 <- 0
@@ -421,7 +421,7 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' the result. If missing, the result is not cropped
 #' @param coeff      coefficient to transform narrow to broad band albedo:
 #' "Tasumi" (default), "Olmedo", "Liang" or "auto" ("Olmedo" for Landsat 8 and
-#' 9, "Tasumi" for Landsat 7, "Liang" for MODIS; with sat = "auto", Landsat
+#' 9, "Tasumi" for Landsat 7 and MODIS; with sat = "auto", Landsat
 #' images are taken as Landsat 8/9). See Details.
 #' @param sat        "L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
 #' layer named SWIR3 (as from loadImage()), Landsat otherwise (L7, L8 and L9
@@ -468,7 +468,15 @@ albedo <- function(image.SR, coeff="Tasumi", sat="auto", aoi){
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)} # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
     if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} # Liang 2001
   }
-  if(sat=="MODIS"){wb <- c(0.037, 0.479, -0.068, 0.0976, 0.266, 0.0757, 0.107)} # Liang 2001 direct-NIR coefficients
+  if(sat=="MODIS"){
+    # Tasumi et al. (2008), Table 2: MODIS bands 1-7 (R, NIR, B, G, SWIR1, SWIR2, SWIR3)
+    if(coeff != "Tasumi"){
+      warn("albedo(): for MODIS only the coefficients of Tasumi et al. (2008) are ",
+           "available; coeff = \"", coeff, "\" is ignored")
+      coeff <- "Tasumi"
+    }
+    wb <- c(0.215, 0.215, 0.242, 0.129, 0.101, 0.062, 0.036)
+  }
   # bands by name, in the order of the coefficients
   image.SR <- if(sat == "MODIS"){
     landsatBands(image.SR, c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3"))
@@ -615,19 +623,24 @@ LAI <- function(image, method="metric2010", L=0.1, aoi, sat){
 #'
 #' ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005 \cr
 #' @export
-SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
+SWtransmissivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
-  tauB <- 0.98 * exp(((-0.00149 * P )/ (Kt * 
+  tauB <- 0.98 * exp(((-0.00146 * P )/ (Kt * 
                       cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
-  tauD <- rast(tauB)
   tauD <- 0.35 - 0.36 * tauB 
   tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB[tauB < 0.15]
   tau.sw <- tauB + tauD
   # Next one it's from METRIC 2007, previous from METRIC 2010
-  #sw.t <- 0.35 + 0.627 * exp((-0.00149 * P / Kt * 
+  #sw.t <- 0.35 + 0.627 * exp((-0.00146 * P / Kt * 
   #                              cos(incidence.hor))-0.075*(W / cos(incidence.hor))^0.4)
   return(tau.sw)
+}
+
+#' @rdname SWtransmissivity
+#' @export
+SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
+  SWtransmissivity(Kt = Kt, ea = ea, dem = dem, incidence.hor = incidence.hor)
 }
 
 #' Estimates Land Surface Temperature from Landsat Data
@@ -799,7 +812,7 @@ outLWradiation <- function(LAI, Ts){
 #' surfaceTemperature()
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
 #' @return SpatRaster with incoming long-wave radiation (W/m2).
 #' @author Guillermo Federico Olmedo
 #' @author David Fonseca-Luengo
@@ -819,7 +832,7 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts, Kt = 1){
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
                                              (WeatherStation$temp+237.3))
-  tau.sw <- SWtrasmisivity(Kt = Kt, ea, DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtransmissivity(Kt = Kt, ea, DEM, solar.angles$incidence.hor)
   #temp <-  WeatherStation$temp+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
   ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization

@@ -25,6 +25,16 @@ Fixes that change results:
   test case of the RefET package (ASCE method) within 1e-5 mm/h.
 * dailyET() accepts a Date for date, and returns NA with a warning when the
   records do not cover the day (it summed the hours available) (#90).
+* Model constants (#107): the transmissivity uses -0.00146 (Allen et al.
+  2007, Eq. 4; it was -0.00149): net radiation +1 W/m2. The air density
+  of the dT calibration uses the temperature of the air, Ts - dT (Eq. 37),
+  at every pixel and at the anchors, so H closes at the hot anchors (it was
+  1-3 W/m2 off): mean LE +0.5% (Landsat 8 example, flexible anchors),
+  +0.7% (percentile). MODIS albedo uses the weights of Tasumi et al. (2008)
+  (alb.coeff = "auto" and other coefficients: Tasumi, with a warning); the
+  direct-NIR set of Liang gave about 0.275 for green vegetation against
+  0.178. SWtransmissivity() is the correctly spelled name of
+  SWtrasmisivity(), which remains as an alias.
 * Anchor pixels (#92): new default anchors.method = "percentile", with
   criteria relative to the scene, in the spirit of the automated
   calibration of Allen et al. (2013) and Morton et al. (2013): cold
@@ -197,7 +207,7 @@ New:
   image.DN, surf.temp, thermalband and DEM are on the same grid. New
   default alb.coeff = "auto" in the METRIC functions (albedo() keeps
   "Tasumi"): "Olmedo" for Landsat 8 and 9, "Tasumi" for
-  Landsat 7, "Liang" for MODIS (Landsat 8/9 runs that relied on the old
+  Landsat 7 and MODIS (Landsat 8/9 runs that relied on the old
   default "Tasumi" change by about 0.6% in LE).
 * anchors.control() and calcH.control() group the parameters of the anchor
   selection and of the H iteration: METRIC.EB(anchors.control = ,

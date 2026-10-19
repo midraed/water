@@ -252,7 +252,7 @@ stopifnot(terra::nlyr(terra::rast(f)) == 5)
 near <- function(x, y, tol = 1e-6) all(abs(x - y) <= tol * abs(y))
 # (#85: surface reflectance outside 0-1 masked, mean LE +4.2%; #89: ASCE
 # reference ET at the overpass, LE +0.01%; #94: Z.om at least 0.005 m, LE -1.6%)
-pin.L8 <- c(576.7867019656, 89.5582897965, 236.6041652690, 255.5225786928, 311.2443506301)
+pin.L8 <- c(577.8324193046, 89.6838434238, 236.0560319014, 256.8827717802, 311.2443506301)
 stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
@@ -262,7 +262,7 @@ stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
 EBpct <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                                           WeatherStation = WS, MTL = MTL.L2,
                                           alb.coeff = "Olmedo", Z.om.ws = 0.03)))
-pin.pct <- c(576.7867019656, 89.5582897965, 264.3366198918, 223.5560870661, 311.2443506301)
+pin.pct <- c(577.8324193046, 89.6838434238, 263.5789086889, 225.1898998384, 311.2443506301)
 ndvi.c2 <- (image.SR$NIR - image.SR$R) / (image.SR$NIR + image.SR$R)
 cold.pct <- EBpct$anchors[EBpct$anchors$type == "cold", ]
 hot.pct <- EBpct$anchors[EBpct$anchors$type == "hot", ]
@@ -355,6 +355,16 @@ warm <- which(terra::values(Ts.eb)[, 1] > cold.T + 1 & terra::values(Ts.eb)[, 1]
 flat.area <- df
 flat.area[flat.area$type == "hot", c("X", "Y")] <- terra::xyFromCell(Ts.eb, warm[1:5])
 expect_error(runH(flat.area), "minimum 5 K")
+
+## Air density at the temperature of the air, Ts - dT, at the anchors too
+## (Allen et al. 2007, Eq. 37): H closes at the hot anchors, where ET = 0 (#107)
+rho <- water:::airDensity(Ts = 310, dT = 5, DEM = 927)
+P.ta <- 101.3 * ((305 - 0.0065 * 927) / 305)^5.26
+stopifnot(abs(rho - 1000 * P.ta / (1.01 * 305 * 287)) / rho < 1e-3)
+hot.v <- terra::extract(EB$EB, terra::vect(sf::st_transform(EB$anchors, terra::crs(EB$EB))))
+hot.i <- tolower(EB$anchors$type) == "hot"
+stopifnot(abs(mean(hot.v$SensibleHeat[hot.i]) -
+                mean(hot.v$NetRadiation[hot.i] - hot.v$SoilHeat[hot.i])) < 2)  # W/m2
 
 ## calcH(): exact maxit, wind floor, damping, Z.om floor, diagnostics (#94)
 stopifnot(all(EB$calibration$candidates >= 20),  # (#93)
@@ -524,7 +534,7 @@ expect_error(METRIC.EB(image.SR = "x", sat = "L7", LST.method = "L2"), "only for
 ## METRIC.EB() with Landsat 7 digital numbers, as in the METRIC_simple vignette
 EB7 <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, n = 5,
                        sat = "L7", thermalband = L7$Thermal1, anchors.method = "flexible"))
-pin.L7 <- c(562.8423517407, 82.3828585967, 184.5625226436, 295.8988091457, 303.7011250221)
+pin.L7 <- c(563.994534218, 82.519285448, 184.948561291, 296.528350376, 303.701125022)
 stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))
@@ -535,11 +545,11 @@ EBmtn <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, sat 
                          anchors.method = "flexible", n = 5))
 # anchors on Ts referred to the station elevation, and daily ET corrected for
 # slope and aspect with C_rad (Allen et al. 2007, Eq. 56)
-pin.mtn <- c(555.0476642210, 81.2546785165, 189.9864806481, 283.8470861435, 303.6977245062)
+pin.mtn <- c(556.1852550980, 81.3891784171, 190.3356488031, 284.4997661126, 303.6977245062)
 ET.mtn <- quiet(suppressMessages(ET24h(EBmtn)))
 crad.q <- terra::global(ET.mtn$C.rad, quantile, probs = c(0.01, 0.99), na.rm = TRUE)
 stopifnot(near(terra::global(EBmtn$EB, "mean", na.rm = TRUE)[, 1], pin.mtn),
-          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.19202350368013),
+          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.20397212798425),
           "C.rad" %in% names(ET.mtn), crad.q[[1]] > 0.85, crad.q[[2]] < 1.3,
           terra::global(ET.mtn$C.rad, "max", na.rm = TRUE)[1, 1] <= 2,
           terra::global(is.na(ET.mtn$C.rad) & !is.na(ET.mtn$ET24), "sum")[1, 1] == 0)

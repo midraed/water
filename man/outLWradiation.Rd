@@ -27,7 +27,7 @@ Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 Other net radiation related functions:
 \code{\link[=LAI]{LAI()}},
 \code{\link[=METRICtopo]{METRICtopo()}},
-\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=SWtransmissivity]{SWtransmissivity()}},
 \code{\link[=albedo]{albedo()}},
 \code{\link[=incLWradiation]{incLWradiation()}},
 \code{\link[=incSWradiation]{incSWradiation()}},

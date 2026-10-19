@@ -139,7 +139,7 @@ give a warning.}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}}
 
 \item{anchors.control}{parameters of the automatic selection of anchor
 pixels: a list from \code{\link{anchors.control}} (or a plain list with
@@ -184,7 +184,7 @@ temperature (surf.temp), both from loadImageSR().
 \details{
 There are different models to convert narrowband data to broadband albedo.
 With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
-and 9, Tasumi for Landsat 7 and Liang for MODIS.
+and 9, Tasumi for Landsat 7 and MODIS.
 You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo

@@ -90,7 +90,7 @@ give a warning.}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}}
 
 \item{Rn}{Net radiation in W/m2, e.g. from METRIC.Rn(). If
 missing it is computed as in METRIC.Rn()}
@@ -109,7 +109,7 @@ Level-2 surface reflectance as image.SR and surface temperature as surf.temp.
 \details{
 There are different models to convert narrowband data to broadband albedo.
 With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
-and 9, Tasumi for Landsat 7 and Liang for MODIS.
+and 9, Tasumi for Landsat 7 and MODIS.
 You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo

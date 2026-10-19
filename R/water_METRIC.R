@@ -52,13 +52,13 @@
 #' surf.temp. See \code{\link{surfaceTemperature}}
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
 #' @param plots            Logical. If TRUE the results are plotted (default:
 #' only in interactive sessions)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
-#' and 9, Tasumi for Landsat 7 and Liang for MODIS.
+#' and 9, Tasumi for Landsat 7 and MODIS.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 #' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 #' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
@@ -366,7 +366,7 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' only in interactive sessions)
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
-#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
+#' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
 #' @param extraParameters  named numeric vector with extra parameters for the
 #' non default methods, e.g. c(fLAI = 0.5, h = 1.8) for Zom.method =
 #' "Perrier". See \code{\link{momentumRoughnessLength}} and the Extra
@@ -379,7 +379,7 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
-#' and 9, Tasumi for Landsat 7 and Liang for MODIS.
+#' and 9, Tasumi for Landsat 7 and MODIS.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 #' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 #' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo

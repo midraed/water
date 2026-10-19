@@ -43,7 +43,7 @@ Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in th
 Other net radiation related functions:
 \code{\link[=LAI]{LAI()}},
 \code{\link[=METRICtopo]{METRICtopo()}},
-\code{\link[=SWtrasmisivity]{SWtrasmisivity()}},
+\code{\link[=SWtransmissivity]{SWtransmissivity()}},
 \code{\link[=albedo]{albedo()}},
 \code{\link[=incLWradiation]{incLWradiation()}},
 \code{\link[=incSWradiation]{incSWradiation()}},
