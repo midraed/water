@@ -149,6 +149,9 @@ Fixes that change results:
 
 New:
 
+* momentumRoughnessLength(method = "Perrier") takes fLAI and h as numbers or as
+  rasters on the grid of LAI, so that crop height can come from a field map.
+
 * ET24h(EB) takes the result of METRIC.EB() and returns layers ETinst
   (mm/h), ETrF (reference ET fraction, the alfalfa-basis crop coefficient),
   ET24 (mm/day) and HgtRnG (pixels where H > Rn - G, where ETinst and ETrF

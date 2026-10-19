@@ -219,6 +219,24 @@ expect_error(momentumRoughnessLength(method = "short.crop", LAI = one),
              "did you mean \"short.crops\"")
 expect_error(momentumRoughnessLength(method = "Perrier", LAI = one, fLAI = 2, h = 1),
              "fLAI must be")
+## Perrier with rasters of fLAI and h equals the scalar result (#105)
+lai.r <- terra::rast(nrows = 2, ncols = 2, vals = c(0.5, 1, 3, 5))
+zp <- function(f, h) terra::values(momentumRoughnessLength(method = "Perrier", LAI = lai.r,
+                                                           fLAI = f, h = h))[, 1]
+f.r <- terra::rast(lai.r, vals = c(0.2, 0.2, 0.8, 0.8))
+h.r <- terra::rast(lai.r, vals = c(0.5, 1, 2, 3))
+by.cell <- c(zp(0.2, 0.5)[1], zp(0.2, 1)[2], zp(0.8, 2)[3], zp(0.8, 3)[4])
+stopifnot(isTRUE(all.equal(zp(f.r, h.r), by.cell)),
+          isTRUE(all.equal(zp(0.2, h.r)[2], zp(0.2, 1)[2])))
+expect_error(zp(f.r, terra::rast(nrows = 3, ncols = 3, vals = 1)), "grid of LAI")
+expect_error(zp(terra::rast(lai.r, vals = 2), 1), "between 0 and 1")
+## MODIS albedo uses the weights of Tasumi et al. (2008), Table 2, without offset
+modis <- terra::rast(nrows = 1, ncols = 1, nlyrs = 7, vals = rep(0.2, 7))
+names(modis) <- c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3")
+stopifnot(isTRUE(all.equal(unname(terra::values(water::albedo(modis, sat = "MODIS"))[1, 1]), 0.2)))
+modis[[1]] <- 0.3; names(modis)[1] <- "R"
+stopifnot(isTRUE(all.equal(unname(terra::values(water::albedo(modis, sat = "MODIS"))[1, 1]),
+                           0.2 + 0.1 * 0.215)))
 expect_error(momentumRoughnessLength(method = "custom", LAI = one, NDVI = one, albedo = one),
              "needs a and b")
 expect_error(soilHeatFlux(method = "T"), "Unknown method = \"T\"")

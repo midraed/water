@@ -14,8 +14,10 @@
 #' for method = "custom"
 #' @param a               "a" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
 #' @param b               "b" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"
-#' @param fLAI            proportion of LAI lying above h/2. Only needed for method = "Perrier"
-#' @param h               crop height in meters. Only needed for method = "Perrier"
+#' @param fLAI            proportion of LAI lying above h/2: a number or a SpatRaster
+#' on the grid of LAI. Only needed for method = "Perrier"
+#' @param h               crop height in meters: a number or a SpatRaster on the
+#' grid of LAI (e.g. rasterized from a field map). Only needed for method = "Perrier"
 #' @param mountainous     Logical. If TRUE applies the empirical adjustment for
 #' the effects of general terrain roughness on momentum and heat transfer
 #' (Allen et al., 2007); needs surface.model
@@ -62,14 +64,32 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
   }
   if(method=="Perrier"){
     if(missing(fLAI) || missing(h)){stop("method = \"Perrier\" needs fLAI and h", call. = FALSE)}
-    if(!is.numeric(fLAI) || length(fLAI) != 1 || !isTRUE(fLAI >= 0 && fLAI <= 1)){
-      stop("fLAI must be a number between 0 and 1", call. = FALSE)
+    # fLAI and h: one number, or a SpatRaster on the grid of LAI
+    ras <- function(x) inherits(x, "SpatRaster")
+    if(ras(fLAI) || ras(h)){
+      for(x in list(fLAI, h)){
+        if(ras(x) && !terra::compareGeom(x, LAI, stopOnError = FALSE)){
+          stop("fLAI and h as rasters must have the grid of LAI", call. = FALSE)
+        }
+      }
     }
-    if(!is.numeric(h) || length(h) != 1 || !isTRUE(h > 0)){
-      stop("h (crop height, m) must be a number above 0", call. = FALSE)
+    if(ras(fLAI)){
+      rg <- unlist(terra::global(fLAI, c("min", "max"), na.rm = TRUE))
+      if(!all(is.finite(rg)) || rg[1] < 0 || rg[2] > 1){
+        stop("fLAI must be between 0 and 1", call. = FALSE)
+      }
+    } else if(!is.numeric(fLAI) || length(fLAI) != 1 || !isTRUE(fLAI >= 0 && fLAI <= 1)){
+      stop("fLAI must be a number (or a raster) between 0 and 1", call. = FALSE)
     }
-    if(fLAI <0.5){ a <- (2*(1-fLAI))^-1 }
-    if(fLAI >=0.5){ a <- 2*fLAI }
+    if(ras(h)){
+      if(!isTRUE(terra::global(h, "min", na.rm = TRUE)[1, 1] > 0)){
+        stop("h (crop height, m) must be above 0", call. = FALSE)
+      }
+    } else if(!is.numeric(h) || length(h) != 1 || !isTRUE(h > 0)){
+      stop("h (crop height, m) must be a number (or a raster) above 0", call. = FALSE)
+    }
+    a <- if(ras(fLAI)) terra::ifel(fLAI < 0.5, (2*(1-fLAI))^-1, 2*fLAI) else
+      if(fLAI < 0.5) (2*(1-fLAI))^-1 else 2*fLAI
     Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))*h
   }
   if(mountainous==TRUE){
