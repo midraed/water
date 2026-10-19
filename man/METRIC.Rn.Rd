@@ -18,7 +18,7 @@ METRIC.Rn(
   image.SR,
   surf.temp,
   L = 0.1,
-  LST.method = "SC",
+  LST.method = "auto",
   Kt = 1
 )
 }
@@ -71,9 +71,12 @@ give a warning.}
 
 \item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
 
-\item{LST.method}{Method for land surface temperature estimation: "SC"
-for single channel or "SW" for split window (only for L8 and L9). Ignored
-if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
+\item{LST.method}{Land surface temperature when surf.temp is not
+supplied: "auto" (default) uses the Level-2 surface temperature
+(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
+"L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
+(split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or

@@ -16,7 +16,7 @@ METRIC.EB(
   aoi,
   G.method = "Tasumi",
   alb.coeff = "Tasumi",
-  LST.method = "SC",
+  LST.method = "auto",
   LAI.method = "metric2010",
   L = 0.1,
   Zom.method = "short.crops",
@@ -75,9 +75,12 @@ inputs are cropped to it}
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{LST.method}{Method for land surface temperature estimation: "SC"
-for single channel or "SW" for split window (only for L8 and L9). Ignored
-if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
+\item{LST.method}{Land surface temperature when surf.temp is not
+supplied: "auto" (default) uses the Level-2 surface temperature
+(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
+"L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
+(split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}}
 
 \item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}

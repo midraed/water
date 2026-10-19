@@ -19,6 +19,18 @@ Fixes that change results:
   test case of the RefET package (ASCE method) within 1e-5 mm/h.
 * dailyET() accepts a Date for date, and returns NA with a warning when the
   records do not cover the day (it summed the hours available) (#90).
+* Land surface temperature (#95): LST.method = "auto" (new default) uses
+  the Level-2 surface temperature (image.SR$Band_10) for Landsat 8 and 9
+  when it is present, also when image.DN is passed (before, Ts was
+  estimated from the thermal band with "SC", +3 K against the Level-2
+  product in the example); "L2" requires it. The thermal-band path is now
+  "METRIC" (Allen et al. 2007, Eqs. 20-21) with the paper's general
+  atmospheric values (tau 0.866, Rp 0.91, Rsky 1.32), or per-pixel values
+  with surfaceTemperature(atmosphere = ); for Landsat 8/9 it warns that the
+  general values can bias Ts by several K (-6 K in the example). "SC" was
+  removed; "SW" is deprecated. Landsat 7 example: mean Ts 313.9 -> 303.7 K
+  (air 295.7 K), mean LE +0.8% (the calibration absorbs most of a uniform
+  bias in Ts).
 * calcH() (#94): when the wind extrapolated to 200 m is below 2 m/s, 2 m/s
   is used (calcH.control(u200.min = ); before, below 1 m/s it jumped to
   4 m/s, so 0.50 and 0.53 m/s at the station gave very different results);
@@ -255,6 +267,8 @@ Behaviour changes to check in existing scripts:
 
 * Method names are matched exactly: partial or differently capitalised
   names (e.g. ET = "ETR", G.method = "T") are errors (#82).
+* LST.method = "SC" is an error (removed); the default is now "auto"
+  (#95).
 * Pass MTL explicitly: it is no longer searched in the working directory;
   waterOptions(autoAoi) is ignored, with a warning: pass aoi instead (#87).
 * dailyET(): the day is now taken in the time zone of the station records,

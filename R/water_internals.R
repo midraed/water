@@ -166,8 +166,8 @@ checkChoice <- function(x, choices, name){
   hint <- NULL
   if(ok){
     d <- utils::adist(tolower(x), tolower(choices))[1, ]
-    # up to 2 edits, fewer for short names ("L8" is not a typo of "SC")
-    if(min(d) <= min(2, nchar(x) %/% 2)){hint <- choices[which.min(d)]}
+    # up to 2 edits, fewer for short names ("L8" is not a typo of "L2")
+    if(min(d) <= min(2, nchar(x) %/% 3)){hint <- choices[which.min(d)]}
   }
   stop("Unknown ", name, " = ",
        if(ok) paste0("\"", x, "\"") else paste(deparse(x), collapse = " "),
@@ -180,7 +180,7 @@ waterChoices <- list(
   sat = c("auto", "L7", "L8", "L9", "MODIS"),
   alb.coeff = c("Tasumi", "Olmedo", "Liang"),
   LAI.method = c("metric2010", "metric", "MCB", "vineyard", "turner"),
-  LST.method = c("SC", "SW"),
+  LST.method = c("auto", "L2", "METRIC", "SW"),
   G.method = c("Tasumi", "Bastiaanssen"),
   Zom.method = c("short.crops", "custom", "Perrier"),
   anchors.method = c("flexible", "best", "random")
@@ -205,19 +205,55 @@ checkMetricArgs <- function(sat, alb.coeff, LAI.method, LST.method,
   checkChoice(sat, waterChoices$sat, "sat")
   checkChoice(alb.coeff, waterChoices$alb.coeff, "alb.coeff")
   checkChoice(LAI.method, waterChoices$LAI.method, "LAI.method")
+  removedSC(LST.method, "LST.method")
   checkChoice(LST.method, waterChoices$LST.method, "LST.method")
   checkChoice(G.method, waterChoices$G.method, "G.method")
   checkChoice(Zom.method, waterChoices$Zom.method, "Zom.method")
   invisible(TRUE)
 }
 
-# The split window needs the two thermal bands of Landsat 8 and 9
+# The split window needs the two thermal bands of Landsat 8 and 9; the
+# Level-2 surface temperature is read only for Landsat 8 and 9
 checkLSTmethod <- function(LST.method, sat, used, name = "LST.method"){
   if(used && LST.method == "SW" && sat == "L7"){
     stop(name, " = \"SW\" (split window) needs two thermal bands: only for ",
          "Landsat 8 and 9", call. = FALSE)
   }
+  if(used && LST.method == "L2" && sat == "L7"){
+    stop(name, " = \"L2\" (Level-2 surface temperature) is only for Landsat 8 ",
+         "and 9; use \"METRIC\", or pass surf.temp", call. = FALSE)
+  }
   invisible(TRUE)
+}
+
+# "SC" (single channel) was removed in version 1.0
+removedSC <- function(method, name){
+  if(identical(method, "SC")){
+    stop(name, " = \"SC\" was removed in version 1.0. Use \"auto\" (the ",
+         "Level-2 surface temperature for Landsat 8 and 9, the METRIC equations ",
+         "otherwise), \"L2\" or \"METRIC\"", call. = FALSE)
+  }
+}
+
+# The surface temperature to use: "surf.temp" when it is supplied; "auto" is
+# "L2" for Landsat 8 and 9 with Band_10 in image.SR, "METRIC" otherwise
+resolveLST <- function(LST.method, sat, image.SR = NULL, has.surf.temp = FALSE){
+  if(has.surf.temp){return("surf.temp")}
+  hasB10 <- !is.null(image.SR) && "Band_10" %in% names(image.SR)
+  if(LST.method == "auto"){
+    LST.method <- if(sat %in% c("L8", "L9") && hasB10) "L2" else "METRIC"
+  }
+  if(LST.method == "L2" && !hasB10){
+    stop("LST.method = \"L2\" needs the Level-2 surface temperature: ",
+         "image.SR$Band_10 from loadImageSR() (with the *_ST_B10.TIF file), or ",
+         "pass surf.temp", call. = FALSE)
+  }
+  if(LST.method == "SW"){
+    warning("LST.method = \"SW\" (split window) is deprecated and will be ",
+            "removed: USGS advises against using band 11 for surface temperature. ",
+            "Use the Level-2 surface temperature (\"auto\" or \"L2\")", call. = FALSE)
+  }
+  LST.method
 }
 
 # extraParameters of METRIC.EB(): a named numeric vector with known names, and

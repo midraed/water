@@ -9,10 +9,11 @@ surfaceTemperature(
   sat = "auto",
   LAI,
   aoi,
-  method = "SC",
+  method = "METRIC",
   WeatherStation,
   thermalband,
-  MTL
+  MTL,
+  atmosphere
 )
 }
 \arguments{
@@ -25,31 +26,46 @@ file (MTL is then required)}
 
 \item{aoi}{Not used; kept for backward compatibility}
 
-\item{method}{"SC" for single channel or "SW" for split window
-algorithm. "SW" is only available for L8 and L9}
+\item{method}{"METRIC" (default; Allen et al., 2007, Eqs. 20-21)
+or "SW" (split window, Landsat 8 and 9 only; deprecated). "SC" was removed
+in version 1.0}
 
-\item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
-data.frame returned by getDataWS()}
+\item{WeatherStation}{Not used; kept for backward compatibility}
 
 \item{thermalband}{thermal band in digital numbers. Optional: if missing,
 image.DN$Thermal1 is used (L7: band 6 low gain; L8/L9: band 10)}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. For L8 and
-L9 the thermal calibration constants are read from
-it. Required for L9; without it L8 uses Landsat 8
-defaults}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file. For L8
+and L9 the radiance rescaling and thermal constants are read from it.
+Required for L9; without it L8 uses Landsat 8 defaults}
+
+\item{atmosphere}{Optional atmospheric correction: a named list or
+SpatRaster with tau (narrow-band transmissivity), Rp (path radiance) and
+Rsky (downward thermal radiance, both W m-2 sr-1 um-1). For Landsat 8 and 9
+Level-2 products, the per-pixel bands ST_ATRAN * 0.0001, ST_URAD * 0.001 and
+ST_DRAD * 0.001. If missing, the general values of Allen et al. (2007) are
+used: tau = 0.866, Rp = 0.91 and Rsky = 1.32}
 }
 \value{
 SpatRaster with land surface temperature (K).
 }
 \description{
-Surface temperature is estimated using a modified Planck equation
-considering empirical constants for Landsat images. In addition, this model
-implements a correction of thermal radiance following Wukelic et al.
-(1989). For Landsat 8 and 9, a single-channel (Jimenez-Munoz et al., 2014)
-or a split-window algorithm can be used. With Landsat 8/9 Collection 2
-Level-2 products, the surface temperature band can be used directly instead
-(surf.temp in METRIC.EB()).
+Estimates the land surface temperature from the thermal band in digital
+numbers with the METRIC equations (Allen et al., 2007, Eqs. 20-21): the
+at-sensor radiance is corrected for the atmosphere and for the surface
+emissivity, and converted to temperature with the K1 and K2 constants of
+the band. For Landsat 8 and 9, the Level-2 surface temperature
+(image.SR$Band_10 from loadImageSR(), used by default by METRIC.EB()) is
+preferred.
+}
+\details{
+Rc = (Lt - Rp) / tau - (1 - eNB) Rsky (Eq. 21), Ts = K2 / ln(eNB K1 / Rc +
+1) (Eq. 20), with the narrow-band emissivity eNB = 0.97 + 0.0033 LAI (0.98
+for LAI > 3). The general atmospheric values come from MODTRAN runs for
+Landsat 5 and 7 in Idaho; for Landsat 8 and 9 band 10 they can bias Ts by
+several K (-6 K in the example crop against the Level-2 product), so a
+warning is given when they are used for Landsat 8 or 9: use the Level-2
+surface temperature, or the per-pixel atmosphere bands.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for 
@@ -57,14 +73,10 @@ mapping evapotranspiration with internalized calibration (METRIC) -
 Model" Journal of Irrigation and Drainage Engineering, vol. 133, 
 p. 380, 2007 \cr
 
-Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric 
-calibration of Landsat thematic mapper thermal band Remote Sensing of 
-Environment, 1989, 28, (339-347) \cr
-
 Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
 J. (2014). Land surface temperature retrieval methods from Landsat-8 thermal
 infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
-1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr
+1840-1843. http://doi.org/10.1109/LGRS.2014.2312032
 }
 \seealso{
 Other net radiation related functions:

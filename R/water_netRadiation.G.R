@@ -526,13 +526,13 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 
 #' Estimates Land Surface Temperature from Landsat Data
 #' @description
-#' Surface temperature is estimated using a modified Planck equation
-#' considering empirical constants for Landsat images. In addition, this model
-#' implements a correction of thermal radiance following Wukelic et al.
-#' (1989). For Landsat 8 and 9, a single-channel (Jimenez-Munoz et al., 2014)
-#' or a split-window algorithm can be used. With Landsat 8/9 Collection 2
-#' Level-2 products, the surface temperature band can be used directly instead
-#' (surf.temp in METRIC.EB()).
+#' Estimates the land surface temperature from the thermal band in digital
+#' numbers with the METRIC equations (Allen et al., 2007, Eqs. 20-21): the
+#' at-sensor radiance is corrected for the atmosphere and for the surface
+#' emissivity, and converted to temperature with the K1 and K2 constants of
+#' the band. For Landsat 8 and 9, the Level-2 surface temperature
+#' (image.SR$Band_10 from loadImageSR(), used by default by METRIC.EB()) is
+#' preferred.
 #' @param image.DN        raw image in digital numbers, e.g. from loadImage()
 #' @param thermalband     thermal band in digital numbers. Optional: if missing,
 #' image.DN$Thermal1 is used (L7: band 6 low gain; L8/L9: band 10)
@@ -540,14 +540,27 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' file (MTL is then required)
 #' @param LAI             SpatRaster with leaf area index, from LAI()
 #' @param aoi             Not used; kept for backward compatibility
-#' @param method          "SC" for single channel or "SW" for split window
-#'                        algorithm. "SW" is only available for L8 and L9
-#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
-#' data.frame returned by getDataWS()
-#' @param MTL             path to the Landsat metadata (MTL) file. For L8 and
-#'                        L9 the thermal calibration constants are read from
-#'                        it. Required for L9; without it L8 uses Landsat 8
-#'                        defaults
+#' @param method          "METRIC" (default; Allen et al., 2007, Eqs. 20-21)
+#' or "SW" (split window, Landsat 8 and 9 only; deprecated). "SC" was removed
+#' in version 1.0
+#' @param WeatherStation  Not used; kept for backward compatibility
+#' @param MTL             path to the Landsat metadata (*_MTL.txt) file. For L8
+#' and L9 the radiance rescaling and thermal constants are read from it.
+#' Required for L9; without it L8 uses Landsat 8 defaults
+#' @param atmosphere      Optional atmospheric correction: a named list or
+#' SpatRaster with tau (narrow-band transmissivity), Rp (path radiance) and
+#' Rsky (downward thermal radiance, both W m-2 sr-1 um-1). For Landsat 8 and 9
+#' Level-2 products, the per-pixel bands ST_ATRAN * 0.0001, ST_URAD * 0.001 and
+#' ST_DRAD * 0.001. If missing, the general values of Allen et al. (2007) are
+#' used: tau = 0.866, Rp = 0.91 and Rsky = 1.32
+#' @details
+#' Rc = (Lt - Rp) / tau - (1 - eNB) Rsky (Eq. 21), Ts = K2 / ln(eNB K1 / Rc +
+#' 1) (Eq. 20), with the narrow-band emissivity eNB = 0.97 + 0.0033 LAI (0.98
+#' for LAI > 3). The general atmospheric values come from MODTRAN runs for
+#' Landsat 5 and 7 in Idaho; for Landsat 8 and 9 band 10 they can bias Ts by
+#' several K (-6 K in the example crop against the Level-2 product), so a
+#' warning is given when they are used for Landsat 8 or 9: use the Level-2
+#' surface temperature, or the per-pixel atmosphere bands.
 #' @return SpatRaster with land surface temperature (K).
 #' @family net radiation related functions
 #' @author Guillermo Federico Olmedo
@@ -558,36 +571,36 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' Model" Journal of Irrigation and Drainage Engineering, vol. 133, 
 #' p. 380, 2007 \cr
 #'
-#' Wukelic G. E.; Gibbons D. E.; Martucci L. M. & Foote, H. P. Radiometric 
-#' calibration of Landsat thematic mapper thermal band Remote Sensing of 
-#' Environment, 1989, 28, (339-347) \cr
-#'
 #' Jimenez-Munoz, J. C., Sobrino, J. A., Skokovic, D., Mattar, C., & Cristobal, 
 #' J. (2014). Land surface temperature retrieval methods from Landsat-8 thermal
 #' infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
-#' 1840–1843. http://doi.org/10.1109/LGRS.2014.2312032 \cr 
+#' 1840-1843. http://doi.org/10.1109/LGRS.2014.2312032
 #' @export
-## Add Sobrino and Qin improvements to LST in ETM+
-surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi, 
-                               method = "SC", WeatherStation, thermalband, MTL){
+surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
+                               method = "METRIC", WeatherStation, thermalband,
+                               MTL, atmosphere){
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
-  checkChoice(method, waterChoices$LST.method, "method")
+  removedSC(method, "method")
+  checkChoice(method, c("METRIC", "SW"), "method")
   checkLSTmethod(method, sat, TRUE, "method")
-  if(inherits(WeatherStation, "waterWeatherStation")){
-    WeatherStation <- getDataWS(WeatherStation)
-  }
-  epsilon_NB <- 0.97 + 0.0033 * LAI  
-  epsilon_NB[LAI > 3] <- 0.98
-  # Downwelling atm radiance
-  
-  R_sky <- (1.807e-10)*(WeatherStation$temp+273.15)^4*(1-0.26*
-                                            exp(-7.77e-4*WeatherStation$temp^2))
-  # path radiance
-  Rp <- 0.91     
-  # atm transmissivity
-  tau_NB <- 0.75+2e-5*WeatherStation$elev
   if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(method, sat, TRUE, "method")
+  if(method == "SW"){
+    warning("method = \"SW\" (split window) is deprecated and will be removed: ",
+            "USGS advises against using band 11 for surface temperature", call. = FALSE)
+  }
+  epsilon_NB <- 0.97 + 0.0033 * LAI
+  epsilon_NB[LAI > 3] <- 0.98
+  # atmospheric correction (Eq. 21): per pixel, or the general values of
+  # Allen et al. (2007)
+  if(!missing(atmosphere)){
+    if(!all(c("tau", "Rp", "Rsky") %in% names(atmosphere))){
+      stop("atmosphere must have tau, Rp and Rsky", call. = FALSE)
+    }
+    tau_NB <- atmosphere[["tau"]]; Rp <- atmosphere[["Rp"]]; R_sky <- atmosphere[["Rsky"]]
+  } else {
+    tau_NB <- 0.866; Rp <- 0.91; R_sky <- 1.32
+  }
   if(sat %in% c("L8", "L9")){
     # Landsat 8 defaults; L9 (TIRS-2) constants differ, so read them from MTL
     cal <- c(RADIANCE_MULT_BAND_10 = 3.3420E-04, RADIANCE_ADD_BAND_10 = 0.1,
@@ -602,33 +615,26 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
     }
     B10 <- if(!missing(thermalband)) thermalband else image.DN$Thermal1
     L_b10 <- B10*cal[["RADIANCE_MULT_BAND_10"]]+cal[["RADIANCE_ADD_BAND_10"]]
-    bT_b10 <- cal[["K2_CONSTANT_BAND_10"]] / log((cal[["K1_CONSTANT_BAND_10"]]/L_b10)+1)
-    if(method == "SC"){
-      #atm.coeff from Jimenez-Munoz, 2014
-      atm.coeff <- matrix(data=c(0.04019, 0.02916, 1.01523,
-                                 -0.38333, -1.50294, 0.20324,
-                                 0.00918, 1.36072, -0.27514),
-                          byrow= TRUE, nrow= 3, ncol=3)
-      ea = (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
-                                                (WeatherStation$temp+237.3))
-      atm.cond <- matrix(data=c(ea^2, ea, 1), nrow= 3, ncol=1) #not ea, vwc in g/cm2
-      AF.j <- atm.coeff %*% atm.cond
-      AF.m <- c(1/tau_NB, -R_sky - (Rp/tau_NB), R_sky)
-      delta <- (bT_b10^2)/(1324*L_b10 )
-      gama <- bT_b10 - (bT_b10^2/1324)
-      Ts <- delta*((1/epsilon_NB)*(AF.m[1]*L_b10+AF.m[2])+AF.m[3])+gama
+    if(method == "METRIC"){
+      if(missing(atmosphere)){
+        warning("With the general atmospheric values of Allen et al. (2007), the ",
+                "Landsat 8/9 surface temperature can be biased by several K: use ",
+                "the Level-2 surface temperature (image.SR$Band_10), or the ",
+                "atmosphere argument", call. = FALSE)
+      }
+      Rc <- ((L_b10 - Rp) / tau_NB) - (1-epsilon_NB)*R_sky
+      Ts <- cal[["K2_CONSTANT_BAND_10"]] / log((epsilon_NB*cal[["K1_CONSTANT_BAND_10"]]/Rc)+1)
     }
     if(method=="SW"){
+      bT_b10 <- cal[["K2_CONSTANT_BAND_10"]] / log((cal[["K1_CONSTANT_BAND_10"]]/L_b10)+1)
       L_b11 <- image.DN$Thermal2*cal[["RADIANCE_MULT_BAND_11"]]+cal[["RADIANCE_ADD_BAND_11"]]
       bT_b11 <- cal[["K2_CONSTANT_BAND_11"]] / log((cal[["K1_CONSTANT_BAND_11"]]/L_b11)+1)
-      SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238, -129.20, 16.40)
-      w <- 1.2 #Atm water vapor content in g cm-2
-      delta_e <- 0 # emissivity difference 
+      # Jimenez-Munoz et al. (2014), water vapour 1.2 g cm-2, one emissivity
+      SW.c <- c(-0.268, 1.378, 0.183, 54.30, -2.238)
+      w <- 1.2
       Ts <- bT_b10 + SW.c[2] * (bT_b10 - bT_b11) +
         SW.c[3] * (bT_b10 - bT_b11)^2 + SW.c[1] +
-        (SW.c[4] + SW.c[5] * w) * (1 - epsilon_NB) 
-      # If I had two different emissivity, I should change epsilon_NB parameter
-      # with the mean emissivity and add +(SW.c[6] + SW.c[7] * w) * delta_e
+        (SW.c[4] + SW.c[5] * w) * (1 - epsilon_NB)
     }
   }
   if(sat=="L7"){

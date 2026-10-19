@@ -40,9 +40,12 @@
 #' cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
 #' give a warning.
 #' @param L                L value for SAVI calculation. See \code{\link{LAI}}
-#' @param LST.method       Method for land surface temperature estimation: "SC"
-#' for single channel or "SW" for split window (only for L8 and L9). Ignored
-#' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
+#' @param LST.method       Land surface temperature when surf.temp is not
+#' supplied: "auto" (default) uses the Level-2 surface temperature
+#' (image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+#' METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
+#' "L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
+#' (split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 #' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
@@ -85,7 +88,7 @@
 METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
                       plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
-                      LST.method = "SC", Kt = 1){
+                      LST.method = "auto", Kt = 1){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method)
   checkKt(Kt)
@@ -136,7 +139,7 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
-                     surf.temp, L = 0.1, LST.method = "SC", Kt = 1){
+                     surf.temp, L = 0.1, LST.method = "auto", Kt = 1){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method)
   checkKt(Kt)
@@ -162,12 +165,14 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 # surfaceTemperature()
 metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
                           thermalband, surf.temp, alb.coeff, LAI.method,
-                          L = 0.1, LST.method = "SC", plain, DEM, aoi, Kt = 1){
+                          L = 0.1, LST.method = "auto", plain, DEM, aoi, Kt = 1){
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
          "MODIS; for L8/L9 provide it (e.g., loadImageSR()).")
   }
-  if(missing(surf.temp) && missing(image.DN)){
+  lst <- resolveLST(LST.method, sat, if(!missing(image.SR)) image.SR,
+                    !missing(surf.temp))
+  if(lst %in% c("METRIC", "SW") && missing(image.DN) && missing(thermalband)){
     stop("Provide surf.temp (e.g., image.SR$Band_10 from loadImageSR()) or ",
          "image.DN with a thermal band.")
   }
@@ -179,7 +184,7 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
     if(!plain){DEM <- cropToAoi(DEM, aoi)}
   }
   # thermal band from image.DN, as in METRIC.EB()
-  if(missing(surf.temp) && missing(thermalband) && !missing(image.DN) &&
+  if(lst %in% c("METRIC", "SW") && missing(thermalband) && !missing(image.DN) &&
      sat %in% c("L7", "L8", "L9")){
     thermal.layer <- intersect(c("Thermal1", "thermal.low"), names(image.DN))
     if(length(thermal.layer) == 0){
@@ -222,9 +227,13 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
   }
   if(!missing(surf.temp)){
     Ts <- surf.temp
+  } else if(lst == "L2"){
+    message("Using the Level-2 surface temperature (image.SR$Band_10)")
+    Ts <- image.SR$Band_10
   } else if(sat %in% c("L7", "L8", "L9")){
-    Ts <- surfaceTemperature(LAI = LAI, sat = sat, image.DN = image.DN,
-                             method = LST.method, thermalband = thermalband,
+    Ts <- surfaceTemperature(LAI = LAI, sat = sat,
+                             image.DN = if(!missing(image.DN)) image.DN,
+                             method = lst, thermalband = thermalband,
                              MTL = MTL, WeatherStation = WeatherStation)
   } else {
     Ts <- image.DN$LST  # MODIS
@@ -290,9 +299,12 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo.
 #' See Details.
-#' @param LST.method       Method for land surface temperature estimation: "SC"
-#' for single channel or "SW" for split window (only for L8 and L9). Ignored
-#' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
+#' @param LST.method       Land surface temperature when surf.temp is not
+#' supplied: "auto" (default) uses the Level-2 surface temperature
+#' (image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+#' METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
+#' "L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
+#' (split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
 #' @param L                L value for SAVI calculation. See \code{\link{LAI}}
@@ -414,7 +426,7 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi, G.method = "Tasumi",
-                      alb.coeff = "Tasumi", LST.method = "SC",
+                      alb.coeff = "Tasumi", LST.method = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
@@ -441,20 +453,6 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
          "MODIS; provide it (e.g., loadImageSR()).")
   }
 
-  if(missing(surf.temp) && missing(thermalband) && sat %in% c("L7", "L8", "L9")){
-    if(missing(image.DN)){
-      stop("Provide surf.temp, thermalband or image.DN with a thermal layer.")
-    }
-    thermal.layer <- intersect(c("Thermal1", "thermal.low"), names(image.DN))
-    if(length(thermal.layer) == 0){
-      stop("thermalband is missing. Provide a thermal layer (e.g., image.DN$Thermal1).")
-    }
-    thermalband <- image.DN[[thermal.layer[1]]]
-  }
-
-  if(missing(surf.temp) && sat %in% c("L7", "L8", "L9") && is.null(thermalband)){
-    stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
-  }
 
   MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,

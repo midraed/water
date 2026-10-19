@@ -378,13 +378,38 @@ stopifnot(maxdiff(Rn, EBsw$EB$NetRadiation) < 1e-8,
 ## METRIC.Rn(): thermal layer named "thermal.low", detected as in METRIC.EB()
 DN.low <- image.DN; names(DN.low)[names(DN.low) == "Thermal1"] <- "thermal.low"
 Rn.low <- quiet(METRIC.Rn(image.DN = DN.low, image.SR = loadImageSR(c2), WeatherStation = WS,
-                          MTL = MTL.L1, sat = "L8", alb.coeff = "Olmedo"))
+                          MTL = MTL.L1, sat = "L8", alb.coeff = "Olmedo",
+                          LST.method = "METRIC"))
 stopifnot(inherits(Rn.low, "SpatRaster"))
+
+## Surface temperature (#95): for Landsat 8/9 the Level-2 Band_10 is used by
+## default, also with image.DN; the DN path uses Allen et al. (2007) Eqs.
+## 20-21, with a warning for Landsat 8/9 without per-pixel atmosphere
+sr.c2 <- suppressMessages(loadImageSR(c2))
+Rn.auto <- quiet(suppressMessages(METRIC.Rn(image.DN = image.DN, image.SR = sr.c2,
+                                            WeatherStation = WS, MTL = MTL.L1, sat = "L8",
+                                            alb.coeff = "Olmedo")))
+Rn.L2 <- quiet(METRIC.Rn(image.DN = image.DN, image.SR = sr.c2, surf.temp = sr.c2$Band_10,
+                         WeatherStation = WS, MTL = MTL.L1, sat = "L8",
+                         alb.coeff = "Olmedo"))
+stopifnot(maxdiff(Rn.auto, Rn.L2) == 0)
+lai.dn <- LAI(image = sr.c2)
+Ts.metric <- expect_warning(surfaceTemperature(image.DN = image.DN, sat = "L8", LAI = lai.dn,
+                                               MTL = MTL.L1), "biased by several K")
+w95 <- character()
+Ts.atm <- withCallingHandlers(
+  surfaceTemperature(image.DN = image.DN, sat = "L8", LAI = lai.dn, MTL = MTL.L1,
+                     atmosphere = list(tau = 0.866, Rp = 0.91, Rsky = 1.32)),
+  warning = function(c) { w95 <<- c(w95, conditionMessage(c)); invokeRestart("muffleWarning") })
+stopifnot(length(w95) == 0, maxdiff(Ts.metric, Ts.atm) == 0,
+          abs(stats::median(terra::values(Ts.metric - sr.c2$Band_10), na.rm = TRUE) + 6.2) < 0.3)
+expect_error(METRIC.Rn(image.SR = "x", LST.method = "SC"), "removed in version 1.0")
+expect_error(METRIC.EB(image.SR = "x", sat = "L7", LST.method = "L2"), "only for Landsat 8")
 
 ## METRIC.EB() with Landsat 7 digital numbers, as in the METRIC_simple vignette
 EB7 <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, n = 5,
                        sat = "L7", thermalband = L7$Thermal1))
-pin.L7 <- c(547.5577230608, 85.3656706699, 168.5586105085, 293.6354141959, 313.8947743373)
+pin.L7 <- c(562.8423517407, 82.3828585967, 184.5625226436, 295.8988091457, 303.7011250221)
 stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))
