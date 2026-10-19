@@ -53,16 +53,11 @@ To estimate crop evapotranspiration with METRIC, the **water** package and the a
 
 - A raw (Level-1) Landsat 7, 8 or 9 image (original .TIF files from USGS EarthExplorer or GloVis).
 - Weather station data (a .csv file).
-- A polygon (an sf object) with our area of interest (AOI), if we do not want to estimate crop ET for the entire Landsat scene.
 - A digital elevation model (DEM) of the area.
 
-First, we create the AOI as a polygon from its top-left and bottom-right corners. With a full scene, pass it when loading the image (`loadImage(path, aoi = aoi)`) or to `METRIC.EB(aoi = aoi)`; the example image used here is already cropped:
-```{r}
-aoi <- createAoi(topleft = c(272955, 6085705), 
-                 bottomright = c( 288195, 6073195), EPSG = 32719)
-```
+With a full scene, crop an area of interest when loading the image, `loadImage(path, aoi = createAoi(...))` (see `?createAoi`); the example image used here is already cropped.
 
-Then, we load the weather station data with `read.WSdata()`, which converts our .csv file into a `waterWeatherStation` object. If we provide a Landsat metadata (MTL) file, it also computes the weather conditions at the time of the satellite overpass. Always set `tz`, the time zone of the weather station clock, because the overpass time in the MTL file is UTC.
+First, we load the weather station data with `read.WSdata()`, which converts our .csv file into a `waterWeatherStation` object. If we provide a Landsat metadata (MTL) file, it also computes the weather conditions at the time of the satellite overpass. Always set `tz`, the time zone of the weather station clock, because the overpass time in the MTL file is UTC.
 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -178,15 +173,15 @@ plot(G)
 ## Sensible Heat Flux (H) estimation
 To estimate the sensible heat flux from the Landsat data, first we need to calculate the *momentum roughness length* (Zom). Several methods from the literature are available (see `?momentumRoughnessLength`). In this vignette we use the *short.crops* method.
 
-Then, we use `calcAnchors()` to automatically search for end members (anchor pixels) within the scene (extreme wet and dry conditions). In this vignette we use the *best* method (formerly called *CITRA-MCB*; see `?calcAnchors`).
+Then, we use `calcAnchors()` to automatically search for end members (anchor pixels) within the scene (extreme wet and dry conditions). The default method of `METRIC.EB()` is "percentile" (anchors from percentiles of NDVI, albedo and Ts); in this vignette we use the *best* method (formerly called *CITRA-MCB*), which searches the scene with the parameters `n` and `deltaTemp` (see `?calcAnchors`).
 
-Finally, we estimate H for each pixel with `calcH()`. This function applies the *CIMEC* self-calibration (calibration using inverse modelling at extreme conditions), iterating over the "hot" and "cold" pixels to absorb biases in the computation of H. The iterations are shown in a plot while `calcH()` runs. The argument `verbose` controls how much information about the anchor pixels and the iterations is printed.
+Finally, we estimate H for each pixel with `calcH()`. This function applies the *CIMEC* self-calibration (calibration using inverse modelling at extreme conditions), iterating over the "hot" and "cold" pixels to absorb biases in the computation of H. With `plots = TRUE` the iterations are shown in a plot while `calcH()` runs. The argument `verbose` controls how much information about the anchor pixels and the iterations is printed.
 ```{r Ts, fig.width=5}
 Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = TRUE, 
                                 method = "short.crops", 
                                 surface.model = surface.model)
 
-hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = F,
+hot.and.cold <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = FALSE,
                             albedo = albedo, Z.om = Z.om, n = 5, 
                             anchors.method = "best", deltaTemp = 5,
                             WeatherStation = WeatherStation, verbose = FALSE)
@@ -196,18 +191,21 @@ H <- calcH(anchors = hot.and.cold, Ts = Ts, Z.om = Z.om,
            Z.om.ws = 0.03, DEM = DEM, Rn = Rn, G = G, verbose = FALSE)
 ```
 
+`calcH()` warns that the wind speed at the station at the overpass is very low (0.31 m/s), so the wind extrapolated to 200 m is below 2 m/s. In METRIC 2 m/s is used as the minimum (`calcH.control = calcH.control(u200.min = 2)`), because very low wind makes H, and the calibration, unreliable. Check the units of the wind speed (`cf` in `read.WSdata()`) and the sensor when you see this warning.
+
 ## Daily Crop Evapotranspiration (ET_24) estimation
 
-To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) at the weather station, which we calculate with:
+To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr, ASCE-EWRI 2005) at the weather station, which we calculate with:
 
 ```{r}
 ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
 ```
 
-And finally, we can estimate daily crop ET pixel by pixel:
+And finally, we can estimate daily crop ET pixel by pixel. With the result of `METRIC.EB()` this is just `ET24h(Energy.Balance)`; here we pass the layers we computed:
 
 ```{r, fig.width = 5}
 ET.24 <- ET24h(Rn, G, H$H, Ts, WeatherStation = WeatherStation, ETr.daily=ET_WS)
+plot(ET.24$ET24)
 ```
 
 

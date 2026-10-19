@@ -52,15 +52,10 @@ To estimate crop evapotranspiration with METRIC, the **water** package and the s
 
 - A raw (Level-1) Landsat 7, 8 or 9 image (original .TIF files from USGS EarthExplorer or GloVis).
 - Weather station data (a .csv file).
-- A polygon (an sf object) with our area of interest (AOI), if we do not want to estimate crop ET for the entire Landsat scene.
 
-First, we create the AOI as a polygon from its top-left and bottom-right corners. With a full scene, pass it when loading the image (`loadImage(path, aoi = aoi)`) or to `METRIC.EB(aoi = aoi)`; the example image used here is already cropped:
-```{r}
-aoi <- createAoi(topleft = c(272955, 6085705), 
-                 bottomright = c( 288195, 6073195), EPSG = 32719)
-```
+With a full scene, crop an area of interest when loading the image, `loadImage(path, aoi = createAoi(...))` (see `?createAoi`); the example image used here is already cropped.
 
-Then, we load the weather station data with `read.WSdata()`, which converts our .csv file into a `waterWeatherStation` object. If we provide a Landsat metadata (MTL) file, it also computes the weather conditions at the time of the satellite overpass. Always set `tz`, the time zone of the weather station clock, because the overpass time in the MTL file is UTC.
+First, we load the weather station data with `read.WSdata()`, which converts our .csv file into a `waterWeatherStation` object. If we provide a Landsat metadata (MTL) file, it also computes the weather conditions at the time of the satellite overpass. Always set `tz`, the time zone of the weather station clock, because the overpass time in the MTL file is UTC.
 
 ```{r}
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -102,14 +97,17 @@ We use the function `METRIC.EB()` to estimate the land surface energy balance. T
 - Automatic method to select anchor pixels
 - ETr coefficient and momentum roughness length for the weather station
 
-When we run `METRIC.EB()`, the energy balance and the surface temperature (Ts) are stored in the `Energy.Balance` object (class `waterLSEB`). The function also prints the position and other data of the anchor pixels and plots the aerodynamic resistance during the iterative process. The argument `verbose` controls how much information is printed.
+When we run `METRIC.EB()`, the energy balance and the surface temperature (Ts) are stored in the `Energy.Balance` object (class `waterLSEB`). The function prints a one-line summary of the calibration (anchor pixels, dT, wind speed used) and warns about problems with the inputs. The hot and cold anchor pixels are selected from percentiles of NDVI, albedo and surface temperature (`anchors.method = "percentile"`, see `?calcAnchors`). With `plots = TRUE` it also plots the anchors and the aerodynamic resistance during the iterative process; the argument `verbose` controls how much information is printed.
 
 ```{r, fig.width = 5, warning=FALSE}
 Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE, 
                             WeatherStation = WeatherStation, 
-                            MTL=MTLfile, n = 5,
+                            MTL=MTLfile,
                             sat="L7", thermalband=image.DN$Thermal1)
+summary(Energy.Balance)
 ```
+
+`summary()` lists the calibration so that you can check it: the temperature at the anchor pixels, dT, the ETrF at the anchors and the share of pixels with ETrF above 1.1.
 
 Now we can plot the results using:
 
@@ -119,19 +117,11 @@ plot(Energy.Balance$EB)
 
 ## Daily Crop Evapotranspiration (ET_24) estimation
 
-To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) at the weather station, which we calculate with:
-
-```{r}
-ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
-```
-
-And finally, we can estimate daily crop ET pixel by pixel:
+To estimate the daily crop evapotranspiration from the *Landsat scene* we need the daily reference ET (ETr) at the weather station. `ET24h()` calculates it for the day of the image (with `dailyET()`, ASCE-EWRI 2005) and estimates the daily crop ET pixel by pixel. It returns the layers `ETinst`, `ETrF`, `ET24` and `HgtRnG`:
 
 ```{r, fig.width = 5, warning=FALSE}
-ET.24 <- ET24h(Rn=Energy.Balance$EB$NetRadiation, G=Energy.Balance$EB$SoilHeat, 
-               H=Energy.Balance$EB$SensibleHeat, 
-               Ts=Energy.Balance$EB$surfaceTemperature, 
-               WeatherStation = WeatherStation, ETr.daily=ET_WS)
+ET.24 <- ET24h(Energy.Balance)
+plot(ET.24$ET24)
 ```
 
 ## References

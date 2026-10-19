@@ -58,39 +58,48 @@ print(WeatherStation)
 
 ## Energy balance
 
-With `surf.temp`, `METRIC.EB()` uses the Level-2 surface temperature instead of estimating it from the thermal band. The satellite is detected from the MTL file (`sat = "auto"`), and `alb.coeff = "Olmedo"` uses albedo coefficients for the Landsat 8 and 9 bands:
+With `surf.temp`, `METRIC.EB()` uses the Level-2 surface temperature instead of estimating it from the thermal band (it would also be used by default, `LST.method = "auto"`, because `image.SR` has the layer `Band_10`). The satellite is detected from the MTL file (`sat = "auto"`) and the albedo coefficients are chosen for the satellite (`alb.coeff = "auto"`: those of Olmedo for Landsat 8 and 9, Tasumi et al. for Landsat 7). The hot and cold anchor pixels are selected from percentiles of the NDVI, the albedo and the surface temperature (`anchors.method = "percentile"`; see `?calcAnchors`), and the sensible heat flux iterates over them with the aerodynamic resistance (`?calcH`):
 
 ```{r, fig.width = 7}
 Energy.Balance <- METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                             WeatherStation = WeatherStation, MTL = MTLfile,
-                            alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03)
+                            Z.om.ws = 0.03)
 plot(Energy.Balance)
+```
+
+`summary()` shows the calibration (anchor pixels, temperature difference dT, wind speed used and the share of pixels with ETrF above 1.1) so that you can judge it. Read it before using the results, and see `?plotAnchors` to draw the anchors on the map:
+
+```{r}
+summary(Energy.Balance)
 ```
 
 Without `image.DN`, `METRIC.EB()` computes the leaf area index and selects the anchor pixels from the surface reflectance. The LAI equations of METRIC were described for top-of-atmosphere reflectance, so the results can differ from a run that also uses the Level-1 data (see the last section).
 
 ## Daily evapotranspiration
 
-Finally, the daily evapotranspiration is estimated with the daily reference ET of the weather station:
+Finally, `ET24h()` takes the energy balance and returns the instantaneous ET (`ETinst`, mm/h), the reference ET fraction (`ETrF`, the crop coefficient with respect to alfalfa), the daily ET (`ET24`, mm/day) and the pixels where H is larger than Rn - G (`HgtRnG`). The daily reference ET (ETr, ASCE-EWRI 2005) of the day of the image comes from the weather station:
 
-```{r, fig.width = 5}
-ET_WS <- dailyET(WeatherStation = WeatherStation, MTL = MTLfile)
-ET.24 <- ET24h(Rn = Energy.Balance$EB$NetRadiation, G = Energy.Balance$EB$SoilHeat,
-               H = Energy.Balance$EB$SensibleHeat,
-               Ts = Energy.Balance$EB$surfaceTemperature,
-               WeatherStation = WeatherStation, ETr.daily = ET_WS)
+```{r, fig.width = 7}
+ET.24 <- ET24h(Energy.Balance)
+plot(ET.24$ET24)
 ```
+
+The message about the record of 24:00 is not an error: the weather station file ends at 23:00 of the day, so the last hour of the day (at night) is left out of the daily ETr, which follows the ASCE-EWRI (2005) day of hourly periods ending at 01:00 to 24:00. A day with more missing hours gives NA, and then you must provide the daily ETr (`ETr.daily`) from another source.
+
+For a season, the ETrF of several images can be interpolated and added up with `ETperiod()`, using the daily reference ET of every day from `dailyETseries()`.
 
 ## Using Level-1 digital numbers
 
-If the Level-1 product of the same scene is also available (dataset "Landsat 8-9 OLI/TIRS C2 L1" in EarthExplorer), it can be loaded with `loadImage()` and passed as `image.DN`. `METRIC.EB()` then uses the top-of-atmosphere reflectance for the leaf area index and the anchor pixels and, without `surf.temp`, estimates the surface temperature from the thermal bands: `LST.method = "SW"` uses the split window method with bands 10 and 11. The Level-1 example files included in **water** are from the same scene, with the older (pre-Collection) file names:
+If the Level-1 product of the same scene is also available (dataset "Landsat 8-9 OLI/TIRS C2 L1" in EarthExplorer), it can be loaded with `loadImage()` and passed as `image.DN`. `METRIC.EB()` then uses the top-of-atmosphere reflectance for the leaf area index and the anchor pixels and, with `LST.method = "METRIC"`, estimates the surface temperature from the thermal band with the equations of METRIC (Eqs. 20-21) instead of using the Level-2 product. The Level-1 example files included in **water** are from the same scene, with the older (pre-Collection) file names:
 
 ```{r, fig.width = 7}
 image.DN <- loadImage(path = system.file("extdata", package = "water"), sat = "L8")
 MTL.L1 <- system.file("extdata", "LC82320832016040LGN00_MTL.txt", package = "water")
 Energy.Balance.DN <- METRIC.EB(image.DN = image.DN, image.SR = image.SR,
                                WeatherStation = WeatherStation, MTL = MTL.L1,
-                               sat = "L8", alb.coeff = "Olmedo", LST.method = "SW",
-                               n = 5, Z.om.ws = 0.03)
+                               sat = "L8", LST.method = "METRIC",
+                               Z.om.ws = 0.03)
 plot(Energy.Balance.DN)
 ```
+
+The warning about the atmosphere above is expected here: without the Level-2 product, the surface temperature from the thermal band uses general atmospheric values and can be biased by several K for Landsat 8 and 9. Prefer the Level-2 surface temperature, as in the first run.
