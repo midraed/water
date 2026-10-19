@@ -141,8 +141,9 @@ checkCloudMask <- function(MTL, ...){
   }, logical(1))
   if(!any(tagged)){
     message("The scene has ", cover, "% clouds (CLOUD_COVER in the MTL file) and ",
-            "the image was not masked with cfmask(): clouds and their shadows ",
-            "can be taken as cold anchor pixels")
+            "the image was not masked with cfmask() (or its mark was lost, e.g. ",
+            "by selecting layers afterwards): clouds and their shadows can be ",
+            "taken as cold anchor pixels")
   }
   invisible(!any(tagged))
 }
@@ -286,11 +287,6 @@ resolveLST <- function(LST.method, sat, image.SR = NULL, has.surf.temp = FALSE){
     stop("LST.method = \"L2\" needs the Level-2 surface temperature: ",
          "image.SR$Band_10 from loadImageSR() (with the *_ST_B10.TIF file), or ",
          "pass surf.temp", call. = FALSE)
-  }
-  if(LST.method == "SW"){
-    warning("LST.method = \"SW\" (split window) is deprecated and will be ",
-            "removed: USGS advises against using band 11 for surface temperature. ",
-            "Use the Level-2 surface temperature (\"auto\" or \"L2\")", call. = FALSE)
   }
   LST.method
 }

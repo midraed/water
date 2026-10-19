@@ -82,10 +82,13 @@ give a warning.}
 
 \item{LST.method}{Land surface temperature when surf.temp is not
 supplied: "auto" (default) uses the Level-2 surface temperature
-(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present (also
+when image.DN is given), and the
 METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
 "L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
-(split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}}
+(split window, L8 and L9) is deprecated. For a per-pixel atmospheric
+correction, compute Ts with surfaceTemperature(atmosphere = ) and pass it as
+surf.temp. See \code{\link{surfaceTemperature}}}
 
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or

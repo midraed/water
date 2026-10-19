@@ -171,6 +171,15 @@ anchors <- quiet(calcAnchors(image = sr, Ts = Ts, LAI = lai, albedo = alb, Z.om 
                              n = 1, plots = TRUE, anchors.method = "flexible"))
 stopifnot(!any(anchors$pixel %in% cloud))
 
+## "percentile" (default) with water in the area: the NDVI quantiles are
+## taken over land, so the hot candidates are not empty
+sr.water <- sr
+water.cells <- terra::cellFromRowCol(sr, rep(1:25, each = 184), rep(1:184, 25))
+sr.water$NIR[water.cells] <- 0.02; sr.water$R[water.cells] <- 0.05
+a.water <- quiet(calcAnchors(image = sr.water, Ts = Ts, LAI = lai, albedo = alb, Z.om = zom,
+                             plots = FALSE))
+stopifnot(any(a.water$type == "hot"), all(a.water$NDVI[a.water$type == "hot"] > 0))
+
 ## "random": candidates only, also with a single hot candidate (sample(x, 1)
 ## drew from 1:x)
 syn <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 300, ymin = 0, ymax = 300,
@@ -235,13 +244,13 @@ stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
 EBpct <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                                           WeatherStation = WS, MTL = MTL.L2,
                                           alb.coeff = "Olmedo", Z.om.ws = 0.03)))
-pin.pct <- c(576.7867019656, 89.5582897965, 264.1775030905, 223.7056089964, 311.2443506301)
+pin.pct <- c(576.7867019656, 89.5582897965, 264.3366198918, 223.5560870661, 311.2443506301)
 ndvi.c2 <- (image.SR$NIR - image.SR$R) / (image.SR$NIR + image.SR$R)
 cold.pct <- EBpct$anchors[EBpct$anchors$type == "cold", ]
 hot.pct <- EBpct$anchors[EBpct$anchors$type == "hot", ]
 ETrF.pct <- terra::values(quiet(suppressMessages(ET24h(EBpct)))$ETrF)[, 1]
 stopifnot(near(terra::global(EBpct$EB, "mean", na.rm = TRUE)[, 1], pin.pct),
-          table(EBpct$anchors$type)[["cold"]] == 98, table(EBpct$anchors$type)[["hot"]] == 421,
+          table(EBpct$anchors$type)[["cold"]] == 98, table(EBpct$anchors$type)[["hot"]] == 429,
           all(cold.pct$LAI >= 3.995), all(hot.pct$NDVI > 0),
           all(cold.pct$NDVI >= round(stats::quantile(terra::values(ndvi.c2), 0.95, na.rm = TRUE), 2) - 0.005),
           mean(ETrF.pct > 1.1, na.rm = TRUE) < 0.01)
@@ -512,8 +521,10 @@ pin.mtn <- c(555.0476642210, 81.2546785165, 189.9864806481, 283.8470861435, 303.
 ET.mtn <- quiet(suppressMessages(ET24h(EBmtn)))
 crad.q <- terra::global(ET.mtn$C.rad, quantile, probs = c(0.01, 0.99), na.rm = TRUE)
 stopifnot(near(terra::global(EBmtn$EB, "mean", na.rm = TRUE)[, 1], pin.mtn),
-          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.19204364815433),
-          "C.rad" %in% names(ET.mtn), crad.q[[1]] > 0.85, crad.q[[2]] < 1.3)
+          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.19202350368013),
+          "C.rad" %in% names(ET.mtn), crad.q[[1]] > 0.85, crad.q[[2]] < 1.3,
+          terra::global(ET.mtn$C.rad, "max", na.rm = TRUE)[1, 1] <= 2,
+          terra::global(is.na(ET.mtn$C.rad) & !is.na(ET.mtn$ET24), "sum")[1, 1] == 0)
 # on a flat surface C_rad is 1
 stopifnot(all(terra::values(Crad(flat, angles, WS)) == 1))
 

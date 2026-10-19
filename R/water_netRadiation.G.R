@@ -307,7 +307,8 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 #' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
 #' @return SpatRaster with incoming short-wave radiation (W/m2) at the time of
-#' the satellite overpass.
+#' the satellite overpass. Slopes facing away from the sun (cosine of the
+#' incidence angle below 0) get no direct radiation.
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
 #' @author David Fonseca-Luengo
@@ -354,7 +355,9 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' horizontal), with the clear-sky radiation of Eq. 3 integrated over the day
 #' in 30-minute steps (Eq. 57). Only self-shading (the sun behind the slope)
 #' is considered, not the shadows of other slopes. C_rad is 1 on horizontal
-#' pixels, and NA where the pixel is not lit at the overpass.
+#' pixels. On slopes barely lit at the overpass the cosine of the incidence
+#' angle is taken as at least 0.1, and C_rad is limited to 0.5-2 (choices of
+#' this package; C_rad reached 3.5 at grazing sun on DEM_Talca).
 #' @return SpatRaster with C_rad (unitless) in a layer named C.rad.
 #' @family ET functions
 #' @references
@@ -393,7 +396,10 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
   }
   cos.hor.i <- cos(solar.angles$incidence.hor)
   cos.rel.i <- cos(solar.angles$incidence.rel)
-  C.rad <- ifel(cos.rel.i > 0, cos.hor.i / cos.rel.i, NA) * pixel.24 / horizontal.24
+  # slopes barely lit (or not lit) at the overpass: cos at least 0.1, and
+  # C_rad within 0.5 to 2 (a choice of this package)
+  C.rad <- cos.hor.i / max(cos.rel.i, 0.1) * pixel.24 / horizontal.24
+  C.rad <- clamp(C.rad, lower = 0.5, upper = 2, values = TRUE)
   saveLoadClean(imagestack = C.rad, stack.names = "C.rad", file = "C.rad", overwrite = TRUE)
 }
 

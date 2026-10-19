@@ -16,7 +16,8 @@ plot.waterLSEB <- function(x, ...){
 #' @param x        waterLSEB object.
 #' @param ...      further arguments passed to or from other methods.
 #' @return x, invisibly (called for its side effect of printing the energy
-#' balance layers, the weather station, the anchor pixels and the methods).
+#' balance layers, the weather station, the anchor pixels, the methods and the
+#' calibration summary, see \code{\link{summary.waterLSEB}}).
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family LSEB objects related functions

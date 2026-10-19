@@ -46,7 +46,8 @@ Must be in Kelvin: values that look like Celsius, or more than 1\% of the
 cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
 give a warning.}
 
-\item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
+\item{Z.om}{momentum roughness length, from momentumRoughnessLength()
+(which keeps it at least 0.005 m; calcH() uses it as given)}
 
 \item{WeatherStation}{WeatherStation data at the satellite overpass.
 Can be a waterWeatherStation object calculated using read.WSdata and MTL file

@@ -78,10 +78,13 @@ See Details.}
 
 \item{LST.method}{Land surface temperature when surf.temp is not
 supplied: "auto" (default) uses the Level-2 surface temperature
-(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present, and the
+(image.SR$Band_10 from loadImageSR()) for L8 and L9 when present (also
+when image.DN is given), and the
 METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
 "L2" requires Band_10; "METRIC" uses the thermal band of image.DN; "SW"
-(split window, L8 and L9) is deprecated. See \code{\link{surfaceTemperature}}}
+(split window, L8 and L9) is deprecated. For a per-pixel atmospheric
+correction, compute Ts with surfaceTemperature(atmosphere = ) and pass it as
+surf.temp. See \code{\link{surfaceTemperature}}}
 
 \item{LAI.method}{Method used to estimate LAI from spectral data.
 See Details.}
@@ -109,8 +112,8 @@ used by anchors.method = "percentile")}
 
 \item{ETp.coef}{ratio of the ET of the cold pixels to the
 instantaneous alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)
-use 1.05, the default. It can be updated with anchors.method = "flexible"
-(see Details)}
+use 1.05, the default. It can be updated with anchors.method = "flexible",
+or for every method with calcH.control(cold.NDVI.rule = TRUE) (see Details)}
 
 \item{Z.om.ws}{momentum roughness length (m) of the weather station
 surface, used to extrapolate the wind speed to 200 m (Allen et al., 2007,
@@ -197,7 +200,15 @@ With anchors.method = "flexible", if the cold-pixel criteria had to be
 relaxed and the mean NDVI of the cold pixels is below 0.8, ETp.coef is
 replaced by Kc * ETo / ETr, where Kc = 2.11 * NDVI - 0.4989 is a crop
 coefficient on a grass reference basis (Reyes-González et al., 2015) and ETo / ETr
-is the ratio of the grass and alfalfa reference ET at the overpass.
+is the ratio of the grass and alfalfa reference ET at the overpass. With
+calcH.control(cold.NDVI.rule = TRUE), automatic cold anchors with mean NDVI
+below 0.8 get min(ETp.coef, Kc * ETo / ETr) for every anchors.method,
+instead of the "flexible" rule.
+
+METRIC.EB() gives a message when the scene has clouds (CLOUD_COVER in the
+MTL file) and the image was not masked with cfmask(), and a warning when
+the weather station recorded more than 5 mm of rain in the 3 days before
+the image (the hot anchors may not be dry; see calcH.control(ETrF.hot = )).
 
 Method arguments (sat, alb.coeff, LAI.method, LST.method and, where they
 apply, G.method, Zom.method and anchors.method) must be one of the listed

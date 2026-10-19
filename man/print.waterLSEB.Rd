@@ -13,7 +13,8 @@
 }
 \value{
 x, invisibly (called for its side effect of printing the energy
-balance layers, the weather station, the anchor pixels and the methods).
+balance layers, the weather station, the anchor pixels, the methods and the
+calibration summary, see \code{\link{summary.waterLSEB}}).
 }
 \description{
 Print method for waterLSEB S3 class

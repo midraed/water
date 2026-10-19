@@ -56,7 +56,8 @@ Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM.
 Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
 (from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
 (ETr, see hourlyET()) at the satellite overpass gives the reference ET
-fraction (ETrF), which is multiplied by the daily reference ET.
+fraction (ETrF), which is multiplied by the daily reference ET. The simplest
+call is ET24h(EB), with EB from METRIC.EB().
 }
 \details{
 ETrF is a crop coefficient on the alfalfa reference basis. To compare it

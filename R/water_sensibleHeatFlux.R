@@ -113,20 +113,24 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param plots            Logical. If TRUE (default: only in interactive
 #' sessions) the anchors are plotted over LAI: hot in red, cold in blue and the
 #' weather station (if supplied) in black
-#' @param deltaTemp        temperature margin (K, default 5): cold candidates must
+#' @param deltaTemp        (not used by "percentile") temperature margin (K,
+#' default 5): cold candidates must
 #' be colder than the 5\% quantile of Ts over well-vegetated pixels plus
 #' deltaTemp, and hot candidates warmer than the maximum Ts over bare-soil
 #' pixels minus deltaTemp
-#' @param minDist          minimum distance (m) between two anchor pixels of the
-#' same type
+#' @param minDist          (not used by "percentile") minimum distance (m)
+#' between two anchor pixels of the same type
 #' @param WSbuffer         maximum distance (m) to the weather station. If no
 #' pixel is within WSbuffer, the whole image is used, with a warning
 #' @param verbose          Logical. If TRUE will print additional data to console
 #' @param min.candidates   minimum number of hot and of cold candidates (default
 #' 20) below which a warning is given: the area may be too small or too
 #' homogeneous for the calibration
-#' @param control          parameters of anchors.method = "percentile", a list
-#' from \code{\link{anchors.control}}
+#' @param control          a list from \code{\link{anchors.control}}; only its
+#' percentile parameters are read (cold.NDVI, cold.LAI, cold.fraction,
+#' hot.NDVI, hot.fraction and homogeneity): deltaTemp, minDist, WSbuffer and
+#' min.candidates are arguments of calcAnchors(). METRIC.EB() fills both from
+#' its anchors.control
 #' @details
 #' anchors.method = "percentile" (default) uses criteria relative to the
 #' scene, in the spirit of the automated calibration of Allen et al. (2013)
@@ -138,8 +142,13 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' Ts in the 5 x 5 pixels around them up to 1.5 K). The coldest 20\% of the
 #' cold candidates and the hottest 20\% of the hot candidates are the anchors,
 #' and calcH() uses their means. The candidates are searched within WSbuffer
-#' of the weather station, or in the whole image if there are none. The
-#' parameters are in \code{\link{anchors.control}}.
+#' of the weather station, or in the whole image if there are none. The NDVI
+#' quantiles are taken over land (NDVI > 0), so water in the area does not
+#' move them. If no candidate is homogeneous, the homogeneity test is dropped;
+#' if there are no cold candidates, cold.LAI is lowered to 3 and then
+#' cold.NDVI to the 0.85 quantile; if there are no hot candidates, hot.NDVI is
+#' raised to the 0.3 quantile. Attribute relaxation records what was relaxed.
+#' The parameters are in \code{\link{anchors.control}}.
 #'
 #' For the other methods, cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
 #' within 0.15 of the maximum NDVI of the image and Ts below the threshold given
@@ -148,7 +157,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #'
 #' anchors.method = "best" selects the coldest and the hottest candidates;
 #' "random" selects them at random among the candidates (CITRA-MCB method);
-#' "flexible" (default) works like "best" but, when there are not enough
+#' "flexible" works like "best" but, when there are not enough
 #' candidates, relaxes the limits of the criteria (LAI, albedo and Z.om for cold
 #' pixels; albedo, NDVI, Z.om and Ts for hot pixels) in 1\% steps up to 100\%,
 #' first near the weather station (within WSbuffer) and then in the whole
@@ -159,7 +168,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
 #' added: the relaxation applied to the criteria of each type (0 = none, 1 =
 #' 100\%). Attribute candidates gives the number of cold and hot candidates
-#' and, for "flexible", attribute relaxation the criteria used. If plots =
+#' and, for "flexible" and "percentile", attribute relaxation the criteria
+#' used. If plots =
 #' TRUE the anchors are also plotted over LAI.
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
@@ -533,8 +543,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   xy <- terra::xyFromCell(LAI, cells)
   at <- function(r){as.numeric(r[cells][[1]])}
   hot.and.cold <- data.frame(pixel = as.numeric(cells), X = xy[, 1], Y = xy[, 2],
-                             Ts = at(Ts), LAI = round(at(LAI), 2),
-                             NDVI = round(at(NDVI), 2),
+                             Ts = at(Ts), LAI = at(LAI), NDVI = at(NDVI),
                              type = factor(rep(c("hot", "cold"), c(length(hot), length(cold))),
                                            levels = c("hot", "cold")))
   if(anchors.method=="flexible"){
@@ -578,15 +587,20 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
   valid <- stats::complete.cases(v[, c("NDVI", "LAI", "Ts", "albedo")])
   homogeneous <- valid & sdTs <= control$homogeneity & !is.na(sdTs)
   relax <- list(cold = list(), hot = list())
+  # quantiles over land (NDVI > 0), so that water in the area does not move them
+  land <- function(use){use & v$NDVI > 0}
+  hotSet <- function(use, qhot){
+    q <- stats::quantile(v$NDVI[land(use)], qhot, names = FALSE)
+    land(use) & v$NDVI <= q & v$albedo >= 0.10 & v$albedo <= 0.35
+  }
   pick <- function(use){
-    q <- stats::quantile(v$NDVI[use], c(control$hot.NDVI, control$cold.NDVI), names = FALSE)
-    cold.ok <- use & v$NDVI >= q[2] & v$LAI >= control$cold.LAI
-    hot.ok <- use & v$NDVI <= q[1] & v$NDVI > 0 & v$albedo >= 0.10 & v$albedo <= 0.35
-    list(cold = cold.ok, hot = hot.ok)
+    q <- stats::quantile(v$NDVI[land(use)], control$cold.NDVI, names = FALSE)
+    cold.ok <- land(use) & v$NDVI >= q & v$LAI >= control$cold.LAI
+    list(cold = cold.ok, hot = hotSet(use, control$hot.NDVI))
   }
   for(inBuffer in c(TRUE, FALSE)){
     use <- valid & (if(inBuffer) v$buffer else TRUE)
-    if(sum(use) < 25){next}
+    if(sum(land(use)) < 25){next}
     sets <- pick(use)
     # homogeneous candidates; if there are none, all candidates (with a note)
     for(type in c("cold", "hot")){
@@ -597,9 +611,16 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
     LAImin <- control$cold.LAI; qcold <- control$cold.NDVI
     while(!any(sets$cold) && (LAImin > 3 || qcold > 0.85)){
       if(LAImin > 3){LAImin <- LAImin - 0.25} else {qcold <- qcold - 0.01}
-      q <- stats::quantile(v$NDVI[use], qcold, names = FALSE)
-      sets$cold <- use & v$NDVI >= q & v$LAI >= LAImin
+      q <- stats::quantile(v$NDVI[land(use)], qcold, names = FALSE)
+      sets$cold <- land(use) & v$NDVI >= q & v$LAI >= LAImin
       relax$cold$cold.LAI <- LAImin; relax$cold$cold.NDVI <- qcold
+    }
+    # hot: raise the NDVI quantile when there are no candidates
+    qhot <- control$hot.NDVI
+    while(!any(sets$hot) && qhot < 0.3){
+      qhot <- qhot + 0.01
+      sets$hot <- hotSet(use, qhot)
+      relax$hot$hot.NDVI <- qhot
     }
     if(any(sets$cold) && any(sets$hot)){
       relax$cold$wholeImage <- relax$hot$wholeImage <- !inBuffer
@@ -639,6 +660,7 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 #' cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
 #' give a warning.
 #' @param Z.om           momentum roughness length, from momentumRoughnessLength()
+#' (which keeps it at least 0.005 m; calcH() uses it as given)
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
 #' (with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
@@ -880,6 +902,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       friction.velocity[friction.velocity==0] <- 0.1
+      friction.velocity[friction.velocity < 0] <- NA  # no valid stability correction
       
       checkIteration(u = cell_vals(friction.velocity, c(hot, cold)))
       r.ah.hot.previous  <- cell_mean(r.ah, hot)
@@ -928,6 +951,11 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     i <- 1
     
     npairs <- min(c(length(cold), length(hot)))
+    if(npairs > 10){
+      warning("method = \"lm\" iterates each of the ", npairs, " pairs of anchors in ",
+              "turn and uses the last one: slow and no better than \"mean\" with many ",
+              "anchors (e.g. from anchors.method = \"percentile\")", call. = FALSE)
+    }
     for(pair in 1:npairs){
 
       converge <- FALSE
@@ -991,6 +1019,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         
         friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
         friction.velocity[friction.velocity==0] <- 0.1
+        friction.velocity[friction.velocity < 0] <- NA  # no valid stability correction
         
         checkIteration(u = cell_vals(friction.velocity, c(hot[pair], cold[pair])))
         r.ah.hot.previous  <- cell_vals(r.ah, hot[pair])

@@ -35,7 +35,9 @@ C_rad = (Rso_inst horizontal / Rso_inst pixel) * (Rso_24 pixel / Rso_24
 horizontal), with the clear-sky radiation of Eq. 3 integrated over the day
 in 30-minute steps (Eq. 57). Only self-shading (the sun behind the slope)
 is considered, not the shadows of other slopes. C_rad is 1 on horizontal
-pixels, and NA where the pixel is not lit at the overpass.
+pixels. On slopes barely lit at the overpass the cosine of the incidence
+angle is taken as at least 0.1, and C_rad is limited to 0.5-2 (choices of
+this package; C_rad reached 3.5 at grazing sun on DEM_Talca).
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

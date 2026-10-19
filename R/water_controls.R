@@ -63,7 +63,9 @@ anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
 #' oscillate instead of converging. A choice of this package
 #' @param ETrF.hot  reference ET fraction of the hot anchor pixels (default 0,
 #' dry bare soil). After rain the soil may still evaporate; Allen et al. (2007,
-#' Eq. 47) then compute dT of the hot pixels from Rn - G - LE.hot
+#' Eq. 47) then compute dT of the hot pixels from Rn - G - LE.hot. METRIC.EB()
+#' warns when the station recorded more than 5 mm of rain in the 3 days before
+#' the image and ETrF.hot is 0
 #' @param cold.NDVI.rule  logical (default FALSE). If TRUE, METRIC.EB() lowers
 #' the ET fraction of automatically selected cold anchors with NDVI below 0.8:
 #' min(ETp.coef, Kc * ETo / ETr), with Kc = 2.11 NDVI - 0.4989

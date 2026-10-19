@@ -22,7 +22,8 @@ polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
 }
 \value{
 SpatRaster with incoming short-wave radiation (W/m2) at the time of
-the satellite overpass.
+the satellite overpass. Slopes facing away from the sun (cosine of the
+incidence angle below 0) get no direct radiation.
 }
 \description{
 This function calculates incoming solar radiation from the surface model,

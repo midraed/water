@@ -169,7 +169,8 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
 #' (from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
 #' (ETr, see hourlyET()) at the satellite overpass gives the reference ET
-#' fraction (ETrF), which is multiplied by the daily reference ET.
+#' fraction (ETrF), which is multiplied by the daily reference ET. The simplest
+#' call is ET24h(EB), with EB from METRIC.EB().
 #' @param Rn             Net radiation (W/m2), see \code{\link{netRadiation}}; or
 #' the result of METRIC.EB(), which supplies Rn, G, H, Ts and the weather
 #' station. See Value

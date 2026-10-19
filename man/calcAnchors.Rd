@@ -58,13 +58,14 @@ station}
 sessions) the anchors are plotted over LAI: hot in red, cold in blue and the
 weather station (if supplied) in black}
 
-\item{deltaTemp}{temperature margin (K, default 5): cold candidates must
+\item{deltaTemp}{(not used by "percentile") temperature margin (K,
+default 5): cold candidates must
 be colder than the 5\% quantile of Ts over well-vegetated pixels plus
 deltaTemp, and hot candidates warmer than the maximum Ts over bare-soil
 pixels minus deltaTemp}
 
-\item{minDist}{minimum distance (m) between two anchor pixels of the
-same type}
+\item{minDist}{(not used by "percentile") minimum distance (m)
+between two anchor pixels of the same type}
 
 \item{WSbuffer}{maximum distance (m) to the weather station. If no
 pixel is within WSbuffer, the whole image is used, with a warning}
@@ -75,8 +76,11 @@ pixel is within WSbuffer, the whole image is used, with a warning}
 20) below which a warning is given: the area may be too small or too
 homogeneous for the calibration}
 
-\item{control}{parameters of anchors.method = "percentile", a list
-from \code{\link{anchors.control}}}
+\item{control}{a list from \code{\link{anchors.control}}; only its
+percentile parameters are read (cold.NDVI, cold.LAI, cold.fraction,
+hot.NDVI, hot.fraction and homogeneity): deltaTemp, minDist, WSbuffer and
+min.candidates are arguments of calcAnchors(). METRIC.EB() fills both from
+its anchors.control}
 }
 \value{
 A data.frame with one row per anchor pixel and columns pixel (cell
@@ -84,7 +88,8 @@ number), X and Y (cell coordinates in the CRS of Ts), Ts (K), LAI, NDVI and
 type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
 added: the relaxation applied to the criteria of each type (0 = none, 1 =
 100\%). Attribute candidates gives the number of cold and hot candidates
-and, for "flexible", attribute relaxation the criteria used. If plots =
+and, for "flexible" and "percentile", attribute relaxation the criteria
+used. If plots =
 TRUE the anchors are also plotted over LAI.
 }
 \description{
@@ -104,8 +109,13 @@ bright rock). Candidates must have a homogeneous surface temperature (sd of
 Ts in the 5 x 5 pixels around them up to 1.5 K). The coldest 20\% of the
 cold candidates and the hottest 20\% of the hot candidates are the anchors,
 and calcH() uses their means. The candidates are searched within WSbuffer
-of the weather station, or in the whole image if there are none. The
-parameters are in \code{\link{anchors.control}}.
+of the weather station, or in the whole image if there are none. The NDVI
+quantiles are taken over land (NDVI > 0), so water in the area does not
+move them. If no candidate is homogeneous, the homogeneity test is dropped;
+if there are no cold candidates, cold.LAI is lowered to 3 and then
+cold.NDVI to the 0.85 quantile; if there are no hot candidates, hot.NDVI is
+raised to the 0.3 quantile. Attribute relaxation records what was relaxed.
+The parameters are in \code{\link{anchors.control}}.
 
 For the other methods, cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
 within 0.15 of the maximum NDVI of the image and Ts below the threshold given
@@ -114,7 +124,7 @@ Z.om up to 0.005 and Ts above the threshold given by deltaTemp.
 
 anchors.method = "best" selects the coldest and the hottest candidates;
 "random" selects them at random among the candidates (CITRA-MCB method);
-"flexible" (default) works like "best" but, when there are not enough
+"flexible" works like "best" but, when there are not enough
 candidates, relaxes the limits of the criteria (LAI, albedo and Z.om for cold
 pixels; albedo, NDVI, Z.om and Ts for hot pixels) in 1\% steps up to 100\%,
 first near the weather station (within WSbuffer) and then in the whole
