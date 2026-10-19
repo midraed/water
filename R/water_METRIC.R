@@ -364,6 +364,10 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' shown (as messages)
 #' @param plots            Logical. If TRUE the anchors and the iteration of H are plotted (default:
 #' only in interactive sessions)
+#' @param crop.height      Only for Zom.method = "Perrier": crop height in m, a
+#' number or a SpatRaster on the grid of the image (e.g. rasterized from a
+#' field map), instead of h in extraParameters. Cells with 0 or NA (bare soil,
+#' roads) get the minimum Z.om of 0.005 m. Default NULL.
 #' @param Kt               clearness (turbidity) coefficient of the atmosphere,
 #' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 #' polluted air (Allen et al., 2007). See \code{\link{SWtransmissivity}}
@@ -488,13 +492,13 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
                       verbose = FALSE, extraParameters = vector(), surf.temp,
                       Kt = 1, anchors.control = NULL, calcH.control = NULL,
-                      plots = interactive()){
+                      plots = interactive(), crop.height = NULL){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method,
                   Zom.method = Zom.method)
   checkKt(Kt)
   anchors.method <- checkAnchorsMethod(anchors.method)
-  checkExtraParameters(extraParameters, Zom.method)
+  checkExtraParameters(extraParameters, Zom.method, crop.height)
   anchors.control <- controlList(anchors.control, "anchors.control")
   calcH.control <- controlList(calcH.control, "calcH.control")
   old <- intersect(c("deltaTemp", "minDist", "WSbuffer"), names(extraParameters))
@@ -551,7 +555,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   if(Zom.method == "Perrier"){
     Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, slope.min1 = calcH.control$slope.min1, 
                                     method = Zom.method, fLAI = extraParameters["fLAI"],
-                                    h = extraParameters["h"],
+                                    h = if(is.null(crop.height)) extraParameters["h"] else crop.height,
                                     surface.model = surface.model)
   }
   if(Zom.method != "short.crops"){Z.om.sc <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, slope.min1 = calcH.control$slope.min1, 

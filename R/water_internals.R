@@ -344,7 +344,7 @@ resolveLST <- function(LST.method, sat, image.SR = NULL, has.surf.temp = FALSE){
 
 # extraParameters of METRIC.EB(): a named numeric vector with known names, and
 # the ones needed by Zom.method
-checkExtraParameters <- function(extraParameters, Zom.method){
+checkExtraParameters <- function(extraParameters, Zom.method, crop.height = NULL){
   allowed <- c("a", "b", "fLAI", "h", "deltaTemp", "minDist", "WSbuffer")
   if(length(extraParameters) > 0){
     if(!is.numeric(extraParameters) || is.null(names(extraParameters)) ||
@@ -358,7 +358,22 @@ checkExtraParameters <- function(extraParameters, Zom.method){
            ". Allowed: ", paste(allowed, collapse = ", "), call. = FALSE)
     }
   }
-  needed <- switch(Zom.method, custom = c("a", "b"), Perrier = c("fLAI", "h"), NULL)
+  if(!is.null(crop.height)){
+    if(Zom.method != "Perrier"){
+      stop("crop.height is only used with Zom.method = \"Perrier\"", call. = FALSE)
+    }
+    if("h" %in% names(extraParameters)){
+      stop("Give the crop height in crop.height or in extraParameters[\"h\"], not in both",
+           call. = FALSE)
+    }
+    if(!inherits(crop.height, "SpatRaster") &&
+       !(is.numeric(crop.height) && length(crop.height) == 1 && isTRUE(crop.height > 0))){
+      stop("crop.height must be a number above 0 or a SpatRaster of the crop height (m)",
+           call. = FALSE)
+    }
+  }
+  needed <- switch(Zom.method, custom = c("a", "b"),
+                   Perrier = c("fLAI", if(is.null(crop.height)) "h"), NULL)
   if(length(needed) && !all(needed %in% names(extraParameters))){
     stop("Zom.method = \"", Zom.method, "\" needs extraParameters ",
          paste(needed, collapse = " and "), call. = FALSE)

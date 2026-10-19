@@ -24,6 +24,15 @@ extent.
 Mosaics the SRTM 1 arc-second tiles found in path (see \code{\link{checkSRTMgrids}}) and
 projects the result to the grid of the image.
 }
+\examples{
+image.DN <- terra::rast(L7_Talca)
+# tiles needed to cover the image (to download from EarthExplorer)
+checkSRTMgrids(image.DN)
+\dontrun{
+# with the tiles in a folder: mosaic and crop them to the grid of the image
+DEM <- prepareSRTMdata(path = "folder/with/the/SRTM/tiles", extent = image.DN)
+}
+}
 \seealso{
 Other support functions:
 \code{\link[=checkSRTMgrids]{checkSRTMgrids()}},

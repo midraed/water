@@ -143,6 +143,14 @@ getDEM <- function(image, source = "copernicus"){
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions
+#' @examples
+#' image.DN <- terra::rast(L7_Talca)
+#' # tiles needed to cover the image (to download from EarthExplorer)
+#' checkSRTMgrids(image.DN)
+#' \dontrun{
+#' # with the tiles in a folder: mosaic and crop them to the grid of the image
+#' DEM <- prepareSRTMdata(path = "folder/with/the/SRTM/tiles", extent = image.DN)
+#' }
 # Should use checkSRTMgrids to get the files list and not use all from the folder...!
 # Also look for files on path and local repo
 prepareSRTMdata <- function(path=getwd(), format="tif", extent){

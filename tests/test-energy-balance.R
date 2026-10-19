@@ -540,6 +540,23 @@ stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))
 
 ## Mountain mode: Landsat 7 with DEM_Talca, plain = FALSE (#97)
+## crop.height (Perrier): a raster equal to h in extraParameters gives the same
+## result; cells with 0 are at the minimum Z.om (#105)
+L7s <- L7[1:60, 1:80, drop = FALSE]
+perrier <- function(...) quiet(METRIC.EB(image.DN = L7s, WeatherStation = WS7, MTL = MTL.L7,
+                                         sat = "L7", thermalband = L7s$Thermal1,
+                                         Zom.method = "Perrier", ...))
+eb.h <- perrier(extraParameters = c(fLAI = 0.5, h = 1.8))
+eb.r <- perrier(extraParameters = c(fLAI = 0.5), crop.height = terra::rast(L7s[[1]], vals = 1.8))
+stopifnot(isTRUE(all.equal(terra::values(eb.h$EB), terra::values(eb.r$EB))))
+half <- terra::rast(L7s[[1]], vals = rep(c(1.8, 0), length.out = terra::ncell(L7s)))
+eb.half <- perrier(extraParameters = c(fLAI = 0.5), crop.height = half)
+stopifnot(!isTRUE(all.equal(terra::values(eb.h$EB), terra::values(eb.half$EB))))
+expect_error(METRIC.EB(image.DN = L7s, sat = "L7", crop.height = 2), "only used with")
+expect_error(METRIC.EB(image.DN = L7s, sat = "L7", Zom.method = "Perrier", crop.height = 2,
+                       extraParameters = c(fLAI = 0.5, h = 1)), "not in both")
+expect_error(METRIC.EB(image.DN = L7s, sat = "L7", Zom.method = "Perrier", crop.height = -1,
+                       extraParameters = c(fLAI = 0.5)), "crop.height must be")
 EBmtn <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, sat = "L7",
                          thermalband = L7$Thermal1, plain = FALSE, DEM = terra::rast(DEM_Talca),
                          anchors.method = "flexible", n = 5))

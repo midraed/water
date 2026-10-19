@@ -213,6 +213,19 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' @importFrom grDevices colorRampPalette
 #' @export
 #' @examples
+#' # the usual way: ET24h() takes the result of METRIC.EB()
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' ET <- ET24h(Energy.Balance)
+#' plot(ET$ET24)
+#'
+#' # step by step, with the layers computed one by one:
 #' # a small window of the Landsat 7 example scene, to run quickly
 #' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
 #' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
@@ -244,7 +257,7 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #'                       WeatherStation = WeatherStation, plots = FALSE, verbose = FALSE)
 #' H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, WeatherStation = WeatherStation,
 #'            DEM = DEM, Rn = Rn, G = G, plots = FALSE, verbose = FALSE)
-#' # with the layers computed above; with a METRIC.EB() result use ET24h(Energy.Balance)
+#' # the layers computed above
 #' ET24h(Rn, G, H$H, Ts, WeatherStation = WeatherStation,
 #'       ETr.daily = dailyET(WeatherStation, MTL = MTL))
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1,

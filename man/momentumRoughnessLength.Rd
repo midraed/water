@@ -41,7 +41,8 @@ for method = "custom"}
 on the grid of LAI. Only needed for method = "Perrier"}
 
 \item{h}{crop height in meters: a number or a SpatRaster on the
-grid of LAI (e.g. rasterized from a field map). Only needed for method = "Perrier"}
+grid of LAI (e.g. rasterized from a field map; cells with 0 or NA, such as
+bare soil, get the minimum Z.om of 0.005 m). Only needed for method = "Perrier"}
 
 \item{mountainous}{Logical. If TRUE applies the empirical adjustment for
 the effects of general terrain roughness on momentum and heat transfer

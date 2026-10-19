@@ -17,7 +17,8 @@
 #' @param fLAI            proportion of LAI lying above h/2: a number or a SpatRaster
 #' on the grid of LAI. Only needed for method = "Perrier"
 #' @param h               crop height in meters: a number or a SpatRaster on the
-#' grid of LAI (e.g. rasterized from a field map). Only needed for method = "Perrier"
+#' grid of LAI (e.g. rasterized from a field map; cells with 0 or NA, such as
+#' bare soil, get the minimum Z.om of 0.005 m). Only needed for method = "Perrier"
 #' @param mountainous     Logical. If TRUE applies the empirical adjustment for
 #' the effects of general terrain roughness on momentum and heat transfer
 #' (Allen et al., 2007); needs surface.model
@@ -99,8 +100,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
       stop("fLAI must be a number (or a raster) between 0 and 1", call. = FALSE)
     }
     if(ras(h)){
-      if(!isTRUE(terra::global(h, "min", na.rm = TRUE)[1, 1] > 0)){
-        stop("h (crop height, m) must be above 0", call. = FALSE)
+      # 0 (or NA) cells, e.g. bare soil, end at the minimum roughness of 0.005 m
+      if(!isTRUE(terra::global(h, "min", na.rm = TRUE)[1, 1] >= 0)){
+        stop("h (crop height, m) cannot be negative", call. = FALSE)
       }
     } else if(!is.numeric(h) || length(h) != 1 || !isTRUE(h > 0)){
       stop("h (crop height, m) must be a number (or a raster) above 0", call. = FALSE)

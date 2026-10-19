@@ -149,6 +149,10 @@ Fixes that change results:
 
 New:
 
+* METRIC.EB(Zom.method = "Perrier") has the argument crop.height (a number or a
+  raster of the crop height, m) as an alternative to h in extraParameters;
+  cells with 0 or NA (bare soil) get the minimum roughness of 0.005 m.
+
 * ETperiod() adds up the ET of a period (a month, a season) from the ETrF of
   several images, as in Allen et al. (2007), Eqs. 58 and 59: ETrF is
   interpolated for each day, pixel by pixel (cloud-masked dates are skipped),

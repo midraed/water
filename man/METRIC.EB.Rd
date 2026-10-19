@@ -31,7 +31,8 @@ METRIC.EB(
   Kt = 1,
   anchors.control = NULL,
   calcH.control = NULL,
-  plots = interactive()
+  plots = interactive(),
+  crop.height = NULL
 )
 }
 \arguments{
@@ -150,6 +151,11 @@ some of its elements)}
 
 \item{plots}{Logical. If TRUE the anchors and the iteration of H are plotted (default:
 only in interactive sessions)}
+
+\item{crop.height}{Only for Zom.method = "Perrier": crop height in m, a
+number or a SpatRaster on the grid of the image (e.g. rasterized from a
+field map), instead of h in extraParameters. Cells with 0 or NA (bare soil,
+roads) get the minimum Z.om of 0.005 m. Default NULL.}
 }
 \value{
 An object of class \code{waterLSEB}, a list with the elements
