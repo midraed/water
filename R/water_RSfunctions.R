@@ -271,12 +271,20 @@ calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
   }
   ### Ro TOA L7
   if(sat=="L7"){
-    MTL <- readLines(findMTL(if(!missing(MTL)) MTL), warn=FALSE)
+    MTL.file <- findMTL(if(!missing(MTL)) MTL)
+    MTL <- readLines(MTL.file, warn=FALSE)
     ESUN <- c(1997, 1812, 1533, 1039, 230.8, 84.90) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
     ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
+    # the calibration of the scene (it depends on the gain state of each band)
+    # when the MTL file has it
+    rad.keys <- function(key) paste0(key, c(1:5, 7))
+    cal <- tryCatch(list(Gain = mtlValues(MTL.file, rad.keys("RADIANCE_MULT_BAND_")),
+                         Bias = mtlValues(MTL.file, rad.keys("RADIANCE_ADD_BAND_"))),
+                    error = function(e) NULL)
+    if(!is.null(cal)){Gain <- unname(cal$Gain); Bias <- unname(cal$Bias)}
     sat.datetime <- as.POSIXlt(mtlDateTime(MTL))
     DOY <-  sat.datetime$yday +1
     d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))

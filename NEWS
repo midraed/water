@@ -249,6 +249,11 @@ Landsat 8 and 9 (Collection 2):
 
 Other changes and fixes:
 
+* calcTOAr() for Landsat 7 takes the radiance gains and offsets of the scene
+  from the MTL file (RADIANCE_MULT_BAND_n, RADIANCE_ADD_BAND_n), which depend
+  on the gain state of each band; the Landsat 7 Handbook values are used
+  only if the MTL file does not have them. The example scene is unchanged.
+
 * calcAnchors(): works when the weather station is outside the image;
   "flexible" relaxes the criteria near the station and then, with a
   warning, in the whole image; failed selections explain what to check;
