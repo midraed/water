@@ -94,11 +94,14 @@ by.name <- function(data, columns, ...) {
               height = 2, tz = "UTC", ...)
 }
 swapped <- july[, c("datetime", "temp", "RH", "wind", "radiation", "rain")]
-ws.named <- expect_warning(by.name(swapped, c(datetime = 1, temp = 2, RH = 3, wind = 4,
+ws.named <- expect_warning(by.name(swapped, c(date = 1, time = 1, temp = 2, RH = 3, wind = 4,
                                               radiation = 5, rain = 6), MTL = mtl.july),
                            "matched by name")
 stopifnot(isTRUE(all.equal(ws.named$alldata, ref$alldata)),
           isTRUE(all.equal(ws.named$at.sat, ref$at.sat)))
+ws.dt <- by.name(swapped, c(datetime = 1, temp = 2, RH = 3, wind = 4, radiation = 5, rain = 6),
+                 MTL = mtl.july)
+stopifnot(isTRUE(all.equal(ws.dt$alldata, ref$alldata)))
 expect_error(by.name(july, c(datetime = 1, humidity = 4)), "Unknown names in columns")
 expect_error(by.name(july, c(datetime = 1, radiation = 2, wind = 3, RH = 4)),
              "columns has no \"temp\"")

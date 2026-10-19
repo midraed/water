@@ -373,6 +373,7 @@ columnsByName <- function(columns){
   roles <- c("date", "time", "radiation", "wind", "RH", "temp", "rain")
   # what the vector meant when only its order was used
   old <- unname(c(columns, rep(NA, 7))[1:7])
+  columns.in <- columns
   nm <- names(columns)
   nm[nm == "pp"] <- "rain"
   unknown <- nm[is.na(nm) | !nm %in% c(roles, "datetime")]
@@ -399,7 +400,7 @@ columnsByName <- function(columns){
     stop("columns has no ", paste0("\"", needed, "\"", collapse = ", "), call. = FALSE)
   }
   positional <- unname(columns[roles])  # NA for a missing rain
-  if(!identical(as.numeric(old), as.numeric(positional))){
+  if(!"datetime" %in% names(columns.in) && !identical(as.numeric(old), as.numeric(positional))){
     warn("columns are matched by name (before version 1.0 only their ",
             "order was used): check that the names are right")
   }

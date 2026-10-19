@@ -1,70 +1,24 @@
-## Resubmission 0.3.2
+## Submission water 1.0
 
-Previous submission had an error:
-Found the following (possibly) invalid URLs:
-  URL: https://cran.r-project.org/web/packages/water/
-    From: README.md
-    Status: 200
-    Message: OK
-    CRAN URL not in canonical form
-  The canonical URL of the CRAN page for a package is
-  https://cran.r-project.org/package=pkgname
-
-* URL was corrected.
-
+water was archived on CRAN on 2021-10-05 (check problems not corrected in
+time), so this is a new submission of a package that was on CRAN. Version
+1.0 is a large update: it was migrated from raster/sp to terra/sf, supports
+Landsat 8 and 9 Collection 2 Level-2 products, and fixes many errors in the
+energy balance (see NEWS).
 
 ## Test environments
-* local linux install, 3.2.5
-* win-builder (devel and release)
+* local Windows 11, R 4.5.3 (R CMD check --as-cran, with --run-donttest)
 
-## R CMD check
-  results
+## R CMD check results
 There were no ERRORs or WARNINGs.
 
-There
-  was 1 NOTE:
+NOTEs:
 
-* Possibly mis-spelled words in
-  DESCRIPTION:
-  Evapotranspiration (2:15)
+* CRAN incoming feasibility: "New submission", "Package was archived on
+  CRAN" (see above).
+* On the local machine pandoc is not installed, so README.md and NEWS.md and
+  the vignettes could not be checked there.
 
-  evapotranspiration (9:54)
-
-Is not an error. The
-  first use is upper case because it's on the title.
-
-
-
-
-################################################################################
-
-
-## Resubmission 0.3
-This is a resubmission. In this version I have:
-
-* Found (possibly) invalid URLs
-
-SOLVED. Was a github.com repository marked as private, now marked as public.
-
-* Title not in title case: SOLVED
-
-* Author field differs from that derived from Authors@R: SOLVED
-
-* Problems in NAMESPACE: ALL SOLVED
-
-- ET24h: no visible global function definition for 'colorRampPalette': OK
-- calcAnchors: no visible global function definition for 'points': OK
-- calcH: no visible global function definition for 'points': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'par': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'abline': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'points': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'axis': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'mtext': OK
-- plot.waterWeatherStation: no visible global function definition for
-  'axis.POSIXct': OK
-- read.WSdata: no visible global function definition for 'read.csv': OK
+## Not checked locally
+win-builder, r-hub and macOS checks, and the vignette build, are to be run
+before submission.
