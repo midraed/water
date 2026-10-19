@@ -2,7 +2,7 @@ water:
 change log. From 09/09/2015. Most recent changes first / on top.
 Guillermo OLMEDO
 -----------------------------------------------------------------
-VERSION 0.8.5
+VERSION 1.0
 
 Fixes that change results:
 
@@ -55,6 +55,17 @@ Fixes that change results:
   the instantaneous ETr at the overpass, as calcH() does (ETrF =
   instantaneous ET / instantaneous ETr).
 * albedo(): for MODIS only 6 of the 7 coefficients were used (#78).
+* loadImageSR() masks pixels where any band is outside the valid range of
+  the product (7273 to 43636 DN, reflectance 0 to 1), not only the fill
+  value, in every layer (surface temperature included), and says how many.
+  In the Landsat 8 example, 109 pixels (0.4%) were negative and raised the
+  maximum NDVI from 0.923 to 1.88, which moved the NDVI threshold of the
+  cold anchors: the cold anchors change, and mean LE and daily ET increase
+  by 4.4% on the cells valid before and after. Some masked pixels are
+  dense crops with slightly negative blue reflectance (an atmospheric
+  over-correction of the product), so the outputs have small holes over
+  some of the best-watered fields. loadImage() sets the Level-1 fill (DN 0)
+  to NA: it gave Ts = -53.6 K and entered the anchor search (#85).
 * Example data: the wind speed in apples.csv is in km/h, but the
   read.WSdata() example and the METRIC vignettes read it as m/s. The daily
   reference ET of the example was 10.2 instead of 7.0 mm, and the daily ET

@@ -31,6 +31,7 @@ from a folder. Landsat file names can follow the Collection 1/2 naming
 the pre-Collection naming (e.g. \code{LC82320832016040LGN00_band2.tif});
 Level-2 surface reflectance files are skipped (use loadImageSR()). If the
 folder holds more than one image, the first one is used, with a warning.
+For Landsat, the fill value (DN 0) is set to NA.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr

@@ -223,6 +223,12 @@ for (prefix in c("LC08_L1TP_232083_20160209_20200907_02_RT_B",
   stopifnot(terra::nlyr(img) == 8, terra::global(img$Thermal2, "max")[1, 1] == 11)
 }
 expect_error(loadImage(path = tmp, sat = "L8"), "No Landsat Level-1 band files")
+# DN 0 is fill (#85)
+z.dir <- make.scene(tempfile(tmpdir = tmp), "LC08_L1TP_232083_20160209_20200907_02_T1_B")
+terra::writeRaster(terra::rast(nrows = 3, ncols = 3, vals = c(0, rep(2, 8))), overwrite = TRUE,
+                   file.path(z.dir, "LC08_L1TP_232083_20160209_20200907_02_T1_B2.TIF"))
+z.img <- terra::values(loadImage(path = z.dir, sat = "L8"))
+stopifnot(is.na(z.img[1, "B"]), !anyNA(z.img[-1, ]))
 
 ## loadImageSR(): all six bands are required
 sr.dir <- tempfile(tmpdir = tmp); dir.create(sr.dir)
@@ -238,6 +244,23 @@ for (b in 2:7) {
                      file.path(espa.dir, sprintf("LC82320832016040LGN00_sr_band%d.tif", b)))
 }
 expect_error(loadImageSR(espa.dir), "No Collection 2 Level-2")
+# fill and values outside the valid range (reflectance 0 to 1) are masked in
+# every layer, surface temperature included (#85)
+sr.ok <- tempfile(tmpdir = tmp); dir.create(sr.ok)
+for (b in 2:7) {
+  v <- rep(10000, 9); if (b == 2) v[1:3] <- c(5000, 0, 50000)
+  terra::writeRaster(terra::rast(nrows = 3, ncols = 3, vals = v), datatype = "INT2U",
+                     file.path(sr.ok, sprintf("LC08_X_SR_B%d.TIF", b)))
+}
+terra::writeRaster(terra::rast(nrows = 3, ncols = 3, vals = 40000), datatype = "INT2U",
+                   file.path(sr.ok, "LC08_X_ST_B10.TIF"))
+msg <- character()
+sr3 <- withCallingHandlers(loadImageSR(sr.ok), message = function(m) {
+  msg <<- c(msg, conditionMessage(m)); invokeRestart("muffleMessage")
+})
+v3 <- terra::values(sr3)
+stopifnot(all(is.na(v3[1:3, ])), !anyNA(v3[4:9, ]),
+          all(v3[4:9, "B"] == 10000 * 0.0000275 - 0.2), any(grepl("^3 pixels", msg)))
 
 ## cfmask(): Collection 2 QA_PIXEL bits (#55)
 img <- terra::rast(nrows = 1, ncols = 5, vals = 1:5)

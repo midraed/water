@@ -6,6 +6,7 @@
 #' the pre-Collection naming (e.g. \code{LC82320832016040LGN00_band2.tif});
 #' Level-2 surface reflectance files are skipped (use loadImageSR()). If the
 #' folder holds more than one image, the first one is used, with a warning.
+#' For Landsat, the fill value (DN 0) is set to NA.
 #' @param path  folder where band files are stored
 #' @param sat   "L7" for Landsat 7, "L8" for Landsat 8, "L9" for Landsat 9,
 #' "MODIS" for MODIS or "auto" to detect the Landsat satellite from the
@@ -87,6 +88,8 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   }
   raw.image <- do.call(c, stack1)
   raw.image <- aoiCrop(raw.image, aoi)
+  # Level-1 fill: DN 0 (it gave Ts of -53.6 K and entered the anchor search)
+  if(sat %in% c("L7", "L8", "L9")){raw.image[raw.image == 0] <- NA}
   if(sat=="MODIS"){for(i in 1:7){
     raw.image[[i]] <- raw.image[[i]]*0.0001
   }
@@ -106,8 +109,11 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' @description
 #' Loads Landsat 8 or 9 Collection 2 Level-2 surface reflectance bands 2 to 7
 #' (\code{*_SR_B2.TIF} to \code{*_SR_B7.TIF}) from a folder, scaled as
-#' DN * 0.0000275 - 0.2, with the fill value 0 set to NA. All six bands are
-#' required, as other functions use them by position.
+#' DN * 0.0000275 - 0.2. Pixels where any band is fill (0) or outside the
+#' valid range of the product (7273 to 43636 DN, reflectance 0 to 1) are set
+#' to NA in all layers, with a message giving the number of out-of-range
+#' pixels: slightly negative blue reflectance over dense crops is masked too.
+#' All six bands are required.
 #' If \code{*_ST_B10.TIF} is present it is added as the last layer, "Band_10",
 #' in Kelvin (DN * 0.00341802 + 149, fill value 0 set to NA).
 #' It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
@@ -143,7 +149,17 @@ loadImageSR <-  function(path = getwd(),  aoi){
   image_SR <- rast(files[ord])
   image_SR <- aoiCrop(image_SR, aoi)
   bandnames <- unname(bandnames[band[ord]])
-  image_SR[image_SR == 0] <- NA  # Collection 2 fill value
+  # Collection 2: fill 0 and valid range 7273-43636 DN (reflectance 0 to 1).
+  # A pixel with any band outside it is masked in every layer
+  # (the files may also flag the fill as nodata, read as NA)
+  invalid <- any(is.na(image_SR) | image_SR < 7273 | image_SR > 43636)
+  fill <- all(is.na(image_SR) | image_SR == 0)
+  out.of.range <- global(invalid & !fill, "sum", na.rm = TRUE)[1, 1]
+  if(out.of.range > 0){
+    message(out.of.range, " pixels (", signif(100 * out.of.range / ncell(image_SR), 2),
+            "%) with surface reflectance below 0 or above 1 (outside the valid ",
+            "range of the product) were masked")
+  }
   image_SR <- image_SR * 0.0000275 - 0.2
   # L8/L9 surface temperature, appended last so SR band positions don't change
   st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = T)
@@ -153,6 +169,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
     image_SR <- c(image_SR, st * 0.00341802 + 149)
     bandnames <- c(bandnames, "Band_10")
   }
+  image_SR <- mask(image_SR, invalid, maskvalues = 1)
   image_SR <- saveLoadClean(imagestack = image_SR,
                              stack.names = bandnames, 
                              file = "image_SR", 

@@ -171,10 +171,11 @@ stopifnot(terra::nlyr(terra::rast(f)) == 5)
 ## Pinned results: means of the layers and anchor cells, so that changes in
 ## the results are deliberate (relative tolerance, for other platforms)
 near <- function(x, y, tol = 1e-6) all(abs(x - y) <= tol * abs(y))
-pin.L8 <- c(576.943941776, 89.495516469, 243.130078300, 249.226700745, 311.236334000)
+# (#85: surface reflectance outside 0-1 masked; mean LE +4.2%)
+pin.L8 <- c(576.7867019656, 89.5582897965, 232.6072265396, 259.6976248626, 311.2443506301)
 stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
-                   c(4517, 11142, 23763, 24554, 16283, 20877, 11120, 17373, 18527, 6791)))
+                   c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
 
 ## Cold pixels and ET24h() use the same alfalfa reference ET (Allen et al.
 ## 2007): the reference ET fraction (ETrF) of the cold pixels is ETp.coef
