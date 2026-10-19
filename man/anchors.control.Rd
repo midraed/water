@@ -8,7 +8,13 @@ anchors.control(
   deltaTemp = 5,
   minDist = 500,
   WSbuffer = 30000,
-  min.candidates = 20
+  min.candidates = 20,
+  cold.NDVI = 0.95,
+  cold.LAI = 4,
+  cold.fraction = 0.2,
+  hot.NDVI = 0.1,
+  hot.fraction = 0.2,
+  homogeneity = 1.5
 )
 }
 \arguments{
@@ -25,6 +31,23 @@ is within WSbuffer, the whole image is used, with a warning}
 
 \item{min.candidates}{minimum number of hot and of cold candidates below
 which a warning is given (the area may be too small or too homogeneous)}
+
+\item{cold.NDVI}{anchors.method = "percentile": cold candidates have
+NDVI at or above this quantile of the NDVI of the area (default 0.95)}
+
+\item{cold.LAI}{"percentile": and LAI of at least cold.LAI (default 4)}
+
+\item{cold.fraction}{"percentile": the coldest fraction of the cold
+candidates are the cold anchors (default 0.2)}
+
+\item{hot.NDVI}{"percentile": hot candidates have NDVI at or below
+this quantile (default 0.1), above 0 (no water) and albedo 0.10 to 0.35}
+
+\item{hot.fraction}{"percentile": the hottest fraction of the hot
+candidates are the hot anchors (default 0.2)}
+
+\item{homogeneity}{"percentile": maximum standard deviation of Ts (K) in
+the 5 x 5 pixels around a candidate (default 1.5)}
 }
 \value{
 A list of class waterControl with the parameters.

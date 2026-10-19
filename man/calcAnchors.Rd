@@ -12,14 +12,15 @@ calcAnchors(
   Z.om,
   n = 1,
   aoi,
-  anchors.method = "flexible",
+  anchors.method = "percentile",
   WeatherStation,
   plots = TRUE,
   deltaTemp = 5,
   minDist = 500,
   WSbuffer = 30000,
   verbose = FALSE,
-  min.candidates = 20
+  min.candidates = 20,
+  control = NULL
 )
 }
 \arguments{
@@ -41,12 +42,13 @@ give a warning.}
 
 \item{Z.om}{momentum roughness length, from momentumRoughnessLength()}
 
-\item{n}{number of pairs of anchor pixels to select}
+\item{n}{number of pairs of anchor pixels to select (not used
+by "percentile")}
 
 \item{aoi}{Not used; kept for backward compatibility}
 
-\item{anchors.method}{method for the selection of anchor pixels: "flexible"
-(default), "best" or "random". See Details.}
+\item{anchors.method}{method for the selection of anchor pixels:
+"percentile" (default), "flexible", "best" or "random". See Details.}
 
 \item{WeatherStation}{Optional. waterWeatherStation object (see
 read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
@@ -72,6 +74,9 @@ pixel is within WSbuffer, the whole image is used, with a warning}
 \item{min.candidates}{minimum number of hot and of cold candidates (default
 20) below which a warning is given: the area may be too small or too
 homogeneous for the calibration}
+
+\item{control}{parameters of anchors.method = "percentile", a list
+from \code{\link{anchors.control}}}
 }
 \value{
 A data.frame with one row per anchor pixel and columns pixel (cell
@@ -89,7 +94,20 @@ pixels with well-watered full-cover vegetation and hot pixels with dry bare
 soil.
 }
 \details{
-Cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
+anchors.method = "percentile" (default) uses criteria relative to the
+scene, in the spirit of the automated calibration of Allen et al. (2013)
+and Morton et al. (2013): cold candidates are full-cover vegetation, with
+NDVI at or above its 95th percentile in the area and LAI of at least 4;
+hot candidates are bare soil, with NDVI at or below its 10th percentile,
+NDVI above 0 (no water) and albedo 0.10 to 0.35 (no urban surfaces or
+bright rock). Candidates must have a homogeneous surface temperature (sd of
+Ts in the 5 x 5 pixels around them up to 1.5 K). The coldest 20\% of the
+cold candidates and the hottest 20\% of the hot candidates are the anchors,
+and calcH() uses their means. The candidates are searched within WSbuffer
+of the weather station, or in the whole image if there are none. The
+parameters are in \code{\link{anchors.control}}.
+
+For the other methods, cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
 within 0.15 of the maximum NDVI of the image and Ts below the threshold given
 by deltaTemp. Hot candidates have albedo 0.13 to 0.15, NDVI 0.1 to 0.28,
 Z.om up to 0.005 and Ts above the threshold given by deltaTemp.
@@ -105,6 +123,17 @@ image, with a warning. The old names "CITRA-MCB" and "CITRA-MCBbc" (now
 }
 \references{
 CITRA and MCB (personal communication)
+
+Allen, R. G., Burnett, B., Kramber, W., Huntington, J., Kjaersgaard, J.,
+Kilic, A., Kelly, C., & Trezza, R. (2013). Automated calibration of the
+METRIC-Landsat evapotranspiration process. Journal of the American Water
+Resources Association, 49(3), 563-576. https://doi.org/10.1111/jawr.12056
+
+Morton, C. G., Huntington, J. L., Pohll, G. M., Allen, R. G., McGwire, K. C.,
+& Bassett, S. D. (2013). Assessing calibration uncertainty and automation
+for estimating evapotranspiration from agricultural areas using METRIC.
+Journal of the American Water Resources Association, 49(3), 549-562.
+https://doi.org/10.1111/jawr.12054
 }
 \seealso{
 Other sensible heat flux functions:

@@ -202,7 +202,7 @@ waterChoices <- list(
   LST.method = c("auto", "L2", "METRIC", "SW"),
   G.method = c("Tasumi", "Bastiaanssen"),
   Zom.method = c("short.crops", "custom", "Perrier"),
-  anchors.method = c("flexible", "best", "random")
+  anchors.method = c("percentile", "flexible", "best", "random")
 )
 
 # anchors.method, with the old CITRA names mapped (deprecated)

@@ -20,7 +20,7 @@ METRIC.EB(
   LAI.method = "metric2010",
   L = 0.1,
   Zom.method = "short.crops",
-  anchors.method = "flexible",
+  anchors.method = "percentile",
   anchors,
   n = 1,
   ETp.coef = 1.05,
@@ -93,7 +93,8 @@ length. Use "short.crops" for short crops methods from Allen et al (2007);
 Perrier equation as in Santos et al (2012) and Pocas et al (2014).}
 
 \item{anchors.method}{method for the automatic selection of the anchor
-pixels: "flexible" (default), "best" or "random". See \code{\link{calcAnchors}}}
+pixels: "percentile" (default), "flexible", "best" or "random". See
+\code{\link{calcAnchors}}}
 
 \item{anchors}{data.frame with X, Y (coordinates in the CRS of the
 image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
@@ -102,7 +103,8 @@ automatically with calcAnchors(). They are checked by calcH(): type "hot" or
 "cold" (case ignored), inside the image, inputs not NA there, and the hot
 anchors at least 5 K warmer than the cold ones}
 
-\item{n}{number of pairs of anchor pixels to select}
+\item{n}{number of pairs of anchor pixels to select (not
+used by anchors.method = "percentile")}
 
 \item{ETp.coef}{ratio of the ET of the cold pixels to the
 instantaneous alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)

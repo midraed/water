@@ -213,7 +213,7 @@ stopifnot(any(grepl("not masked with cfmask", cloud.msg)),
 image.SR <- cfmask(path = c2, image = loadImageSR(c2))
 EB <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                       WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                      n = 5, Z.om.ws = 0.03))
+                      n = 5, Z.om.ws = 0.03, anchors.method = "flexible"))
 stopifnot(inherits(EB, "waterLSEB"), nrow(EB$anchors) == 10)
 invisible(utils::capture.output(print(EB)))
 f <- tempfile(fileext = ".tif")
@@ -230,15 +230,31 @@ stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
 
+## anchors.method = "percentile", the default (#92): scene-relative criteria.
+## ETrF > 1.1 on 0.6% of the pixels (15.8% with "flexible", n = 5)
+EBpct <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                                          WeatherStation = WS, MTL = MTL.L2,
+                                          alb.coeff = "Olmedo", Z.om.ws = 0.03)))
+pin.pct <- c(576.7867019656, 89.5582897965, 264.1775030905, 223.7056089964, 311.2443506301)
+ndvi.c2 <- (image.SR$NIR - image.SR$R) / (image.SR$NIR + image.SR$R)
+cold.pct <- EBpct$anchors[EBpct$anchors$type == "cold", ]
+hot.pct <- EBpct$anchors[EBpct$anchors$type == "hot", ]
+ETrF.pct <- terra::values(quiet(suppressMessages(ET24h(EBpct)))$ETrF)[, 1]
+stopifnot(near(terra::global(EBpct$EB, "mean", na.rm = TRUE)[, 1], pin.pct),
+          table(EBpct$anchors$type)[["cold"]] == 98, table(EBpct$anchors$type)[["hot"]] == 421,
+          all(cold.pct$LAI >= 3.995), all(hot.pct$NDVI > 0),
+          all(cold.pct$NDVI >= round(stats::quantile(terra::values(ndvi.c2), 0.95, na.rm = TRUE), 2) - 0.005),
+          mean(ETrF.pct > 1.1, na.rm = TRUE) < 0.01)
+
 ## anchors.control and calcH.control (#102); the calcAnchors() parameters
 ## in extraParameters still work, with a message
 EBctl <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                          WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                         n = 5, Z.om.ws = 0.03, anchors.control = list(minDist = 500),
+                         n = 5, Z.om.ws = 0.03, anchors.method = "flexible", anchors.control = list(minDist = 500),
                          calcH.control = calcH.control(maxit = 20)))
 EBold <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                                           WeatherStation = WS, MTL = MTL.L2,
-                                          alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03,
+                                          alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03, anchors.method = "flexible",
                                           extraParameters = c(minDist = 500))))
 stopifnot(maxdiff(EBctl$EB$LatentHeat, EB$EB$LatentHeat) == 0,
           maxdiff(EBold$EB$LatentHeat, EB$EB$LatentHeat) == 0)
@@ -329,7 +345,7 @@ relaxed$flex <- 0.05
 relaxed$NDVI[relaxed$type == "cold"] <- 0.7
 EBflex <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                           WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
-                          anchors = relaxed, Z.om.ws = 0.03))
+                          anchors = relaxed, anchors.method = "flexible", Z.om.ws = 0.03))
 EBkc <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                         WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
                         anchors = relaxed, anchors.method = "best", Z.om.ws = 0.03,
@@ -427,7 +443,7 @@ expect_error(METRIC.EB(image.SR = "x", sat = "L7", LST.method = "L2"), "only for
 
 ## METRIC.EB() with Landsat 7 digital numbers, as in the METRIC_simple vignette
 EB7 <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, n = 5,
-                       sat = "L7", thermalband = L7$Thermal1))
+                       sat = "L7", thermalband = L7$Thermal1, anchors.method = "flexible"))
 pin.L7 <- c(562.8423517407, 82.3828585967, 184.5625226436, 295.8988091457, 303.7011250221)
 stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),

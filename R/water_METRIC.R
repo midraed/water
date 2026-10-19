@@ -313,14 +313,16 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' "custom" for custom method also in Allen et al (2007); Or "Perrier" to use
 #' Perrier equation as in Santos et al (2012) and Pocas et al (2014).
 #' @param anchors.method   method for the automatic selection of the anchor
-#' pixels: "flexible" (default), "best" or "random". See \code{\link{calcAnchors}}
+#' pixels: "percentile" (default), "flexible", "best" or "random". See
+#' \code{\link{calcAnchors}}
 #' @param anchors          data.frame with X, Y (coordinates in the CRS of the
 #' image) and type ("hot" or "cold") columns, e.g. from calcAnchors(), or an sf
 #' POINT object with a type column. If missing, the anchors are selected
 #' automatically with calcAnchors(). They are checked by calcH(): type "hot" or
 #' "cold" (case ignored), inside the image, inputs not NA there, and the hot
 #' anchors at least 5 K warmer than the cold ones
-#' @param n                number of pairs of anchor pixels to select
+#' @param n                number of pairs of anchor pixels to select (not
+#' used by anchors.method = "percentile")
 #' @param ETp.coef         ratio of the ET of the cold pixels to the
 #' instantaneous alfalfa reference ET (ETr) at the satellite overpass. Allen et al. (2007)
 #' use 1.05, the default. It can be updated with anchors.method = "flexible"
@@ -430,7 +432,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi, G.method = "Tasumi",
                       alb.coeff = "Tasumi", LST.method = "auto",
                       LAI.method = "metric2010", L = 0.1,
-                      Zom.method = "short.crops", anchors.method = "flexible",
+                      Zom.method = "short.crops", anchors.method = "percentile",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
                       verbose = FALSE, extraParameters = vector(), surf.temp,
                       Kt = 1, anchors.control = NULL, calcH.control = NULL){
@@ -512,8 +514,15 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                   minDist = anchors.control$minDist,
                   WSbuffer = anchors.control$WSbuffer,
                   min.candidates = anchors.control$min.candidates,
+                  control = anchors.control,
                   verbose = verbose))
-    print(anchors)
+    if(nrow(anchors) > 20){
+      # many anchors ("percentile"): their number and mean values
+      print(do.call(rbind, lapply(split(anchors, anchors$type), function(a){
+        data.frame(type = a$type[1], n = nrow(a), Ts = mean(a$Ts),
+                   LAI = mean(a$LAI), NDVI = mean(a$NDVI))
+      })), row.names = FALSE)
+    } else print(anchors)
   }
   #setTxtProgressBar(pb, 45)
   if(anchors.method == "flexible" && !is.null(anchors$flex)){

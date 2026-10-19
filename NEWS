@@ -19,6 +19,20 @@ Fixes that change results:
   test case of the RefET package (ASCE method) within 1e-5 mm/h.
 * dailyET() accepts a Date for date, and returns NA with a warning when the
   records do not cover the day (it summed the hours available) (#90).
+* Anchor pixels (#92): new default anchors.method = "percentile", with
+  criteria relative to the scene, in the spirit of the automated
+  calibration of Allen et al. (2013) and Morton et al. (2013): cold
+  candidates have NDVI at or above its 95th percentile and LAI of at least
+  4; hot candidates NDVI at or below its 10th percentile, NDVI above 0 and
+  albedo 0.10 to 0.35 (no water, urban surfaces or bright rock); both with
+  a homogeneous surface temperature (sd up to 1.5 K in 5 x 5 pixels); the
+  coldest and hottest 20% are the anchors, averaged by calcH(). With the
+  fixed windows of "flexible" (n = 5), the Landsat 8 example had ETrF >
+  1.1 on 15.8% of the pixels (cold anchors warmer than many crops); with
+  "percentile", 0.6%; mean LE 255.5 -> 223.7 W/m2 (-12.5%), daily ET 4.13 -> 3.62 mm;
+  Landsat 7 example mean LE -5.6%. The other methods are unchanged; use
+  anchors.method = "flexible" for the old default. Parameters in
+  anchors.control().
 * Land surface temperature (#95): LST.method = "auto" (new default) uses
   the Level-2 surface temperature (image.SR$Band_10) for Landsat 8 and 9
   when it is present, also when image.DN is passed (before, Ts was
@@ -276,6 +290,8 @@ Behaviour changes to check in existing scripts:
   names (e.g. ET = "ETR", G.method = "T") are errors (#82).
 * LST.method = "SC" is an error (removed); the default is now "auto"
   (#95).
+* The default anchors.method is now "percentile" (#92); pass
+  anchors.method = "flexible" to reproduce earlier results.
 * Pass MTL explicitly: it is no longer searched in the working directory;
   waterOptions(autoAoi) is ignored, with a warning: pass aoi instead (#87).
 * dailyET(): the day is now taken in the time zone of the station records,

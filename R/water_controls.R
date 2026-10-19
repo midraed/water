@@ -11,6 +11,17 @@
 #' is within WSbuffer, the whole image is used, with a warning
 #' @param min.candidates  minimum number of hot and of cold candidates below
 #' which a warning is given (the area may be too small or too homogeneous)
+#' @param cold.NDVI      anchors.method = "percentile": cold candidates have
+#' NDVI at or above this quantile of the NDVI of the area (default 0.95)
+#' @param cold.LAI       "percentile": and LAI of at least cold.LAI (default 4)
+#' @param cold.fraction  "percentile": the coldest fraction of the cold
+#' candidates are the cold anchors (default 0.2)
+#' @param hot.NDVI       "percentile": hot candidates have NDVI at or below
+#' this quantile (default 0.1), above 0 (no water) and albedo 0.10 to 0.35
+#' @param hot.fraction   "percentile": the hottest fraction of the hot
+#' candidates are the hot anchors (default 0.2)
+#' @param homogeneity    "percentile": maximum standard deviation of Ts (K) in
+#' the 5 x 5 pixels around a candidate (default 1.5)
 #' @return A list of class waterControl with the parameters.
 #' @family METRIC model functions
 #' @seealso \code{\link{calcAnchors}}
@@ -18,11 +29,23 @@
 #' anchors.control(minDist = 1000)
 #' @export
 anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
-                            min.candidates = 20){
+                            min.candidates = 20, cold.NDVI = 0.95, cold.LAI = 4,
+                            cold.fraction = 0.2, hot.NDVI = 0.1, hot.fraction = 0.2,
+                            homogeneity = 1.5){
   positive(deltaTemp, "deltaTemp"); positive(minDist, "minDist", zero = TRUE)
   positive(WSbuffer, "WSbuffer"); positive(min.candidates, "min.candidates", zero = TRUE)
+  for(p in c("cold.NDVI", "cold.fraction", "hot.NDVI", "hot.fraction")){
+    v <- get(p)
+    if(!is.numeric(v) || length(v) != 1 || !isTRUE(v > 0 && v <= 1)){
+      stop(p, " must be a number above 0 and up to 1", call. = FALSE)
+    }
+  }
+  positive(cold.LAI, "cold.LAI", zero = TRUE); positive(homogeneity, "homogeneity")
   structure(list(deltaTemp = deltaTemp, minDist = minDist, WSbuffer = WSbuffer,
-                 min.candidates = min.candidates),
+                 min.candidates = min.candidates, cold.NDVI = cold.NDVI,
+                 cold.LAI = cold.LAI, cold.fraction = cold.fraction,
+                 hot.NDVI = hot.NDVI, hot.fraction = hot.fraction,
+                 homogeneity = homogeneity),
             class = c("waterControl", "list"))
 }
 

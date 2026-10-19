@@ -96,10 +96,11 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param LAI              SpatRaster with leaf area index, from LAI()
 #' @param albedo           broadband surface albedo, from albedo()
 #' @param Z.om             momentum roughness length, from momentumRoughnessLength()
-#' @param n                number of pairs of anchor pixels to select
+#' @param n                number of pairs of anchor pixels to select (not used
+#' by "percentile")
 #' @param aoi              Not used; kept for backward compatibility
-#' @param anchors.method   method for the selection of anchor pixels: "flexible"
-#' (default), "best" or "random". See Details.
+#' @param anchors.method   method for the selection of anchor pixels:
+#' "percentile" (default), "flexible", "best" or "random". See Details.
 #' @param WeatherStation   Optional. waterWeatherStation object (see
 #' read.WSdata()). If supplied, the anchors are searched within WSbuffer of the
 #' station
@@ -118,8 +119,23 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param min.candidates   minimum number of hot and of cold candidates (default
 #' 20) below which a warning is given: the area may be too small or too
 #' homogeneous for the calibration
+#' @param control          parameters of anchors.method = "percentile", a list
+#' from \code{\link{anchors.control}}
 #' @details
-#' Cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
+#' anchors.method = "percentile" (default) uses criteria relative to the
+#' scene, in the spirit of the automated calibration of Allen et al. (2013)
+#' and Morton et al. (2013): cold candidates are full-cover vegetation, with
+#' NDVI at or above its 95th percentile in the area and LAI of at least 4;
+#' hot candidates are bare soil, with NDVI at or below its 10th percentile,
+#' NDVI above 0 (no water) and albedo 0.10 to 0.35 (no urban surfaces or
+#' bright rock). Candidates must have a homogeneous surface temperature (sd of
+#' Ts in the 5 x 5 pixels around them up to 1.5 K). The coldest 20\% of the
+#' cold candidates and the hottest 20\% of the hot candidates are the anchors,
+#' and calcH() uses their means. The candidates are searched within WSbuffer
+#' of the weather station, or in the whole image if there are none. The
+#' parameters are in \code{\link{anchors.control}}.
+#'
+#' For the other methods, cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
 #' within 0.15 of the maximum NDVI of the image and Ts below the threshold given
 #' by deltaTemp. Hot candidates have albedo 0.13 to 0.15, NDVI 0.1 to 0.28,
 #' Z.om up to 0.005 and Ts above the threshold given by deltaTemp.
@@ -144,11 +160,23 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @family sensible heat flux functions
 #' @references
 #' CITRA and MCB (personal communication)
+#'
+#' Allen, R. G., Burnett, B., Kramber, W., Huntington, J., Kjaersgaard, J.,
+#' Kilic, A., Kelly, C., & Trezza, R. (2013). Automated calibration of the
+#' METRIC-Landsat evapotranspiration process. Journal of the American Water
+#' Resources Association, 49(3), 563-576. https://doi.org/10.1111/jawr.12056
+#'
+#' Morton, C. G., Huntington, J. L., Pohll, G. M., Allen, R. G., McGwire, K. C.,
+#' & Bassett, S. D. (2013). Assessing calibration uncertainty and automation
+#' for estimating evapotranspiration from agricultural areas using METRIC.
+#' Journal of the American Water Resources Association, 49(3), 549-562.
+#' https://doi.org/10.1111/jawr.12054
 #' @export
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
-                         anchors.method= "flexible", WeatherStation,
+                         anchors.method= "percentile", WeatherStation,
                          plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
-                         verbose=FALSE, min.candidates = 20) {
+                         verbose=FALSE, min.candidates = 20, control = NULL) {
+  control <- controlList(control, "anchors.control")
   sanitizeCellIndex <- function(index) {
     as.integer(stats::na.omit(unlist(index, use.names = FALSE)))
   }
@@ -178,6 +206,12 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     }
   } else {
     WS.buffer <- rast(Ts, vals = 1)
+  }
+  if(anchors.method=="percentile"){
+    selected <- anchorsPercentile(NDVI = NDVI, LAI = LAI, Ts = Ts, albedo = albedo,
+                                  WS.buffer = WS.buffer, control = control)
+    hot <- selected$hot; cold <- selected$cold
+    cold.n <- selected$cold.n; hot.n <- selected$hot.n
   }
   if(anchors.method=="random"){
     minT <- quantile(Ts[LAI>=3&LAI<=6&albedo>=0.18&albedo<=0.25&Z.om>=0.03&
@@ -489,16 +523,14 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     graphics::points(terra::xyFromCell(LAI, sanitizeCellIndex(cold)), col="blue", pch=4)
     if(!missing(WeatherStation)){graphics::points(WSloc, pch=13)}
   }
-  hot.and.cold <- data.frame(pixel=integer(),  X=integer(),
-                             Y=integer(), Ts=double(), LAI=double(), NDVI=double(),
-                             type=factor(levels = c("hot", "cold")))
-  for(i in 1:length(hot)){hot.and.cold[i, ] <- c(hot[i], terra::xyFromCell(LAI, sanitizeCellIndex(hot[i])),
-                                                 Ts[hot[i]][1,1], round(LAI[hot[i]][1,1],2), round(NDVI[hot[i]][1,1],2), "hot")}
-  for(i in 1:length(cold)){hot.and.cold[i+length(hot), ] <- c(cold[i], terra::xyFromCell(LAI, sanitizeCellIndex(cold[i])),
-                                                              Ts[cold[i]][1,1], round(LAI[cold[i]][1,1],2), round(NDVI[cold[i]][1,1],2), "cold")}
-  for(i in 1:5){
-    hot.and.cold[,i] <- as.numeric(hot.and.cold[,i])
-  }
+  cells <- c(hot, cold)
+  xy <- terra::xyFromCell(LAI, cells)
+  at <- function(r){as.numeric(r[cells][[1]])}
+  hot.and.cold <- data.frame(pixel = as.numeric(cells), X = xy[, 1], Y = xy[, 2],
+                             Ts = at(Ts), LAI = round(at(LAI), 2),
+                             NDVI = round(at(NDVI), 2),
+                             type = factor(rep(c("hot", "cold"), c(length(hot), length(cold))),
+                                           levels = c("hot", "cold")))
   if(anchors.method=="flexible"){
     hot.and.cold$flex <- flex.cold
     hot.and.cold$flex[hot.and.cold$type == "hot"] <- flex.hot
@@ -507,6 +539,9 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                   wholeImage = length(coldSearch$inBuffer) == 1),
       hot = list(flex = flex.hot, criteria = optValHot,
                  wholeImage = length(hotSearch$inBuffer) == 1))
+  }
+  if(anchors.method=="percentile"){
+    attr(hot.and.cold, "relaxation") <- selected$relaxation
   }
   attr(hot.and.cold, "candidates") <- c(cold = cold.n, hot = hot.n)
   if(min(cold.n, hot.n) < min.candidates){
@@ -517,6 +552,65 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   return(hot.and.cold)
 }
 
+
+
+# Anchors of anchors.method = "percentile", relative to the scene (in the
+# spirit of the automated calibration of Allen et al., 2013, and Morton et
+# al., 2013): cold candidates have NDVI >= its cold.NDVI quantile and LAI >=
+# cold.LAI; hot candidates NDVI <= its hot.NDVI quantile, NDVI > 0 (no water)
+# and albedo 0.10-0.35 (no urban surfaces or bright rock); both with a
+# homogeneous surface temperature (sd of Ts in 5 x 5 pixels, as the 100 m
+# thermal pixel spans about 3 x 3 Landsat pixels). The coldest cold.fraction
+# of the cold candidates and the hottest hot.fraction of the hot candidates
+# are the anchors. Near the weather station when possible; criteria relaxed
+# when a set is empty
+anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
+  v <- data.frame(NDVI = values(NDVI)[, 1], LAI = values(LAI)[, 1],
+                  Ts = values(Ts)[, 1], albedo = values(albedo)[, 1],
+                  buffer = values(WS.buffer)[, 1] %in% 1)
+  sdTs <- values(terra::focal(Ts, w = 5, fun = "sd", na.rm = TRUE))[, 1]
+  valid <- stats::complete.cases(v[, c("NDVI", "LAI", "Ts", "albedo")])
+  homogeneous <- valid & sdTs <= control$homogeneity & !is.na(sdTs)
+  relax <- list(cold = list(), hot = list())
+  pick <- function(use){
+    q <- stats::quantile(v$NDVI[use], c(control$hot.NDVI, control$cold.NDVI), names = FALSE)
+    cold.ok <- use & v$NDVI >= q[2] & v$LAI >= control$cold.LAI
+    hot.ok <- use & v$NDVI <= q[1] & v$NDVI > 0 & v$albedo >= 0.10 & v$albedo <= 0.35
+    list(cold = cold.ok, hot = hot.ok)
+  }
+  for(inBuffer in c(TRUE, FALSE)){
+    use <- valid & (if(inBuffer) v$buffer else TRUE)
+    if(sum(use) < 25){next}
+    sets <- pick(use)
+    # homogeneous candidates; if there are none, all candidates (with a note)
+    for(type in c("cold", "hot")){
+      h <- sets[[type]] & homogeneous
+      if(any(h)){sets[[type]] <- h} else {relax[[type]]$homogeneity <- FALSE}
+    }
+    # cold: lower the LAI and NDVI limits when there are no candidates
+    LAImin <- control$cold.LAI; qcold <- control$cold.NDVI
+    while(!any(sets$cold) && (LAImin > 3 || qcold > 0.85)){
+      if(LAImin > 3){LAImin <- LAImin - 0.25} else {qcold <- qcold - 0.01}
+      q <- stats::quantile(v$NDVI[use], qcold, names = FALSE)
+      sets$cold <- use & v$NDVI >= q & v$LAI >= LAImin
+      relax$cold$cold.LAI <- LAImin; relax$cold$cold.NDVI <- qcold
+    }
+    if(any(sets$cold) && any(sets$hot)){
+      relax$cold$wholeImage <- relax$hot$wholeImage <- !inBuffer
+      if(!inBuffer && any(v$buffer)){
+        warning("Not enough anchor candidates within WSbuffer of the weather ",
+                "station; searched the whole image", call. = FALSE)
+      }
+      cold.T <- stats::quantile(v$Ts[sets$cold], control$cold.fraction, names = FALSE)
+      hot.T <- stats::quantile(v$Ts[sets$hot], 1 - control$hot.fraction, names = FALSE)
+      return(list(cold = which(sets$cold & v$Ts <= cold.T),
+                  hot = which(sets$hot & v$Ts >= hot.T),
+                  cold.n = sum(sets$cold), hot.n = sum(sets$hot), relaxation = relax))
+    }
+  }
+  stop("Automatic selection of anchors FAILED: no cold (full-cover vegetation) or ",
+       "no hot (dry bare soil) candidates. ", anchorHint(albedo), call. = FALSE)
+}
 
 
 #' Iterative function to estimate H and R.ah
