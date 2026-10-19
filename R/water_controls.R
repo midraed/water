@@ -9,16 +9,20 @@
 #' type
 #' @param WSbuffer   maximum distance (m) to the weather station. If no pixel
 #' is within WSbuffer, the whole image is used, with a warning
+#' @param min.candidates  minimum number of hot and of cold candidates below
+#' which a warning is given (the area may be too small or too homogeneous)
 #' @return A list of class waterControl with the parameters.
 #' @family METRIC model functions
 #' @seealso \code{\link{calcAnchors}}
 #' @examples
 #' anchors.control(minDist = 1000)
 #' @export
-anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000){
+anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
+                            min.candidates = 20){
   positive(deltaTemp, "deltaTemp"); positive(minDist, "minDist", zero = TRUE)
-  positive(WSbuffer, "WSbuffer")
-  structure(list(deltaTemp = deltaTemp, minDist = minDist, WSbuffer = WSbuffer),
+  positive(WSbuffer, "WSbuffer"); positive(min.candidates, "min.candidates", zero = TRUE)
+  structure(list(deltaTemp = deltaTemp, minDist = minDist, WSbuffer = WSbuffer,
+                 min.candidates = min.candidates),
             class = c("waterControl", "list"))
 }
 

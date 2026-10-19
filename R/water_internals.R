@@ -128,6 +128,25 @@ checkIteration <- function(a = 0, b = 0, u = 1){
   invisible(TRUE)
 }
 
+# Message when the scene has clouds (CLOUD_COVER in the MTL file) and none
+# of the images was masked with cfmask(), which tags its output
+checkCloudMask <- function(MTL, ...){
+  images <- Filter(Negate(is.null), list(...))
+  cover <- tryCatch(suppressWarnings(mtlValues(MTL, "CLOUD_COVER")),
+                    error = function(e) NA)
+  if(!length(images) || !isTRUE(cover > 0)){return(invisible(FALSE))}
+  tagged <- vapply(images, function(x){
+    m <- terra::metags(x)
+    "water_cfmask" %in% (if(is.data.frame(m)) m$name else names(m))
+  }, logical(1))
+  if(!any(tagged)){
+    message("The scene has ", cover, "% clouds (CLOUD_COVER in the MTL file) and ",
+            "the image was not masked with cfmask(): clouds and their shadows ",
+            "can be taken as cold anchor pixels")
+  }
+  invisible(!any(tagged))
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){

@@ -456,6 +456,8 @@ cfmask <-  function(path = getwd(), image, cfmask, keep, buffer = 60){
             "contain QA_PIXEL)")
   }
   image <- mask(image, clear)
+  # tag, so that METRIC.EB() knows that clouds were masked
+  terra::metags(image) <- c(water_cfmask = "TRUE")
   return(image)
 }
 

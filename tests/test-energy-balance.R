@@ -191,6 +191,23 @@ for (seed in 1:5) {
                          plots = FALSE, anchors.method = "random"))
   stopifnot(a$pixel[a$type == "hot"] == 95, a$pixel[a$type == "cold"] %in% cold.cells)
 }
+# few candidates (a small or homogeneous area) give a warning (#93)
+syn.a <- expect_warning(calcAnchors(image = syn, Ts = Ts.syn, LAI = set.layer(syn, 4, 0.1, 1),
+                                    albedo = set.layer(syn, 0.2, 0.14, 0.3),
+                                    Z.om = set.layer(syn, 0.05, 0.002, 0.01), n = 1,
+                                    plots = FALSE, anchors.method = "best"),
+                        "anchor candidates")
+stopifnot(attr(syn.a, "candidates")[["cold"]] == 10)
+
+## Clouds: a cloudy scene (CLOUD_COVER) not masked with cfmask() gives a
+## message (#93)
+cloud.msg <- character()
+withCallingHandlers(water:::checkCloudMask(MTL.L2, suppressMessages(loadImageSR(c2))),
+                    message = function(m) {
+                      cloud.msg <<- c(cloud.msg, conditionMessage(m)); invokeRestart("muffleMessage")
+                    })
+stopifnot(any(grepl("not masked with cfmask", cloud.msg)),
+          !water:::checkCloudMask(MTL.L2, cfmask(path = c2, image = loadImageSR(c2))))
 
 ## METRIC.EB() with Collection 2 Level-2 data, cloud mask, print() and writeRaster()
 image.SR <- cfmask(path = c2, image = loadImageSR(c2))
@@ -268,6 +285,8 @@ flat.area[flat.area$type == "hot", c("X", "Y")] <- terra::xyFromCell(Ts.eb, warm
 expect_error(runH(flat.area), "minimum 5 K")
 
 ## calcH(): exact maxit, wind floor, damping, Z.om floor, diagnostics (#94)
+stopifnot(all(EB$calibration$candidates >= 20),  # (#93)
+          EB$calibration$relaxation$cold$flex == EB$anchors$flex[EB$anchors$type == "cold"][1])
 stopifnot(isTRUE(EB$calibration$converged), EB$calibration$iterations <= 20,
           suppressWarnings(runH(df, maxit = 1))$iterations == 1,
           !suppressWarnings(runH(df, maxit = 1))$converged)

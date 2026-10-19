@@ -18,7 +18,8 @@ calcAnchors(
   deltaTemp = 5,
   minDist = 500,
   WSbuffer = 30000,
-  verbose = FALSE
+  verbose = FALSE,
+  min.candidates = 20
 )
 }
 \arguments{
@@ -67,13 +68,19 @@ same type}
 pixel is within WSbuffer, the whole image is used, with a warning}
 
 \item{verbose}{Logical. If TRUE will print additional data to console}
+
+\item{min.candidates}{minimum number of hot and of cold candidates (default
+20) below which a warning is given: the area may be too small or too
+homogeneous for the calibration}
 }
 \value{
 A data.frame with one row per anchor pixel and columns pixel (cell
 number), X and Y (cell coordinates in the CRS of Ts), Ts (K), LAI, NDVI and
 type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
-added: the relaxation applied to the cold-pixel criteria (0 = none, 1 =
-100\%). If plots = TRUE the anchors are also plotted over LAI.
+added: the relaxation applied to the criteria of each type (0 = none, 1 =
+100\%). Attribute candidates gives the number of cold and hot candidates
+and, for "flexible", attribute relaxation the criteria used. If plots =
+TRUE the anchors are also plotted over LAI.
 }
 \description{
 Automatically searches for end members (anchor

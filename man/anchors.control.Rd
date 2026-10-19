@@ -4,7 +4,12 @@
 \alias{anchors.control}
 \title{Parameters for the selection of anchor pixels}
 \usage{
-anchors.control(deltaTemp = 5, minDist = 500, WSbuffer = 30000)
+anchors.control(
+  deltaTemp = 5,
+  minDist = 500,
+  WSbuffer = 30000,
+  min.candidates = 20
+)
 }
 \arguments{
 \item{deltaTemp}{temperature margin (K, default 5): cold candidates must be
@@ -17,6 +22,9 @@ type}
 
 \item{WSbuffer}{maximum distance (m) to the weather station. If no pixel
 is within WSbuffer, the whole image is used, with a warning}
+
+\item{min.candidates}{minimum number of hot and of cold candidates below
+which a warning is given (the area may be too small or too homogeneous)}
 }
 \value{
 A list of class waterControl with the parameters.

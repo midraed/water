@@ -148,7 +148,9 @@ An object of class \code{waterLSEB}, a list with:
   \item{WeatherStation}{the weather station data used.}
   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
   \item{calibration}{list with a and b (dT = a * Ts_datum + b), converged,
-    iterations and u200 (wind speed at 200 m used, m/s), from calcH().}
+    iterations and u200 (wind speed at 200 m used, m/s), from calcH(); and,
+    for automatic anchors, the number of candidates and the relaxation of
+    the criteria, from calcAnchors().}
   \item{methods}{named character vector with the methods and parameters used.}
 }
 }

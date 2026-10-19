@@ -51,6 +51,13 @@ New:
   Kc. The old call with Rn, G, H and Ts gives the same ET24 as before (#91).
 * Single-layer results are named (e.g. "Rn", "G", "H", "albedo", "Z.om",
   "ET24"); they had empty names (#91).
+* Calibration guards (#93): calcAnchors() warns when there are fewer than
+  20 hot or cold candidates (anchors.control(min.candidates = )): the area
+  may be too small or too homogeneous; it returns the candidate counts and,
+  for "flexible", the relaxed criteria of each type (the flex column now has
+  the hot relaxation on the hot rows). METRIC.EB() gives a message when the
+  scene has clouds (CLOUD_COVER) and the image was not masked with
+  cfmask(), and keeps the counts in $calibration.
 * anchors.control() and calcH.control() group the parameters of the anchor
   selection and of the H iteration: METRIC.EB(anchors.control = ,
   calcH.control = ). deltaTemp, minDist and WSbuffer in extraParameters

@@ -115,6 +115,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param WSbuffer         maximum distance (m) to the weather station. If no
 #' pixel is within WSbuffer, the whole image is used, with a warning
 #' @param verbose          Logical. If TRUE will print additional data to console
+#' @param min.candidates   minimum number of hot and of cold candidates (default
+#' 20) below which a warning is given: the area may be too small or too
+#' homogeneous for the calibration
 #' @details
 #' Cold candidates have LAI 3 to 6, albedo 0.18 to 0.25, Z.om 0.03 to 0.08, NDVI
 #' within 0.15 of the maximum NDVI of the image and Ts below the threshold given
@@ -132,8 +135,10 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @return A data.frame with one row per anchor pixel and columns pixel (cell
 #' number), X and Y (cell coordinates in the CRS of Ts), Ts (K), LAI, NDVI and
 #' type ("hot" or "cold"). For anchors.method = "flexible" a column flex is
-#' added: the relaxation applied to the cold-pixel criteria (0 = none, 1 =
-#' 100\%). If plots = TRUE the anchors are also plotted over LAI.
+#' added: the relaxation applied to the criteria of each type (0 = none, 1 =
+#' 100\%). Attribute candidates gives the number of cold and hot candidates
+#' and, for "flexible", attribute relaxation the criteria used. If plots =
+#' TRUE the anchors are also plotted over LAI.
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
 #' @family sensible heat flux functions
@@ -143,7 +148,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
                          anchors.method= "flexible", WeatherStation,
                          plots=TRUE, deltaTemp=5, minDist = 500, WSbuffer = 30000,
-                         verbose=FALSE) {
+                         verbose=FALSE, min.candidates = 20) {
   sanitizeCellIndex <- function(index) {
     as.integer(stats::na.omit(unlist(index, use.names = FALSE)))
   }
@@ -397,6 +402,8 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
     hotSearch <- relaxCriteria(hotCandidates, optValHot, "hot")
     hot.candidates <- hotSearch$candidates
     flex.hot <- hotSearch$flex
+    cold.n <- sum(cold.candidates, na.rm = TRUE)
+    hot.n <- sum(hot.candidates, na.rm = TRUE)
     optValHot <- hotSearch$opt
     # Cold samples
     Ts.cold <- Ts
@@ -494,7 +501,18 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   }
   if(anchors.method=="flexible"){
     hot.and.cold$flex <- flex.cold
-    #hot.and.cold$flex[hot.and.cold$type == "hot"] <- flex.hot
+    hot.and.cold$flex[hot.and.cold$type == "hot"] <- flex.hot
+    attr(hot.and.cold, "relaxation") <- list(
+      cold = list(flex = flex.cold, criteria = optValCold,
+                  wholeImage = length(coldSearch$inBuffer) == 1),
+      hot = list(flex = flex.hot, criteria = optValHot,
+                 wholeImage = length(hotSearch$inBuffer) == 1))
+  }
+  attr(hot.and.cold, "candidates") <- c(cold = cold.n, hot = hot.n)
+  if(min(cold.n, hot.n) < min.candidates){
+    warning("Only ", cold.n, " cold and ", hot.n, " hot anchor candidates ",
+            "(minimum ", min.candidates, "): the area may be too small or too ",
+            "homogeneous; calibrate on an area of tens of km", call. = FALSE)
   }
   return(hot.and.cold)
 }

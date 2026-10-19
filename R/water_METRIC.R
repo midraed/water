@@ -386,7 +386,9 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #'   \item{WeatherStation}{the weather station data used.}
 #'   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
 #'   \item{calibration}{list with a and b (dT = a * Ts_datum + b), converged,
-#'     iterations and u200 (wind speed at 200 m used, m/s), from calcH().}
+#'     iterations and u200 (wind speed at 200 m used, m/s), from calcH(); and,
+#'     for automatic anchors, the number of candidates and the relaxation of
+#'     the criteria, from calcAnchors().}
 #'   \item{methods}{named character vector with the methods and parameters used.}
 #' }
 #' @author Guillermo Federico Olmedo
@@ -448,6 +450,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
+  if(missing(anchors) && !missing(MTL)){
+    checkCloudMask(MTL, if(!missing(image.SR)) image.SR, if(!missing(image.DN)) image.DN)
+  }
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
          "MODIS; provide it (e.g., loadImageSR()).")
@@ -506,6 +511,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                   deltaTemp = anchors.control$deltaTemp,
                   minDist = anchors.control$minDist,
                   WSbuffer = anchors.control$WSbuffer,
+                  min.candidates = anchors.control$min.candidates,
                   verbose = verbose))
     print(anchors)
   }
@@ -537,6 +543,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   calibration <- H[c("a", "b", "converged", "iterations", "u200")]
+  calibration$candidates <- attr(anchors, "candidates")
+  calibration$relaxation <- attr(anchors, "relaxation")
   H <-  H$H
   # H[H < 0]  <-  0  not a good solution...! not for any of the components
   LE <- Rn - G - H
