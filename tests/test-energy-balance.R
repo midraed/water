@@ -465,4 +465,13 @@ stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))
 
+## Mountain mode: Landsat 7 with DEM_Talca, plain = FALSE (#97)
+EBmtn <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, sat = "L7",
+                         thermalband = L7$Thermal1, plain = FALSE, DEM = terra::rast(DEM_Talca),
+                         anchors.method = "flexible", n = 5))
+pin.mtn <- c(555.0476642210, 81.2546785165, 187.3032572380, 286.5167524774, 303.6977245062)
+ET.mtn <- quiet(suppressMessages(ET24h(EBmtn)))
+stopifnot(near(terra::global(EBmtn$EB, "mean", na.rm = TRUE)[, 1], pin.mtn),
+          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.21745917808565))
+
 cat("test-energy-balance.R: all tests passed\n")
