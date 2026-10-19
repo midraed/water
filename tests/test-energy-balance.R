@@ -206,8 +206,9 @@ stopifnot(terra::nlyr(terra::rast(f)) == 5)
 ## Pinned results: means of the layers and anchor cells, so that changes in
 ## the results are deliberate (relative tolerance, for other platforms)
 near <- function(x, y, tol = 1e-6) all(abs(x - y) <= tol * abs(y))
-# (#85: surface reflectance outside 0-1 masked; mean LE +4.2%)
-pin.L8 <- c(576.7867019656, 89.5582897965, 232.6072265396, 259.6976248626, 311.2443506301)
+# (#85: surface reflectance outside 0-1 masked, mean LE +4.2%; #89: ASCE
+# reference ET at the overpass, LE +0.01%)
+pin.L8 <- c(576.7867019656, 89.5582897965, 232.5746736555, 259.7305664032, 311.2443506301)
 stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
@@ -336,7 +337,7 @@ stopifnot(inherits(Rn.low, "SpatRaster"))
 ## METRIC.EB() with Landsat 7 digital numbers, as in the METRIC_simple vignette
 EB7 <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, n = 5,
                        sat = "L7", thermalband = L7$Thermal1))
-pin.L7 <- c(547.5577230608, 85.3656706699, 171.1853796032, 291.0083660900, 313.8947743373)
+pin.L7 <- c(547.5577230608, 85.3656706699, 171.1774240015, 291.0163216654, 313.8947743373)
 stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))

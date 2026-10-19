@@ -6,6 +6,20 @@ VERSION 1.0
 
 Fixes that change results:
 
+* Reference ET follows ASCE-EWRI (2005) (#89): Rs/Rso is limited to 0.3-1
+  (it was set to 0 below 0.3), the cloudiness function of the last sunny
+  period is carried over the night (it was fixed at 0.05), Cd and G switch
+  between day and night on Rn > 0 (it was Rs > 0), the extraterrestrial
+  radiation is integrated between sunrise and sunset, and T + 273 is used in
+  the aerodynamic term. dailyET() sums the hourly periods ending at 01:00 to
+  24:00, as ASCE does (it summed those ending at 00:00 to 23:00). Daily ETr:
+  Talca example 7.09 -> 6.53 mm (-7.8%), Mendoza 5.34 -> 5.41 mm (+1.3%);
+  daily ET (ET24h()) changes in the same proportion. The instantaneous ETr
+  at the overpass changes by less than 0.02%. Checked against the hourly
+  test case of the RefET package (ASCE method) within 1e-5 mm/h.
+* dailyET() accepts a Date for date, and returns NA with a warning when the
+  records do not cover the day (it summed the hours available) (#90).
+
 * calcH(): the ET of the cold pixels was ETp.coef times the hourly grass
   reference ET (ETo), while ET24h() and dailyET() extrapolate with the
   alfalfa reference ETr. Both now use ETr, as in Allen et al. (2007), so the

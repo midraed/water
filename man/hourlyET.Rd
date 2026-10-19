@@ -65,6 +65,15 @@ tall (ETr, alfalfa) reference crop.
 The only difference on instantaneous ET is how the hour is interpreted. With
 FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00;
 with TRUE, ET is calculated at 11:00.
+
+The equations follow ASCE-EWRI (2005): Rs/Rso is limited to 0.3-1 (Eq.
+45), the extraterrestrial radiation is integrated between sunrise and
+sunset (Eqs. 48 and 56-58), the daytime and nighttime coefficients Cd and G
+are chosen by Rn > 0 (Table 1), and T + 273 is used in the aerodynamic term
+and T + 273.16 in the net long-wave radiation. For a single period at night
+(sun angle below 0.3 rad) the cloudiness function cannot be computed and
+Rs/Rso = 0.3 is used; dailyET() carries the value of the last sunny period
+over the night instead (Eq. 46).
 }
 \examples{
 WeatherStation  <- data.frame(wind=4.72,

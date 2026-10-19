@@ -55,15 +55,24 @@ the day of the overpass in the time zone of the station selects the day
 }
 \value{
 Numeric. Daily reference ET (mm/day): the sum of the hourly values
-of the day computed with hourlyET(). A warning is given when the day does
-not have 24 hourly values (incomplete records, or daylight saving time
-changes).
+of the day. If the records do not cover the whole day, NA with a warning
+(only the last period, ending at 24:00, may be missing: it is then left
+out, with a message).
 }
 \description{
 Sums the hourly reference ET (ASCE standardized Penman-Monteith equation,
 see \code{\link{hourlyET}}) of the hourly weather station values of one day,
 in the time zone of the station records: the day of the satellite overpass
 or another day.
+}
+\details{
+As in ASCE-EWRI (2005), the day is the 24 hourly periods ending at 01:00 to
+24:00 (00:00 of the next day); 23 or 25 periods on days when daylight saving
+time starts or ends. The cloudiness function of the net long-wave radiation
+is computed while the sun is higher than 0.3 rad, and its last value is
+carried over dusk, night and dawn (Eq. 46); before the first sunny period
+the previous evening is used, or the last sunny period of the day if the
+records do not include the previous day.
 }
 \examples{
 csvfile <- system.file("extdata", "apples.csv", package="water")

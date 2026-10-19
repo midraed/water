@@ -164,7 +164,21 @@ stopifnot(!is.null(ws.nz$at.sat),
           all.equal(dailyET(ws.nz), dailyET(ws.nz, date = "2016-07-09")))
 # an incomplete day is summed with a warning
 part <- read.ws(ws.july()[1:38, ], tz = "UTC")
-invisible(expect_warning(dailyET(part, date = "2016-07-10"), "14 hourly values"))
+stopifnot(is.na(expect_warning(dailyET(part, date = "2016-07-10"), "Only 13 of 24 hours")))
+# a Date works as date (#90)
+stopifnot(all.equal(dailyET(apples, date = as.Date("2013-02-15")), et.mtl))
+
+## Reference ET follows ASCE-EWRI (2005) (#89): test case of the RefET
+## package (WSWUP), Fallon (Nevada), 2015-07-01 18:00-19:00 UTC, ASCE method
+Tf <- (91.80 - 32) / 1.8
+fallon <- data.frame(temp = Tf, RH = 1.1990099614301906 / (0.6108 * exp(17.27 * Tf / (Tf + 237.3))) * 100,
+                     wind = 3.33 * 0.44704, radiation = 61.16 * 0.041868 * 1e6 / 3600,
+                     lat = 39.4575, long = -118.77388, elev = 1208.5, height = 3)
+stopifnot(abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETo") - 0.6063515) < 1e-4,
+          abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETr") - 0.7196370) < 1e-4)
+# daily reference ET: the periods ending at 01:00 to 24:00, with the
+# cloudiness of the last sunny hour at night (Talca 7.09 mm before)
+stopifnot(abs(et.mtl - 6.5336) < 0.001)
 
 ## read.WSdata(): sub-hourly records at the end of daylight saving time (the
 ## repeated hour) are averaged, not an error

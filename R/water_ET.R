@@ -31,6 +31,15 @@
 #' The only difference on instantaneous ET is how the hour is interpreted. With
 #' FALSE, and for example at 11:00, ET is calculated between 10:00 and 11:00;
 #' with TRUE, ET is calculated at 11:00.
+#'
+#' The equations follow ASCE-EWRI (2005): Rs/Rso is limited to 0.3-1 (Eq.
+#' 45), the extraterrestrial radiation is integrated between sunrise and
+#' sunset (Eqs. 48 and 56-58), the daytime and nighttime coefficients Cd and G
+#' are chosen by Rn > 0 (Table 1), and T + 273 is used in the aerodynamic term
+#' and T + 273.16 in the net long-wave radiation. For a single period at night
+#' (sun angle below 0.3 rad) the cloudiness function cannot be computed and
+#' Rs/Rso = 0.3 is used; dailyET() carries the value of the last sunny period
+#' over the night instead (Eq. 46).
 #' @return Numeric. Hourly (or, with ET.instantaneous = TRUE, instantaneous)
 #' reference ET (mm/h).
 #' @family ET functions
@@ -74,16 +83,6 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
       hours <- WeatherStation$hours
     } 
   }
-  tempK <- WeatherStation$temp + 273.16
-  Rs <- WeatherStation$radiation * 3600 / 1e6
-  P <- 101.3*((293-0.0065*WeatherStation$elev)/293)^5.26
-  psi <- 0.000665*P
-  Delta <- 2503 * exp((17.27*WeatherStation$temp)/
-                  (WeatherStation$temp+237.3))/((WeatherStation$temp+237.3)^2)
-  ea.sat <- 0.61078*exp((17.269*WeatherStation$temp)/
-                          (WeatherStation$temp+237.3))
-  ea <- (WeatherStation$RH/100)*ea.sat
-  DPV <- ea.sat - ea
   if(is.null(long.z)){
     long.z <- WeatherStation$long.z
     if(is.null(long.z) && inherits(WeatherStation$datetime, "POSIXt")){
@@ -92,33 +91,51 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
     if(is.null(long.z)){long.z <- WeatherStation$long}  # time zone unknown
   }
   if(ET.instantaneous==TRUE){hours <- hours +0.5}
-  Rso <- clearSkyRso(DOY = DOY, hours = hours, lat = WeatherStation$lat,
-                     long = WeatherStation$long, long.z = long.z,
-                     elev = WeatherStation$elev)
-  Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
-  fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, 
-                ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
-  Rn.a <- ((1-0.23)*Rs) - (2.042e-10*fcd*(0.34-0.14*(ea^0.5))*tempK^4)
-  Ghr <- c(0.1, 0.5)
-  if(ET=="ETr"){Ghr <- c(0.04, 0.2)}
-  G.day <- Rn.a * ifelse(Rn.a > 0, Ghr[1], Ghr[2])
-  wind.2 <- WeatherStation$wind *(4.87/(log(67.8*WeatherStation$height-5.42)))
-  windfactors <- c(0.24, 0.96)
-  if(ET=="ETr"){windfactors <-  c(0.25, 1.7)}
-  windf <- ifelse(WeatherStation$radiation > 0, windfactors[1], windfactors[2])
-  ET.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(37/tempK)*wind.2*(DPV)))/
-    (Delta+(psi*(1+(windf*wind.2))))
-  if(ET=="ETr"){
-    ET.hourly <- ((0.408*Delta*(Rn.a-G.day))+(psi*(66/tempK)*wind.2*(DPV)))/
-      (Delta+(psi*(1+(windf*wind.2))))
-  }
-  return(ET.hourly)
+  asceHourly(WeatherStation, hours = hours, DOY = DOY, long.z = long.z, ET = ET)$ET
 }
 
-# Clear-sky solar radiation Rso (MJ m-2 h-1, ASCE-EWRI 2005) for the hour
-# ending at hours (decimal hours of the station clock); long.z is the
-# longitude of the centre of its time zone
-clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
+# ASCE-EWRI (2005) standardized reference ET for the hours (periods) ending at
+# hours, with the station data in the data.frame WS (temp, RH, wind,
+# radiation, lat, long, elev, height). fcd: cloudiness function to use, e.g.
+# carried over the night by dailyET() (Eq. 46); if NULL it is computed from
+# Rs/Rso of each period. Returns a list with ET (mm/h), fcd and beta (sun
+# angle at the middle of the period, radians)
+asceHourly <- function(WS, hours, DOY, long.z, ET = "ETr", fcd = NULL){
+  temp <- WS$temp
+  Rs <- WS$radiation * 3600 / 1e6
+  P <- 101.3*((293-0.0065*WS$elev)/293)^5.26                  # Eq. 34
+  psi <- 0.000665*P                                           # Eq. 35
+  Delta <- 2503 * exp((17.27*temp)/(temp+237.3))/((temp+237.3)^2)  # Eq. 36
+  ea.sat <- 0.6108*exp((17.27*temp)/(temp+237.3))             # Eq. 37
+  ea <- (WS$RH/100)*ea.sat
+  DPV <- ea.sat - ea
+  sun <- asceRa(DOY = DOY, hours = hours, lat = WS$lat, long = WS$long, long.z = long.z)
+  Rso <- (0.75+2e-5*WS$elev)*sun$Ra                           # Eq. 47
+  if(is.null(fcd)){
+    # Rs/Rso limited to 0.3-1 (Eq. 45); at night (Rso = 0) the minimum
+    ratio <- ifelse(Rso > 0, Rs/Rso, 0.3)
+    fcd <- 1.35*pmin(pmax(ratio, 0.3), 1) - 0.35
+  }
+  Rnl <- 2.042e-10*fcd*(0.34-0.14*sqrt(ea))*(temp + 273.16)^4  # Eq. 44
+  Rn <- (1-0.23)*Rs - Rnl                                     # Eqs. 42-43
+  # daytime when Rn > 0 (Table 1)
+  day <- Rn > 0
+  if(ET == "ETr"){
+    G <- Rn * ifelse(day, 0.04, 0.2); Cn <- 66; Cd <- ifelse(day, 0.25, 1.7)
+  } else {
+    G <- Rn * ifelse(day, 0.1, 0.5); Cn <- 37; Cd <- ifelse(day, 0.24, 0.96)
+  }
+  wind.2 <- WS$wind *(4.87/(log(67.8*WS$height-5.42)))         # Eq. 33
+  ET.hourly <- ((0.408*Delta*(Rn-G))+(psi*(Cn/(temp+273))*wind.2*(DPV)))/
+    (Delta+(psi*(1+(Cd*wind.2))))                             # Eq. 1
+  list(ET = ET.hourly, fcd = fcd, beta = sun$beta)
+}
+
+# Extraterrestrial radiation Ra (MJ m-2 h-1, ASCE-EWRI 2005 Eq. 48) for the
+# hour ending at hours (decimal hours of the station clock), and the sun
+# angle beta (radians, Eq. 62) at its middle; long.z is the longitude of the
+# centre of the time zone of the clock
+asceRa <- function(DOY, hours, lat, long, long.z){
   dr <- 1 + 0.033*(cos(2*pi*DOY/365))
   delta <- 0.409*sin((2*pi*DOY/365)-1.39)
   phi <- lat*(pi/180)
@@ -128,15 +145,23 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
   w1 <- hour.angle-((pi)/24)
   w2 <- hour.angle+((pi)/24)
   hour.angle.s <- acos(-tan(phi)*tan(delta))
+  # integration limits within sunrise and sunset (Eqs. 56-58)
   w1c <- ifelse(w1< -hour.angle.s, -hour.angle.s,
-                ifelse(w1>hour.angle.s, hour.angle.s, ifelse(w1>w2, w2, w1)))
+                ifelse(w1>hour.angle.s, hour.angle.s, w1))
   w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s,
                 ifelse(w2>hour.angle.s, hour.angle.s, w2))
-  Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
-  Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*
-                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*
-                                                     (sin(w2)-sin(w1)))))
-  (0.75+2e-5*elev)*Ra
+  w1c <- pmin(w1c, w2c)
+  beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
+  Ra <- ((12/pi)*4.92*dr)*(((w2c-w1c)*sin(phi)*sin(delta))+
+                             (cos(phi)*cos(delta)*(sin(w2c)-sin(w1c))))
+  list(Ra = pmax(Ra, 0), beta = beta)
+}
+
+# Clear-sky solar radiation Rso (MJ m-2 h-1, ASCE-EWRI 2005 Eq. 47) for the
+# hour ending at hours (decimal hours of the station clock)
+clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
+  (0.75+2e-5*elev)*asceRa(DOY = DOY, hours = hours, lat = lat, long = long,
+                          long.z = long.z)$Ra
 }
 
 #' Calculates daily ET from a surface energy balance and Weather Station
@@ -218,10 +243,18 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
 #' weather station data, taken in the time zone of the station records.
 #' Without MTL, date or at.sat, dailyET() stops
+#' @details
+#' As in ASCE-EWRI (2005), the day is the 24 hourly periods ending at 01:00 to
+#' 24:00 (00:00 of the next day); 23 or 25 periods on days when daylight saving
+#' time starts or ends. The cloudiness function of the net long-wave radiation
+#' is computed while the sun is higher than 0.3 rad, and its last value is
+#' carried over dusk, night and dawn (Eq. 46); before the first sunny period
+#' the previous evening is used, or the last sunny period of the day if the
+#' records do not include the previous day.
 #' @return Numeric. Daily reference ET (mm/day): the sum of the hourly values
-#' of the day computed with hourlyET(). A warning is given when the day does
-#' not have 24 hourly values (incomplete records, or daylight saving time
-#' changes).
+#' of the day. If the records do not cover the whole day, NA with a warning
+#' (only the last period, ending at 24:00, may be missing: it is then left
+#' out, with a message).
 #' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @export
@@ -251,8 +284,8 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
     ## date of the conditions at the overpass (at.sat)
     MTL <- findMTL(if(!missing(MTL)) MTL, required = FALSE)
     hourly <- WeatherStation$hourly
-    if(date != "auto"){
-      day <- as.character(as.Date(date))
+    if(!identical(date, "auto")){
+      day <- as.character(as.Date(date))  # a Date or a character date
     } else {
       if(!is.null(MTL)){
         # local day of the overpass: DATE_ACQUIRED and SCENE_CENTER_TIME are
@@ -276,24 +309,54 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
              call. = FALSE)
       }
     }
-    # day in the time zone of the station records
-    data <- hourly[as.character(trunc(hourly$datetime, "days")) == day,]
-    if(nrow(data) == 0){
+    # the day in the time zone of the station records: the hourly periods
+    # ending at 01:00 to 24:00 (ASCE-EWRI 2005); 23 or 25 with daylight saving
+    tz <- attr(as.POSIXlt(hourly$datetime[1]), "tzone")[1]
+    if(is.null(tz)){tz <- ""}
+    start <- as.POSIXct(paste(day, "00:00:00"), tz = tz)
+    end <- as.POSIXct(paste(as.Date(day) + 1, "00:00:00"), tz = tz)
+    expected <- round(as.numeric(difftime(end, start, units = "hours")))
+    t <- hourly$datetime
+    target <- t > start & t <= end
+    if(!any(target)){
       stop("No weather station records on ", day, call. = FALSE)
     }
-    if(nrow(data) != 24){
-      warning("The weather station has ", nrow(data), " hourly values on ", day,
-              " (not 24): daily ", ET, " is the sum of those hours")
+    # with the previous day, if available, for the cloudiness at night
+    rows <- t > start - 86400 & t <= end
+    d <- hourly[rows, ]
+    d$lat <- lat; d$long <- long; d$elev <- elev; d$height <- height
+    lt <- as.POSIXlt(d$datetime)
+    hours <- lt$hour + lt$min/60 + lt$sec/3600
+    DOY <- lt$yday + 1
+    lz <- if(is.null(long.z)) tzLongitude(d$datetime) else long.z
+    first <- asceHourly(d, hours = hours, DOY = DOY, long.z = lz, ET = ET)
+    # cloudiness function: from Rs/Rso while the sun is higher than 0.3 rad,
+    # then carried over dusk, night and dawn (Eq. 46). Before the first such
+    # period, the previous evening or else the last one of the day
+    tgt <- target[rows]
+    sunny <- first$beta > 0.3
+    fcd <- first$fcd
+    current <- if(any(sunny & tgt)) utils::tail(fcd[sunny & tgt], 1) else fcd[1]
+    for(i in seq_along(fcd)){
+      if(sunny[i]){current <- fcd[i]} else {fcd[i] <- current}
     }
-    ET.daily <- vector()
-    for(i in seq_len(nrow(data))){
-      ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat,
-                                       long = long, elev=elev, ET=ET,
-                                       height = height, long.z = long.z))
+    ET.hourly <- asceHourly(d, hours = hours, DOY = DOY, long.z = lz, ET = ET,
+                            fcd = fcd)$ET[tgt]
+    n <- sum(tgt)
+    if(n < expected){
+      if(n == expected - 1 && !any(t == end)){
+        message("The record of 24:00 on ", day, " (00:00 of the next day) is ",
+                "missing: the last hour (at night) is not included")
+      } else {
+        warning("Only ", n, " of ", expected, " hours on ", day, ": daily ", ET,
+                " is NA. Provide the whole day, or the daily reference ET from ",
+                "another source", call. = FALSE)
+        return(NA_real_)
+      }
     }
   } else {
     stop("WeatherStation must be a waterWeatherStation object (see read.WSdata())",
          call. = FALSE)
   }
-  return(sum(ET.daily, na.rm=T))
+  return(sum(ET.hourly))
 }
