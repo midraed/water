@@ -11,9 +11,8 @@
 #' "MODIS" for MODIS or "auto" to detect the Landsat satellite from the
 #' SPACECRAFT_ID of an MTL file in path or, failing that, from the Landsat file
 #' names
-#' @param aoi   area of interest (e.g. from createAoi()) to crop the image. If
-#' missing and waterOptions("autoAoi") is TRUE, an object called aoi in
-#' .GlobalEnv is used if it exists
+#' @param aoi   Optional area of interest (e.g. from createAoi()) to crop the
+#' image. If missing, the image is not cropped
 #' @return SpatRaster in digital numbers. Landsat 8/9: layers B, G, R, NIR,
 #' SWIR1, SWIR2, Thermal1 and Thermal2 (bands 2 to 7, 10 and 11). Landsat 7: B,
 #' G, R, NIR, SWIR1, SWIR2 and Thermal1 (bands 1 to 5, 7 and 6 low gain).
@@ -114,9 +113,8 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' It can be passed as surf.temp to METRIC.EB(), METRIC.Rn() or METRIC.G().
 #' Landsat 7 Level-2 products are not supported (different band numbers).
 #' @param path  folder where band files are stored
-#' @param aoi   area of interest (e.g. from createAoi()) to crop the image. If
-#' missing and waterOptions("autoAoi") is TRUE, an object called aoi in
-#' .GlobalEnv is used if it exists
+#' @param aoi   Optional area of interest (e.g. from createAoi()) to crop the
+#' image. If missing, the image is not cropped
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
 #' NIR, SWIR1 and SWIR2 (Landsat 8/9 bands 2 to 7). If \code{*_ST_B10.TIF} is
 #' present, a seventh layer Band_10 with surface temperature (K) is added.
@@ -170,10 +168,9 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, Thermal2)
 #' when present
 #' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
-#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
-#' working directory)
-#' @param MTL           path to the Landsat metadata (MTL) file. If missing,
-#' the only *MTL.txt file in the working directory is used
+#' file (MTL is then required)
+#' @param MTL           path to the Landsat metadata (*_MTL.txt) file.
+#' Required
 #' @return SpatRaster with at-sensor spectral radiance (W m-2 sr-1 um-1) in
 #' layers B, G, R, NIR, SWIR1, SWIR2, Thermal1 and, for Landsat 8/9, Thermal2.
 #' @author Guillermo Federico Olmedo
@@ -188,8 +185,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #' @export
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
-  path <- getwd()
-  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- c(2:7, 10, 11)}
   if(sat=="L7"){bands <- c(1:5,7, 6)}
   MTL <- findMTL(if(!missing(MTL)) MTL)
@@ -217,15 +213,13 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #' @param image.DN      raw image in digital numbers, e.g. from loadImage().
 #' Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present
 #' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
-#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
-#' working directory)
+#' file (MTL is then required)
 #' @param aoi           Not used; kept for backward compatibility. Crop the
 #' inputs beforehand (e.g. loadImage(..., aoi = aoi))
 #' @param incidence.rel solar incidence angle (radians) considering the relief,
 #' from solarAngles()
 #' @param MTL           path to the Landsat metadata (MTL) file, needed for
-#' Landsat 7 and for sat = "auto". If missing, the only *MTL.txt file in the
-#' working directory is used
+#' Landsat 7 and for sat = "auto"
 #' @return SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,
 #' G, R, NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
@@ -241,8 +235,10 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 calcTOAr <- function(image.DN, sat="auto", 
                      aoi, incidence.rel, MTL){
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
-  path = getwd()
-  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(missing(image.DN)){
+    stop("image.DN is missing: load the image with loadImage()", call. = FALSE)
+  }
+  if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){bands <- 2:7}
   if(sat=="L7"){bands <- c(1:5,7)}
   if(sat %in% c("L8", "L9")){
@@ -251,13 +247,12 @@ calcTOAr <- function(image.DN, sat="auto",
   }
   ### Ro TOA L7
   if(sat=="L7"){
-    MTL <- readLines(findMTL(if(!missing(MTL)) MTL, path = path), warn=FALSE)
+    MTL <- readLines(findMTL(if(!missing(MTL)) MTL), warn=FALSE)
     ESUN <- c(1997, 1812, 1533, 1039, 230.8, 84.90) # Landsat 7 Handbook
     ## On sect 11.3, L7 handbook recommends using this formula for Ro TOA
     ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
-    if(missing(image.DN)){image.DN <- loadImage(path = path)}
     time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
     date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
     sat.time <-regmatches(time.line,regexec(text=time.line,
@@ -293,8 +288,8 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance (B, G,
 #' R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()
 #' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
-#' error. "auto" detects the satellite from an MTL file or Landsat file names
-#' in the working directory
+#' error. "auto" detects the satellite from the MTL file (MTL is then
+#' required)
 #' @param aoi             Not used; kept for backward compatibility
 #' @param incidence.hor   solar incidence angle (radians) on a horizontal
 #' surface, from solarAngles()
@@ -321,14 +316,15 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  path <- getwd()
-  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
   if(sat %in% c("L8", "L9")){stop("water package does not include a model to calculate ",
     "surface reflectance for Landsat 8/9. Download Collection 2 Level-2 products ",
     "and load them with loadImageSR().")}
   if(sat=="L7"){
     bands <- c(1:5,7)
-    if(missing(image.TOAr)){image.TOAr <- calcTOAr()}
+    if(missing(image.TOAr)){
+      stop("image.TOAr is missing: compute it with calcTOAr()", call. = FALSE)
+    }
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
     ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
     W <- 0.14 * ea * P + 2.1

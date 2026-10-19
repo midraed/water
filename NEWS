@@ -94,8 +94,7 @@ Other changes and fixes:
   warning; tibbles and integer columns work (#41). An overpass outside the
   station records gives a warning instead of an error (#28).
   read.WSdata2() works (it reads with read.csv2()).
-* MTL must be the file name; a missing MTL is searched in the folder and
-  must be the only MTL file there (#45).
+* MTL must be the file name, not its contents (#45).
 * loadImage() accepts any scene prefix, e.g. real-time tier or renamed
   files, and explains the expected names when nothing matches (#50).
 * prepareSRTMdata() returns the DEM on the image grid (#31).
@@ -114,9 +113,8 @@ Other changes and fixes:
   "thermal.low" is also found by METRIC.Rn() and METRIC.G().
 * print() and writeRaster() work on METRIC.EB() results (writeRaster() is
   now an S4 method).
-* waterOptions(outputFolder, SRTMrepo) work; waterOptions(autoAoi = FALSE)
-  is honoured; waterWriteResults = TRUE no longer deletes temporary files
-  in use.
+* waterOptions(outputFolder, SRTMrepo) work; waterWriteResults = TRUE no
+  longer deletes temporary files in use.
 * calcH(method = "lm") could loop forever.
 * hourlyET() only accepts ET = "ETr" or "ETo" (calcH() requested the
   invalid "ETor" and silently got ETo).
@@ -148,11 +146,25 @@ Input checks:
   METRIC.EB() checks extraParameters: a named numeric vector with known
   names, and a and b for Zom.method = "custom", fLAI and h for "Perrier"
   (#82).
+* No hidden inputs (#87): aoi crops only when it is passed (an object called
+  aoi in the workspace was used by loadImage(), loadImageSR() and albedo()),
+  and the MTL file is never searched in the working directory (an unrelated
+  MTL file there changed the results or stopped read.WSdata()). Functions
+  that need it stop with "MTL is required", and sat = "auto" needs MTL.
+  read.WSdata() without MTL says that the conditions at the overpass were
+  not computed. dailyET() without MTL takes the day from date or from the
+  overpass conditions (at.sat); it summed the first 24 records, another day
+  in the examples. calcTOAr() and calcSR() no longer try to load or compute
+  a missing image.
 
 Behaviour changes to check in existing scripts:
 
 * Method names are matched exactly: partial or differently capitalised
   names (e.g. ET = "ETR", G.method = "T") are errors (#82).
+* Pass MTL explicitly: it is no longer searched in the working directory;
+  waterOptions(autoAoi) is ignored, with a warning: pass aoi instead (#87).
+* dailyET(date = ): the day is now taken in the time zone of the station
+  records, as with the MTL date (it was the UTC day, a few hours off) (#87).
 
 * sf moved from Depends to Imports: library(water) no longer attaches sf,
   so call library(sf) to use its functions directly (#81).

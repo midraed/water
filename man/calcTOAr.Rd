@@ -11,8 +11,7 @@ calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
 Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2) when present}
 
 \item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
-file (or, if MTL is missing, from an MTL file or Landsat file names in the
-working directory)}
+file (MTL is then required)}
 
 \item{aoi}{Not used; kept for backward compatibility. Crop the
 inputs beforehand (e.g. loadImage(..., aoi = aoi))}
@@ -21,8 +20,7 @@ inputs beforehand (e.g. loadImage(..., aoi = aoi))}
 from solarAngles()}
 
 \item{MTL}{path to the Landsat metadata (MTL) file, needed for
-Landsat 7 and for sat = "auto". If missing, the only *MTL.txt file in the
-working directory is used}
+Landsat 7 and for sat = "auto"}
 }
 \value{
 SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,

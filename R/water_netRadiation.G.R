@@ -209,8 +209,8 @@ METRICtopo <- function(DEM){
 #' Metadata, aspect and slope maps are combined to estimate solar angles for the entire image. 
 #' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
 #' METRICtopo()
-#' @param MTL             path to the Landsat metadata (MTL) file. If missing,
-#' the only *MTL.txt file in the working directory is used
+#' @param MTL             path to the Landsat metadata (*_MTL.txt) file.
+#' Required
 #' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
 #' @details Latitude is computed for each row of the grid; declination and hour
@@ -232,11 +232,10 @@ METRICtopo <- function(DEM){
 #' @export
 ### Change to look in metadata for keyword instead of using line #
 solarAngles <- function(surface.model, MTL, WeatherStation){
-  path = getwd()
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  MTL <- readLines(findMTL(if(!missing(MTL)) MTL, path = path), warn=FALSE)
+  MTL <- readLines(findMTL(if(!missing(MTL)) MTL), warn=FALSE)
   Elev.line <- grep("SUN_ELEVATION",MTL,value=TRUE)
   sun.elevation <- (90 - as.numeric(regmatches(Elev.line, 
                                                regexec(text=Elev.line ,
@@ -334,13 +333,13 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation){
 #' empirical coefficients (Tasumi et al., 2008).
 #' @param image.SR   surface reflectance SpatRaster with bands B, G, R, NIR,
 #' SWIR1 and SWIR2 (only the first six layers are used, by position)
-#' @param aoi        area of interest (e.g. from createAoi()) to crop the
-#' result. If missing and waterOptions("autoAoi") is TRUE, an object called aoi
-#' in .GlobalEnv is used if it exists
+#' @param aoi        Optional area of interest (e.g. from createAoi()) to crop
+#' the result. If missing, the result is not cropped
 #' @param coeff      coefficient to transform narrow to broad band albedo.
 #' See Details.
-#' @param sat        "L7", "L8", "L9", "MODIS" or "auto" to detect the Landsat
-#' satellite from an MTL file or Landsat file names in the working directory
+#' @param sat        "L7", "L8", "L9", "MODIS" or "auto": MODIS when the first
+#' two layers are R and NIR (as from loadImage()), Landsat otherwise (L7, L8
+#' and L9 use the same coefficients)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose coeff = "Tasumi" to use Tasumi et al. (2008) coefficients,
@@ -525,8 +524,7 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param thermalband     thermal band in digital numbers. Optional: if missing,
 #' image.DN$Thermal1 is used (L7: band 6 low gain; L8/L9: band 10)
 #' @param sat             "L7", "L8", "L9" or "auto" to detect it from the MTL
-#' file (or, if MTL is missing, from an MTL file or Landsat file names in the
-#' working directory)
+#' file (MTL is then required)
 #' @param LAI             SpatRaster with leaf area index, from LAI()
 #' @param aoi             Not used; kept for backward compatibility
 #' @param method          "SC" for single channel or "SW" for split window
@@ -562,7 +560,6 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   checkChoice(method, waterChoices$LST.method, "method")
   checkLSTmethod(method, sat, TRUE, "method")
-  path=getwd()
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -576,7 +573,7 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
   Rp <- 0.91     
   # atm transmissivity
   tau_NB <- 0.75+2e-5*WeatherStation$elev
-  if(sat=="auto"){sat = getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(method, sat, TRUE, "method")
   if(sat %in% c("L8", "L9")){
     # Landsat 8 defaults; L9 (TIRS-2) constants differ, so read them from MTL

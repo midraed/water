@@ -19,8 +19,7 @@ surfaceTemperature(
 \item{image.DN}{raw image in digital numbers, e.g. from loadImage()}
 
 \item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
-file (or, if MTL is missing, from an MTL file or Landsat file names in the
-working directory)}
+file (MTL is then required)}
 
 \item{LAI}{SpatRaster with leaf area index, from LAI()}
 

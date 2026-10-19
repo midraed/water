@@ -5,8 +5,7 @@
     waterOverwrite = TRUE,
     waterWriteResults = FALSE,
     waterOutputFolder = ".",
-    waterSRTMrepo = NULL,
-    waterAutoAoi = TRUE
+    waterSRTMrepo = NULL
   )
   toset <- !(names(op.water) %in% names(op))
   if(any(toset)) options(op.water[toset])
@@ -33,9 +32,9 @@
 #' directory.
 #' @param SRTMrepo      A folder where SRTM grids are stored. Currently not
 #' used by prepareSRTMdata(); use its path argument
-#' @param autoAoi       Logical. If TRUE (default), functions with an aoi
-#' argument that is missing (loadImage(), loadImageSR(), albedo()) use an
-#' object called aoi in .GlobalEnv if it exists. See \code{\link{createAoi}}
+#' @param autoAoi       Deprecated and ignored, with a warning. An object
+#' called aoi in the workspace is no longer used: pass aoi to loadImage(),
+#' loadImageSR(), albedo() or the METRIC functions. See \code{\link{createAoi}}
 #' @param default       Logical. If TRUE will revert all options to default
 #' values
 #' @return
@@ -98,14 +97,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
       }
     }
   }
-  setAutoAoi <- function(autoAoi) {
-    if (is.logical(autoAoi)) {
-      options(waterAutoAoi = autoAoi)
-    }
-    else {
-      warning(paste("Could not set autoAoi. It must be a logical value"))
-    }
-  }
 #   setToDisk <- function(todisk) {
 #     if (is.logical(todisk)) {
 #       options(rasterToDisk = todisk)
@@ -129,7 +120,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
     options(waterWriteResults = FALSE)
     options(waterOutputFolder = ".")
     options(waterSRTMrepo = NULL)
-    options(waterAutoAoi = TRUE)
     v <- utils::packageDescription("water")[["Version"]]
   }
   if (!missing(overwrite)) {
@@ -149,12 +139,13 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
     cnt <- cnt + 1
   } else {SRTMrepo <- getOption("waterSRTMrepo")}
   if (!missing(autoAoi)) {
-    setAutoAoi(autoAoi)
+    warning("waterOptions(autoAoi) is no longer used: an object called aoi in ",
+            "the workspace is never used. Pass aoi to loadImage(), ",
+            "loadImageSR(), albedo() or the METRIC functions")
     cnt <- cnt + 1
-  } else {autoAoi <- getOption("waterAutoAoi")}
+  }
   lst <- list(overwrite = overwrite, writeResults = writeResults,
-              outputFolder = outputFolder, SRTMrepo= SRTMrepo,
-              autoAoi = autoAoi)
+              outputFolder = outputFolder, SRTMrepo= SRTMrepo)
   save <- FALSE
   if (save) {
     v <- utils::packageDescription("water")[["Version"]]
@@ -179,7 +170,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
     cat("writeResults  :", lst$writeResults, "\n")
     cat("outputFolder  :", lst$outputFolder, "\n")
     cat("SRTMrepo      :", lst$SRTMrepo, "\n")
-    cat("autoAoi       :", lst$autoAoi, "\n")
   }
   invisible(lst)
 }

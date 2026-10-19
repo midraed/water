@@ -28,9 +28,9 @@ directory.}
 \item{SRTMrepo}{A folder where SRTM grids are stored. Currently not
 used by prepareSRTMdata(); use its path argument}
 
-\item{autoAoi}{Logical. If TRUE (default), functions with an aoi
-argument that is missing (loadImage(), loadImageSR(), albedo()) use an
-object called aoi in .GlobalEnv if it exists. See \code{\link{createAoi}}}
+\item{autoAoi}{Deprecated and ignored, with a warning. An object
+called aoi in the workspace is no longer used: pass aoi to loadImage(),
+loadImageSR(), albedo() or the METRIC functions. See \code{\link{createAoi}}}
 
 \item{default}{Logical. If TRUE will revert all options to default
 values}

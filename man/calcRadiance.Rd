@@ -12,11 +12,10 @@ Bands are selected by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, Thermal2)
 when present}
 
 \item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
-file (or, if MTL is missing, from an MTL file or Landsat file names in the
-working directory)}
+file (MTL is then required)}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
-the only *MTL.txt file in the working directory is used}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file.
+Required}
 }
 \value{
 SpatRaster with at-sensor spectral radiance (W m-2 sr-1 um-1) in

@@ -10,8 +10,8 @@
 #' reflectance (LAI) and, without surf.temp, for surface temperature.
 #' @param WeatherStation   waterWeatherStation object with the conditions at
 #' the satellite overpass (from read.WSdata() with the MTL file)
-#' @param MTL              path to the Landsat metadata (MTL) file. If missing,
-#' the only *MTL.txt file in the working directory is used
+#' @param MTL              path to the Landsat metadata (*_MTL.txt) file.
+#' Required
 #' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 #' detect it from the MTL file
 #' @param thermalband      Thermal band in digital numbers (L7: band 6 low gain;
@@ -74,10 +74,9 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                       LST.method = "SC"){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method)
-  path=getwd()
-  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
-  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
+  MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
                            thermalband = thermalband, surf.temp = surf.temp,
@@ -125,10 +124,9 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      surf.temp, L = 0.1, LST.method = "SC"){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method)
-  path=getwd()
-  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
-  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
+  MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
                            thermalband = thermalband, surf.temp = surf.temp,
@@ -196,9 +194,7 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
   }
   # Without DN (or for MODIS) LAI uses SR instead of TOAr
   if(missing(image.DN) || sat=="MODIS"){image.TOAr <- image.SR}
-  # aoi = extent of image.SR, so albedo() does not crop to a global aoi object
-  albedo <- albedo(image.SR = image.SR, aoi = ext(image.SR), coeff = alb.coeff,
-                   sat = sat)
+  albedo <- albedo(image.SR = image.SR, coeff = alb.coeff, sat = sat)
   if(LAI.method == "vineyard"){
     if(missing(image.DN)){stop("LAI.method = 'vineyard' needs image.DN.")}
     LAI <- LAI(method = LAI.method, L = L,
@@ -250,8 +246,8 @@ metricRn <- function(surface, WeatherStation){
 #' Required for L8 and L9.
 #' @param WeatherStation   waterWeatherStation object with the conditions at
 #' the satellite overpass (from read.WSdata() with the MTL file)
-#' @param MTL              path to the Landsat metadata (MTL) file. If missing,
-#' the only *MTL.txt file in the working directory is used
+#' @param MTL              path to the Landsat metadata (*_MTL.txt) file.
+#' Required
 #' @param sat              Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 #' detect it from the MTL file
 #' @param thermalband      Thermal band in digital numbers (L7: band 6 low gain;
@@ -384,8 +380,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                   Zom.method = Zom.method)
   anchors.method <- checkAnchorsMethod(anchors.method)
   checkExtraParameters(extraParameters, Zom.method)
-  path=getwd()
-  if(sat=="auto"){sat <- getSat(path, MTL = if(!missing(MTL)) MTL)}
+  if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
@@ -407,7 +402,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     stop("thermalband is NULL. Check the band name in image.DN (e.g., names(image.DN)).")
   }
 
-  MTL <- findMTL(if(!missing(MTL)) MTL, path = path)
+  MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
                            thermalband = thermalband, surf.temp = surf.temp,

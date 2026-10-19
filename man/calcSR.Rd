@@ -19,8 +19,8 @@ calcSR(
 R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()}
 
 \item{sat}{Only "L7" is supported; "L8" and "L9" stop with an
-error. "auto" detects the satellite from an MTL file or Landsat file names
-in the working directory}
+error. "auto" detects the satellite from the MTL file (MTL is then
+required)}
 
 \item{aoi}{Not used; kept for backward compatibility}
 

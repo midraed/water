@@ -43,14 +43,13 @@ alfalfa.}
 station clock (decimal degrees, negative west). By default it is computed
 from the time zone of the records; see \code{\link{hourlyET}}}
 
-\item{date}{"auto" (default) uses the acquisition date in the MTL file;
-otherwise a date (e.g. "2016-02-09") present in the weather station data.
-Without an MTL file, the first 24 hourly records are used and date is
-ignored}
+\item{date}{"auto" (default) uses the acquisition date in the MTL file
+or, without MTL, the date of the conditions at the overpass of
+WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
+weather station data. Without MTL, date or at.sat it is an error}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. If missing, the only
-*MTL.txt file in the working directory is used, if any. Its acquisition date
-selects the day (see date)}
+\item{MTL}{Optional path to the Landsat metadata (MTL) file. Its
+acquisition date selects the day (see date)}
 }
 \value{
 Numeric. Daily reference ET (mm/day): the sum of the 24 hourly values
@@ -66,7 +65,7 @@ WeatherStation <- read.WSdata(WSdata = csvfile, date.format = "\%d/\%m/\%Y",
 lat=-35.42222, long= -71.38639, elev=201, height= 2.2, cf=c(1,0.2777778,1),
 tz = "America/Santiago")
 
-dailyET(WeatherStation = WeatherStation, ET="ETo")
+dailyET(WeatherStation = WeatherStation, ET="ETo", date = "2013-02-15")
 
 }
 \references{

@@ -98,6 +98,14 @@ stopifnot(all.equal(et.default, hourlyET(overpass, hours = overpass$hours, DOY =
 stopifnot(all.equal(dailyET(apples, MTL = file.path(extdata, "L7.MTL.txt")),
                     dailyET(apples, MTL = file.path(extdata, "L7.MTL.txt"), long.z = -45)))
 
+## dailyET(): without MTL, the day is date or the day of the overpass
+## conditions (it summed the first 24 records, another day) (#87)
+et.mtl <- dailyET(apples, MTL = file.path(extdata, "L7.MTL.txt"))
+stopifnot(all.equal(dailyET(apples), et.mtl),
+          all.equal(dailyET(apples, date = "2013-02-15"), et.mtl))
+expect_error(dailyET(read.ws(ws.july(), tz = "UTC")), "needs the day")
+expect_error(dailyET(apples, date = "2001-01-01"), "No weather station records")
+
 ## print() returns the weather station invisibly
 printed <- withVisible(print(apples))
 stopifnot(!printed$visible, identical(printed$value, apples))
@@ -232,14 +240,23 @@ waterOptions(outputFolder = tmp)
 stopifnot(getOption("waterOutputFolder") == paste0(tmp, "/"))
 waterOptions(default = TRUE)
 
-## aoiCrop(): honours waterOptions(autoAoi = FALSE)
-aoi <- createAoi(topleft = c(510495, -3651000), bottomright = c(512000, -3652000), EPSG = 32619)
-assign("aoi", aoi, envir = .GlobalEnv)
-waterOptions(autoAoi = FALSE)
-stopifnot(terra::ncell(water:::aoiCrop(image)) == terra::ncell(image))
-waterOptions(autoAoi = TRUE)
-stopifnot(terra::ncell(water:::aoiCrop(image)) < terra::ncell(image))
+## No hidden inputs: an object called aoi in the workspace and MTL files in
+## the working directory are never used (#87)
+assign("aoi", createAoi(c(0, 1), c(1, 0), EPSG = 32719), envir = .GlobalEnv)
+stopifnot(terra::ncell(loadImageSR(file.path(extdata, "L8_C2"))) == 134 * 184)
 rm("aoi", envir = .GlobalEnv)
+expect_warning(waterOptions(autoAoi = TRUE), "no longer used")
+old <- setwd(tmp)
+invisible(file.copy(c(MTL.L8, mtl.july), c("a_MTL.txt", "b_MTL.txt")))
+msg <- character()
+ws0 <- withCallingHandlers(read.ws(ws.july(), tz = "UTC"), message = function(m) {
+  msg <<- c(msg, conditionMessage(m)); invokeRestart("muffleMessage")
+})
+stopifnot(is.null(ws0$at.sat), any(grepl("at.sat", msg)))
+expect_error(water:::getSat(), "needs the MTL")
+expect_error(solarAngles(surface.model = NULL, WeatherStation = ws), "MTL is required")
+expect_error(METRIC.Rn(image.SR = "x", WeatherStation = ws), "needs the MTL")
+setwd(old)
 
 unlink(tmp, recursive = TRUE)
 cat("test-inputs.R: all tests passed\n")

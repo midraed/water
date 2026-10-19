@@ -44,8 +44,8 @@ Required for L8 and L9.}
 \item{WeatherStation}{waterWeatherStation object with the conditions at
 the satellite overpass (from read.WSdata() with the MTL file)}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
-the only *MTL.txt file in the working directory is used}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file.
+Required}
 
 \item{sat}{Satellite: "L7", "L8", "L9", "MODIS" or "auto" to
 detect it from the MTL file}

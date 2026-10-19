@@ -10,15 +10,15 @@ albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
 \item{image.SR}{surface reflectance SpatRaster with bands B, G, R, NIR,
 SWIR1 and SWIR2 (only the first six layers are used, by position)}
 
-\item{aoi}{area of interest (e.g. from createAoi()) to crop the
-result. If missing and waterOptions("autoAoi") is TRUE, an object called aoi
-in .GlobalEnv is used if it exists}
+\item{aoi}{Optional area of interest (e.g. from createAoi()) to crop
+the result. If missing, the result is not cropped}
 
 \item{coeff}{coefficient to transform narrow to broad band albedo.
 See Details.}
 
-\item{sat}{"L7", "L8", "L9", "MODIS" or "auto" to detect the Landsat
-satellite from an MTL file or Landsat file names in the working directory}
+\item{sat}{"L7", "L8", "L9", "MODIS" or "auto": MODIS when the first
+two layers are R and NIR (as from loadImage()), Landsat otherwise (L7, L8
+and L9 use the same coefficients)}
 }
 \value{
 SpatRaster with broadband surface albedo (unitless).

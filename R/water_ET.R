@@ -193,13 +193,12 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' @param long.z   longitude of the centre of the time zone of the weather
 #' station clock (decimal degrees, negative west). By default it is computed
 #' from the time zone of the records; see \code{\link{hourlyET}}
-#' @param MTL      path to the Landsat metadata (MTL) file. If missing, the only
-#' *MTL.txt file in the working directory is used, if any. Its acquisition date
-#' selects the day (see date)
-#' @param date     "auto" (default) uses the acquisition date in the MTL file;
-#' otherwise a date (e.g. "2016-02-09") present in the weather station data.
-#' Without an MTL file, the first 24 hourly records are used and date is
-#' ignored
+#' @param MTL      Optional path to the Landsat metadata (MTL) file. Its
+#' acquisition date selects the day (see date)
+#' @param date     "auto" (default) uses the acquisition date in the MTL file
+#' or, without MTL, the date of the conditions at the overpass of
+#' WeatherStation (at.sat); otherwise a date (e.g. "2016-02-09") present in the
+#' weather station data. Without MTL, date or at.sat it is an error
 #' @return Numeric. Daily reference ET (mm/day): the sum of the 24 hourly values
 #' computed with hourlyET().
 #' @family ET functions
@@ -216,7 +215,7 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
 #' lat=-35.42222, long= -71.38639, elev=201, height= 2.2, cf=c(1,0.2777778,1),
 #' tz = "America/Santiago")
 #'
-#' dailyET(WeatherStation = WeatherStation, ET="ETo")
+#' dailyET(WeatherStation = WeatherStation, ET="ETo", date = "2013-02-15")
 #' 
 dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr", 
                     long.z=NULL, date = "auto", MTL){
@@ -227,37 +226,43 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
     if(missing(long)){long <- WeatherStation$location$long}
     if(missing(elev)){elev <- WeatherStation$location$elev}
     
-    ## Join with satellite data
+    ## Day of the image: date, the acquisition date in the MTL file or the
+    ## date of the conditions at the overpass (at.sat)
     MTL <- findMTL(if(!missing(MTL)) MTL, required = FALSE)
-    if(!is.null(MTL)){  ## TODO: Check if MTL date is inside WS data
-      MTL <- readLines(MTL, warn=FALSE)
-      date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-      sat.date <-regmatches(date.line,regexec(text=date.line,
-                                              pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-      sat.date <- strptime(sat.date,  
-                           format = "%Y-%m-%d", tz="GMT")
-      if(date == "auto"){
-        data <- WeatherStation$hourly[as.character(trunc(WeatherStation$hourly$datetime, "days")) == 
-                                        as.character(as.Date(sat.date)),]
-      }  else {
-        data <- WeatherStation$hourly[as.Date(WeatherStation$hourly$datetime) == as.Date(date),]
+    hourly <- WeatherStation$hourly
+    if(date != "auto"){
+      day <- as.character(as.Date(date))
+    } else {
+      if(!is.null(MTL)){
+        MTL <- readLines(MTL, warn=FALSE)
+        date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
+        sat.date <-regmatches(date.line,regexec(text=date.line,
+                                                pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+        sat.date <- strptime(sat.date,
+                             format = "%Y-%m-%d", tz="GMT")
+        day <- as.character(as.Date(sat.date))
+      } else if(!is.null(WeatherStation$at.sat)){
+        day <- format(WeatherStation$at.sat$datetime, "%Y-%m-%d")
+      } else {
+        stop("dailyET() needs the day of the image: pass MTL or date (e.g. ",
+             "date = \"2016-02-09\"), or read the weather station with MTL",
+             call. = FALSE)
       }
-      ET.daily <- vector()
-      for(i in 1:24){
-          ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat,
-                                           long = long, elev=elev, ET=ET,
-                                           height = height, long.z = long.z))
-        }
     }
-    if(length(MTL)==0){
-      ET.daily <- vector()
-      for(i in 1:24){
-        date <- as.POSIXlt(WeatherStation$hourly[i,1], format="%Y-%m-%d %H:%M:%S")
-        ET.daily <- c(ET.daily, hourlyET(WeatherStation$hourly[i,], lat=lat,
-                                         long = long, elev=elev, ET=ET,
-                                         height = height, long.z = long.z))
-      }
-  }} else {
-    print("not implemented yet")}
+    # day in the time zone of the station records
+    data <- hourly[as.character(trunc(hourly$datetime, "days")) == day,]
+    if(nrow(data) == 0){
+      stop("No weather station records on ", day, call. = FALSE)
+    }
+    ET.daily <- vector()
+    for(i in 1:24){
+      ET.daily <- c(ET.daily, hourlyET(data[i,], lat=lat,
+                                       long = long, elev=elev, ET=ET,
+                                       height = height, long.z = long.z))
+    }
+  } else {
+    stop("WeatherStation must be a waterWeatherStation object (see read.WSdata())",
+         call. = FALSE)
+  }
   return(sum(ET.daily, na.rm=T))
 }

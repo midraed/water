@@ -14,9 +14,8 @@ loadImage(path = getwd(), sat = "auto", aoi)
 SPACECRAFT_ID of an MTL file in path or, failing that, from the Landsat file
 names}
 
-\item{aoi}{area of interest (e.g. from createAoi()) to crop the image. If
-missing and waterOptions("autoAoi") is TRUE, an object called aoi in
-.GlobalEnv is used if it exists}
+\item{aoi}{Optional area of interest (e.g. from createAoi()) to crop the
+image. If missing, the image is not cropped}
 }
 \value{
 SpatRaster in digital numbers. Landsat 8/9: layers B, G, R, NIR,

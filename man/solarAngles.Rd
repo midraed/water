@@ -10,8 +10,8 @@ solarAngles(surface.model, MTL, WeatherStation)
 \item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
 METRICtopo()}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. If missing,
-the only *MTL.txt file in the working directory is used}
+\item{MTL}{path to the Landsat metadata (*_MTL.txt) file.
+Required}
 
 \item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}

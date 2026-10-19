@@ -27,11 +27,11 @@
 #' details.
 #' @param cf                 conversion factor to convert radiation, wind, and
 #' temperature to W/m2; m/s and Celsius. See Details.
-#' @param MTL                path to the Landsat metadata (MTL) file. If
-#' missing, the only *MTL.txt file in the working directory is used, if any.
-#' When available, the weather conditions at the satellite overpass are
-#' interpolated (element at.sat); if the overpass is outside the records, a
-#' warning is given and at.sat is not computed.
+#' @param MTL                path to the Landsat metadata (MTL) file. When
+#' given, the weather conditions at the satellite overpass are interpolated
+#' (element at.sat); if the overpass is outside the records, a warning is
+#' given and at.sat is not computed. If missing, at.sat is not computed (with
+#' a message).
 #' @details
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
@@ -197,6 +197,10 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                rain = rainFun(sequence))
     ## Join with satellite data
   MTL <- findMTL(if(!missing(MTL)) MTL, required = FALSE)
+  if(is.null(MTL)){
+    message("No MTL file: the conditions at the satellite overpass (at.sat) ",
+            "were not computed")
+  }
   if(!is.null(MTL)){
     MTL <- readLines(MTL, warn=FALSE)
     time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)

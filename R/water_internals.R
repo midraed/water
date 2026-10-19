@@ -1,10 +1,18 @@
-getSat <- function(path = getwd(), MTL = NULL){
+# Satellite for sat = "auto": from the MTL file or, for the loaders, from the
+# MTL file or the Landsat file names in path. The working directory is never
+# searched
+getSat <- function(path = NULL, MTL = NULL){
+  if(is.null(MTL) && is.null(path)){
+    stop("sat = \"auto\" needs the MTL file: pass MTL, or set sat (\"L7\", ",
+         "\"L8\", \"L9\")", call. = FALSE)
+  }
   # 1. SPACECRAFT_ID from the MTL file, same in every Landsat product format
   if(is.null(MTL)){
     MTL <- list.files(path = path, pattern = "MTL\\.txt$", full.names = T)
   } else {
     MTL <- findMTL(MTL)
   }
+  where <- if(is.null(path)) MTL else path
   MTL <- MTL[file.exists(MTL)]
   if(length(MTL)){
     num <- unique(vapply(MTL, function(f){
@@ -17,12 +25,12 @@ getSat <- function(path = getwd(), MTL = NULL){
     num <- unique(sub("^L[COTE]0?([789]).*", "\\1", files))
   }
   if(length(num) > 1){
-    stop("Files from more than one Landsat satellite in ", path, ". Set sat.")
+    stop("Files from more than one Landsat satellite in ", where, ". Set sat.")
   }
   if(length(num) == 1 && !is.na(num) && num %in% c("7", "8", "9")){
     return(paste0("L", num))
   }
-  stop("Can't establish satellite from MTL file or file names in ", path,
+  stop("Can't establish satellite from MTL file or file names in ", where,
        ". Set sat = \"L7\", \"L8\", \"L9\" or \"MODIS\".")
 }
 
@@ -123,10 +131,18 @@ sampleOne <- function(x){
 }
 
 # Path of the Landsat metadata (MTL) file: MTL itself, checked, or the only
-# *MTL.txt file in path when MTL is NULL
-findMTL <- function(MTL = NULL, path = getwd(), required = TRUE){
+# *MTL.txt file in path when MTL is NULL and path is given. The working
+# directory is never searched
+findMTL <- function(MTL = NULL, path = NULL, required = TRUE){
   if(!is.null(MTL) && length(MTL) == 0){
     if(required){stop("MTL is empty: no Landsat MTL file was given")}
+    return(NULL)
+  }
+  if(is.null(MTL) && is.null(path)){
+    if(required){
+      stop("MTL is required: pass the path of the Landsat *_MTL.txt file ",
+           "(MTL = ...)", call. = FALSE)
+    }
     return(NULL)
   }
   if(is.null(MTL)){
@@ -199,18 +215,11 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
 }
 
 
+# Crop to aoi only when it is passed (an object called aoi in the workspace is
+# never used)
 aoiCrop <- function(raster, aoi){
-  if(!missing(aoi)){
-    raster <- cropToAoi(raster, aoi)
-    return(raster)
-  }
-  if(missing(aoi) && isTRUE(getOption("waterAutoAoi")) &&
-     exists(x = "aoi", envir = .GlobalEnv, inherits = FALSE)){
-    aoi <- get(x = "aoi", envir=.GlobalEnv)
-    raster <- cropToAoi(raster, aoi)
-    return(raster)
-  }
-  return(raster)
+  if(missing(aoi)){return(raster)}
+  cropToAoi(raster, aoi)
 }
 
 # Crop x to aoi, reprojecting a polygon aoi to the CRS of x when both have one

@@ -57,11 +57,11 @@ details.}
 \item{cf}{conversion factor to convert radiation, wind, and
 temperature to W/m2; m/s and Celsius. See Details.}
 
-\item{MTL}{path to the Landsat metadata (MTL) file. If
-missing, the only *MTL.txt file in the working directory is used, if any.
-When available, the weather conditions at the satellite overpass are
-interpolated (element at.sat); if the overpass is outside the records, a
-warning is given and at.sat is not computed.}
+\item{MTL}{path to the Landsat metadata (MTL) file. When
+given, the weather conditions at the satellite overpass are interpolated
+(element at.sat); if the overpass is outside the records, a warning is
+given and at.sat is not computed. If missing, at.sat is not computed (with
+a message).}
 }
 \value{
 An object of class waterWeatherStation: a list with location (lat,

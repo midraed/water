@@ -9,9 +9,8 @@ loadImageSR(path = getwd(), aoi)
 \arguments{
 \item{path}{folder where band files are stored}
 
-\item{aoi}{area of interest (e.g. from createAoi()) to crop the image. If
-missing and waterOptions("autoAoi") is TRUE, an object called aoi in
-.GlobalEnv is used if it exists}
+\item{aoi}{Optional area of interest (e.g. from createAoi()) to crop the
+image. If missing, the image is not cropped}
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,
