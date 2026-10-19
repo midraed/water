@@ -11,7 +11,8 @@ calcSR(
   incidence.hor,
   WeatherStation,
   surface.model,
-  MTL
+  MTL,
+  Kt = 1
 )
 }
 \arguments{
@@ -35,6 +36,10 @@ METRICtopo()}
 
 \item{MTL}{Landsat metadata file, used to detect the satellite
 when sat = "auto"}
+
+\item{Kt}{clearness (turbidity) coefficient of the atmosphere,
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid air. See
+\code{\link{incSWradiation}}}
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,

@@ -47,6 +47,29 @@ stopifnot(terra::global(is.na(flat$Slope), "sum")[1, 1] == 0,
 angles <- solarAngles(surface.model = flat, WeatherStation = WS, MTL = MTL.L1)
 stopifnot(terra::global(angles$hour.angle, "max")[1, 1] < 0)
 
+## Kt (clearness of the atmosphere) is an argument (#84); it was fixed at 1
+sw1 <- incSWradiation(flat, angles, WS)
+stopifnot(maxdiff(incSWradiation(flat, angles, WS, Kt = 1), sw1) == 0,
+          terra::global(incSWradiation(flat, angles, WS, Kt = 0.5) - sw1, "max")[1, 1] < 0)
+
+## Weather at the overpass (#84): radiation against clear sky, period means
+## and the clear-sky option. INTA: 587 W/m2 against a clear-sky 860 W/m2
+ws.args <- list(WSdata = file.path(extdata, "INTA.csv"), datetime.format = "%Y/%m/%d %H:%M",
+                columns = c("date" = 1, "time" = 1, "radiation" = 5, "wind" = 6, "RH" = 3,
+                            "temp" = 2, "rain" = 4),
+                lat = -33.00513, long = -68.86469, elev = 927, height = 2, MTL = MTL.L2,
+                tz = "America/Argentina/Mendoza")
+o <- water:::getDataWS(WS)
+Rso <- water:::clearSkyRso(o$DOY, o$hours + 0.5, o$lat, o$long, o$long.z, o$elev) * 1e6 / 3600
+stopifnot(abs(Rso - 860) < 1)
+invisible(expect_warning(do.call(read.WSdata, ws.args), "68% of the clear-sky value"))
+WSend <- quiet(do.call(read.WSdata, c(ws.args, timestamps = "end")))
+stopifnot(abs(WSend$at.sat$radiation - 638) < 2)
+WSclear <- quiet(do.call(read.WSdata, c(ws.args, overpass.radiation = "clear-sky")))
+stopifnot(abs(water:::getDataWS(WSclear)$radiation - 860) < 1,
+          WSclear$at.sat$radiation.measured == WS$at.sat$radiation,
+          abs(hourlyET(WSclear) - 0.679) < 0.005)
+
 ## calcTOAr(): L8 reflectance divided by cos(incidence angle), not the angle
 toa <- calcTOAr(image.DN = image.DN, sat = "L8", MTL = MTL.L1,
                 incidence.rel = angles$incidence.rel)
@@ -57,11 +80,16 @@ stopifnot(abs(terra::global(toa$NIR - usgs, "mean", na.rm = TRUE)[1, 1]) < 0.005
 ## calcTOAr(): L7 bands by name (L7_Talca stores SWIR2 after Thermal1)
 L7 <- terra::rast(L7_Talca)
 MTL.L7 <- file.path(extdata, "L7.MTL.txt")
-WS7 <- quiet(read.WSdata(WSdata = file.path(extdata, "apples.csv"),
-                         date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639,
-                         elev = 201, height = 2.2, tz = "America/Santiago",
-                         columns = c(1, 2, 3, 4, 6, 7, 8), cf = c(1, 0.2777778, 1),
-                         MTL = MTL.L7))
+w7 <- character()
+WS7 <- withCallingHandlers(
+  read.WSdata(WSdata = file.path(extdata, "apples.csv"),
+              date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639,
+              elev = 201, height = 2.2, tz = "America/Santiago",
+              columns = c(1, 2, 3, 4, 6, 7, 8), cf = c(1, 0.2777778, 1),
+              MTL = MTL.L7),
+  warning = function(c) { w7 <<- c(w7, conditionMessage(c)); invokeRestart("muffleWarning") })
+# a clear overpass: Rs/Rso is 0.94, no warning (#84)
+stopifnot(!any(grepl("clear-sky", w7)))
 angles7 <- solarAngles(surface.model = METRICtopo(flatDEM(L7)), WeatherStation = WS7,
                        MTL = MTL.L7)
 toa7 <- calcTOAr(image.DN = L7, sat = "L7", MTL = MTL.L7,

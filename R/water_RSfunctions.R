@@ -299,6 +299,9 @@ calcTOAr <- function(image.DN, sat="auto",
 #' METRICtopo()
 #' @param MTL             Landsat metadata file, used to detect the satellite
 #' when sat = "auto"
+#' @param Kt              clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid air. See
+#' \code{\link{incSWradiation}}
 #' @return SpatRaster with surface reflectance (unitless) in layers B, G, R,
 #' NIR, SWIR1 and SWIR2.
 #' @author Guillermo Federico Olmedo
@@ -311,8 +314,9 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @export
 # incidence hor from TML?? 
 calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
-                   WeatherStation, surface.model, MTL){
+                   WeatherStation, surface.model, MTL, Kt = 1){
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
+  checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -328,7 +332,6 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
     P <- 101.3*((293-0.0065 * surface.model$DEM)/293)^5.26
     ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
     W <- 0.14 * ea * P + 2.1
-    Kt <- 1
     Cnb <- matrix(data=c(0.987, 2.319, 0.951, 0.375, 0.234, 0.365,
                          -0.00071, -0.00016, -0.00033, -0.00048, -0.00101, -0.00097,
                          0.000036, 0.000105, 0.00028, 0.005018, 0.004336, 0.004296,

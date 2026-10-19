@@ -229,6 +229,37 @@ checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
   invisible(TRUE)
 }
 
+# Station radiation at the overpass (Rs) against clear sky (Rso), both W/m2.
+# METRIC needs a clear image, so Rs/Rso should be near 1 (ASCE-EWRI 2005 uses
+# about +-10% on clear days); 0.8 leaves room for haze. Not checked at low sun
+checkOverpassRadiation <- function(Rs, Rso, overpass.radiation = "measured"){
+  if(!isTRUE(Rso >= 200) || is.na(Rs)){return(invisible(NA))}
+  ratio <- Rs / Rso
+  if(ratio < 0.8){
+    warning("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
+            "% of the clear-sky value (", round(Rso), " W/m2): clouds near the ",
+            "station, or a faulty or miscalibrated pyranometer. ",
+            if(overpass.radiation == "measured") {
+              "Check the sensor, or use overpass.radiation = \"clear-sky\""
+            } else "The clear-sky value is used (overpass.radiation = \"clear-sky\")")
+  }
+  if(ratio > 1.1){
+    warning("Radiation at the overpass is ", round(Rs), " W/m2, ", round(100 * ratio),
+            "% of the clear-sky value (", round(Rso), " W/m2): check the units ",
+            "and the calibration of the pyranometer")
+  }
+  invisible(ratio)
+}
+
+# Kt, the clearness (turbidity) coefficient of the atmosphere: 0 < Kt <= 1
+checkKt <- function(Kt){
+  if(!is.numeric(Kt) || length(Kt) != 1 || !isTRUE(Kt > 0 && Kt <= 1)){
+    stop("Kt must be a number above 0 and up to 1 (1 for clean air, 0.5 for ",
+         "extremely turbid air)", call. = FALSE)
+  }
+  invisible(Kt)
+}
+
 # One element of x at random; sample(x, 1) samples from 1:x when length(x) == 1
 sampleOne <- function(x){
   x[sample.int(length(x), 1)]

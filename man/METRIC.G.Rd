@@ -20,7 +20,8 @@ METRIC.G(
   image.SR,
   surf.temp,
   L = 0.1,
-  LST.method = "SC"
+  LST.method = "SC",
+  Kt = 1
 )
 }
 \arguments{
@@ -75,6 +76,10 @@ supplied it is used as Ts and surfaceTemperature() is not called.}
 \item{LST.method}{Method for land surface temperature estimation: "SC"
 for single channel or "SW" for split window (only for L8 and L9). Ignored
 if surf.temp is supplied. See \code{\link{surfaceTemperature}}}
+
+\item{Kt}{clearness (turbidity) coefficient of the atmosphere,
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}}
 }
 \value{
 SpatRaster with soil heat flux G (W/m2). The result is also plotted.

@@ -166,6 +166,17 @@ Input checks:
   ones warn with the likely unit problem (Kelvin or Fahrenheit, RH as a
   fraction, wind in km/h, radiation in MJ); a semicolon-separated file
   points to read.WSdata2().
+* Weather at the overpass (#84): read.WSdata() warns when the station
+  radiation at the overpass is below 80% (or above 110%) of the ASCE-EWRI
+  clear-sky radiation: the cold pixels are calibrated with it, and METRIC
+  needs a clear image. The Landsat 8 example now warns: 587 W/m2 against a
+  clear-sky 860 W/m2. New options, off by default: timestamps = "end" or
+  "start" for records that are means over a period (interpolated at the
+  middle of the periods); overpass.radiation = "clear-sky" to calibrate
+  with clear-sky radiation (calcH() and ET24h() use the same reference
+  ET); Kt, the clearness of the atmosphere (it was fixed at 1), in
+  METRIC.EB(), METRIC.Rn(), METRIC.G(), incSWradiation(), incLWradiation()
+  and calcSR().
 
 Behaviour changes to check in existing scripts:
 

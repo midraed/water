@@ -37,6 +37,9 @@
 #' @param LST.method       Method for land surface temperature estimation: "SC"
 #' for single channel or "SW" for split window (only for L8 and L9). Ignored
 #' if surf.temp is supplied. See \code{\link{surfaceTemperature}}
+#' @param Kt               clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+#' polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -71,9 +74,10 @@
 METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
                       alb.coeff = "Tasumi", LAI.method = "metric2010",
                       plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
-                      LST.method = "SC"){
+                      LST.method = "SC", Kt = 1){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method)
+  checkKt(Kt)
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
   MTL <- findMTL(if(!missing(MTL)) MTL)
@@ -82,8 +86,8 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                            thermalband = thermalband, surf.temp = surf.temp,
                            alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
                            LST.method = LST.method, plain = plain, DEM = DEM,
-                           aoi = aoi)
-  Rn <- metricRn(surface, WeatherStation)
+                           aoi = aoi, Kt = Kt)
+  Rn <- metricRn(surface, WeatherStation, Kt = Kt)
   plot(Rn, main="METRIC Net Radiation")
   return(Rn)
 }
@@ -121,9 +125,10 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                      Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
                      G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
-                     surf.temp, L = 0.1, LST.method = "SC"){
+                     surf.temp, L = 0.1, LST.method = "SC", Kt = 1){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method)
+  checkKt(Kt)
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
   MTL <- findMTL(if(!missing(MTL)) MTL)
@@ -132,8 +137,8 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
                            thermalband = thermalband, surf.temp = surf.temp,
                            alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
                            LST.method = LST.method, plain = plain, DEM = DEM,
-                           aoi = aoi)
-  if(missing(Rn)){Rn <- metricRn(surface, WeatherStation)}
+                           aoi = aoi, Kt = Kt)
+  if(missing(Rn)){Rn <- metricRn(surface, WeatherStation, Kt = Kt)}
   G <- soilHeatFlux(image = surface$image.SR, Ts = surface$Ts,
                     albedo = surface$albedo, Rn = Rn, LAI = surface$LAI,
                     method = G.method)
@@ -146,7 +151,7 @@ METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 # surfaceTemperature()
 metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
                           thermalband, surf.temp, alb.coeff, LAI.method,
-                          L = 0.1, LST.method = "SC", plain, DEM, aoi){
+                          L = 0.1, LST.method = "SC", plain, DEM, aoi, Kt = 1){
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
     stop("image.SR is missing. It can only be computed from image.DN for L7 or ",
          "MODIS; for L8/L9 provide it (e.g., loadImageSR()).")
@@ -187,7 +192,7 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
       image.SR <- calcSR(image.TOAr = image.TOAr, sat = sat,
                          surface.model = surface.model,
                          incidence.hor = solar.angles$incidence.hor,
-                         WeatherStation = WeatherStation)
+                         WeatherStation = WeatherStation, Kt = Kt)
     } else {
       image.SR <- image.DN  # MODIS
     }
@@ -219,13 +224,14 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
 }
 
 # Net radiation from the output of metricSurface()
-metricRn <- function(surface, WeatherStation){
+metricRn <- function(surface, WeatherStation, Kt = 1){
   Rs.inc <- incSWradiation(surface.model = surface$surface.model,
                            solar.angles = surface$solar.angles,
-                           WeatherStation = WeatherStation)
+                           WeatherStation = WeatherStation, Kt = Kt)
   Rl.out <- outLWradiation(LAI = surface$LAI, Ts = surface$Ts)
   Rl.inc <- incLWradiation(WeatherStation, DEM = surface$surface.model$DEM,
-                           solar.angles = surface$solar.angles, Ts = surface$Ts)
+                           solar.angles = surface$solar.angles, Ts = surface$Ts,
+                           Kt = Kt)
   netRadiation(surface$LAI, surface$albedo, Rs.inc, Rl.inc, Rl.out)
 }
 
@@ -293,6 +299,9 @@ metricRn <- function(surface, WeatherStation){
 #' station (Allen et al., 1998): 0.015 m (the default) for a standard station
 #' over clipped grass 0.12 m tall, 0.03 m for vegetation about 0.25 m tall
 #' @param verbose          Logical. If TRUE will print additional data to console
+#' @param Kt               clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+#' polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}
 #' @param extraParameters  Extra parameters for the non default methods, e.g.
 #' Zom.method = "Perrier" needs two extra parameters: fLAI, h. See
 #' \code{\link{momentumRoughnessLength}} and the Extra Parameters section.
@@ -374,10 +383,12 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
-                      verbose = FALSE, extraParameters = vector(), surf.temp){
+                      verbose = FALSE, extraParameters = vector(), surf.temp,
+                      Kt = 1){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method,
                   Zom.method = Zom.method)
+  checkKt(Kt)
   anchors.method <- checkAnchorsMethod(anchors.method)
   checkExtraParameters(extraParameters, Zom.method)
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
@@ -408,7 +419,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                            thermalband = thermalband, surf.temp = surf.temp,
                            alb.coeff = alb.coeff, LAI.method = LAI.method, L = L,
                            LST.method = LST.method, plain = plain, DEM = DEM,
-                           aoi = aoi)
+                           aoi = aoi, Kt = Kt)
   DEM <- surface$DEM
   surface.model <- surface$surface.model
   image.TOAr <- surface$image.TOAr
@@ -416,7 +427,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   albedo <- surface$albedo
   LAI <- surface$LAI
   Ts <- surface$Ts
-  Rn <- metricRn(surface, WeatherStation)
+  Rn <- metricRn(surface, WeatherStation, Kt = Kt)
   # Rn[Rn < 0]  <-  0 # see H
   #setTxtProgressBar(pb, 40)
   G <- soilHeatFlux(image = image.SR, Ts=Ts,albedo=albedo, 
@@ -502,7 +513,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
                       anchors.method = anchors.method, plain = plain,
-                      ETp.coef= ETp.coef, Z.om.ws=Z.om.ws,
+                      ETp.coef= ETp.coef, Z.om.ws=Z.om.ws, Kt = Kt,
                       extraParameters = extraParameters)
   class(result) <- "waterLSEB"
   return(result)

@@ -17,7 +17,9 @@ read.WSdata(
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S",
   tz = "",
   cf = c(1, 1, 1),
-  MTL
+  MTL,
+  timestamps = "instant",
+  overpass.radiation = "measured"
 )
 }
 \arguments{
@@ -64,6 +66,17 @@ given, the weather conditions at the satellite overpass are interpolated
 (element at.sat); if the overpass is outside the records, a warning is
 given and at.sat is not computed. If missing, at.sat is not computed (with
 a message).}
+
+\item{timestamps}{"instant" (default) if each record is the value at
+its time; "end" or "start" if it is the mean over the period ending or
+starting at its time (e.g. hourly means). For period means, the conditions
+at the overpass are interpolated between the middles of the periods.}
+
+\item{overpass.radiation}{"measured" (default) uses the station radiation
+at the overpass; "clear-sky" uses the ASCE-EWRI (2005) clear-sky radiation
+instead (the measured value is kept in at.sat$radiation.measured), e.g.
+when clouds shade the station but not the image. calcH() (ET of the cold
+pixels) and ET24h() then use the same clear-sky reference ET. See Details.}
 }
 \value{
 An object of class waterWeatherStation: a list with location (lat,
@@ -93,6 +106,13 @@ speed above 20 m/s (km/h), radiation above 1400 W/m2, or below 50 W/m2 over
 at least 12 hours (MJ m-2 h-1). Wind speed in km/h is not caught when it is
 below 20 km/h. A file with semicolon separators stops, pointing to
 read.WSdata2().
+
+METRIC needs a clear image, so the station radiation at the overpass (Rs)
+should be close to the clear-sky radiation (Rso, ASCE-EWRI 2005, over the
+hour centred on the overpass). A warning is given when Rs/Rso is below 0.8
+(clouds near the station, or a faulty or miscalibrated pyranometer) or
+above 1.1 (units or calibration). It is not checked when Rso is below 200
+W/m2 (low sun).
 }
 \examples{
 csvfile <- system.file("extdata", "apples.csv", package="water")
@@ -110,6 +130,10 @@ plot(WS, hourly=TRUE)
 \references{
 Landsat 7 Metadata example file available from the U.S. Geological Survey.
 Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
+
+ASCE-EWRI (2005). The ASCE Standardized Reference Evapotranspiration
+Equation. Report of the ASCE-EWRI Task Committee on Standardization of
+Reference Evapotranspiration.
 }
 \seealso{
 \code{\link{read.WSdata2}} for files with semicolon separators and

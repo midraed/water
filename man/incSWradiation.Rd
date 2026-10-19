@@ -4,7 +4,7 @@
 \alias{incSWradiation}
 \title{Calculates Incoming Solar Radiation}
 \usage{
-incSWradiation(surface.model, solar.angles, WeatherStation)
+incSWradiation(surface.model, solar.angles, WeatherStation, Kt = 1)
 }
 \arguments{
 \item{surface.model}{SpatRaster with layers DEM, Slope and Aspect, from
@@ -15,6 +15,10 @@ hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 
 \item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 data.frame returned by getDataWS()}
+
+\item{Kt}{clearness (turbidity) coefficient of the atmosphere,
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
 }
 \value{
 SpatRaster with incoming short-wave radiation (W/m2) at the time of

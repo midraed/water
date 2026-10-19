@@ -17,7 +17,9 @@ read.WSdata2(
   datetime.format = "\%Y-\%m-\%d \%H:\%M:\%S",
   tz = "",
   cf = c(1, 1, 1),
-  MTL
+  MTL,
+  timestamps = "instant",
+  overpass.radiation = "measured"
 )
 }
 \arguments{
@@ -65,6 +67,17 @@ given, the weather conditions at the satellite overpass are interpolated
 (element at.sat); if the overpass is outside the records, a warning is
 given and at.sat is not computed. If missing, at.sat is not computed (with
 a message).}
+
+\item{timestamps}{"instant" (default) if each record is the value at
+its time; "end" or "start" if it is the mean over the period ending or
+starting at its time (e.g. hourly means). For period means, the conditions
+at the overpass are interpolated between the middles of the periods.}
+
+\item{overpass.radiation}{"measured" (default) uses the station radiation
+at the overpass; "clear-sky" uses the ASCE-EWRI (2005) clear-sky radiation
+instead (the measured value is kept in at.sat$radiation.measured), e.g.
+when clouds shade the station but not the image. calcH() (ET of the cold
+pixels) and ET24h() then use the same clear-sky reference ET. See Details.}
 }
 \value{
 A waterWeatherStation object, see \code{\link{read.WSdata}}.

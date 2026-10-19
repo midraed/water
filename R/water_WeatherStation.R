@@ -34,6 +34,15 @@
 #' (element at.sat); if the overpass is outside the records, a warning is
 #' given and at.sat is not computed. If missing, at.sat is not computed (with
 #' a message).
+#' @param timestamps         "instant" (default) if each record is the value at
+#' its time; "end" or "start" if it is the mean over the period ending or
+#' starting at its time (e.g. hourly means). For period means, the conditions
+#' at the overpass are interpolated between the middles of the periods.
+#' @param overpass.radiation "measured" (default) uses the station radiation
+#' at the overpass; "clear-sky" uses the ASCE-EWRI (2005) clear-sky radiation
+#' instead (the measured value is kept in at.sat$radiation.measured), e.g.
+#' when clouds shade the station but not the image. calcH() (ET of the cold
+#' pixels) and ET24h() then use the same clear-sky reference ET. See Details.
 #' @details
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
@@ -51,6 +60,13 @@
 #' at least 12 hours (MJ m-2 h-1). Wind speed in km/h is not caught when it is
 #' below 20 km/h. A file with semicolon separators stops, pointing to
 #' read.WSdata2().
+#'
+#' METRIC needs a clear image, so the station radiation at the overpass (Rs)
+#' should be close to the clear-sky radiation (Rso, ASCE-EWRI 2005, over the
+#' hour centred on the overpass). A warning is given when Rs/Rso is below 0.8
+#' (clouds near the station, or a faulty or miscalibrated pyranometer) or
+#' above 1.1 (units or calibration). It is not checked when Rso is below 200
+#' W/m2 (low sun).
 #' @examples
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
@@ -71,16 +87,23 @@
 #' @family Weather station related functions
 #' @seealso \code{\link{read.WSdata2}} for files with semicolon separators and
 #' decimal commas (read.csv2())
-#' @references 
+#' @references
 #' Landsat 7 Metadata example file available from the U.S. Geological Survey.
 #' Weather Station example file courtesy of CITRA, Universidad de Talca, Chile
+#'
+#' ASCE-EWRI (2005). The ASCE Standardized Reference Evapotranspiration
+#' Equation. Report of the ASCE-EWRI Task Committee on Standardization of
+#' Reference Evapotranspiration.
 #' @export
 read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                         columns=c("date" = 1, "time" = 2, "radiation" = 3,
                                   "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8),
                         date.format = "%Y-%m-%d", time.format = "%H:%M:%S", 
                         datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
-                        cf = c(1, 1, 1), MTL){
+                        cf = c(1, 1, 1), MTL, timestamps = "instant",
+                        overpass.radiation = "measured"){
+  checkChoice(timestamps, c("instant", "end", "start"), "timestamps")
+  checkChoice(overpass.radiation, c("measured", "clear-sky"), "overpass.radiation")
   if(tz==""){warning(paste('As tz = "", assuming the weather station time zone is', Sys.timezone()))
   } else if(!knownTimezone(tz)){
     stop("Unknown time zone: \"", tz, "\". Use a name from OlsonNames(), e.g. ",
@@ -272,6 +295,13 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
                              format = "%Y-%m-%d %H:%M:%S", tz="UTC")
     # same instant in the weather station time zone, to compare with its records
     sat.datetime <- as.POSIXlt(as.POSIXct(sat.datetime), tz = tz)
+    if(timestamps != "instant"){
+      # means over the period ending (or starting) at each record: they are
+      # interpolated at the middle of the periods
+      step <- stats::median(diff(as.numeric(WSdata$datetime)))
+      WSdata$datetime <- WSdata$datetime + if(timestamps == "end") -step/2 else step/2
+      datetime <- as.POSIXlt(WSdata$datetime)
+    }
     records <- range(WSdata$datetime)
     if(!(sat.datetime > records[1] && sat.datetime < records[2])){
       warning("The satellite overpass (", format(sat.datetime, usetz = TRUE),
@@ -292,6 +322,15 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     sat.data <- WS.prev + (WS.after - WS.prev)/delta1 * delta2
     sat.data[,2:6] <- round(sat.data[,2:6],2)
     result$at.sat <- sat.data
+    # clear-sky radiation over the hour centred on the overpass, as in hourlyET()
+    o <- getDataWS(result)
+    Rso <- clearSkyRso(DOY = o$DOY, hours = o$hours + 0.5, lat = o$lat,
+                       long = o$long, long.z = o$long.z, elev = o$elev) * 1e6 / 3600
+    checkOverpassRadiation(o$radiation, Rso, overpass.radiation)
+    if(overpass.radiation == "clear-sky"){
+      result$at.sat$radiation.measured <- result$at.sat$radiation
+      result$at.sat$radiation <- Rso
+    }
   }
   class(result) <- "waterWeatherStation"
   return(result)
@@ -320,7 +359,8 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
                                    "wind" = 4, "RH" = 6, "temp" = 7, "rain" = 8),
                          date.format = "%d/%m/%Y", time.format = "%H:%M:%S", 
                          datetime.format = "%Y-%m-%d %H:%M:%S", tz = "",
-                         cf = c(1, 1, 1), MTL){
+                         cf = c(1, 1, 1), MTL, timestamps = "instant",
+                         overpass.radiation = "measured"){
   if(is.character(WSdata)){
     if(!isURL(WSdata) && !file.exists(WSdata)){
       stop("Weather station file not found: ", WSdata)
@@ -330,7 +370,8 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
   read.WSdata(WSdata, height = height, lat = lat, long = long, elev = elev,
               columns = columns, date.format = date.format,
               time.format = time.format, datetime.format = datetime.format,
-              tz = tz, cf = cf, MTL = MTL)
+              tz = tz, cf = cf, MTL = MTL, timestamps = timestamps,
+              overpass.radiation = overpass.radiation)
 }
 
 

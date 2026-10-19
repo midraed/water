@@ -27,7 +27,8 @@ METRIC.EB(
   Z.om.ws = 0.015,
   verbose = FALSE,
   extraParameters = vector(),
-  surf.temp
+  surf.temp,
+  Kt = 1
 )
 }
 \arguments{
@@ -113,6 +114,10 @@ Zom.method = "Perrier" needs two extra parameters: fLAI, h. See
 \item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
 same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
 supplied it is used as Ts and surfaceTemperature() is not called.}
+
+\item{Kt}{clearness (turbidity) coefficient of the atmosphere,
+0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+polluted air (Allen et al., 2007). See \code{\link{incSWradiation}}}
 }
 \value{
 An object of class \code{waterLSEB}, a list with:

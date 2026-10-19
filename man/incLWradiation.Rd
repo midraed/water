@@ -4,7 +4,7 @@
 \alias{incLWradiation}
 \title{Calculates incoming long-wave radiation}
 \usage{
-incLWradiation(WeatherStation, DEM, solar.angles, Ts)
+incLWradiation(WeatherStation, DEM, solar.angles, Ts, Kt = 1)
 }
 \arguments{
 \item{WeatherStation}{waterWeatherStation object (see \code{\link{read.WSdata}}) or the
@@ -17,6 +17,10 @@ hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()}
 
 \item{Ts}{land surface temperature (K), from
 surfaceTemperature()}
+
+\item{Kt}{clearness (turbidity) coefficient of the atmosphere,
+0 < Kt <= 1, used for the short-wave transmissivity: 1 (default) for clean
+air. See \code{\link{incSWradiation}}}
 }
 \value{
 SpatRaster with incoming long-wave radiation (W/m2).

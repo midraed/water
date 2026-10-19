@@ -84,11 +84,6 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
                           (WeatherStation$temp+237.3))
   ea <- (WeatherStation$RH/100)*ea.sat
   DPV <- ea.sat - ea
-  dr <- 1 + 0.033*(cos(2*pi*DOY/365))
-  delta <- 0.409*sin((2*pi*DOY/365)-1.39)
-  phi <- WeatherStation$lat*(pi/180)
-  b <- 2*pi*(DOY-81)/364
-  Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
   if(is.null(long.z)){
     long.z <- WeatherStation$long.z
     if(is.null(long.z) && inherits(WeatherStation$datetime, "POSIXt")){
@@ -97,19 +92,9 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
     if(is.null(long.z)){long.z <- WeatherStation$long}  # time zone unknown
   }
   if(ET.instantaneous==TRUE){hours <- hours +0.5}
-  hour.angle <- (pi/12)*((hours-0.5+0.06667*(WeatherStation$long-long.z)+Sc)-12)
-  w1 <- hour.angle-((pi)/24)
-  w2 <- hour.angle+((pi)/24)
-  hour.angle.s <- acos(-tan(phi)*tan(delta))
-  w1c <- ifelse(w1< -hour.angle.s, -hour.angle.s, 
-                ifelse(w1>hour.angle.s, hour.angle.s, ifelse(w1>w2, w2, w1)))
-  w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s, 
-                ifelse(w2>hour.angle.s, hour.angle.s, w2))
-  Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
-  Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*
-                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*
-                                                     (sin(w2)-sin(w1)))))
-  Rso <- (0.75+2e-5*WeatherStation$elev)*Ra
+  Rso <- clearSkyRso(DOY = DOY, hours = hours, lat = WeatherStation$lat,
+                     long = WeatherStation$long, long.z = long.z,
+                     elev = WeatherStation$elev)
   Rs.Rso <- ifelse(Rs/Rso<=0.3, 0, ifelse(Rs/Rso>=1, 1, Rs/Rso))
   fcd <- ifelse(1.35*Rs.Rso-0.35<=0.05, 0.05, 
                 ifelse(1.35*Rs.Rso-0.35<1, 1.35*Rs.Rso-0.35,1))
@@ -130,7 +115,31 @@ hourlyET <- function(WeatherStation, hours, DOY, long.z=NULL,
   return(ET.hourly)
 }
 
-#' Calculates daily ET from a surface energy balance and Weather Station 
+# Clear-sky solar radiation Rso (MJ m-2 h-1, ASCE-EWRI 2005) for the hour
+# ending at hours (decimal hours of the station clock); long.z is the
+# longitude of the centre of its time zone
+clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
+  dr <- 1 + 0.033*(cos(2*pi*DOY/365))
+  delta <- 0.409*sin((2*pi*DOY/365)-1.39)
+  phi <- lat*(pi/180)
+  b <- 2*pi*(DOY-81)/364
+  Sc <- 0.1645*sin(2*b)-0.1255*cos(b)-0.025*sin(b)
+  hour.angle <- (pi/12)*((hours-0.5+0.06667*(long-long.z)+Sc)-12)
+  w1 <- hour.angle-((pi)/24)
+  w2 <- hour.angle+((pi)/24)
+  hour.angle.s <- acos(-tan(phi)*tan(delta))
+  w1c <- ifelse(w1< -hour.angle.s, -hour.angle.s,
+                ifelse(w1>hour.angle.s, hour.angle.s, ifelse(w1>w2, w2, w1)))
+  w2c <- ifelse(w2< -hour.angle.s, -hour.angle.s,
+                ifelse(w2>hour.angle.s, hour.angle.s, w2))
+  Beta <- asin((sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(hour.angle)))
+  Ra <- ifelse(Beta <= 0, 1e-45, ((12/pi)*4.92*dr)*
+                 (((w2c-w1c)*sin(phi)*sin(delta))+(cos(phi)*cos(delta)*
+                                                     (sin(w2)-sin(w1)))))
+  (0.75+2e-5*elev)*Ra
+}
+
+#' Calculates daily ET from a surface energy balance and Weather Station
 #' @description
 #' Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
 #' (from LE = Rn - G - H) divided by the hourly alfalfa reference ET (ETr, see

@@ -303,6 +303,9 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()
 #' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
 #' data.frame returned by getDataWS()
+#' @param Kt              clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
+#' polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}
 #' @return SpatRaster with incoming short-wave radiation (W/m2) at the time of
 #' the satellite overpass.
 #' @author Guillermo Federico Olmedo
@@ -312,12 +315,13 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
-incSWradiation <- function(surface.model, solar.angles, WeatherStation){
+incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
+  checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
-  tau.sw <- SWtrasmisivity(Kt = 1, ea, surface.model$DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtrasmisivity(Kt = Kt, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
   Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
@@ -671,6 +675,9 @@ outLWradiation <- function(LAI, Ts){
 #' hour.angle, incidence.hor and incidence.rel (radians), from solarAngles()
 #' @param Ts               land surface temperature (K), from
 #' surfaceTemperature()
+#' @param Kt               clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1, used for the short-wave transmissivity: 1 (default) for clean
+#' air. See \code{\link{incSWradiation}}
 #' @return SpatRaster with incoming long-wave radiation (W/m2).
 #' @author Guillermo Federico Olmedo
 #' @author David Fonseca-Luengo
@@ -683,13 +690,14 @@ outLWradiation <- function(LAI, Ts){
 #' Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000 \cr
 #' @export
 # Add a function to get "cold" pixel temperature so in can be used in the next function
-incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts){
+incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts, Kt = 1){
+  checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/
                                              (WeatherStation$temp+237.3))
-  tau.sw <- SWtrasmisivity(Kt = 1, ea, DEM, solar.angles$incidence.hor)
+  tau.sw <- SWtrasmisivity(Kt = Kt, ea, DEM, solar.angles$incidence.hor)
   #temp <-  WeatherStation$temp+273.15 - (DEM - WeatherStation$elev) * 6.49 / 1000 
   ## Temperature in Kelvin
   #Mountain lapse effects from International Civil Aviation Organization
