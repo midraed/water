@@ -9,7 +9,9 @@ calcH.control(
   u200.min = 2,
   damping = 0,
   ETrF.hot = 0,
-  cold.NDVI.rule = FALSE
+  cold.NDVI.rule = FALSE,
+  lapse = 6.49,
+  slope.min1 = FALSE
 )
 }
 \arguments{
@@ -36,6 +38,15 @@ min(ETp.coef, Kc * ETo / ETr), with Kc = 2.11 NDVI - 0.4989
 "flexible" does it, when the cold criteria had to be relaxed. The NDVI is
 from top-of-atmosphere reflectance with image.DN, from surface reflectance
 otherwise}
+
+\item{lapse}{lapse rate (K/km) of the surface temperature with
+elevation, for plain = FALSE (default 6.49): Ts is referred to the
+elevation of the weather station for the dT calibration and the anchors}
+
+\item{slope.min1}{logical (default FALSE). For plain = FALSE, the
+roughness adjustment for terrain of Allen et al. (2007, Eq. 35), 1 + (slope
+- 5) / 20, lowers the roughness on slopes below 5 degrees; if TRUE it is at
+least 1, as in the METRIC manual}
 }
 \value{
 A list of class waterControl with the parameters.

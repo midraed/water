@@ -184,7 +184,10 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' e.g. from dailyET() (whose default is the alfalfa reference, ETr). If
 #' missing, dailyET(WeatherStation) is used (the day of the overpass)
 #' @param C.rad          correction term used in sloping terrain to correct for
-#' variation in 24 h versus instantaneous energy availability. See Allen (2007)
+#' variation in 24 h versus instantaneous energy availability (Allen et al.,
+#' 2007, Eq. 56): a number or a SpatRaster. With a METRIC.EB() result computed
+#' with a DEM (plain = FALSE) it is computed with \code{\link{Crad}}; 1
+#' otherwise
 #' @details
 #' ETrF is a crop coefficient on the alfalfa reference basis. To compare it
 #' with a crop coefficient on the grass reference basis (Kc, FAO-56), multiply
@@ -199,7 +202,8 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
 #' (instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
 #' unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
-#' Rn - G, else 0). ET24 is also plotted.
+#' Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM. ET24
+#' is also plotted.
 #' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @references 
@@ -213,6 +217,11 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
     if(missing(WeatherStation)){WeatherStation <- EB$WeatherStation}
     Rn <- EB$EB$NetRadiation; G <- EB$EB$SoilHeat; H <- EB$EB$SensibleHeat
     Ts <- EB$EB$surfaceTemperature
+    # mountain mode: slope correction of daily ET (Allen et al., 2007, Eq. 56)
+    if(!is.null(EB$terrain) && missing(C.rad)){
+      C.rad <- Crad(EB$terrain, EB$terrain, WeatherStation,
+                    Kt = as.numeric(EB$methods[["Kt"]]))
+    }
   }
   if(missing(ETr.daily)){
     if(!inherits(WeatherStation, "waterWeatherStation")){
@@ -240,8 +249,12 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
     return(saveLoadClean(imagestack = ET.24, file = "ET24", overwrite=TRUE))
   }
   result <- c(ET.inst, ETr.Fr, ET.24, H > Rn - G)
-  saveLoadClean(imagestack = result, stack.names = c("ETinst", "ETrF", "ET24", "HgtRnG"),
-                file = "ET24", overwrite = TRUE)
+  layers <- c("ETinst", "ETrF", "ET24", "HgtRnG")
+  if(inherits(C.rad, "SpatRaster")){
+    result <- c(result, C.rad)
+    layers <- c(layers, "C.rad")
+  }
+  saveLoadClean(imagestack = result, stack.names = layers, file = "ET24", overwrite = TRUE)
 }
 
 

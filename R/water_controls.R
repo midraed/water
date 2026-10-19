@@ -71,6 +71,13 @@ anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
 #' "flexible" does it, when the cold criteria had to be relaxed. The NDVI is
 #' from top-of-atmosphere reflectance with image.DN, from surface reflectance
 #' otherwise
+#' @param lapse     lapse rate (K/km) of the surface temperature with
+#' elevation, for plain = FALSE (default 6.49): Ts is referred to the
+#' elevation of the weather station for the dT calibration and the anchors
+#' @param slope.min1  logical (default FALSE). For plain = FALSE, the
+#' roughness adjustment for terrain of Allen et al. (2007, Eq. 35), 1 + (slope
+#' - 5) / 20, lowers the roughness on slopes below 5 degrees; if TRUE it is at
+#' least 1, as in the METRIC manual
 #' @return A list of class waterControl with the parameters.
 #' @family METRIC model functions
 #' @seealso \code{\link{calcH}}
@@ -78,7 +85,7 @@ anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
 #' calcH.control(maxit = 30)
 #' @export
 calcH.control <- function(maxit = 20, u200.min = 2, damping = 0, ETrF.hot = 0,
-                          cold.NDVI.rule = FALSE){
+                          cold.NDVI.rule = FALSE, lapse = 6.49, slope.min1 = FALSE){
   if(!is.numeric(maxit) || length(maxit) != 1 || !isTRUE(maxit >= 1) || maxit %% 1 != 0){
     stop("maxit must be a whole number, 1 or more", call. = FALSE)
   }
@@ -92,8 +99,13 @@ calcH.control <- function(maxit = 20, u200.min = 2, damping = 0, ETrF.hot = 0,
   if(!isTRUE(cold.NDVI.rule) && !isFALSE(cold.NDVI.rule)){
     stop("cold.NDVI.rule must be TRUE or FALSE", call. = FALSE)
   }
+  positive(lapse, "lapse", zero = TRUE)
+  if(!isTRUE(slope.min1) && !isFALSE(slope.min1)){
+    stop("slope.min1 must be TRUE or FALSE", call. = FALSE)
+  }
   structure(list(maxit = maxit, u200.min = u200.min, damping = damping,
-                 ETrF.hot = ETrF.hot, cold.NDVI.rule = cold.NDVI.rule),
+                 ETrF.hot = ETrF.hot, cold.NDVI.rule = cold.NDVI.rule,
+                 lapse = lapse, slope.min1 = slope.min1),
             class = c("waterControl", "list"))
 }
 

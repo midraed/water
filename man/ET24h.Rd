@@ -27,7 +27,10 @@ e.g. from dailyET() (whose default is the alfalfa reference, ETr). If
 missing, dailyET(WeatherStation) is used (the day of the overpass)}
 
 \item{C.rad}{correction term used in sloping terrain to correct for
-variation in 24 h versus instantaneous energy availability. See Allen (2007)}
+variation in 24 h versus instantaneous energy availability (Allen et al.,
+2007, Eq. 56): a number or a SpatRaster. With a METRIC.EB() result computed
+with a DEM (plain = FALSE) it is computed with \code{\link{Crad}}; 1
+otherwise}
 }
 \value{
 With Rn, G, H and Ts: a SpatRaster with daily (24 h) actual
@@ -35,7 +38,8 @@ evapotranspiration (mm/day) in a layer named ET24; negative values are set
 to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
 (instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
 unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
-Rn - G, else 0). ET24 is also plotted.
+Rn - G, else 0), and C.rad for METRIC.EB() results computed with a DEM. ET24
+is also plotted.
 }
 \description{
 Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
@@ -58,6 +62,7 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 }
 \seealso{
 Other ET functions:
+\code{\link[=Crad]{Crad()}},
 \code{\link[=dailyET]{dailyET()}},
 \code{\link[=hourlyET]{hourlyET()}}
 }

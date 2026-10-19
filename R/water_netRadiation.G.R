@@ -324,10 +324,77 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
   tau.sw <- SWtrasmisivity(Kt = Kt, ea, surface.model$DEM, solar.angles$incidence.hor)
   DOY <- WeatherStation$DOY
   d <- sqrt(1/(1+0.033*cos(DOY * (2 * pi/365))))
-  Rs.inc <- 1367 * cos(solar.angles$incidence.rel) * tau.sw / d^2
+  # slopes facing away from the sun (cos < 0) get no direct radiation
+  cos.rel <- cos(solar.angles$incidence.rel)
+  cos.rel[cos.rel < 0] <- 0
+  Rs.inc <- 1367 * cos.rel * tau.sw / d^2
   Rs.inc <- saveLoadClean(imagestack = Rs.inc, 
                           file = "Rs.inc", overwrite=TRUE)
   return(Rs.inc)
+}
+
+#' Correction of daily ET for sloping terrain
+#' @description
+#' Calculates C_rad, the correction of daily ET for the slope and aspect of
+#' each pixel (Allen et al., 2007, Eqs. 55-57): the ratio of the clear-sky
+#' radiation of the pixel to that of a horizontal surface over 24 h, relative
+#' to the same ratio at the satellite overpass. ET24h() uses it for METRIC.EB()
+#' results computed with a DEM (plain = FALSE).
+#' @param surface.model   SpatRaster with layers DEM, Slope and Aspect, from
+#' METRICtopo()
+#' @param solar.angles    SpatRaster with layers latitude, declination,
+#' hour.angle, incidence.hor and incidence.rel, from solarAngles()
+#' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
+#' data.frame returned by getDataWS(); its vapour pressure at the overpass is
+#' used for the transmissivity
+#' @param Kt              clearness (turbidity) coefficient of the atmosphere,
+#' 0 < Kt <= 1: 1 (default) for clean air. See \code{\link{SWtrasmisivity}}
+#' @details
+#' C_rad = (Rso_inst horizontal / Rso_inst pixel) * (Rso_24 pixel / Rso_24
+#' horizontal), with the clear-sky radiation of Eq. 3 integrated over the day
+#' in 30-minute steps (Eq. 57). Only self-shading (the sun behind the slope)
+#' is considered, not the shadows of other slopes. C_rad is 1 on horizontal
+#' pixels, and NA where the pixel is not lit at the overpass.
+#' @return SpatRaster with C_rad (unitless) in a layer named C.rad.
+#' @family ET functions
+#' @references
+#' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
+#' @export
+Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
+  checkKt(Kt)
+  if(inherits(WeatherStation, "waterWeatherStation")){
+    WeatherStation <- getDataWS(WeatherStation)
+  }
+  ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
+  lat <- solar.angles$latitude
+  dec <- solar.angles$declination
+  slope <- surface.model$Slope
+  aspect <- surface.model$Aspect
+  # cosine of the solar incidence angle on the sloping and on the horizontal
+  # surface for hour angle w, as in solarAngles() (Eq. 7)
+  cosRel <- function(w){
+    sin(dec)*sin(lat)*cos(slope) - sin(dec)*cos(lat)*sin(slope)*cos(aspect) +
+      cos(dec)*cos(lat)*cos(slope)*cos(w) +
+      cos(dec)*sin(lat)*sin(slope)*cos(aspect)*cos(w) +
+      cos(dec)*sin(aspect)*sin(slope)*sin(w)
+  }
+  cosHor <- function(w){sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(w)}
+  # Rso of Eq. 3 without the constant Gsc / d2, which cancels
+  rso <- function(cos.surface, cos.hor){
+    lit <- cos.hor > 0.01
+    tau <- SWtrasmisivity(Kt = Kt, ea, surface.model$DEM, acos(ifel(lit, cos.hor, 1)))
+    ifel(lit & cos.surface > 0, cos.surface * tau, 0)
+  }
+  pixel.24 <- horizontal.24 <- 0
+  for(w in seq(-pi, pi, by = pi/24)){
+    ch <- cosHor(w)
+    pixel.24 <- pixel.24 + rso(cosRel(w), ch)
+    horizontal.24 <- horizontal.24 + rso(ch, ch)
+  }
+  cos.hor.i <- cos(solar.angles$incidence.hor)
+  cos.rel.i <- cos(solar.angles$incidence.rel)
+  C.rad <- ifel(cos.rel.i > 0, cos.hor.i / cos.rel.i, NA) * pixel.24 / horizontal.24
+  saveLoadClean(imagestack = C.rad, stack.names = "C.rad", file = "C.rad", overwrite = TRUE)
 }
 
 #' Calculates Broadband Albedo from Landsat data

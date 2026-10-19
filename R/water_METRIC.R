@@ -391,6 +391,9 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #'     iterations and u200 (wind speed at 200 m used, m/s), from calcH(); and,
 #'     for automatic anchors, the number of candidates and the relaxation of
 #'     the criteria, from calcAnchors().}
+#'   \item{terrain}{with plain = FALSE, SpatRaster with the surface model and
+#'     the solar angles, for the slope correction of daily ET (see
+#'     \code{\link{Crad}} and \code{\link{ET24h}}).}
 #'   \item{methods}{named character vector with the methods and parameters used.}
 #' }
 #' @author Guillermo Federico Olmedo
@@ -482,33 +485,38 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                     Rn=Rn, LAI=LAI, method = G.method)
   # G[G < 0]  <-  0 # see H
   if(Zom.method == "short.crops"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, slope.min1 = calcH.control$slope.min1, 
                                     method = Zom.method, 
                                     surface.model = surface.model)
   }
   if(Zom.method == "custom"){
     NDVI <- (image.TOAr$NIR - image.TOAr$R) / (image.TOAr$NIR + image.TOAr$R)
     Z.om <- momentumRoughnessLength(LAI=LAI, NDVI = NDVI, albedo = albedo,
-                                    mountainous = !plain,
+                                    mountainous = !plain, slope.min1 = calcH.control$slope.min1,
                                     method = Zom.method, a = extraParameters["a"],
                                     b = extraParameters["b"],
                                     surface.model = surface.model)
   }
   if(Zom.method == "Perrier"){
-    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
+    Z.om <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, slope.min1 = calcH.control$slope.min1, 
                                     method = Zom.method, fLAI = extraParameters["fLAI"],
                                     h = extraParameters["h"],
                                     surface.model = surface.model)
   }
-  if(Zom.method != "short.crops"){Z.om.sc <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, 
+  if(Zom.method != "short.crops"){Z.om.sc <- momentumRoughnessLength(LAI=LAI, mountainous = !plain, slope.min1 = calcH.control$slope.min1, 
                                                              method = "short.crops", 
                                                              surface.model = surface.model)
   } else {Z.om.sc <- Z.om}
   par(mfrow=c(1,2))
   auto.anchors <- missing(anchors)
+  # in mountain mode the anchors are chosen on Ts referred to the elevation of
+  # the weather station, as the dT calibration of calcH()
+  Ts.anchors <- if(plain) Ts else {
+    Ts + (DEM - WeatherStation$location$elev) * calcH.control$lapse / 1000
+  }
   if(auto.anchors){
     anchors <- muffleKelvin(
-      calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
+      calcAnchors(image = image.TOAr, Ts = Ts.anchors, LAI = LAI, plots = T,
                   albedo = albedo, Z.om = Z.om.sc, n = n,
                   anchors.method = anchors.method, WeatherStation = WeatherStation,
                   deltaTemp = anchors.control$deltaTemp,
@@ -563,7 +571,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
           WeatherStation = WeatherStation, ETp.coef = ETp.coef,
           Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose,
           maxit = calcH.control$maxit, u200.min = calcH.control$u200.min,
-          ETrF.hot = calcH.control$ETrF.hot,
+          ETrF.hot = calcH.control$ETrF.hot, lapse = calcH.control$lapse,
           damping = calcH.control$damping))
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
@@ -588,6 +596,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   result$anchors <- anchors
   result$calibration <- calibration
+  # for the slope correction of daily ET (Crad(), used by ET24h())
+  if(!plain){result$terrain <- c(surface.model, surface$solar.angles)}
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
                       anchors.method = anchors.method, plain = plain,

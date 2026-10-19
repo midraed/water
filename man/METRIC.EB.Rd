@@ -153,6 +153,9 @@ An object of class \code{waterLSEB}, a list with:
     iterations and u200 (wind speed at 200 m used, m/s), from calcH(); and,
     for automatic anchors, the number of candidates and the relaxation of
     the criteria, from calcAnchors().}
+  \item{terrain}{with plain = FALSE, SpatRaster with the surface model and
+    the solar angles, for the slope correction of daily ET (see
+    \code{\link{Crad}} and \code{\link{ET24h}}).}
   \item{methods}{named character vector with the methods and parameters used.}
 }
 }

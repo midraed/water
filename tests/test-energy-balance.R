@@ -469,9 +469,15 @@ stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
 EBmtn <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, sat = "L7",
                          thermalband = L7$Thermal1, plain = FALSE, DEM = terra::rast(DEM_Talca),
                          anchors.method = "flexible", n = 5))
-pin.mtn <- c(555.0476642210, 81.2546785165, 187.3032572380, 286.5167524774, 303.6977245062)
+# anchors on Ts referred to the station elevation, and daily ET corrected for
+# slope and aspect with C_rad (Allen et al. 2007, Eq. 56)
+pin.mtn <- c(555.0476642210, 81.2546785165, 189.9864806481, 283.8470861435, 303.6977245062)
 ET.mtn <- quiet(suppressMessages(ET24h(EBmtn)))
+crad.q <- terra::global(ET.mtn$C.rad, quantile, probs = c(0.01, 0.99), na.rm = TRUE)
 stopifnot(near(terra::global(EBmtn$EB, "mean", na.rm = TRUE)[, 1], pin.mtn),
-          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.21745917808565))
+          near(terra::global(ET.mtn$ET24, "mean", na.rm = TRUE)[1, 1], 5.19204364815433),
+          "C.rad" %in% names(ET.mtn), crad.q[[1]] > 0.85, crad.q[[2]] < 1.3)
+# on a flat surface C_rad is 1
+stopifnot(all(terra::values(Crad(flat, angles, WS)) == 1))
 
 cat("test-energy-balance.R: all tests passed\n")

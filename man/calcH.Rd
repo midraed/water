@@ -20,7 +20,8 @@ calcH(
   maxit = 20,
   u200.min = 2,
   damping = 0,
-  ETrF.hot = 0
+  ETrF.hot = 0,
+  lapse = 6.49
 )
 }
 \arguments{
@@ -83,6 +84,9 @@ iteration (default 0, no damping). See \code{\link{calcH.control}}}
 
 \item{ETrF.hot}{reference ET fraction of the hot anchors (default 0).
 See \code{\link{calcH.control}}}
+
+\item{lapse}{lapse rate (K/km) used to refer Ts to the elevation of
+the weather station (default 6.49). See \code{\link{calcH.control}}}
 }
 \value{
 A list with a and b (coefficients of dT = a * Ts_datum + b), dT

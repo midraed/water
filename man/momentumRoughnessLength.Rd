@@ -14,7 +14,8 @@ momentumRoughnessLength(
   fLAI,
   h,
   mountainous = FALSE,
-  surface.model
+  surface.model,
+  slope.min1 = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,10 @@ the effects of general terrain roughness on momentum and heat transfer
 
 \item{surface.model}{SpatRaster from METRICtopo() with a layer named Slope.
 Only needed if mountainous = TRUE}
+
+\item{slope.min1}{logical. If TRUE, the terrain factor 1 + (slope - 5)
+/ 20 is at least 1 (METRIC manual), so slopes below 5 degrees do not lower
+Z.om. See \code{\link{calcH.control}}}
 }
 \value{
 SpatRaster with the momentum roughness length (m).

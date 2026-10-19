@@ -21,6 +21,9 @@
 #' (Allen et al., 2007); needs surface.model
 #' @param surface.model   SpatRaster from METRICtopo() with a layer named Slope.
 #' Only needed if mountainous = TRUE
+#' @param slope.min1      logical. If TRUE, the terrain factor 1 + (slope - 5)
+#' / 20 is at least 1 (METRIC manual), so slopes below 5 degrees do not lower
+#' Z.om. See \code{\link{calcH.control}}
 #' @details According to Allen et al. (2010), Zom is a measure of the form drag
 #' and skin friction for the layer of air that interacts with the surface.
 #' Values below 0.005 m (bare agricultural soil, Allen et al., 2007) are set
@@ -41,7 +44,8 @@
 ## Perrier by Santos 2012 and Pocas 2014.
 momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
                                     albedo, a, b, fLAI, h,
-                                    mountainous=FALSE, surface.model){
+                                    mountainous=FALSE, surface.model,
+                                    slope.min1 = FALSE){
   checkChoice(method, waterChoices$Zom.method, "method")
   number <- function(x, name){
     if(!is.numeric(x) || length(x) != 1 || !is.finite(x)){
@@ -69,7 +73,9 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))*h
   }
   if(mountainous==TRUE){
-    Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
+    terrain <- 1 + (180/pi*surface.model$Slope - 5)/20  # Allen et al. (2007), Eq. 35
+    if(slope.min1){terrain <- terra::ifel(terrain < 1, 1, terrain)}
+    Z.om <- Z.om * terrain
   }
   # minimum 0.005 m, bare agricultural soil (Allen et al., 2007, after Eq. 33)
   Z.om <- terra::ifel(Z.om < 0.005, 0.005, Z.om)
@@ -659,6 +665,8 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 #' iteration (default 0, no damping). See \code{\link{calcH.control}}
 #' @param ETrF.hot       reference ET fraction of the hot anchors (default 0).
 #' See \code{\link{calcH.control}}
+#' @param lapse          lapse rate (K/km) used to refer Ts to the elevation of
+#' the weather station (default 6.49). See \code{\link{calcH.control}}
 #' @details Sensible heat flux is the rate of heat loss to the air by convection
 #' and conduction, due to a temperature difference. This parameter is computed
 #' using a one-dimensional, aerodynamic, temperature-gradient-based equation for
@@ -695,7 +703,7 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,
-                   damping = 0, ETrF.hot = 0) {
+                   damping = 0, ETrF.hot = 0, lapse = 6.49) {
   checkChoice(method, c("mean", "lm"), "method")
   control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping,
                            ETrF.hot = ETrF.hot)
@@ -732,7 +740,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
                          ET= "ETr")
 
-  Ts.datum <- Ts + (DEM - WeatherStation$elev) * 6.49 / 1000
+  Ts.datum <- Ts + (DEM - WeatherStation$elev) * lapse / 1000
   # hot and cold cells, checked before iterating
   anchor.cells <- anchorCells(anchors, Ts = Ts, Ts.datum = Ts.datum, Rn = Rn,
                               G = G, Z.om = Z.om, DEM = DEM, method = method)

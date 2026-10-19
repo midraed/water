@@ -65,6 +65,16 @@ New:
   Kc. The old call with Rn, G, H and Ts gives the same ET24 as before (#91).
 * Single-layer results are named (e.g. "Rn", "G", "H", "albedo", "Z.om",
   "ET24"); they had empty names (#91).
+* Mountain mode, plain = FALSE (#97): new Crad(), the slope correction of
+  daily ET (Allen et al. 2007, Eqs. 55-57), used by ET24h() for METRIC.EB()
+  results computed with a DEM (it was never computed); the anchors are
+  chosen on Ts referred to the elevation of the station, as the dT
+  calibration; slopes facing away from the sun get no direct radiation (it
+  could be negative); the lapse rate is calcH.control(lapse = ). Optional:
+  calcH.control(slope.min1 = TRUE) keeps the terrain factor of the
+  roughness (Eq. 35) at least 1, as in the METRIC manual. Landsat 7 with
+  DEM_Talca: C_rad 0.90 to 1.20 (1st to 99th percentile), mean LE -0.9%,
+  mean daily ET -0.5%. Flat runs are unchanged.
 * Hot and cold anchors (#96, optional): calcH.control(ETrF.hot = ) sets
   the ET of the hot pixels after rain (Allen et al. 2007, Eq. 47; default
   0, dry soil), and METRIC.EB() warns when the station recorded more than
