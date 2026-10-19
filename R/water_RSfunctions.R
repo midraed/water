@@ -238,7 +238,7 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #' layer is an error.
 #' @param sat           "L7", "L8", "L9" or "auto" to detect it from the MTL
 #' file (MTL is then required)
-#' @param aoi           Not used; kept for backward compatibility. Crop the
+#' @param aoi           Not used (a warning is given when it is passed). Crop the
 #' inputs beforehand (e.g. loadImage(..., aoi = aoi))
 #' @param incidence.rel solar incidence angle (radians) considering the relief,
 #' from solarAngles()
@@ -256,8 +256,8 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #'
 #' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
-calcTOAr <- function(image.DN, sat="auto", 
-                     aoi, incidence.rel, MTL){
+calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
+  unusedAoi(missing(aoi))
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   if(missing(image.DN)){
     stop("image.DN is missing: load the image with loadImage()", call. = FALSE)
@@ -317,7 +317,8 @@ calcTOAr <- function(image.DN, sat="auto",
 #' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
 #' error. "auto" detects the satellite from the MTL file (MTL is then
 #' required)
-#' @param aoi             Not used; kept for backward compatibility
+#' @param aoi             Not used (a warning is given when it is passed); kept for
+#' backward compatibility
 #' @param incidence.hor   solar incidence angle (radians) on a horizontal
 #' surface, from solarAngles()
 #' @param WeatherStation  waterWeatherStation object (see \code{\link{read.WSdata}}) or the
@@ -340,8 +341,9 @@ calcTOAr <- function(image.DN, sat="auto",
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
 # incidence hor from TML?? 
-calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
-                   WeatherStation, surface.model, MTL, Kt = 1){
+calcSR <- function(image.TOAr, sat="auto", incidence.hor,
+                   WeatherStation, surface.model, MTL, Kt = 1, aoi){
+  unusedAoi(missing(aoi))
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){

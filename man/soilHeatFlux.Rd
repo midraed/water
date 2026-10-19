@@ -4,7 +4,7 @@
 \alias{soilHeatFlux}
 \title{Estimates Soil Heat Flux}
 \usage{
-soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi")
+soilHeatFlux(image, Ts, albedo, LAI, Rn, method = "Tasumi", aoi)
 }
 \arguments{
 \item{image}{surface reflectance SpatRaster with layers named R and NIR,
@@ -19,10 +19,11 @@ with a warning; a named stack without R or NIR is an error)}
 
 \item{Rn}{net radiation (W/m2), from netRadiation()}
 
-\item{aoi}{Not used; kept for backward compatibility}
-
 \item{method}{method used for the G estimation: "Tasumi" (Tasumi, 2003;
 default) or "Bastiaanssen" (Bastiaanssen, 2000)}
+
+\item{aoi}{Not used (a warning is given when it is passed); kept for
+backward compatibility}
 }
 \value{
 SpatRaster with soil heat flux (W/m2).

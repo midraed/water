@@ -6,22 +6,22 @@
 \usage{
 METRIC.G(
   image.DN,
+  image.SR,
   WeatherStation,
   MTL,
   sat = "auto",
   thermalband,
-  Rn,
-  alb.coeff = "Tasumi",
-  LAI.method = "metric2010",
-  G.method = "Tasumi",
   plain = TRUE,
   DEM,
   aoi,
-  image.SR,
-  surf.temp,
-  L = 0.1,
+  G.method = "Tasumi",
+  alb.coeff = "auto",
   LST.method = "auto",
+  LAI.method = "metric2010",
+  L = 0.1,
+  surf.temp,
   Kt = 1,
+  Rn,
   plots = interactive()
 )
 }
@@ -29,6 +29,13 @@ METRIC.G(
 \item{image.DN}{Raw image in digital counts. Optional if image.SR and
 surf.temp are supplied. If supplied (L7/L8/L9) it is used for TOA
 reflectance (LAI) and, without surf.temp, for surface temperature.}
+
+\item{image.SR}{Surface reflectance image with layers B, G, R, NIR,
+SWIR1 and SWIR2, e.g. from loadImageSR(). Required for L8 and L9; for L7
+it is computed from image.DN if missing.
+Layers are selected by name; a stack without the standard names is used by
+position, with a warning, and a stack with these names that lacks a needed
+layer is an error.}
 
 \item{WeatherStation}{waterWeatherStation object with the conditions at
 the satellite overpass (from read.WSdata() with the MTL file)}
@@ -43,18 +50,6 @@ detect it from the MTL file}
 L8/L9: band 10). If missing, image.DN$Thermal1 is used. Not needed if
 surf.temp is supplied}
 
-\item{Rn}{Net radiation in W/m2, e.g. from METRIC.Rn(). If
-missing it is computed as in METRIC.Rn()}
-
-\item{alb.coeff}{coefficient to transform narrow to broad band albedo.
-See Details.}
-
-\item{LAI.method}{Method used to estimate LAI from spectral data.
-See Details.}
-
-\item{G.method}{method used for the G estimation: "Tasumi" (Tasumi,
-2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}}
-
 \item{plain}{Logical. If TRUE (default) the surface is assumed
 flat: DEM is replaced by a constant raster at the weather station elevation}
 
@@ -64,21 +59,12 @@ study area, on the same grid as the image. Not needed if plain = TRUE}
 \item{aoi}{Optional sf polygon or SpatVector. If given, the
 inputs are cropped to it}
 
-\item{image.SR}{Surface reflectance image with layers B, G, R, NIR,
-SWIR1 and SWIR2, e.g. from loadImageSR(). Required for L8 and L9; for L7
-it is computed from image.DN if missing.
-Layers are selected by name; a stack without the standard names is used by
-position, with a warning, and a stack with these names that lacks a needed
-layer is an error.}
+\item{G.method}{method used for the G estimation: "Tasumi" (Tasumi,
+2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}}
 
-\item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
-same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
-supplied it is used as Ts and surfaceTemperature() is not called.
-Must be in Kelvin: values that look like Celsius, or more than 1\% of the
-cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
-give a warning.}
-
-\item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
+\item{alb.coeff}{coefficient to transform narrow to broad band albedo:
+"auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
+MODIS), "Tasumi", "Olmedo" or "Liang". See Details.}
 
 \item{LST.method}{Land surface temperature when surf.temp is not
 supplied: "auto" (default) uses the Level-2 surface temperature
@@ -90,9 +76,24 @@ METRIC equations (Allen et al., 2007, Eqs. 20-21) with image.DN otherwise;
 correction, compute Ts with surfaceTemperature(atmosphere = ) and pass it as
 surf.temp. See \code{\link{surfaceTemperature}}}
 
+\item{LAI.method}{Method used to estimate LAI from spectral data.
+See Details.}
+
+\item{L}{L value for SAVI calculation. See \code{\link{LAI}}}
+
+\item{surf.temp}{Optional. Surface temperature raster in Kelvin, on the
+same grid as image.SR (e.g. image.SR$Band_10 from loadImageSR()). If
+supplied it is used as Ts and surfaceTemperature() is not called.
+Must be in Kelvin: values that look like Celsius, or more than 1\% of the
+cells below 200 K (unmasked fill or clouds), stop; fewer cells below 200 K
+give a warning.}
+
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+
+\item{Rn}{Net radiation in W/m2, e.g. from METRIC.Rn(). If
+missing it is computed as in METRIC.Rn()}
 
 \item{plots}{Logical. If TRUE the results are plotted (default:
 only in interactive sessions)}

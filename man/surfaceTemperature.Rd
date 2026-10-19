@@ -8,12 +8,12 @@ surfaceTemperature(
   image.DN,
   sat = "auto",
   LAI,
-  aoi,
   method = "METRIC",
   WeatherStation,
   thermalband,
   MTL,
-  atmosphere
+  atmosphere,
+  aoi
 )
 }
 \arguments{
@@ -23,8 +23,6 @@ surfaceTemperature(
 file (MTL is then required)}
 
 \item{LAI}{SpatRaster with leaf area index, from LAI()}
-
-\item{aoi}{Not used; kept for backward compatibility}
 
 \item{method}{"METRIC" (default; Allen et al., 2007, Eqs. 20-21)
 or "SW" (split window, Landsat 8 and 9 only; deprecated). "SC" was removed
@@ -45,6 +43,9 @@ Rsky (downward thermal radiance, both W m-2 sr-1 um-1). For Landsat 8 and 9
 Level-2 products, the per-pixel bands ST_ATRAN * 0.0001, ST_URAD * 0.001 and
 ST_DRAD * 0.001. If missing, the general values of Allen et al. (2007) are
 used: tau = 0.866, Rp = 0.91 and Rsky = 1.32}
+
+\item{aoi}{Not used (a warning is given when it is passed); kept for
+backward compatibility}
 }
 \value{
 SpatRaster with land surface temperature (K).

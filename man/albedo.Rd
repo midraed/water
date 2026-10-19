@@ -4,7 +4,7 @@
 \alias{albedo}
 \title{Calculates Broadband Albedo from Landsat data}
 \usage{
-albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
+albedo(image.SR, coeff = "Tasumi", sat = "auto", aoi)
 }
 \arguments{
 \item{image.SR}{surface reflectance SpatRaster with layers named B, G, R,
@@ -13,15 +13,17 @@ Layers are selected by name; a stack without the standard names is used by
 position, with a warning, and a stack with these names that lacks a needed
 layer is an error.}
 
-\item{aoi}{Optional area of interest (e.g. from createAoi()) to crop
-the result. If missing, the result is not cropped}
-
-\item{coeff}{coefficient to transform narrow to broad band albedo.
-See Details.}
+\item{coeff}{coefficient to transform narrow to broad band albedo:
+"Tasumi" (default), "Olmedo", "Liang" or "auto" ("Olmedo" for Landsat 8 and
+9, "Tasumi" for Landsat 7, "Liang" for MODIS; with sat = "auto", Landsat
+images are taken as Landsat 8/9). See Details.}
 
 \item{sat}{"L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
 layer named SWIR3 (as from loadImage()), Landsat otherwise (L7, L8 and L9
 use the same coefficients)}
+
+\item{aoi}{Optional area of interest (e.g. from createAoi()) to crop
+the result. If missing, the result is not cropped}
 }
 \value{
 SpatRaster with broadband surface albedo (unitless).

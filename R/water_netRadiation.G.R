@@ -415,8 +415,10 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' layer is an error.
 #' @param aoi        Optional area of interest (e.g. from createAoi()) to crop
 #' the result. If missing, the result is not cropped
-#' @param coeff      coefficient to transform narrow to broad band albedo.
-#' See Details.
+#' @param coeff      coefficient to transform narrow to broad band albedo:
+#' "Tasumi" (default), "Olmedo", "Liang" or "auto" ("Olmedo" for Landsat 8 and
+#' 9, "Tasumi" for Landsat 7, "Liang" for MODIS; with sat = "auto", Landsat
+#' images are taken as Landsat 8/9). See Details.
 #' @param sat        "L7", "L8", "L9", "MODIS" or "auto": MODIS when there is a
 #' layer named SWIR3 (as from loadImage()), Landsat otherwise (L7, L8 and L9
 #' use the same coefficients)
@@ -435,13 +437,22 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. https://doi.org/10.1061/(ASCE)1084-0699(2008)13:2(51) \cr
 #' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo I: Algorithms. Remote Sensing of Environment, 76(2), 213-238. https://doi.org/10.1016/S0034-4257(00)00205-4 \cr
 #' @export
-albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
+albedo <- function(image.SR, coeff="Tasumi", sat="auto", aoi){
+  # aoi was the second argument: albedo(image.SR, aoi, coeff, sat)
+  if(inherits(coeff, c("sf", "sfc", "SpatVector", "SpatExtent"))){
+    warn("albedo(): coeff is now the second argument and aoi the last one; ",
+         "name the arguments")
+    aoi <- coeff
+    coeff <- if(sat %in% waterChoices$alb.coeff) sat else "Tasumi"
+    sat <- "auto"
+  }
   checkChoice(coeff, waterChoices$alb.coeff, "coeff")
   checkChoice(sat, waterChoices$sat, "sat")
   if(sat=="auto"){
     # L7, L8 and L9 use the same coefficients; only MODIS has SWIR3
     sat <- if("SWIR3" %in% names(image.SR)) "MODIS" else "L8"
   }
+  coeff <- albedoCoeff(coeff, sat)
   if(sat %in% c("L7", "L8", "L9")){
     if(coeff=="Tasumi"){wb <- c(0.254, 0.149, 0.147, 0.311, 0.103, 0.036)}# Tasumi 2008
     if(coeff=="Olmedo") {wb <- c(0.246, 0.146, 0.191, 0.304, 0.105, 0.008)} # Calculated using SMARTS for Kimberly2-noc13 and Direct Normal Irradiance
@@ -478,7 +489,8 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' top-of-atmosphere reflectance for "metric",
 #' "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
 #' "vineyard" (see \code{\link{calcRadiance}})
-#' @param aoi      Not used; kept for backward compatibility
+#' @param aoi      Not used (a warning is given when it is passed); kept for
+#' backward compatibility
 #' @param L        L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1
 #' @param sat      Not used; kept for backward compatibility
 #' @details LAI is computed from top-of-atmosphere reflectance ("metric",
@@ -508,7 +520,14 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
 ## Cite Pocas work for LAI from METRIC2010
-LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
+LAI <- function(image, method="metric2010", L=0.1, aoi, sat){
+  # the method was the first argument: LAI("metric", image)
+  if(is.character(image) && !missing(method) && inherits(method, "SpatRaster")){
+    warn("LAI(): the image is now the first argument; name the arguments ",
+         "(LAI(image = , method = ))")
+    m <- image; image <- method; method <- m
+  }
+  unusedAoi(missing(aoi))
   checkChoice(method, waterChoices$LAI.method, "method")
   if(!missing(sat)){warning("LAI(): the sat argument is not used")}
   # R and NIR by name (layers 3 and 4 of an unnamed stack)
@@ -612,7 +631,8 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' @param sat             "L7", "L8", "L9" or "auto" to detect it from the MTL
 #' file (MTL is then required)
 #' @param LAI             SpatRaster with leaf area index, from LAI()
-#' @param aoi             Not used; kept for backward compatibility
+#' @param aoi             Not used (a warning is given when it is passed); kept for
+#' backward compatibility
 #' @param method          "METRIC" (default; Allen et al., 2007, Eqs. 20-21)
 #' or "SW" (split window, Landsat 8 and 9 only; deprecated). "SC" was removed
 #' in version 1.0
@@ -649,9 +669,9 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 #' 1840-1843. http://doi.org/10.1109/LGRS.2014.2312032
 #' @export
-surfaceTemperature <- function(image.DN, sat="auto", LAI, aoi,
-                               method = "METRIC", WeatherStation, thermalband,
-                               MTL, atmosphere){
+surfaceTemperature <- function(image.DN, sat="auto", LAI, method = "METRIC",
+                               WeatherStation, thermalband, MTL, atmosphere, aoi){
+  unusedAoi(missing(aoi))
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   removedSC(method, "method")
   checkChoice(method, c("METRIC", "SW"), "method")
@@ -835,7 +855,8 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @param albedo   broadband surface albedo, from albedo()
 #' @param LAI      SpatRaster with leaf area index, from LAI()
 #' @param Rn       net radiation (W/m2), from netRadiation()
-#' @param aoi      Not used; kept for backward compatibility
+#' @param aoi      Not used (a warning is given when it is passed); kept for
+#' backward compatibility
 #' @param method   method used for the G estimation: "Tasumi" (Tasumi, 2003;
 #' default) or "Bastiaanssen" (Bastiaanssen, 2000)
 #' @return SpatRaster with soil heat flux (W/m2).
@@ -849,7 +870,8 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #'
 #' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. https://doi.org/10.1016/S0022-1694(99)00202-4 \cr
 #' @export
-soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
+soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, method = "Tasumi", aoi){
+  unusedAoi(missing(aoi))
   checkChoice(method, waterChoices$G.method, "method")
   sr.4.5 <- landsatBands(image, c("R", "NIR"), pos = 3:4)
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])

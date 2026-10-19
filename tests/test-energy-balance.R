@@ -145,6 +145,21 @@ stopifnot(maxdiff(expect_warning(LAI(image = unnamed), "by position"), LAI(image
 stopifnot(maxdiff(LAI(image = sr0[[c("R", "NIR", "B", "G", "SWIR1", "SWIR2")]]),
                   LAI(image = sr0)) == 0)
 
+## Consistent arguments (#102): data first; old positional calls are caught;
+## unused aoi warns; inputs must be on the same grid; alb.coeff = "auto"
+stopifnot(maxdiff(expect_warning(LAI("metric2010", sr0), "first argument"), LAI(sr0)) == 0,
+          maxdiff(albedo(sr0, "Olmedo"), albedo(sr0, coeff = "Olmedo")) == 0,
+          maxdiff(expect_warning(albedo(sr0, terra::ext(sr0), "Olmedo"), "second argument"),
+                  albedo(sr0, coeff = "Olmedo")) == 0,
+          water:::albedoCoeff("auto", "L8") == "Olmedo", water:::albedoCoeff("auto", "L7") == "Tasumi",
+          water:::albedoCoeff("Liang", "L8") == "Liang")
+invisible(expect_warning(LAI(sr0, aoi = terra::ext(sr0)), "aoi is not used"))
+expect_error(METRIC.Rn(image.DN, WS, MTL.L1), "order of METRIC.EB")
+expect_error(METRIC.Rn(image.SR = sr0, surf.temp = sr0$Band_10, WeatherStation = WS, MTL = MTL.L2,
+                       plain = FALSE, DEM = terra::shift(flatDEM(sr0), dx = 15)),
+             "DEM is not on the grid of image.SR")
+expect_error(calcH(data.frame(), "mean", sr0$Band_10), "method is now after")
+
 ## Surface temperature in Kelvin (#86): Celsius stops (ET was +86%); a few
 ## cells below 200 K (cloud tops) warn, many stop
 expect_error(quiet(METRIC.Rn(image.SR = sr0, surf.temp = sr0$Band_10 - 273.15,

@@ -104,7 +104,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' @param Z.om             momentum roughness length, from momentumRoughnessLength()
 #' @param n                number of pairs of anchor pixels to select (not used
 #' by "percentile")
-#' @param aoi              Not used; kept for backward compatibility
+#' @param aoi              Not used (a warning is given when it is passed); kept for
+#' backward compatibility
 #' @param anchors.method   method for the selection of anchor pixels:
 #' "percentile" (default), "flexible", "best" or "random". See Details.
 #' @param WeatherStation   Optional. waterWeatherStation object (see
@@ -188,10 +189,11 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' Journal of the American Water Resources Association, 49(3), 549-562.
 #' https://doi.org/10.1111/jawr.12054
 #' @export
-calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
+calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                          anchors.method= "percentile", WeatherStation,
                          plots=interactive(), deltaTemp=5, minDist = 500, WSbuffer = 30000,
-                         verbose=FALSE, min.candidates = 20, control = NULL) {
+                         verbose=FALSE, min.candidates = 20, control = NULL, aoi) {
+  unusedAoi(missing(aoi))
   control <- controlList(control, "anchors.control")
   sanitizeCellIndex <- function(index) {
     as.integer(stats::na.omit(unlist(index, use.names = FALSE)))
@@ -724,10 +726,16 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 #'
 #' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
-calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
+calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,
-                   damping = 0, ETrF.hot = 0, lapse = 6.49, plots = interactive()) {
+                   damping = 0, ETrF.hot = 0, lapse = 6.49, plots = interactive(),
+                   method = "mean") {
+  # the method was the second argument: calcH(anchors, "mean", Ts, ...)
+  if(!missing(Ts) && is.character(Ts)){
+    stop("calcH(): method is now after the data arguments; name the arguments ",
+         "(e.g. method = \"", Ts, "\")", call. = FALSE)
+  }
   checkChoice(method, c("mean", "lm"), "method")
   control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping,
                            ETrF.hot = ETrF.hot)

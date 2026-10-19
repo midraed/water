@@ -23,8 +23,9 @@
 #' study area, on the same grid as the image. Not needed if plain = TRUE
 #' @param aoi              Optional sf polygon or SpatVector. If given, the
 #' inputs are cropped to it
-#' @param alb.coeff        coefficient to transform narrow to broad band albedo.
-#' See Details.
+#' @param alb.coeff        coefficient to transform narrow to broad band albedo:
+#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
+#' MODIS), "Tasumi", "Olmedo" or "Liang". See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
 #' @param image.SR         Surface reflectance image with layers B, G, R, NIR,
@@ -90,15 +91,20 @@
 #' Rn <- METRIC.Rn(image.SR = image.SR, surf.temp = image.SR$Band_10,
 #'                 WeatherStation = WeatherStation, MTL = MTLfile,
 #'                 alb.coeff = "Olmedo")
-METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband, 
-                      alb.coeff = "Tasumi", LAI.method = "metric2010",
-                      plain = TRUE, DEM, aoi, image.SR, surf.temp, L = 0.1,
-                      LST.method = "auto", Kt = 1, plots = interactive()){
+METRIC.Rn <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
+                      thermalband, plain = TRUE, DEM, aoi, alb.coeff = "auto",
+                      LST.method = "auto", LAI.method = "metric2010", L = 0.1,
+                      surf.temp, Kt = 1, plots = interactive()){
+  if(!missing(image.SR) && inherits(image.SR, "waterWeatherStation")){
+    stop("The arguments of METRIC.Rn() are now in the order of METRIC.EB(): image.DN, ",
+         "image.SR, WeatherStation, MTL, ...; name them", call. = FALSE)
+  }
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method)
   checkKt(Kt)
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
+  alb.coeff <- albedoCoeff(alb.coeff, sat)
   MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
@@ -141,16 +147,21 @@ METRIC.Rn <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
 #' G <- METRIC.G(image.SR = image.SR, surf.temp = image.SR$Band_10,
 #'               WeatherStation = WeatherStation, MTL = MTLfile,
 #'               alb.coeff = "Olmedo")
-METRIC.G <- function(image.DN, WeatherStation, MTL, sat = "auto", thermalband,
-                     Rn, alb.coeff = "Tasumi", LAI.method = "metric2010",
-                     G.method = "Tasumi", plain = TRUE, DEM, aoi, image.SR,
-                     surf.temp, L = 0.1, LST.method = "auto", Kt = 1,
+METRIC.G <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
+                     thermalband, plain = TRUE, DEM, aoi, G.method = "Tasumi",
+                     alb.coeff = "auto", LST.method = "auto",
+                     LAI.method = "metric2010", L = 0.1, surf.temp, Kt = 1, Rn,
                      plots = interactive()){
+  if(!missing(image.SR) && inherits(image.SR, "waterWeatherStation")){
+    stop("The arguments of METRIC.G() are now in the order of METRIC.EB(): image.DN, ",
+         "image.SR, WeatherStation, MTL, ...; name them", call. = FALSE)
+  }
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method)
   checkKt(Kt)
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
+  alb.coeff <- albedoCoeff(alb.coeff, sat)
   MTL <- findMTL(if(!missing(MTL)) MTL)
   surface <- metricSurface(image.DN = image.DN, image.SR = image.SR,
                            WeatherStation = WeatherStation, MTL = MTL, sat = sat,
@@ -189,6 +200,11 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
     if(!missing(thermalband)){thermalband <- cropToAoi(thermalband, aoi)}
     if(!plain){DEM <- cropToAoi(DEM, aoi)}
   }
+  checkGrids(image.SR = if(!missing(image.SR)) image.SR,
+             image.DN = if(!missing(image.DN)) image.DN,
+             surf.temp = if(!missing(surf.temp)) surf.temp,
+             thermalband = if(!missing(thermalband)) thermalband,
+             DEM = if(!plain) DEM)
   # thermal band from image.DN, as in METRIC.EB()
   if(lst %in% c("METRIC", "SW") && missing(thermalband) && !missing(image.DN) &&
      sat %in% c("L7", "L8", "L9")){
@@ -303,8 +319,9 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' inputs are cropped to it
 #' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
 #' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
-#' @param alb.coeff        coefficient to transform narrow to broad band albedo.
-#' See Details.
+#' @param alb.coeff        coefficient to transform narrow to broad band albedo:
+#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
+#' MODIS), "Tasumi", "Olmedo" or "Liang". See Details.
 #' @param LST.method       Land surface temperature when surf.temp is not
 #' supplied: "auto" (default) uses the Level-2 surface temperature
 #' (image.SR$Band_10 from loadImageSR()) for L8 and L9 when present (also
@@ -460,7 +477,7 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @export
 METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       thermalband, plain=TRUE, DEM, aoi, G.method = "Tasumi",
-                      alb.coeff = "Tasumi", LST.method = "auto",
+                      alb.coeff = "auto", LST.method = "auto",
                       LAI.method = "metric2010", L = 0.1,
                       Zom.method = "short.crops", anchors.method = "percentile",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
@@ -483,6 +500,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
+  alb.coeff <- albedoCoeff(alb.coeff, sat)
   if(missing(anchors) && !missing(MTL)){
     checkCloudMask(MTL, if(!missing(image.SR)) image.SR, if(!missing(image.DN)) image.DN)
   }

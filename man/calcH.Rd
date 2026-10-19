@@ -6,7 +6,6 @@
 \usage{
 calcH(
   anchors,
-  method = "mean",
   Ts,
   Z.om,
   WeatherStation,
@@ -22,7 +21,8 @@ calcH(
   damping = 0,
   ETrF.hot = 0,
   lapse = 6.49,
-  plots = interactive()
+  plots = interactive(),
+  method = "mean"
 )
 }
 \arguments{
@@ -35,11 +35,6 @@ and DEM must not be NA there, and the hot anchors must be at least 5 K
 warmer than the cold ones (Ts corrected to the datum elevation; for
 method = "lm", in every pair). A smaller difference means that the area
 lacks the wet and dry extremes that METRIC needs}
-
-\item{method}{Method when using more than 1 pair of anchor pixels:
-"mean" (default) uses the mean values of the cold pixels and of the hot
-pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
-pair) and returns a and b of the last pair}
 
 \item{Ts}{Land surface temperature in K. See \code{\link{surfaceTemperature}}.
 Must be in Kelvin: values that look like Celsius, or more than 1\% of the
@@ -92,6 +87,11 @@ the weather station (default 6.49). See \code{\link{calcH.control}}}
 
 \item{plots}{Logical. If TRUE (default: only in interactive sessions)
 the aerodynamic resistance of the anchors is plotted at each iteration}
+
+\item{method}{Method when using more than 1 pair of anchor pixels:
+"mean" (default) uses the mean values of the cold pixels and of the hot
+pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
+pair) and returns a and b of the last pair}
 }
 \value{
 A list with a and b (coefficients of dT = a * Ts_datum + b), dT

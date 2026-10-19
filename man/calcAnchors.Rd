@@ -11,7 +11,6 @@ calcAnchors(
   albedo,
   Z.om,
   n = 1,
-  aoi,
   anchors.method = "percentile",
   WeatherStation,
   plots = interactive(),
@@ -20,7 +19,8 @@ calcAnchors(
   WSbuffer = 30000,
   verbose = FALSE,
   min.candidates = 20,
-  control = NULL
+  control = NULL,
+  aoi
 )
 }
 \arguments{
@@ -44,8 +44,6 @@ give a warning.}
 
 \item{n}{number of pairs of anchor pixels to select (not used
 by "percentile")}
-
-\item{aoi}{Not used; kept for backward compatibility}
 
 \item{anchors.method}{method for the selection of anchor pixels:
 "percentile" (default), "flexible", "best" or "random". See Details.}
@@ -81,6 +79,9 @@ percentile parameters are read (cold.NDVI, cold.LAI, cold.fraction,
 hot.NDVI, hot.fraction and homogeneity): deltaTemp, minDist, WSbuffer and
 min.candidates are arguments of calcAnchors(). METRIC.EB() fills both from
 its anchors.control}
+
+\item{aoi}{Not used (a warning is given when it is passed); kept for
+backward compatibility}
 }
 \value{
 A data.frame with one row per anchor pixel and columns pixel (cell

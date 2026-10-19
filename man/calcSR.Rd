@@ -7,12 +7,12 @@
 calcSR(
   image.TOAr,
   sat = "auto",
-  aoi,
   incidence.hor,
   WeatherStation,
   surface.model,
   MTL,
-  Kt = 1
+  Kt = 1,
+  aoi
 )
 }
 \arguments{
@@ -25,8 +25,6 @@ layer is an error.}
 \item{sat}{Only "L7" is supported; "L8" and "L9" stop with an
 error. "auto" detects the satellite from the MTL file (MTL is then
 required)}
-
-\item{aoi}{Not used; kept for backward compatibility}
 
 \item{incidence.hor}{solar incidence angle (radians) on a horizontal
 surface, from solarAngles()}
@@ -43,6 +41,9 @@ Needed for sat = "auto"}
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+
+\item{aoi}{Not used (a warning is given when it is passed); kept for
+backward compatibility}
 }
 \value{
 SpatRaster with surface reflectance (unitless) in layers B, G, R,

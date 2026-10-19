@@ -168,6 +168,36 @@ checkRecentRain <- function(WeatherStation, days = 3, limit = 5){
   invisible(total)
 }
 
+# Albedo coefficients for alb.coeff = "auto": Olmedo for Landsat 8 and 9,
+# Tasumi et al. (2008) for Landsat 7 and Liang (2001) for MODIS
+albedoCoeff <- function(coeff, sat){
+  if(coeff != "auto"){return(coeff)}
+  switch(sat, L7 = "Tasumi", L8 = , L9 = "Olmedo", MODIS = "Liang", "Olmedo")
+}
+
+# The inputs of the METRIC functions must be on the grid of the first one
+# (extent, resolution and CRS)
+checkGrids <- function(...){
+  r <- Filter(Negate(is.null), list(...))
+  if(length(r) < 2){return(invisible(TRUE))}
+  for(n in names(r)[-1]){
+    if(!terra::compareGeom(r[[1]], r[[n]], stopOnError = FALSE)){
+      stop(n, " is not on the grid of ", names(r)[1], " (extent, resolution or ",
+           "CRS differ): use e.g. terra::project(", n, ", ", names(r)[1], "[[1]])",
+           call. = FALSE)
+    }
+  }
+  invisible(TRUE)
+}
+
+# aoi of the functions that do not use it
+unusedAoi <- function(missing.aoi){
+  if(!missing.aoi){
+    warn("aoi is not used by this function: crop the inputs beforehand (e.g. ",
+         "loadImageSR(aoi = ))")
+  }
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){
@@ -218,7 +248,7 @@ checkChoice <- function(x, choices, name){
 # Choices of the method arguments
 waterChoices <- list(
   sat = c("auto", "L7", "L8", "L9", "MODIS"),
-  alb.coeff = c("Tasumi", "Olmedo", "Liang"),
+  alb.coeff = c("auto", "Tasumi", "Olmedo", "Liang"),
   LAI.method = c("metric2010", "metric", "MCB", "vineyard", "turner"),
   LST.method = c("auto", "L2", "METRIC", "SW"),
   G.method = c("Tasumi", "Bastiaanssen"),

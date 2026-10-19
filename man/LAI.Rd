@@ -4,12 +4,9 @@
 \alias{LAI}
 \title{Estimate LAI from Landsat Data}
 \usage{
-LAI(method = "metric2010", image, aoi, L = 0.1, sat)
+LAI(image, method = "metric2010", L = 0.1, aoi, sat)
 }
 \arguments{
-\item{method}{Method used to estimate LAI from spectral data: "metric2010"
-(default), "metric", "MCB", "vineyard" or "turner". See Details.}
-
 \item{image}{SpatRaster with layers named R and NIR (a stack without
 standard names: the third and fourth layers, with a warning; a named stack
 without R or NIR is an error):
@@ -17,9 +14,13 @@ top-of-atmosphere reflectance for "metric",
 "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
 "vineyard" (see \code{\link{calcRadiance}})}
 
-\item{aoi}{Not used; kept for backward compatibility}
+\item{method}{Method used to estimate LAI from spectral data: "metric2010"
+(default), "metric", "MCB", "vineyard" or "turner". See Details.}
 
 \item{L}{L factor used in method = "metric" or "metric2010" to estimate SAVI, defaults to 0.1}
+
+\item{aoi}{Not used (a warning is given when it is passed); kept for
+backward compatibility}
 
 \item{sat}{Not used; kept for backward compatibility}
 }

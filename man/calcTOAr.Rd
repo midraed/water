@@ -4,7 +4,7 @@
 \alias{calcTOAr}
 \title{Calculates top-of-atmosphere reflectance}
 \usage{
-calcTOAr(image.DN, sat = "auto", aoi, incidence.rel, MTL)
+calcTOAr(image.DN, sat = "auto", incidence.rel, MTL, aoi)
 }
 \arguments{
 \item{image.DN}{raw image in digital numbers, e.g. from loadImage().
@@ -16,14 +16,14 @@ layer is an error.}
 \item{sat}{"L7", "L8", "L9" or "auto" to detect it from the MTL
 file (MTL is then required)}
 
-\item{aoi}{Not used; kept for backward compatibility. Crop the
-inputs beforehand (e.g. loadImage(..., aoi = aoi))}
-
 \item{incidence.rel}{solar incidence angle (radians) considering the relief,
 from solarAngles()}
 
 \item{MTL}{path to the Landsat metadata (*_MTL.txt) file. Needed
 for Landsat 7 and for sat = "auto"}
+
+\item{aoi}{Not used (a warning is given when it is passed). Crop the
+inputs beforehand (e.g. loadImage(..., aoi = aoi))}
 }
 \value{
 SpatRaster with top-of-atmosphere reflectance (unitless) in layers B,

@@ -15,7 +15,7 @@ METRIC.EB(
   DEM,
   aoi,
   G.method = "Tasumi",
-  alb.coeff = "Tasumi",
+  alb.coeff = "auto",
   LST.method = "auto",
   LAI.method = "metric2010",
   L = 0.1,
@@ -73,8 +73,9 @@ inputs are cropped to it}
 \item{G.method}{method used for the G estimation: "Tasumi" (Tasumi,
 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}}
 
-\item{alb.coeff}{coefficient to transform narrow to broad band albedo.
-See Details.}
+\item{alb.coeff}{coefficient to transform narrow to broad band albedo:
+"auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
+MODIS), "Tasumi", "Olmedo" or "Liang". See Details.}
 
 \item{LST.method}{Land surface temperature when surf.temp is not
 supplied: "auto" (default) uses the Level-2 surface temperature

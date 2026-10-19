@@ -180,6 +180,17 @@ New:
   (cold anchors too warm; 15.8% in the Landsat 8 example with "flexible").
   New summary() method and plotAnchors() (anchors over a false-colour
   composite or Ts); print() includes the summary.
+* Consistent arguments (#102): METRIC.Rn() and METRIC.G() take their
+  arguments in the order of METRIC.EB() (image.DN, image.SR,
+  WeatherStation, MTL, ...); LAI(image, method), albedo(image.SR, coeff,
+  sat, aoi) and calcH(anchors, Ts, ..., method) take the data first (old
+  positional calls of LAI() and albedo() work, with a warning; the others
+  stop with a clear error); unused aoi arguments are last and warn when
+  passed; METRIC.EB(), METRIC.Rn() and METRIC.G() check that image.SR,
+  image.DN, surf.temp, thermalband and DEM are on the same grid. New
+  default alb.coeff = "auto": "Olmedo" for Landsat 8 and 9, "Tasumi" for
+  Landsat 7, "Liang" for MODIS (Landsat 8/9 runs that relied on the old
+  default "Tasumi" change by about 0.6% in LE).
 * anchors.control() and calcH.control() group the parameters of the anchor
   selection and of the H iteration: METRIC.EB(anchors.control = ,
   calcH.control = ). deltaTemp, minDist and WSbuffer in extraParameters
@@ -326,6 +337,10 @@ Behaviour changes to check in existing scripts:
   names (e.g. ET = "ETR", G.method = "T") are errors (#82).
 * LST.method = "SC" is an error (removed); the default is now "auto"
   (#95).
+* METRIC.Rn() and METRIC.G(): arguments in the order of METRIC.EB(); name
+  them in positional calls. LAI(), albedo(), calcH(), calcTOAr(), calcSR(),
+  soilHeatFlux(), surfaceTemperature() and calcAnchors(): data first,
+  method and aoi later. The default alb.coeff is "auto" (#102).
 * The default anchors.method is now "percentile" (#92); pass
   anchors.method = "flexible" to reproduce earlier results. n is not used
   by "percentile".
