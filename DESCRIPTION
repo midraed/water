@@ -1,7 +1,7 @@
 Package: water
 Title: Actual Evapotranspiration with Energy Balance Models
-Version: 0.8.5
-Date: 2026-10-14
+Version: 1.0
+Date: 2026-10-18
 Authors@R: c(
 	person("Guillermo Federico", "Olmedo", role = c("cre", "aut"), email = "guillermo.olmedo@gmail.com", comment=c(ORCID="0000-0002-4482-3266")),
 	person("Samuel", "Ortega-Farías", role = "aut"),
