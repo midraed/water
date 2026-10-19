@@ -58,8 +58,8 @@ study area, on the same grid as the image. Not needed if plain = TRUE}
 inputs are cropped to it}
 
 \item{alb.coeff}{coefficient to transform narrow to broad band albedo:
-"auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
-MODIS), "Tasumi", "Olmedo" or "Liang". See Details.}
+"auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7 and MODIS),
+"Tasumi", "Olmedo" or "Liang". See Details.}
 
 \item{LST.method}{Land surface temperature when surf.temp is not
 supplied: "auto" (default) uses the Level-2 surface temperature

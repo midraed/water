@@ -24,7 +24,9 @@ Fixes that change results:
   at the overpass changes by less than 0.02%. Checked against the hourly
   test case of the RefET package (ASCE method) within 1e-5 mm/h.
 * dailyET() accepts a Date for date, and returns NA with a warning when the
-  records do not cover the day (it summed the hours available) (#90).
+  records do not cover the day (it summed the hours available) (#90). If only
+  the last record (24:00, the 00:00 of the next day) is missing, it gives a
+  message and sums the 23 hours available (about -0.5%).
 * Model constants (#107): the transmissivity uses -0.00146 (Allen et al.
   2007, Eq. 4; it was -0.00149): net radiation +1 W/m2. The air density
   of the dT calibration uses the temperature of the air, Ts - dT (Eq. 37),
@@ -45,9 +47,11 @@ Fixes that change results:
   quantiles over land, so water does not move them); the
   coldest and hottest 20% are the anchors, averaged by calcH(). With the
   fixed windows of "flexible" (n = 5), the Landsat 8 example had ETrF >
-  1.1 on 15.8% of the pixels (cold anchors warmer than many crops); with
-  "percentile", 0.6%; mean LE 255.5 -> 223.6 W/m2 (-12.5%), daily ET 4.13 -> 3.62 mm;
-  Landsat 7 example mean LE -5.6% (before the NDVI quantiles over land). The other methods are unchanged; use
+  1.1 on 16.0% of the pixels (cold anchors warmer than many crops); with
+  "percentile", 0.7%; mean LE 256.9 -> 225.2 W/m2 (-12.3%), daily ET 4.16 -> 3.64 mm;
+  Landsat 7 example mean LE -5.9%. The percentile method relaxes its
+  limits when too few candidates are found (cold LAI 4 -> 3, cold NDVI 0.95 ->
+  0.85, hot quantile 0.1 -> 0.3), and says so. The other methods are unchanged; use
   anchors.method = "flexible" for the old default. Parameters in
   anchors.control().
 * Land surface temperature (#95): LST.method = "auto" (new default) uses
@@ -79,7 +83,7 @@ Fixes that change results:
   reference ET (ETo), while ET24h() and dailyET() extrapolate with the
   alfalfa reference ETr. Both now use ETr, as in Allen et al. (2007), so the
   default ETp.coef = 1.05 is the paper's 1.05 * ETr. With the same ETp.coef,
-  ET increases by the ETr/ETo ratio (11% and 15% in the examples). Scripts
+  ET increases by the ETr/ETo ratio (8% and 14% in the examples). Scripts
   that used ETp.coef = 1.2 to approximate 1.05 * ETr with ETo should now use
   1.05; the vignettes and examples now use the default. With
   anchors.method = "flexible", the grass-based Kc of Gonzalez et al. (2015)
@@ -202,7 +206,7 @@ New:
   of ETrF at the overpass and the shares of pixels with ETrF > 1.1,
   ETrF < 0 and H > Rn - G, with the iteration results; it gives a one-line
   message, and a warning when ETrF > 1.1 on more than 10% of the pixels
-  (cold anchors too warm; 15.8% in the Landsat 8 example with "flexible").
+  (cold anchors too warm; 16.0% in the Landsat 8 example with "flexible").
   New summary() method and plotAnchors() (anchors over a false-colour
   composite or Ts); print() includes the summary.
 * Faster (#101): calcH() iterates on the anchor pixels and then computes
@@ -223,7 +227,8 @@ New:
   default alb.coeff = "auto" in the METRIC functions (albedo() keeps
   "Tasumi"): "Olmedo" for Landsat 8 and 9, "Tasumi" for
   Landsat 7 and MODIS (Landsat 8/9 runs that relied on the old
-  default "Tasumi" change by about 0.6% in LE).
+  default "Tasumi" change by about 0.2% in LE with the percentile anchors,
+  0.6% with "flexible").
 * anchors.control() and calcH.control() group the parameters of the anchor
   selection and of the H iteration: METRIC.EB(anchors.control = ,
   calcH.control = ). deltaTemp, minDist and WSbuffer in extraParameters
@@ -273,7 +278,8 @@ Other changes and fixes:
   non-numeric columns; rows with unreadable dates are removed with a
   warning; tibbles and integer columns work (#41). An overpass outside the
   station records gives a warning instead of an error (#28).
-  read.WSdata2() works (it reads with read.csv2()).
+  read.WSdata2() works (it reads with read.csv2()) and uses its height
+  argument (it was ignored and replaced by 2.2 m).
 * MTL must be the file name, not its contents (#45).
 * loadImage() accepts any scene prefix, e.g. real-time tier or renamed
   files, and explains the expected names when nothing matches (#50).

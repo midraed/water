@@ -9,9 +9,17 @@ water is not on CRAN at the moment (the CRAN version was archived on
     install.packages("remotes")
     remotes::install_github("midraed/water", build_vignettes = TRUE)
 
-Building the vignettes needs [pandoc](https://pandoc.org/); without it use
-`remotes::install_github("midraed/water")` and read the vignettes on the
-[package site](https://midraed.github.io/water/).
+Building the vignettes needs [pandoc](https://pandoc.org/) (RStudio includes
+it). Without pandoc use `remotes::install_github("midraed/water")`; the
+vignettes are then not installed, but you can read their sources on GitHub:
+[Landsat 8 and 9](https://github.com/midraed/water/blob/master/vignettes/Landsat8.Rmd),
+[METRIC simple](https://github.com/midraed/water/blob/master/vignettes/METRIC_simple.Rmd) and
+[METRIC advanced](https://github.com/midraed/water/blob/master/vignettes/METRIC_advanced.Rmd).
+
+On Windows, if the installation fails with "cannot open file" errors from a
+dependency, the path of your R library is probably too long: install into a
+short folder, e.g. `remotes::install_github("midraed/water", lib = "C:/Rlib")`
+(create it first and add it with `.libPaths("C:/Rlib")`).
 
 ## Quick start (Landsat 8 and 9, Collection 2 Level-2)
 

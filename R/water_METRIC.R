@@ -24,8 +24,8 @@
 #' @param aoi              Optional sf polygon or SpatVector. If given, the
 #' inputs are cropped to it
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo:
-#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
-#' MODIS), "Tasumi", "Olmedo" or "Liang". See Details.
+#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7 and MODIS),
+#' "Tasumi", "Olmedo" or "Liang". See Details.
 #' @param LAI.method       Method used to estimate LAI from spectral data.
 #' See Details.
 #' @param image.SR         Surface reflectance image with layers B, G, R, NIR,
@@ -322,8 +322,8 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
 #' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
 #' @param alb.coeff        coefficient to transform narrow to broad band albedo:
-#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7, "Liang" for
-#' MODIS), "Tasumi", "Olmedo" or "Liang". See Details.
+#' "auto" (default; "Olmedo" for L8 and L9, "Tasumi" for L7 and MODIS),
+#' "Tasumi", "Olmedo" or "Liang". See Details.
 #' @param LST.method       Land surface temperature when surf.temp is not
 #' supplied: "auto" (default) uses the Level-2 surface temperature
 #' (image.SR$Band_10 from loadImageSR()) for L8 and L9 when present (also
@@ -501,6 +501,10 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   checkExtraParameters(extraParameters, Zom.method, crop.height)
   anchors.control <- controlList(anchors.control, "anchors.control")
   calcH.control <- controlList(calcH.control, "calcH.control")
+  if(!missing(WeatherStation) && !inherits(WeatherStation, "waterWeatherStation")){
+    stop("WeatherStation must be a waterWeatherStation object: read the station file with ",
+         "read.WSdata() (and MTL = <Landsat MTL file>)", call. = FALSE)
+  }
   old <- intersect(c("deltaTemp", "minDist", "WSbuffer"), names(extraParameters))
   if(length(old)){
     message("extraParameters ", paste(old, collapse = ", "), " are deprecated: ",

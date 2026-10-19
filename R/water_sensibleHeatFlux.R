@@ -109,6 +109,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
     }
     a <- if(ras(fLAI)) terra::ifel(fLAI < 0.5, (2*(1-fLAI))^-1, 2*fLAI) else
       if(fLAI < 0.5) (2*(1-fLAI))^-1 else 2*fLAI
+    # no crop height (NA, e.g. outside a field map) where there is a pixel: bare soil
+    if(ras(h)){h <- terra::ifel(is.na(h) & !is.na(LAI), 0, h)}
     Z.om <- ((1-exp(-a*LAI/2))*exp(-a*LAI/2))*h
   }
   if(mountainous==TRUE){

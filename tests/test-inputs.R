@@ -177,8 +177,8 @@ Tf <- (91.80 - 32) / 1.8
 fallon <- data.frame(temp = Tf, RH = 1.1990099614301906 / (0.6108 * exp(17.27 * Tf / (Tf + 237.3))) * 100,
                      wind = 3.33 * 0.44704, radiation = 61.16 * 0.041868 * 1e6 / 3600,
                      lat = 39.4575, long = -118.77388, elev = 1208.5, height = 3)
-stopifnot(abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETo") - 0.6063515) < 1e-4,
-          abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETr") - 0.7196370) < 1e-4)
+stopifnot(abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETo") - 0.6063515) < 1e-5,
+          abs(hourlyET(fallon, hours = 19, DOY = 182, long.z = 0, ET = "ETr") - 0.7196370) < 1e-5)
 # daily reference ET: the periods ending at 01:00 to 24:00, with the
 # cloudiness of the last sunny hour at night (Talca 7.09 mm before)
 stopifnot(abs(et.mtl - 6.5336) < 0.001)
@@ -258,6 +258,10 @@ h.r <- terra::rast(lai.r, vals = c(0.5, 1, 2, 3))
 by.cell <- c(zp(0.2, 0.5)[1], zp(0.2, 1)[2], zp(0.8, 2)[3], zp(0.8, 3)[4])
 stopifnot(isTRUE(all.equal(zp(f.r, h.r), by.cell)),
           isTRUE(all.equal(zp(0.2, h.r)[2], zp(0.2, 1)[2])))
+h.na <- terra::rast(lai.r, vals = c(NA, 1, 2, 0))   # NA and 0: bare soil, minimum Z.om
+stopifnot(isTRUE(all.equal(zp(0.2, h.na)[c(1, 4)], c(0.005, 0.005))))
+expect_error(METRIC.EB(image.DN = lai.r, WeatherStation = "file.csv", sat = "L7"),
+             "must be a waterWeatherStation")
 expect_error(zp(f.r, terra::rast(nrows = 3, ncols = 3, vals = 1)), "grid of LAI")
 expect_error(zp(terra::rast(lai.r, vals = 2), 1), "between 0 and 1")
 ## MODIS albedo uses the weights of Tasumi et al. (2008), Table 2, without offset

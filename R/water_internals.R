@@ -458,6 +458,10 @@ checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
     if(w[1] < 0 || w[2] > 75){
       stop("Wind speed ", span(w, "m/s"), " is outside 0 to 75 m/s", call. = FALSE)
     }
+    if(mean(wind, na.rm = TRUE) > 6){
+      warn("Mean wind speed ", signif(mean(wind, na.rm = TRUE), 3), " m/s at the weather ",
+           "station is high: in km/h? Use cf = c(1, 0.2777778, 1)")
+    }
     if(w[2] > 20){
       warn("Wind speed up to ", signif(w[2], 4), " m/s: in km/h? Use ",
               "cf = c(1, 0.2777778, 1)")
