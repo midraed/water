@@ -6,6 +6,12 @@ VERSION 1.0
 
 Fixes that change results:
 
+* waterOptions(writeResults = TRUE) gave wrong results: every function
+  wrote and overwrote a file with a fixed name, so later calls changed the
+  objects that read it (e.g. a "Perrier" METRIC.EB() run used the
+  short.crops roughness, mean LE 194.8 instead of 226.9 W/m2), and two runs
+  overwrote each other's EB.tif (#99).
+
 * Reference ET follows ASCE-EWRI (2005) (#89): Rs/Rso is limited to 0.3-1
   (it was set to 0 below 0.3), the cloudiness function of the last sunny
   period is carried over the night (it was fixed at 0.05), Cd and G switch
@@ -340,6 +346,9 @@ Behaviour changes to check in existing scripts:
   ASCE (before it was about 57 times too small); longitudes are negative
   for west.
 * read.WSdata2(): the default cf is now c(1, 1, 1), as in read.WSdata().
+* waterOptions(writeResults = TRUE): only the final outputs (EB, ET24, DEM)
+  are written to outputFolder; intermediate results go to terra's temporary
+  files with unique names (#99).
 * prepareSRTMdata(): with a polygon, the DEM is on the Landsat 30 m grid
   of its projected CRS; a longitude/latitude polygon is an error.
 * Documentation: help files updated for terra/sf, Landsat 9 and

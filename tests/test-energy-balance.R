@@ -246,6 +246,24 @@ stopifnot(near(terra::global(EBpct$EB, "mean", na.rm = TRUE)[, 1], pin.pct),
           all(cold.pct$NDVI >= round(stats::quantile(terra::values(ndvi.c2), 0.95, na.rm = TRUE), 2) - 0.005),
           mean(ETrF.pct > 1.1, na.rm = TRUE) < 0.01)
 
+## waterOptions(writeResults = TRUE): later calls do not change earlier
+## results (a second LAI() changed the first one) (#99)
+out.dir <- tempfile("water-out-"); dir.create(out.dir)
+waterOptions(writeResults = TRUE, outputFolder = out.dir)
+lai.w1 <- LAI(image = image.SR)
+m.w1 <- terra::global(lai.w1, "mean", na.rm = TRUE)[1, 1]
+lai.w2 <- LAI(method = "metric", image = image.SR)
+et.w1 <- quiet(ET24h(EB$EB$NetRadiation, EB$EB$SoilHeat, EB$EB$SensibleHeat,
+                     EB$EB$surfaceTemperature, WS, ETr.daily = 5))
+et.w2 <- quiet(expect_warning(ET24h(EB$EB$NetRadiation, EB$EB$SoilHeat, EB$EB$SensibleHeat,
+                                    EB$EB$surfaceTemperature, WS, ETr.daily = 7),
+                              "written earlier in this session"))
+stopifnot(terra::global(lai.w1, "mean", na.rm = TRUE)[1, 1] == m.w1,
+          maxdiff(et.w1 * 7 / 5, et.w2) < 1e-4,  # float32 files
+          !dirname(terra::sources(lai.w1)) %in% normalizePath(out.dir, winslash = "/"),
+          file.exists(file.path(out.dir, "ET24.tif")))
+waterOptions(default = TRUE)
+
 ## Calibration diagnostics in the result, summary() and plotAnchors() (#98)
 ETrF.flex <- terra::values(quiet(suppressMessages(ET24h(EB)))$ETrF)[, 1]
 stopifnot(abs(EB$calibration$ETrF.above.1.1 - mean(ETrF.flex > 1.1, na.rm = TRUE)) < 1e-9,

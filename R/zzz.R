@@ -22,12 +22,17 @@
 #' @description
 #' Sets or shows the global options of the water package. Inspired by
 #' rasterOptions() of the raster package (Robert J. Hijmans).
-#' @param overwrite     Logical. If TRUE and writeResults is TRUE it will
-#' overwrite results. If FALSE, results are saved with a time stamp appended to
-#' the file name (name_YYYYmmddHHMMSS.tif).
-#' @param writeResults  Logical. If TRUE (default FALSE) results are written as
-#' GeoTIFF files to outputFolder. This is slower, but avoids out-of-memory
-#' problems with large images.
+#' @param overwrite     Logical. If TRUE and writeResults is TRUE, the final
+#' outputs overwrite files of earlier sessions; a file written earlier in the
+#' same session is never overwritten (an object may still read it): a new name
+#' is used, with a warning. If FALSE, a time stamp is appended to the file name
+#' (name_YYYYmmddHHMMSS.tif).
+#' @param writeResults  Logical. If TRUE (default FALSE) results are written to
+#' disk as GeoTIFF files: the final outputs (EB from METRIC.EB(), ET24 from
+#' ET24h(), DEM from getDEM() and prepareSRTMdata()) to outputFolder, and the
+#' intermediate results to terra's temporary files, with unique names. This is
+#' slower, but avoids out-of-memory problems with large images. Values are
+#' stored as 32-bit floats.
 #' @param outputFolder  Name of a folder to save files, relative to the working
 #' directory.
 #' @param SRTMrepo      A folder where SRTM grids are stored. Currently not

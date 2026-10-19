@@ -520,6 +520,14 @@ mtlValues <- function(MTL, keys, group = NULL){
 }
 
 
+# Results of the package functions. With waterOptions(writeResults = TRUE)
+# they are written to disk (for images too large for memory): intermediate
+# results to terra's temporary files, with unique names, and the final outputs
+# (finalOutputs) to waterOptions(outputFolder). A final file written earlier
+# in this session is not overwritten, as an object may still read it: a new
+# name is used, with a warning
+finalOutputs <- c("EB", "ET24", "DEM")
+written <- new.env()
 saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
   # a single layer without a name is named as its file (e.g. "Rn", "G", "H")
   if(is.null(stack.names) && !missing(file) && nlyr(imagestack) == 1){
@@ -529,21 +537,35 @@ saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
     names(imagestack) <- stack.names
     return(imagestack)
   }
-  tstamp <- NULL
-  if(!getOption("waterOverwrite")){
-    tstamp <- paste0("_", strftime(Sys.time(), format = "%Y%m%d%H%M%S"))}
-  tmpdir <- getOption("waterOutputFolder")
-  lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
-  if (lastchar != "/" & lastchar != "\\") {
-    tmpdir <- paste0(tmpdir, "/")
+  if(missing(file)){file <- deparse(substitute(imagestack))}
+  if(file %in% finalOutputs){
+    tmpdir <- getOption("waterOutputFolder")
+    lastchar = substr(tmpdir, nchar(tmpdir), nchar(tmpdir))
+    if (lastchar != "/" & lastchar != "\\") {
+      tmpdir <- paste0(tmpdir, "/")
+    }
+    tstamp <- NULL
+    if(!getOption("waterOverwrite")){
+      tstamp <- paste0("_", strftime(Sys.time(), format = "%Y%m%d%H%M%S"))}
+    resultfile <- paste0(tmpdir, file, tstamp, ".tif")
+    if(file.exists(resultfile) &&
+       (!getOption("waterOverwrite") || exists(normalizePath(resultfile), envir = written))){
+      new <- tempfile(pattern = paste0(file, tstamp, "_"), tmpdir = sub("/$", "", tmpdir),
+                      fileext = ".tif")
+      warning(resultfile, " exists (written earlier in this session, or a time ",
+              "stamp in the same second): saved as ", new, call. = FALSE)
+      resultfile <- new
+    }
+    writeRaster(imagestack, filename = resultfile, overwrite = TRUE)
+    assign(normalizePath(resultfile), TRUE, envir = written)
+    message("Result saved as ", resultfile)
+  } else {
+    resultfile <- tempfile(pattern = paste0(file, "_"), tmpdir = terra::terraOptions(print = FALSE)$tempdir,
+                           fileext = ".tif")
+    writeRaster(imagestack, filename = resultfile)
   }
-  if(missing(file)){file <- paste0(deparse(substitute(imagestack)),".tif")}
-  resultfile <- paste0(tmpdir, file, tstamp, ".tif")
-  writeRaster(imagestack, filename = resultfile, ...)
-  message(paste("Result saved as", paste0(tmpdir, file, tstamp, ".tif"), "    OK"))
   stack <- rast(resultfile)
   names(stack) <- stack.names
-  terra::tmpFiles(current = FALSE, orphan = TRUE, remove = TRUE)
   return(stack)
 }
 
