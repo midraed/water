@@ -4,7 +4,13 @@
 \alias{calcH.control}
 \title{Parameters for the iteration of H and the aerodynamic resistance}
 \usage{
-calcH.control(maxit = 20, u200.min = 2, damping = 0)
+calcH.control(
+  maxit = 20,
+  u200.min = 2,
+  damping = 0,
+  ETrF.hot = 0,
+  cold.NDVI.rule = FALSE
+)
 }
 \arguments{
 \item{maxit}{maximum number of iterations}
@@ -18,6 +24,18 @@ not of Allen et al. (2007)}
 iteration, 0 (default, no damping) to below 1: r_ah = (1 - damping) * new +
 damping * previous. Damping keeps the same solution and helps runs that
 oscillate instead of converging. A choice of this package}
+
+\item{ETrF.hot}{reference ET fraction of the hot anchor pixels (default 0,
+dry bare soil). After rain the soil may still evaporate; Allen et al. (2007,
+Eq. 47) then compute dT of the hot pixels from Rn - G - LE.hot}
+
+\item{cold.NDVI.rule}{logical (default FALSE). If TRUE, METRIC.EB() lowers
+the ET fraction of automatically selected cold anchors with NDVI below 0.8:
+min(ETp.coef, Kc * ETo / ETr), with Kc = 2.11 NDVI - 0.4989
+(Reyes-González et al., 2015), for every anchors.method. If FALSE, only
+"flexible" does it, when the cold criteria had to be relaxed. The NDVI is
+from top-of-atmosphere reflectance with image.DN, from surface reflectance
+otherwise}
 }
 \value{
 A list of class waterControl with the parameters.

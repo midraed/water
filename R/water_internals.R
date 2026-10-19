@@ -147,6 +147,26 @@ checkCloudMask <- function(MTL, ...){
   invisible(!any(tagged))
 }
 
+# Warning when the station recorded more than limit mm of rain in the days
+# before the overpass (if its records cover them): the hot pixels may not be
+# dry, and calcH() assumes ET = 0 there unless ETrF.hot is set
+checkRecentRain <- function(WeatherStation, days = 3, limit = 5){
+  if(!inherits(WeatherStation, "waterWeatherStation") || is.null(WeatherStation$at.sat)){
+    return(invisible(NA))
+  }
+  rain <- WeatherStation$alldata$rain
+  t <- as.POSIXct(WeatherStation$alldata$datetime)
+  overpass <- as.POSIXct(WeatherStation$at.sat$datetime)
+  if(all(is.na(rain)) || min(t) > overpass - days * 86400){return(invisible(NA))}
+  total <- sum(rain[t > overpass - days * 86400 & t <= overpass], na.rm = TRUE)
+  if(total > limit){
+    warn("The station recorded ", round(total, 1), " mm of rain in the ", days,
+         " days before the image: the hot anchor pixels may not be dry (ET = 0 is ",
+         "assumed). Consider calcH.control(ETrF.hot = ) (Allen et al., 2007, Eq. 47)")
+  }
+  invisible(total)
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){

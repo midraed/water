@@ -65,6 +65,13 @@ New:
   Kc. The old call with Rn, G, H and Ts gives the same ET24 as before (#91).
 * Single-layer results are named (e.g. "Rn", "G", "H", "albedo", "Z.om",
   "ET24"); they had empty names (#91).
+* Hot and cold anchors (#96, optional): calcH.control(ETrF.hot = ) sets
+  the ET of the hot pixels after rain (Allen et al. 2007, Eq. 47; default
+  0, dry soil), and METRIC.EB() warns when the station recorded more than
+  5 mm of rain in the 3 days before the image. calcH.control(
+  cold.NDVI.rule = TRUE) lowers the ET fraction of cold anchors with NDVI
+  below 0.8 for every automatic method (before, only "flexible" with
+  relaxed criteria); off by default.
 * Calibration guards (#93): calcAnchors() warns when there are fewer than
   20 hot or cold candidates (anchors.control(min.candidates = )): the area
   may be too small or too homogeneous; it returns the candidate counts and,

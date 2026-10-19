@@ -505,7 +505,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                                                              surface.model = surface.model)
   } else {Z.om.sc <- Z.om}
   par(mfrow=c(1,2))
-  if(missing(anchors)){
+  auto.anchors <- missing(anchors)
+  if(auto.anchors){
     anchors <- muffleKelvin(
       calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
                   albedo = albedo, Z.om = Z.om.sc, n = n,
@@ -525,7 +526,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     } else print(anchors)
   }
   #setTxtProgressBar(pb, 45)
-  if(anchors.method == "flexible" && !is.null(anchors$flex)){
+  if(!isTRUE(calcH.control$cold.NDVI.rule) && anchors.method == "flexible" &&
+     !is.null(anchors$flex)){
      is.cold <- tolower(trimws(as.character(anchors$type))) == "cold"
      flex.cold <- anchors$flex[is.cold][1]
      NDVIcold <- mean(as.numeric(anchors$NDVI[is.cold]))
@@ -542,12 +544,26 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
        print(paste0("ETp.coef updated to: ", round(ETp.coef, 3), " (Kc = ",
                     round(Kc, 3), " from Reyes-Gonzalez et al, 2015, times ETo/ETr)"))
      }
+  } else if(auto.anchors && isTRUE(calcH.control$cold.NDVI.rule)){
+    # cold anchors that are not full cover: ET fraction from their NDVI, for
+    # every method (calcH.control(cold.NDVI.rule = TRUE))
+    is.cold <- tolower(trimws(as.character(anchors$type))) == "cold"
+    NDVIcold <- mean(as.numeric(anchors$NDVI[is.cold]))
+    if(NDVIcold < 0.8){
+      Kc <- 2.11 * NDVIcold - 0.4989
+      ETp.coef <- min(ETp.coef, Kc * hourlyET(WeatherStation, ET = "ETo") /
+                        hourlyET(WeatherStation, ET = "ETr"))
+      message("Mean NDVI of the cold anchors ", round(NDVIcold, 3), ": ETp.coef = ",
+              round(ETp.coef, 3), " (cold.NDVI.rule)")
+    }
   }
+  if(calcH.control$ETrF.hot == 0){checkRecentRain(WeatherStation)}
   H <- muffleKelvin(
     calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
           WeatherStation = WeatherStation, ETp.coef = ETp.coef,
           Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose,
           maxit = calcH.control$maxit, u200.min = calcH.control$u200.min,
+          ETrF.hot = calcH.control$ETrF.hot,
           damping = calcH.control$damping))
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)

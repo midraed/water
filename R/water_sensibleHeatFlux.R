@@ -657,6 +657,8 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 #' \code{\link{calcH.control}}
 #' @param damping        weight of the previous aerodynamic resistance in each
 #' iteration (default 0, no damping). See \code{\link{calcH.control}}
+#' @param ETrF.hot       reference ET fraction of the hot anchors (default 0).
+#' See \code{\link{calcH.control}}
 #' @details Sensible heat flux is the rate of heat loss to the air by convection
 #' and conduction, due to a temperature difference. This parameter is computed
 #' using a one-dimensional, aerodynamic, temperature-gradient-based equation for
@@ -693,9 +695,10 @@ anchorsPercentile <- function(NDVI, LAI, Ts, albedo, WS.buffer, control){
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,
-                   damping = 0) {
+                   damping = 0, ETrF.hot = 0) {
   checkChoice(method, c("mean", "lm"), "method")
-  control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping)
+  control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping,
+                           ETrF.hot = ETrF.hot)
 
   # ---- helper: safe numeric values by cell (Option A) ----
   cell_vals <- function(r, cells) {
@@ -766,6 +769,10 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     (2.501 - 0.002361*(cell_mean(Ts, cold)-273.15)) * (1e6)/3600
   
   H.cold <- cell_mean(Rn, cold) - cell_mean(G, cold) - LE.cold
+  # ET of the hot pixels, 0 for dry bare soil (Allen et al., 2007, Eq. 47)
+  LE.hot <- function(cells){
+    ETr.hourly * ETrF.hot * (2.501 - 0.002361*(cell_vals(Ts, cells)-273.15)) * (1e6)/3600
+  }
   
   result <- list()
   
@@ -812,8 +819,8 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       
       dT.cold <- H.cold * cell_mean(r.ah, cold) / (cell_mean(air.density, cold)*1004)
       
-      dT.hot <- (cell_mean(Rn, hot) - cell_mean(G, hot)) * cell_mean(r.ah, hot) /
-        (cell_mean(air.density, hot)*1004)
+      dT.hot <- (cell_mean(Rn, hot) - cell_mean(G, hot) - mean(LE.hot(hot))) *
+        cell_mean(r.ah, hot) / (cell_mean(air.density, hot)*1004)
       
       a <- (dT.hot - dT.cold) / (cell_mean(Ts.datum, hot) - cell_mean(Ts.datum, cold))
       b <- -a * cell_mean(Ts.datum, cold) + dT.cold
@@ -923,7 +930,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         dT.cold <- H.cold * cell_vals(r.ah, cold[pair]) /
           (cell_vals(air.density, cold[pair]) * 1004)
         
-        dT.hot <- (cell_vals(Rn, hot[pair]) - cell_vals(G, hot[pair])) *
+        dT.hot <- (cell_vals(Rn, hot[pair]) - cell_vals(G, hot[pair]) - LE.hot(hot[pair])) *
           cell_vals(r.ah, hot[pair]) / (cell_vals(air.density, hot[pair]) * 1004)
         
         a <- (dT.hot - dT.cold) / (cell_vals(Ts.datum, hot[pair]) - cell_vals(Ts.datum, cold[pair]))

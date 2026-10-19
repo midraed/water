@@ -318,6 +318,22 @@ stopifnot(H.damped$converged,
           terra::global(momentumRoughnessLength(LAI = 0 * lai), "min", na.rm = TRUE)[1, 1] == 0.005)
 expect_error(calcH.control(damping = 1), "damping")
 
+## ET of the hot pixels after rain (Allen et al. 2007, Eq. 47) and the
+## vegetation-based cold coefficient, both optional (#96)
+H.wet <- runH(df, ETrF.hot = 0.2)
+hot.cells <- terra::cellFromXY(Ts.eb, xy[df$type == "hot", , drop = FALSE])
+stopifnot(mean(terra::values(H.wet$H)[hot.cells, 1]) < mean(terra::values(H0$H)[hot.cells, 1]),
+          maxdiff(runH(df, ETrF.hot = 0)$H, H0$H) == 0)
+EBrule <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                                           WeatherStation = WS, MTL = MTL.L2,
+                                           alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03,
+                                           anchors.method = "flexible",
+                                           calcH.control = list(cold.NDVI.rule = TRUE))))
+stopifnot(as.numeric(EBrule$methods[["ETp.coef"]]) < 1.05)
+rainy <- WS
+rainy$alldata <- rbind(transform(WS$alldata, datetime = datetime - 3 * 86400, rain = 4), WS$alldata)
+invisible(expect_warning(water:::checkRecentRain(rainy), "mm of rain"))
+
 ## Cold pixels and ET24h() use the same alfalfa reference ET (Allen et al.
 ## 2007): the reference ET fraction (ETrF) of the cold pixels is ETp.coef
 cold <- terra::extract(EB$EB, terra::vect(EB$anchors[EB$anchors$type == "cold", ]))

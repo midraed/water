@@ -61,13 +61,24 @@ anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000,
 #' iteration, 0 (default, no damping) to below 1: r_ah = (1 - damping) * new +
 #' damping * previous. Damping keeps the same solution and helps runs that
 #' oscillate instead of converging. A choice of this package
+#' @param ETrF.hot  reference ET fraction of the hot anchor pixels (default 0,
+#' dry bare soil). After rain the soil may still evaporate; Allen et al. (2007,
+#' Eq. 47) then compute dT of the hot pixels from Rn - G - LE.hot
+#' @param cold.NDVI.rule  logical (default FALSE). If TRUE, METRIC.EB() lowers
+#' the ET fraction of automatically selected cold anchors with NDVI below 0.8:
+#' min(ETp.coef, Kc * ETo / ETr), with Kc = 2.11 NDVI - 0.4989
+#' (Reyes-González et al., 2015), for every anchors.method. If FALSE, only
+#' "flexible" does it, when the cold criteria had to be relaxed. The NDVI is
+#' from top-of-atmosphere reflectance with image.DN, from surface reflectance
+#' otherwise
 #' @return A list of class waterControl with the parameters.
 #' @family METRIC model functions
 #' @seealso \code{\link{calcH}}
 #' @examples
 #' calcH.control(maxit = 30)
 #' @export
-calcH.control <- function(maxit = 20, u200.min = 2, damping = 0){
+calcH.control <- function(maxit = 20, u200.min = 2, damping = 0, ETrF.hot = 0,
+                          cold.NDVI.rule = FALSE){
   if(!is.numeric(maxit) || length(maxit) != 1 || !isTRUE(maxit >= 1) || maxit %% 1 != 0){
     stop("maxit must be a whole number, 1 or more", call. = FALSE)
   }
@@ -75,7 +86,14 @@ calcH.control <- function(maxit = 20, u200.min = 2, damping = 0){
   if(!is.numeric(damping) || length(damping) != 1 || !isTRUE(damping >= 0 && damping < 1)){
     stop("damping must be a number from 0 to below 1", call. = FALSE)
   }
-  structure(list(maxit = maxit, u200.min = u200.min, damping = damping),
+  if(!is.numeric(ETrF.hot) || length(ETrF.hot) != 1 || !isTRUE(ETrF.hot >= 0 && ETrF.hot < 1)){
+    stop("ETrF.hot must be a number from 0 to below 1", call. = FALSE)
+  }
+  if(!isTRUE(cold.NDVI.rule) && !isFALSE(cold.NDVI.rule)){
+    stop("cold.NDVI.rule must be TRUE or FALSE", call. = FALSE)
+  }
+  structure(list(maxit = maxit, u200.min = u200.min, damping = damping,
+                 ETrF.hot = ETrF.hot, cold.NDVI.rule = cold.NDVI.rule),
             class = c("waterControl", "list"))
 }
 
