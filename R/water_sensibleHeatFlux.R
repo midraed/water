@@ -139,8 +139,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
   }
   # old method names (CITRA-MCBx) are mapped, with a warning
   anchors.method <- checkAnchorsMethod(anchors.method)
+  checkKelvin(Ts)
   ### Some values used later
-  NDVI <- (image$NIR - image$R) / (image$NIR + image$R)
+  rn <- landsatBands(image, c("R", "NIR"), pos = 3:4)
+  NDVI <- (rn[[2]] - rn[[1]]) / (rn[[2]] + rn[[1]])
   NDVI[NDVI < -1]  <-  NA
   NDVI[NDVI > 1]  <-  NA
   if(!missing(WeatherStation)){
@@ -580,7 +582,8 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
-  
+  checkKelvin(Ts)
+
   if(!inherits(anchors, "sf")){
     anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
   }

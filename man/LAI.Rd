@@ -10,8 +10,9 @@ LAI(method = "metric2010", image, aoi, L = 0.1, sat)
 \item{method}{Method used to estimate LAI from spectral data: "metric2010"
 (default), "metric", "MCB", "vineyard" or "turner". See Details.}
 
-\item{image}{SpatRaster with bands B, G, R, NIR, ... (the third and fourth
-layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
+\item{image}{SpatRaster with layers named R and NIR, selected by name
+(layers without standard names: the third and fourth, with a warning):
+top-of-atmosphere reflectance for "metric",
 "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
 "vineyard" (see \code{\link{calcRadiance}})}
 

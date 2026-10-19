@@ -34,10 +34,45 @@ getSat <- function(path = NULL, MTL = NULL){
        ". Set sat = \"L7\", \"L8\", \"L9\" or \"MODIS\".")
 }
 
-# Bands by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, ...) when the image has
-# them, so the layer order does not matter; otherwise the first layers in order
-landsatBands <- function(image, bands){
-  if(all(bands %in% names(image))) image[[bands]] else image[[seq_along(bands)]]
+# Bands by name (B, G, R, NIR, SWIR1, SWIR2, Thermal1, ...), so the layer
+# order does not matter. Layers without any standard name (e.g. a stack made
+# by hand) are taken by position pos, with a warning; a stack with standard
+# names but without one of the bands is an error
+landsatBands <- function(image, bands, pos = seq_along(bands)){
+  if(all(bands %in% names(image))){return(image[[bands]])}
+  standard <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2", "SWIR3", "Thermal1", "Thermal2")
+  if(!any(standard %in% names(image))){
+    warning("image layers are not named ", paste(bands, collapse = ", "),
+            ": using layers ", paste(pos, collapse = ", "), " by position (name ",
+            "them, e.g. names(x) <- c(\"B\", \"G\", \"R\", \"NIR\", \"SWIR1\", ",
+            "\"SWIR2\"))", call. = FALSE)
+    return(image[[pos]])
+  }
+  stop("image has no layer named ",
+       paste0("\"", setdiff(bands, names(image)), "\"", collapse = ", "),
+       " (layers: ", paste(names(image), collapse = ", "), ")", call. = FALSE)
+}
+
+# Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
+# or unmasked fill or cloud tops (some cells: a warning, unless they are many)
+checkKelvin <- function(Ts, name = "Ts"){
+  r <- as.numeric(global(Ts[[1]], "range", na.rm = TRUE))
+  if(!all(is.finite(r)) || r[1] >= 200){return(invisible(TRUE))}
+  if(r[2] < 200){
+    stop(name, " must be in Kelvin: the values look like Celsius (maximum ",
+         round(r[2], 1), "); add 273.15", call. = FALSE)
+  }
+  n <- global(Ts[[1]] < 200, "sum", na.rm = TRUE)[1, 1]
+  valid <- global(!is.na(Ts[[1]]), "sum")[1, 1]
+  text <- paste0(name, " has ", n, " cells (", signif(100 * n / valid, 2),
+                 "%) below 200 K (minimum ", round(r[1], 1), " K): unmasked fill ",
+                 "or clouds, or wrong scaling")
+  if(n > 0.01 * valid){
+    stop(text, ". Mask them (cfmask(); loadImage() and loadImageSR() mask the ",
+         "fill)", call. = FALSE)
+  }
+  warning(text, ". Mask clouds with cfmask()", call. = FALSE)
+  invisible(FALSE)
 }
 
 # x must be exactly one of choices: no partial matching (match.arg() takes
@@ -159,7 +194,7 @@ columnsByName <- function(columns){
   }
   positional <- unname(columns[roles])  # NA for a missing rain
   if(!identical(as.numeric(old), as.numeric(positional))){
-    warning("columns are matched by name (before version 0.8.5 only their ",
+    warning("columns are matched by name (before version 1.0 only their ",
             "order was used): check that the names are right")
   }
   positional

@@ -302,8 +302,9 @@ calcTOAr <- function(image.DN, sat="auto",
 #' model developed by Tasumi et al. (2008) and Allen et al. (2007), applied band
 #' by band. Only for Landsat 7: for Landsat 8 and 9 use the Collection 2
 #' Level-2 surface reflectance (see \code{\link{loadImageSR}}).
-#' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance (B, G,
-#' R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()
+#' @param image.TOAr      SpatRaster with top-of-atmosphere reflectance in
+#' layers named B, G, R, NIR, SWIR1 and SWIR2 (selected by name), e.g. from
+#' calcTOAr()
 #' @param sat             Only "L7" is supported; "L8" and "L9" stop with an
 #' error. "auto" detects the satellite from the MTL file (MTL is then
 #' required)
@@ -370,9 +371,10 @@ calcSR <- function(image.TOAr, sat="auto", aoi, incidence.hor,
     for(i in 1:6){
       path_refl[[i]] <- Cnb[6,i] * (1 - tau_in[[i]])
     }
+    refl <- landsatBands(image.TOAr, c("B", "G", "R", "NIR", "SWIR1", "SWIR2"))
     stack_SR <- list()
     for(i in 1:6){
-      stack_SR[[i]] <- (image.TOAr[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
+      stack_SR[[i]] <- (refl[[i]] - path_refl[[i]]) / (tau_in[[i]] * tau_out[[i]])
     }
     image_SR <- do.call(c, stack_SR)
   }

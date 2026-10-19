@@ -16,8 +16,9 @@ calcSR(
 )
 }
 \arguments{
-\item{image.TOAr}{SpatRaster with top-of-atmosphere reflectance (B, G,
-R, NIR, SWIR1, SWIR2), e.g. from calcTOAr()}
+\item{image.TOAr}{SpatRaster with top-of-atmosphere reflectance in
+layers named B, G, R, NIR, SWIR1 and SWIR2 (selected by name), e.g. from
+calcTOAr()}
 
 \item{sat}{Only "L7" is supported; "L8" and "L9" stop with an
 error. "auto" detects the satellite from the MTL file (MTL is then

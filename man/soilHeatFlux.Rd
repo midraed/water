@@ -7,8 +7,9 @@
 soilHeatFlux(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi")
 }
 \arguments{
-\item{image}{surface reflectance SpatRaster with bands B, G, R, NIR, ...
-(the third and fourth layers, R and NIR, are used for NDVI)}
+\item{image}{surface reflectance SpatRaster with layers named R and NIR,
+used for NDVI (layers without standard names: the third and fourth, with a
+warning)}
 
 \item{Ts}{land surface temperature (K), from surfaceTemperature()}
 

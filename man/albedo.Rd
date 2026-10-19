@@ -7,8 +7,9 @@
 albedo(image.SR, aoi, coeff = "Tasumi", sat = "auto")
 }
 \arguments{
-\item{image.SR}{surface reflectance SpatRaster with bands B, G, R, NIR,
-SWIR1 and SWIR2 (only the first six layers are used, by position)}
+\item{image.SR}{surface reflectance SpatRaster with layers named B, G, R,
+NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3), selected
+by name. Layers without these names are used by position, with a warning}
 
 \item{aoi}{Optional area of interest (e.g. from createAoi()) to crop
 the result. If missing, the result is not cropped}

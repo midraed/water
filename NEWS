@@ -66,6 +66,11 @@ Fixes that change results:
   over-correction of the product), so the outputs have small holes over
   some of the best-watered fields. loadImage() sets the Level-1 fill (DN 0)
   to NA: it gave Ts = -53.6 K and entered the anchor search (#85).
+* albedo(), LAI(), soilHeatFlux(), calcSR() and calcAnchors() select the
+  bands by name, as calcTOAr() and calcRadiance() did: with the bands in
+  another order, LAI and albedo were silently wrong. For MODIS stacks (R
+  and NIR first), LAI() and soilHeatFlux() used the blue and green bands
+  for NDVI (#86).
 * Example data: the wind speed in apples.csv is in km/h, but the
   read.WSdata() example and the METRIC vignettes read it as m/s. The daily
   reference ET of the example was 10.2 instead of 7.0 mm, and the daily ET
@@ -177,6 +182,13 @@ Input checks:
   ones warn with the likely unit problem (Kelvin or Fahrenheit, RH as a
   fraction, wind in km/h, radiation in MJ); a semicolon-separated file
   points to read.WSdata2().
+* Surface temperature must be in Kelvin (#86): METRIC.EB(), METRIC.Rn(),
+  METRIC.G(), calcAnchors() and calcH() stop when it looks like Celsius
+  (ET was 86% too high, with wrong Rn and G), and when more than 1% of the
+  cells are below 200 K (unmasked fill or clouds); fewer such cells give a
+  warning. A stack whose layers have the standard names (B, G, R, NIR,
+  ...) but lacks one that is needed is an error; layers without standard
+  names are used by position, with a warning.
 * Weather at the overpass (#84): read.WSdata() warns when the station
   radiation at the overpass is below 80% (or above 110%) of the ASCE-EWRI
   clear-sky radiation: the cold pixels are calibrated with it, and METRIC

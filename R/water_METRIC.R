@@ -218,6 +218,7 @@ metricSurface <- function(image.DN, image.SR, WeatherStation, MTL, sat,
   } else {
     Ts <- image.DN$LST  # MODIS
   }
+  checkKelvin(Ts, if(!missing(surf.temp)) "surf.temp" else "Ts")
   list(DEM = DEM, surface.model = surface.model, solar.angles = solar.angles,
        image.TOAr = image.TOAr, image.SR = image.SR, albedo = albedo,
        LAI = LAI, Ts = Ts)

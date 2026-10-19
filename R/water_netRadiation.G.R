@@ -335,8 +335,9 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' Broadband surface albedo is estimated considering the integration of all
 #' narrowband at-surface reflectances following a weighting function with
 #' empirical coefficients (Tasumi et al., 2008).
-#' @param image.SR   surface reflectance SpatRaster with bands B, G, R, NIR,
-#' SWIR1 and SWIR2 (only the first six layers are used, by position)
+#' @param image.SR   surface reflectance SpatRaster with layers named B, G, R,
+#' NIR, SWIR1 and SWIR2 (MODIS: R, NIR, B, G, SWIR1, SWIR2 and SWIR3), selected
+#' by name. Layers without these names are used by position, with a warning
 #' @param aoi        Optional area of interest (e.g. from createAoi()) to crop
 #' the result. If missing, the result is not cropped
 #' @param coeff      coefficient to transform narrow to broad band albedo.
@@ -372,6 +373,10 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
     if(coeff=="Liang") {wb <- c(0.356, 0, 0.130, 0.373, 0.085, 0.072)} # Liang 2001
   }
   if(sat=="MODIS"){wb <- c(0.037, 0.479, -0.068, 0.0976, 0.266, 0.0757, 0.107)} # Liang 2001 direct-NIR coefficients
+  # bands by name, in the order of the coefficients
+  image.SR <- if(sat == "MODIS"){
+    landsatBands(image.SR, c("R", "NIR", "B", "G", "SWIR1", "SWIR2", "SWIR3"))
+  } else landsatBands(image.SR, c("B", "G", "R", "NIR", "SWIR1", "SWIR2"))
   albedo <- app(image.SR[[1]], fun=function(x){x *wb[1]})
     for(i in 2:length(wb)){
       albedo <- albedo + app(image.SR[[i]], fun=function(x){x *wb[i]})
@@ -392,8 +397,9 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 #' other works developed on different crops.
 #' @param method   Method used to estimate LAI from spectral data: "metric2010"
 #' (default), "metric", "MCB", "vineyard" or "turner". See Details.
-#' @param image    SpatRaster with bands B, G, R, NIR, ... (the third and fourth
-#' layers, R and NIR, are used): top-of-atmosphere reflectance for "metric",
+#' @param image    SpatRaster with layers named R and NIR, selected by name
+#' (layers without standard names: the third and fourth, with a warning):
+#' top-of-atmosphere reflectance for "metric",
 #' "metric2010" and "MCB"; surface reflectance for "turner"; radiance for
 #' "vineyard" (see \code{\link{calcRadiance}})
 #' @param aoi      Not used; kept for backward compatibility
@@ -429,10 +435,11 @@ albedo <- function(image.SR, aoi, coeff="Tasumi", sat="auto"){
 LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
   checkChoice(method, waterChoices$LAI.method, "method")
   if(!missing(sat)){warning("LAI(): the sat argument is not used")}
+  # R and NIR by name (layers 3 and 4 of an unnamed stack)
   if(method=="metric" | method=="metric2010" | method=="vineyard" | method=="MCB"){
-      toa.4.5 <- c(image[[3]], image[[4]])}
+      toa.4.5 <- landsatBands(image, c("R", "NIR"), pos = 3:4)}
   if(method=="turner"){
-      sr.4.5 <- c(image[[3]], image[[4]])}
+      sr.4.5 <- landsatBands(image, c("R", "NIR"), pos = 3:4)}
   if(method=="metric2010"){
     # SAVI
     SAVI_ID <- (1 + L) * (toa.4.5[[2]] - toa.4.5[[1]]) / (L + toa.4.5[[1]] + toa.4.5[[2]])
@@ -451,8 +458,7 @@ LAI <- function(method="metric2010", image, aoi, L=0.1, sat){
     LAI <- ifel(SAVI_ID > 0.687, 6, log((0.69-SAVI_ID)/0.59)/0.91 *-1)
   }
   if(method=="vineyard"){
-    # image must be the DN image
-    toa.4.5 <- c(image[[3]], image[[4]])
+    # image must be the radiance image (calcRadiance())
     NDVI <- (toa.4.5[[2]] - toa.4.5[[1]])/(toa.4.5[[1]] + toa.4.5[[2]])
     LAI <- 4.9 * NDVI -0.46 # Johnson 2003
   }
@@ -740,8 +746,9 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @description
 #' This function implements models to estimate soil heat flux for different
 #' surfaces and considering different inputs.
-#' @param image    surface reflectance SpatRaster with bands B, G, R, NIR, ...
-#' (the third and fourth layers, R and NIR, are used for NDVI)
+#' @param image    surface reflectance SpatRaster with layers named R and NIR,
+#' used for NDVI (layers without standard names: the third and fourth, with a
+#' warning)
 #' @param Ts       land surface temperature (K), from surfaceTemperature()
 #' @param albedo   broadband surface albedo, from albedo()
 #' @param LAI      SpatRaster with leaf area index, from LAI()
@@ -762,7 +769,7 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #' @export
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, aoi, method = "Tasumi"){
   checkChoice(method, waterChoices$G.method, "method")
-  sr.4.5 <- c(image[[3]], image[[4]])
+  sr.4.5 <- landsatBands(image, c("R", "NIR"), pos = 3:4)
   NDVI <- (sr.4.5[[2]] - sr.4.5[[1]])/(sr.4.5[[1]] + sr.4.5[[2]])
   if(method == "Bastiaanssen"){
     G <- ((Ts - 273.15)*(0.0038+0.0074*albedo)*(1-0.98*NDVI^4))*Rn

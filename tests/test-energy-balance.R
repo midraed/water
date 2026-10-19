@@ -13,6 +13,12 @@ expect_warning <- function(expr, pattern) {
   if (is.null(w)) stop("expected a warning matching: ", pattern)
   invisible(value)
 }
+expect_error <- function(expr, pattern) {
+  msg <- tryCatch({ expr; NULL }, error = function(e) conditionMessage(e))
+  if (is.null(msg)) stop("expected an error matching: ", pattern)
+  if (!grepl(pattern, msg)) stop("unexpected error: ", msg)
+  invisible(msg)
+}
 quiet <- function(expr) {
   value <- NULL
   invisible(utils::capture.output(value <- suppressWarnings(expr)))
@@ -119,6 +125,32 @@ terra::values(turner.img) <- cbind(0.03, 0.04, red, nir, 0.2, 0.1)
 names(turner.img) <- c("B", "G", "R", "NIR", "SWIR1", "SWIR2")
 stopifnot(isTRUE(all.equal(as.numeric(terra::values(LAI(method = "turner", image = turner.img))),
                            target, tolerance = 0.001)))
+
+## Bands by name everywhere (#86): reordered layers give the same LAI and
+## albedo (LAI dropped from 1.25 to 0.001); a missing band is an error, and
+## layers without standard names are used by position, with a warning
+sr0 <- suppressMessages(loadImageSR(c2))
+rev6 <- sr0[[c("NIR", "R", "G", "B", "SWIR2", "SWIR1")]]
+stopifnot(maxdiff(LAI(image = rev6), LAI(image = sr0)) == 0,
+          maxdiff(albedo(rev6, coeff = "Olmedo", sat = "L8"),
+                  albedo(sr0, coeff = "Olmedo", sat = "L8")) == 0)
+noR <- sr0; names(noR)[3] <- "Red"
+expect_error(LAI(image = noR), "no layer named \"R\"")
+unnamed <- sr0[[1:6]]; names(unnamed) <- paste0("lyr", 1:6)
+stopifnot(maxdiff(expect_warning(LAI(image = unnamed), "by position"), LAI(image = sr0)) == 0)
+# MODIS stacks start with R and NIR: LAI used B and G
+stopifnot(maxdiff(LAI(image = sr0[[c("R", "NIR", "B", "G", "SWIR1", "SWIR2")]]),
+                  LAI(image = sr0)) == 0)
+
+## Surface temperature in Kelvin (#86): Celsius stops (ET was +86%); a few
+## cells below 200 K (cloud tops) warn, many stop
+expect_error(quiet(METRIC.Rn(image.SR = sr0, surf.temp = sr0$Band_10 - 273.15,
+                             WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo")),
+             "Celsius")
+tops <- sr0$Band_10; tops[1:5] <- 190
+invisible(expect_warning(water:::checkKelvin(tops), "5 cells .* below 200 K"))
+tops[1:1000] <- 190
+expect_error(water:::checkKelvin(tops), "below 200 K")
 
 ## calcAnchors(): masked reflectance pixels are never anchors, and plots
 ## work without a weather station
