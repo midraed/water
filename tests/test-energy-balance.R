@@ -257,6 +257,19 @@ lambda <- (2.501 - 0.00236 * (cold$surfaceTemperature - 273.15)) * 1e6
 ETrF.cold <- mean(3600 * cold$LatentHeat / lambda) / hourlyET(WS, ET = "ETr")
 stopifnot(abs(ETrF.cold - 1.05) < 0.03)
 
+## ET24h() takes the METRIC.EB() result and returns ETinst, ETrF, ET24 and
+## the H > Rn - G flag; the old call returns ET24 only, unchanged (#91)
+et.old <- quiet(ET24h(EB$EB$NetRadiation, EB$EB$SoilHeat, EB$EB$SensibleHeat,
+                      EB$EB$surfaceTemperature, WS, ETr.daily = suppressMessages(dailyET(WS))))
+et.all <- quiet(suppressMessages(ET24h(EB)))
+stopifnot(names(et.old) == "ET24",
+          identical(names(et.all), c("ETinst", "ETrF", "ET24", "HgtRnG")),
+          maxdiff(et.all$ET24, et.old) == 0,
+          terra::global(et.all$HgtRnG, "sum", na.rm = TRUE)[1, 1] ==
+            terra::global(EB$EB$SensibleHeat > EB$EB$NetRadiation - EB$EB$SoilHeat,
+                          "sum", na.rm = TRUE)[1, 1],
+          maxdiff(et.all$ETrF * hourlyET(WS, ET = "ETr"), et.all$ETinst) < 1e-12)
+
 ## "flexible": the grass-based Kc (Gonzalez et al. 2015) is converted to the
 ## alfalfa reference, ETp.coef = Kc * ETo / ETr
 relaxed <- EB$anchors
@@ -326,7 +339,8 @@ EBsw <- quiet(do.call(METRIC.EB, c(args, n = 1, Z.om.ws = 0.03)))
 Rn <- quiet(do.call(METRIC.Rn, args))
 G <- quiet(do.call(METRIC.G, c(args, list(Rn = Rn))))
 stopifnot(maxdiff(Rn, EBsw$EB$NetRadiation) < 1e-8,
-          maxdiff(G, EBsw$EB$SoilHeat) < 1e-8)
+          maxdiff(G, EBsw$EB$SoilHeat) < 1e-8,
+          names(Rn) == "Rn", names(G) == "G")  # layers have names (#91)
 
 ## METRIC.Rn(): thermal layer named "thermal.low", detected as in METRIC.EB()
 DN.low <- image.DN; names(DN.low)[names(DN.low) == "Thermal1"] <- "thermal.low"

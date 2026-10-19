@@ -20,6 +20,17 @@ Fixes that change results:
 * dailyET() accepts a Date for date, and returns NA with a warning when the
   records do not cover the day (it summed the hours available) (#90).
 
+New:
+
+* ET24h(EB) takes the result of METRIC.EB() and returns layers ETinst
+  (mm/h), ETrF (reference ET fraction, the alfalfa-basis crop coefficient),
+  ET24 (mm/day) and HgtRnG (pixels where H > Rn - G, where ETinst and ETrF
+  are negative). ETr.daily defaults to dailyET() for the day of the
+  overpass. The help page explains how to compare ETrF with a grass-basis
+  Kc. The old call with Rn, G, H and Ts gives the same ET24 as before (#91).
+* Single-layer results are named (e.g. "Rn", "G", "H", "albedo", "Z.om",
+  "ET24"); they had empty names (#91).
+
 * calcH(): the ET of the cold pixels was ETp.coef times the hourly grass
   reference ET (ETo), while ET24h() and dailyET() extrapolate with the
   alfalfa reference ETr. Both now use ETr, as in Allen et al. (2007), so the

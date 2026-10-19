@@ -436,6 +436,10 @@ mtlValues <- function(MTL, keys, group = NULL){
 
 
 saveLoadClean <- function(imagestack, stack.names=NULL, file, ...){
+  # a single layer without a name is named as its file (e.g. "Rn", "G", "H")
+  if(is.null(stack.names) && !missing(file) && nlyr(imagestack) == 1){
+    stack.names <- file
+  }
   if(!getOption("waterWriteResults")){
     names(imagestack) <- stack.names
     return(imagestack)

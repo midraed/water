@@ -7,7 +7,9 @@
 ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 }
 \arguments{
-\item{Rn}{Net radiation (W/m2). See \code{\link{netRadiation}}}
+\item{Rn}{Net radiation (W/m2), see \code{\link{netRadiation}}; or
+the result of METRIC.EB(), which supplies Rn, G, H, Ts and the weather
+station. See Value}
 
 \item{G}{Soil Heat Flux (W/m2). See \code{\link{soilHeatFlux}}}
 
@@ -18,24 +20,38 @@ ET24h(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad = 1)
 \item{WeatherStation}{WeatherStation data at the satellite overpass.
 Can be a waterWeatherStation object calculated using read.WSdata and MTL file
 (with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
-radiation is used, as in calcH())}
+radiation is used, as in calcH()). Optional with a METRIC.EB() result}
 
 \item{ETr.daily}{daily reference ET (mm/day) for the day of the image,
-e.g. from dailyET() (whose default is the alfalfa reference, ETr)}
+e.g. from dailyET() (whose default is the alfalfa reference, ETr). If
+missing, dailyET(WeatherStation) is used (the day of the overpass)}
 
-\item{C.rad}{correction term used in sloping terrain to correct for 
+\item{C.rad}{correction term used in sloping terrain to correct for
 variation in 24 h versus instantaneous energy availability. See Allen (2007)}
 }
 \value{
-SpatRaster with daily (24 h) actual evapotranspiration (mm/day);
-negative values are set to 0. The result is also plotted.
+With Rn, G, H and Ts: a SpatRaster with daily (24 h) actual
+evapotranspiration (mm/day) in a layer named ET24; negative values are set
+to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
+(instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
+unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
+Rn - G, else 0). ET24 is also plotted.
 }
 \description{
 Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
 (from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
 (ETr, see hourlyET()) at the satellite overpass gives the reference ET
-fraction, which
-is multiplied by the daily reference ET.
+fraction (ETrF), which is multiplied by the daily reference ET.
+}
+\details{
+ETrF is a crop coefficient on the alfalfa reference basis. To compare it
+with a crop coefficient on the grass reference basis (Kc, FAO-56), multiply
+it by the ratio of the daily alfalfa and grass reference ET,
+dailyET(WeatherStation) / dailyET(WeatherStation, ET = "ETo").
+
+LE = Rn - G - H is not limited, so ETinst and ETrF are negative where H >
+Rn - G (usually hot, dry pixels, or where the calibration does not fit);
+layer HgtRnG flags them. METRIC.EB() sets LE to 0 there.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007

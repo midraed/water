@@ -169,22 +169,37 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' Calculates the daily (24 h) actual evapotranspiration: the instantaneous ET
 #' (from LE = Rn - G - H) divided by the instantaneous alfalfa reference ET
 #' (ETr, see hourlyET()) at the satellite overpass gives the reference ET
-#' fraction, which
-#' is multiplied by the daily reference ET.
-#' @param Rn             Net radiation (W/m2). See \code{\link{netRadiation}}
+#' fraction (ETrF), which is multiplied by the daily reference ET.
+#' @param Rn             Net radiation (W/m2), see \code{\link{netRadiation}}; or
+#' the result of METRIC.EB(), which supplies Rn, G, H, Ts and the weather
+#' station. See Value
 #' @param G              Soil Heat Flux (W/m2). See \code{\link{soilHeatFlux}}
 #' @param H              Sensible Heat Flux (W/m2). See \code{\link{calcH}}
 #' @param Ts             Land surface temperature (K). See \code{\link{surfaceTemperature}}
 #' @param WeatherStation WeatherStation data at the satellite overpass.
 #' Can be a waterWeatherStation object calculated using read.WSdata and MTL file
 #' (with read.WSdata(..., overpass.radiation = "clear-sky"), the clear-sky
-#' radiation is used, as in calcH())
+#' radiation is used, as in calcH()). Optional with a METRIC.EB() result
 #' @param ETr.daily      daily reference ET (mm/day) for the day of the image,
-#' e.g. from dailyET() (whose default is the alfalfa reference, ETr)
-#' @param C.rad          correction term used in sloping terrain to correct for 
+#' e.g. from dailyET() (whose default is the alfalfa reference, ETr). If
+#' missing, dailyET(WeatherStation) is used (the day of the overpass)
+#' @param C.rad          correction term used in sloping terrain to correct for
 #' variation in 24 h versus instantaneous energy availability. See Allen (2007)
-#' @return SpatRaster with daily (24 h) actual evapotranspiration (mm/day);
-#' negative values are set to 0. The result is also plotted.
+#' @details
+#' ETrF is a crop coefficient on the alfalfa reference basis. To compare it
+#' with a crop coefficient on the grass reference basis (Kc, FAO-56), multiply
+#' it by the ratio of the daily alfalfa and grass reference ET,
+#' dailyET(WeatherStation) / dailyET(WeatherStation, ET = "ETo").
+#'
+#' LE = Rn - G - H is not limited, so ETinst and ETrF are negative where H >
+#' Rn - G (usually hot, dry pixels, or where the calibration does not fit);
+#' layer HgtRnG flags them. METRIC.EB() sets LE to 0 there.
+#' @return With Rn, G, H and Ts: a SpatRaster with daily (24 h) actual
+#' evapotranspiration (mm/day) in a layer named ET24; negative values are set
+#' to 0. With a METRIC.EB() result: a SpatRaster with layers ETinst
+#' (instantaneous ET at the overpass, mm/h), ETrF (reference ET fraction,
+#' unitless), ET24 (mm/day, negative values set to 0) and HgtRnG (1 where H >
+#' Rn - G, else 0). ET24 is also plotted.
 #' @family ET functions
 #' @author Guillermo Federico Olmedo
 #' @references 
@@ -192,6 +207,20 @@ clearSkyRso <- function(DOY, hours, lat, long, long.z, elev){
 #' @importFrom grDevices colorRampPalette
 #' @export
 ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
+  full <- inherits(Rn, "waterLSEB")  # a METRIC.EB() result
+  if(full){
+    EB <- Rn
+    if(missing(WeatherStation)){WeatherStation <- EB$WeatherStation}
+    Rn <- EB$EB$NetRadiation; G <- EB$EB$SoilHeat; H <- EB$EB$SensibleHeat
+    Ts <- EB$EB$surfaceTemperature
+  }
+  if(missing(ETr.daily)){
+    if(!inherits(WeatherStation, "waterWeatherStation")){
+      stop("ETr.daily is missing: pass it (e.g. from dailyET()) or a ",
+           "waterWeatherStation object as WeatherStation", call. = FALSE)
+    }
+    ETr.daily <- dailyET(WeatherStation)
+  }
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
@@ -207,8 +236,12 @@ ET24h <- function(Rn, G, H, Ts, WeatherStation, ETr.daily, C.rad=1){
   plot(ET.24, col = rgb.palette(50), range = c(0, ceiling(ETr.daily*1.5)),
        fill_range = TRUE, xlab = "Easting", ylab = "Northing",
        main = "24-Hour Evapotranspiration (mm/day)", maxcell = ncell(ET.24) * 0.3)
-  saveLoadClean(imagestack = ET.24, 
-                file = "ET24", overwrite=TRUE)
+  if(!full){
+    return(saveLoadClean(imagestack = ET.24, file = "ET24", overwrite=TRUE))
+  }
+  result <- c(ET.inst, ETr.Fr, ET.24, H > Rn - G)
+  saveLoadClean(imagestack = result, stack.names = c("ETinst", "ETrF", "ET24", "HgtRnG"),
+                file = "ET24", overwrite = TRUE)
 }
 
 
