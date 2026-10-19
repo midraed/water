@@ -224,7 +224,8 @@ extraParameters must be a named numeric vector with these names (unknown
 names stop). a and b are required for Zom.method = "custom", and fLAI and h
 for "Perrier":
 \itemize{
-  \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
+  \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h (numbers
+  or SpatRasters);
   \item for momentumRoughnessLength() when Zom.method = "custom": a, b;
   \item deprecated: minDist, WSbuffer and deltaTemp for calcAnchors(); use
     anchors.control = anchors.control(...) instead.

@@ -13,7 +13,7 @@ vignette: >
 knitr::opts_chunk$set(eval = FALSE)
 ```
 
-Esta viñeta resume el flujo de trabajo para estimar la evapotranspiración (ET) diaria con el modelo METRIC (Allen et al., 2007) a partir de imágenes Landsat 8 y 9 Collection 2 Nivel 2. Es una versión corta de la viñeta "Landsat 8 and 9", en la que se muestran las salidas; aquí el código no se ejecuta. Los pasos son los mismos.
+Esta viñeta resume el flujo de trabajo para estimar la evapotranspiración (ET) diaria con el modelo METRIC (Allen et al., 2007) a partir de imágenes Landsat 8 y 9 Collection 2 Nivel 2. Es una versión corta de la viñeta "Landsat 8 and 9", que muestra las salidas; aquí el código no se ejecuta, solo se muestra. Los pasos son los mismos.
 
 ## Datos necesarios
 
@@ -27,7 +27,7 @@ Cargar la imagen (una escena completa pesa casi 1 GB: puede recortarse con `aoi 
 
 ```{r}
 library(water)
-carpeta <- system.file("extdata", "L8_C2", package = "water")  # su carpeta de la escena
+carpeta <- system.file("extdata", "L8_C2", package = "water")  # la carpeta de su escena
 image.SR <- loadImageSR(path = carpeta)
 image.SR <- cfmask(path = carpeta, image = image.SR)
 ```

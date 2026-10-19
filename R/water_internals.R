@@ -682,6 +682,10 @@ mtlDateTime <- function(MTL){
   sat.date <- regmatches(date.line, regexec(text = date.line,
                          pattern = "([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
   sat.time <- regmatches(time.line, regexec(text = time.line,
-                         pattern = "([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-  as.POSIXct(paste(sat.date, sat.time), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+                         pattern = "([0-9]{2}:[0-9]{2}:[0-9]{2})"))[[1]][1]
+  out <- as.POSIXct(paste(sat.date, sat.time), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  if(length(out) != 1 || is.na(out)){
+    stop("DATE_ACQUIRED and SCENE_CENTER_TIME not found in the MTL file", call. = FALSE)
+  }
+  out
 }

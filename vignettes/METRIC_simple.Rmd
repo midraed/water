@@ -107,7 +107,7 @@ Energy.Balance <- METRIC.EB(image.DN = image.DN, plain=TRUE,
 summary(Energy.Balance)
 ```
 
-`summary()` lists the calibration so that you can check it: the temperature at the anchor pixels, dT, the ETrF at the anchors and the share of pixels with ETrF above 1.1.
+`summary()` lists the calibration so that you can check it: the temperature at the anchor pixels, dT, the ETrF at the anchors and the share of pixels with ETrF above 1.1. In this Landsat 7 example about 5% of the pixels have ETrF above 1.1 (0.7% in the Landsat 8 vignette). Values slightly above 1.1 are common over well-watered crops; a large share would point to a poor cold anchor.
 
 Now we can plot the results using:
 

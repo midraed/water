@@ -249,8 +249,8 @@ Landsat 8 and 9 (Collection 2):
 
 Other changes and fixes:
 
-* Every function has an example that runs in a few seconds on a small window
-  of the example scenes, and there is a Spanish vignette ("Landsat8_es").
+* Every function has an example, except prepareSRTMdata() (it needs SRTM
+  files), that runs in a few seconds on a small window of the example scenes, and there is a Spanish vignette ("Landsat8_es").
 
 * Crad() is about six times faster (it works on blocks of cells instead of
   about 3000 raster operations); the results are the same to rounding.

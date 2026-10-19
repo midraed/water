@@ -41,7 +41,9 @@ filled by linear interpolation. If FALSE (default) they are an error.}
 }
 \value{
 SpatRaster with layers ET.period (mm in the period), ETrF.period
-(Eq. 59, ET.period divided by the reference ET of the period) and n.valid
+(Eq. 59, ET.period divided by the reference ET of the period, so it
+includes C.rad) and n.valid. On large scenes it can take minutes: the
+interpolation is done pixel by pixel
 }
 \description{
 Seasonal or monthly ET from the reference ET fraction (ETrF) of
@@ -54,12 +56,18 @@ The ETrF of a pixel that is masked (NA, e.g. clouds) in one date is
 interpolated between the closest valid dates, and the number of valid dates
 is returned in layer n.valid. A pixel without any valid date is NA. ETrF is
 used as it comes from ET24h(): values below 0 or above 1.1 are not clipped;
-mask or clip them before if needed.
+mask or clip them before if needed. A pixel with one valid date uses that
+ETrF for the whole period (n.valid = 1). The layers of ETrF must be on the
+same grid; their order does not matter (they are sorted by date). ET.period
+and ETrF.period both include C.rad.
 }
 \examples{
+# the ETrF of two images (a toy raster; in practice c(ET24h(EB1)$ETrF, ET24h(EB2)$ETrF))
 f <- terra::rast(nrows = 2, ncols = 2, nlyrs = 2, vals = c(0.2, 0.4, 0.6, NA, 0.8, 0.6, 0.3, 0.5))
 etr <- data.frame(date = as.Date("2013-02-01") + 0:9, ET = 6)
 ETperiod(f, dates = c("2013-02-02", "2013-02-08"), ETr.daily = etr)
+# with a weather station, dailyETseries() gives the daily reference ET:
+# etr <- dailyETseries(WeatherStation)
 }
 \references{
 Allen, R.G., Tasumi, M., Trezza, R., 2007. Satellite-based energy balance for

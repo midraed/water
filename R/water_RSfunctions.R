@@ -311,7 +311,9 @@ calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
     cal <- tryCatch(list(Gain = mtlValues(MTL.file, rad.keys("RADIANCE_MULT_BAND_")),
                          Bias = mtlValues(MTL.file, rad.keys("RADIANCE_ADD_BAND_"))),
                     error = function(e) NULL)
-    if(!is.null(cal)){Gain <- unname(cal$Gain); Bias <- unname(cal$Bias)}
+    if(!is.null(cal)){Gain <- unname(cal$Gain); Bias <- unname(cal$Bias)} else {
+      message("No radiance calibration in the MTL file: the values of the Landsat 7 Handbook are used")
+    }
     sat.datetime <- as.POSIXlt(mtlDateTime(MTL))
     DOY <-  sat.datetime$yday +1
     d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))

@@ -235,6 +235,14 @@ expect_error(ETperiod(f, c("2013-02-02", "2013-02-08"), etr.gap), "without ETr.d
 stopifnot(isTRUE(all.equal(unname(terra::values(ETperiod(f, c("2013-02-02", "2013-02-08"), etr.gap,
                                                   fill.gaps = TRUE))[1, 1]), 0.5 * 6 * 7)))
 expect_error(ETperiod(f, c("2013-02-02", "2013-02-02"), etr), "different dates")
+## one image: its ETrF for the whole period; spline holds the end values
+one.date <- ETperiod(f[[2]], "2013-02-05", etr, period = c("2013-02-02", "2013-02-08"))
+stopifnot(isTRUE(all.equal(unname(terra::values(one.date)[1, ]), c(0.5 * 6 * 7, 0.5, 1))))
+f3 <- terra::rast(nrows = 1, ncols = 1, nlyrs = 3, vals = c(0.2, 0.9, 0.3))
+sp <- ETperiod(f3, c("2013-02-03", "2013-02-05", "2013-02-07"), etr,
+               period = c("2013-02-01", "2013-02-10"), method = "spline")
+stopifnot(terra::values(sp)[1, "ETrF.period"] >= 0.2 - 1e-9,
+          terra::values(sp)[1, "ETrF.period"] <= 1)
 ## dailyETseries() is dailyET() for each day; days without records are NA
 ser <- dailyETseries(ws, dates = c(format(ws$at.sat$datetime, "%Y-%m-%d"), "2001-01-01"))
 stopifnot(isTRUE(all.equal(ser$ET[ser$date == as.Date(ws$at.sat$datetime)],

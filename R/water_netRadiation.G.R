@@ -421,6 +421,7 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
+  stopifnot(length(ea) == 1)
   # ratio of the daily Rso of the sloping surface to that of the horizontal
   # one, by blocks of cells (lapp), summing the hour angles of the day: the
   # Rso of Eq. 3 without the constant Gsc / d2, which cancels

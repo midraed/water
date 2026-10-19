@@ -39,6 +39,10 @@ dailyETseries <- function(WeatherStation, dates = NULL, ET = "ETr", ...){
                   error = function(e) NA_real_)
     as.numeric(r)
   }, numeric(1))
+  if(length(et) && all(is.na(et))){
+    warning("No day has a daily ", ET, ": check the dates, the records of the weather ",
+            "station and the arguments in ...", call. = FALSE)
+  }
   data.frame(date = dates, ET = unname(et))
 }
 
@@ -68,9 +72,14 @@ dailyETseries <- function(WeatherStation, dates = NULL, ET = "ETr", ...){
 #' interpolated between the closest valid dates, and the number of valid dates
 #' is returned in layer n.valid. A pixel without any valid date is NA. ETrF is
 #' used as it comes from ET24h(): values below 0 or above 1.1 are not clipped;
-#' mask or clip them before if needed.
+#' mask or clip them before if needed. A pixel with one valid date uses that
+#' ETrF for the whole period (n.valid = 1). The layers of ETrF must be on the
+#' same grid; their order does not matter (they are sorted by date). ET.period
+#' and ETrF.period both include C.rad.
 #' @return SpatRaster with layers ET.period (mm in the period), ETrF.period
-#' (Eq. 59, ET.period divided by the reference ET of the period) and n.valid
+#' (Eq. 59, ET.period divided by the reference ET of the period, so it
+#' includes C.rad) and n.valid. On large scenes it can take minutes: the
+#' interpolation is done pixel by pixel
 #' @family ET functions
 #' @export
 #' @references
@@ -78,9 +87,12 @@ dailyETseries <- function(WeatherStation, dates = NULL, ET = "ETr", ...){
 #' mapping evapotranspiration with internalized calibration (METRIC) - Model.
 #' Journal of Irrigation and Drainage Engineering 133, 380-394.
 #' @examples
+#' # the ETrF of two images (a toy raster; in practice c(ET24h(EB1)$ETrF, ET24h(EB2)$ETrF))
 #' f <- terra::rast(nrows = 2, ncols = 2, nlyrs = 2, vals = c(0.2, 0.4, 0.6, NA, 0.8, 0.6, 0.3, 0.5))
 #' etr <- data.frame(date = as.Date("2013-02-01") + 0:9, ET = 6)
 #' ETperiod(f, dates = c("2013-02-02", "2013-02-08"), ETr.daily = etr)
+#' # with a weather station, dailyETseries() gives the daily reference ET:
+#' # etr <- dailyETseries(WeatherStation)
 ETperiod <- function(ETrF, dates, ETr.daily, period = NULL, C.rad = 1,
                      method = c("linear", "spline"), fill.gaps = FALSE){
   method <- match.arg(method)
@@ -119,11 +131,20 @@ ETperiod <- function(ETrF, dates, ETr.daily, period = NULL, C.rad = 1,
     n <- sum(ok)
     if(n == 0){return(c(NA_real_, NA_real_, 0))}
     f <- if(n == 1) rep(x[ok], length(dd)) else if(method == "spline" && n >= 3){
-      stats::spline(dn[ok], x[ok], xout = dd, method = "natural")$y
+      # natural spline between the first and the last valid date; the closest
+      # value outside them (a spline would extrapolate)
+      inside <- dd >= min(dn[ok]) & dd <= max(dn[ok])
+      y <- stats::approx(dn[ok], x[ok], dd, rule = 2)$y
+      y[inside] <- stats::spline(dn[ok], x[ok], xout = dd[inside], method = "natural")$y
+      y
     } else stats::approx(dn[ok], x[ok], dd, rule = 2)$y
     c(sum(f * et), sum(et), n)
   }
-  r <- terra::app(ETrF, pixel)
+  if(terra::nlyr(ETrF) == 1){
+    # one image: its ETrF for the whole period
+    valid <- !is.na(ETrF)
+    r <- c(ETrF * sum(et), terra::ifel(valid, sum(et), NA), as.numeric(valid))
+  } else r <- terra::app(ETrF, pixel)
   out <- c(r[[1]] * C.rad, r[[1]] * C.rad / r[[2]], r[[3]])
   names(out) <- c("ET.period", "ETrF.period", "n.valid")
   out

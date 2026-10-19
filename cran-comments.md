@@ -16,8 +16,8 @@ NOTEs:
 
 * CRAN incoming feasibility: "New submission", "Package was archived on
   CRAN" (see above).
-* On the local machine pandoc is not installed, so README.md and NEWS.md and
-  the vignettes could not be checked there.
+* On the local machine pandoc is not installed, so README.md and the
+  vignettes could not be checked there.
 
 ## Not checked locally
 win-builder, r-hub and macOS checks, and the vignette build, are to be run
