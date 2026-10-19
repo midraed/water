@@ -23,7 +23,9 @@ METRIC.EB() result to a file.
 \seealso{
 Other LSEB objects related functions:
 \code{\link[=plot.waterLSEB]{plot.waterLSEB()}},
-\code{\link[=print.waterLSEB]{print.waterLSEB()}}
+\code{\link[=plotAnchors]{plotAnchors()}},
+\code{\link[=print.waterLSEB]{print.waterLSEB()}},
+\code{\link[=summary.waterLSEB]{summary.waterLSEB()}}
 }
 \author{
 María Victoria Munafó

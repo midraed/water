@@ -21,6 +21,8 @@ Print method for waterLSEB S3 class
 \seealso{
 Other LSEB objects related functions:
 \code{\link[=plot.waterLSEB]{plot.waterLSEB()}},
+\code{\link[=plotAnchors]{plotAnchors()}},
+\code{\link[=summary.waterLSEB]{summary.waterLSEB()}},
 \code{\link{writeRaster.waterLSEB}}
 }
 \author{

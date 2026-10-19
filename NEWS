@@ -89,6 +89,14 @@ New:
   the hot relaxation on the hot rows). METRIC.EB() gives a message when the
   scene has clouds (CLOUD_COVER) and the image was not masked with
   cfmask(), and keeps the counts in $calibration.
+* Calibration diagnostics (#98): METRIC.EB() returns in $calibration the
+  mean Ts of the hot and cold anchors and their difference, the quantiles
+  of ETrF at the overpass and the shares of pixels with ETrF > 1.1,
+  ETrF < 0 and H > Rn - G, with the iteration results; it gives a one-line
+  message, and a warning when ETrF > 1.1 on more than 10% of the pixels
+  (cold anchors too warm; 15.8% in the Landsat 8 example with "flexible").
+  New summary() method and plotAnchors() (anchors over a false-colour
+  composite or Ts); print() includes the summary.
 * anchors.control() and calcH.control() group the parameters of the anchor
   selection and of the H iteration: METRIC.EB(anchors.control = ,
   calcH.control = ). deltaTemp, minDist and WSbuffer in extraParameters

@@ -143,16 +143,23 @@ some of its elements)}
 \code{\link{calcH.control}} (or a plain list with some of its elements)}
 }
 \value{
-An object of class \code{waterLSEB}, a list with:
+An object of class \code{waterLSEB}, a list with the elements
+below. A message summarises the calibration, and a warning is given when
+ETrF is above 1.1 on more than 10\% of the pixels (cold anchors too warm):
 \describe{
   \item{EB}{SpatRaster with layers NetRadiation, SoilHeat, SensibleHeat and
     LatentHeat (W/m2), and surfaceTemperature (K).}
   \item{WeatherStation}{the weather station data used.}
   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
   \item{calibration}{list with a and b (dT = a * Ts_datum + b), converged,
-    iterations and u200 (wind speed at 200 m used, m/s), from calcH(); and,
-    for automatic anchors, the number of candidates and the relaxation of
-    the criteria, from calcAnchors().}
+    iterations and u200 (wind speed at 200 m used, m/s), from calcH(); for
+    automatic anchors, the number of candidates and the relaxation of the
+    criteria, from calcAnchors(); and quality checks: Ts.hot and Ts.cold
+    (mean Ts of the anchors, K, referred to the station elevation with
+    plain = FALSE), dT.anchors (their difference), ETrF (5\%, 50\% and
+    95\% quantiles and maximum of the reference ET fraction at the
+    overpass, before LE is set to 0), ETrF.above.1.1, ETrF.below.0 and
+    H.above.Rn.G (shares of the pixels). See \code{\link{summary.waterLSEB}}.}
   \item{terrain}{with plain = FALSE, SpatRaster with the surface model and
     the solar angles, for the slope correction of daily ET (see
     \code{\link{Crad}} and \code{\link{ET24h}}).}

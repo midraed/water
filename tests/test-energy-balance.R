@@ -246,6 +246,17 @@ stopifnot(near(terra::global(EBpct$EB, "mean", na.rm = TRUE)[, 1], pin.pct),
           all(cold.pct$NDVI >= round(stats::quantile(terra::values(ndvi.c2), 0.95, na.rm = TRUE), 2) - 0.005),
           mean(ETrF.pct > 1.1, na.rm = TRUE) < 0.01)
 
+## Calibration diagnostics in the result, summary() and plotAnchors() (#98)
+ETrF.flex <- terra::values(quiet(suppressMessages(ET24h(EB)))$ETrF)[, 1]
+stopifnot(abs(EB$calibration$ETrF.above.1.1 - mean(ETrF.flex > 1.1, na.rm = TRUE)) < 1e-9,
+          abs(EB$calibration$ETrF.below.0 - mean(ETrF.flex < 0, na.rm = TRUE)) < 1e-9,
+          abs(EB$calibration$dT.anchors - 6.671291436) < 1e-6,
+          length(utils::capture.output(summary(EB))) > 3)
+invisible(expect_warning(suppressMessages(water:::reportCalibration(EB$calibration)),
+                         "ETrF is above 1.1"))
+plotAnchors(EB, image.SR)
+plotAnchors(EB)
+
 ## anchors.control and calcH.control (#102); the calcAnchors() parameters
 ## in extraParameters still work, with a message
 EBctl <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,

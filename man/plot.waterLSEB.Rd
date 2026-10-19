@@ -20,7 +20,9 @@ Plot method for waterLSEB S3 class
 }
 \seealso{
 Other LSEB objects related functions:
+\code{\link[=plotAnchors]{plotAnchors()}},
 \code{\link[=print.waterLSEB]{print.waterLSEB()}},
+\code{\link[=summary.waterLSEB]{summary.waterLSEB()}},
 \code{\link{writeRaster.waterLSEB}}
 }
 \author{
