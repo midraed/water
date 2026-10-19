@@ -1,6 +1,6 @@
 ---
-title: "Landsat 8 y 9 L2: búsqueda y descarga desde Planetary Computer"
-lang: es
+title: "Landsat 8 and 9 L2: search and download from Planetary Computer"
+lang: en
 format:
   html:
     embed-resources: true
@@ -10,46 +10,46 @@ execute:
   message: false
 ---
 
-## Uso
+## Usage
 
-Instalar una vez en R:
+Install once in R:
 
 ```{r}
 #| eval: false
 install.packages(c("rstac", "sf", "knitr"))
 ```
 
-1. Editar polígono, fechas y destino en el primer bloque de código y renderizar. Con `ids <- character()` solo se consulta: se muestran la tabla y el gráfico de las escenas disponibles, sin descargar nada.
-2. Revisar la tabla y el gráfico. Copiar el **id_producto** elegido.
-3. Asignar, por ejemplo, `ids <- "LC08_L2SP_232083_20160209_20200907_02_T1"`
-   y renderizar nuevamente. Se pueden incluir varios IDs de la tabla.
+1. Edit the polygon, the dates and the destination in the first code block and render. With `ids <- character()` it only queries: the table and the plot of the available scenes are shown, and nothing is downloaded.
+2. Check the table and the plot. Copy the chosen **product_id**.
+3. Assign, for example, `ids <- "LC08_L2SP_232083_20160209_20200907_02_T1"`
+   and render again. Several IDs from the table can be included.
 
-La búsqueda y la descarga desde
+Search and download from
 [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2)
-son públicas: no requieren cuenta. Las URL se firman automáticamente con un
-token temporal (SAS) que entrega el propio Planetary Computer.
+are public: no account is needed. The URLs are signed automatically with a
+temporary token (SAS) provided by Planetary Computer itself.
 
-Se descargan solo productos **Collection 2 Level-2** (colección `landsat-c2-l2`),
-escenas completas, sin recortar ni reproyectar. Cada producto queda en
-`<destino>/<id_producto>/` con todos sus GeoTIFF y el metadato `*_MTL.txt`,
-conservando los nombres originales de USGS. Los archivos ya descargados no se
-vuelven a descargar.
+Only **Collection 2 Level-2** products (collection `landsat-c2-l2`) are
+downloaded, as complete scenes, without cropping or reprojecting. Each product is stored in
+`<dest>/<product_id>/` with all its GeoTIFF files and the `*_MTL.txt` metadata,
+keeping the original USGS names. Files that were already downloaded are not
+downloaded again.
 
-Para mayor información de las escenas y su procesamiento:
+For more information on the scenes and their processing:
 <https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products>
 
-## Parámetros
+## Parameters
 
 ```{r}
 library(rstac)
 library(sf)
 
-desde   <- as.Date("2016-02-08")
-hasta   <- as.Date("2016-02-10")
-ids     <- character()  # p. ej. "LC08_L2SP_232083_20160209_20200907_02_T1"
-destino <- "../../L8"
+from <- as.Date("2016-02-08")
+to   <- as.Date("2016-02-10")
+ids  <- character()  # e.g. "LC08_L2SP_232083_20160209_20200907_02_T1"
+dest <- "../../L8"
 
-# AOI Mendoza, vértices en UTM 19S (EPSG:32619); el primero se repite para cerrar el anillo
+# AOI Mendoza, vertices in UTM 19S (EPSG:32619); the first one is repeated to close the ring
 vertices <- matrix(c(
   500000, -3660000,
   526000, -3660000,
@@ -59,95 +59,96 @@ vertices <- matrix(c(
 ), ncol = 2, byrow = TRUE)
 aoi <- st_transform(st_sfc(st_polygon(list(vertices)), crs = 32619), 4326)
 
-stopifnot(desde <= hasta, all(st_is_valid(aoi)))
+stopifnot(from <= to, all(st_is_valid(aoi)))
 ```
 
-## Buscar escenas
+## Search scenes
 
 ```{r}
 items <- stac("https://planetarycomputer.microsoft.com/api/stac/v1") |>
   stac_search(
     collections = "landsat-c2-l2",
     bbox = as.vector(st_bbox(aoi)),
-    datetime = paste0(desde, "T00:00:00Z/", hasta, "T23:59:59Z"),
+    datetime = paste0(from, "T00:00:00Z/", to, "T23:59:59Z"),
     limit = 100
   ) |>
   post_request() |>
   items_fetch()
 
-# Solo Landsat 8 y 9 (OLI/TIRS)
-escenas <- Filter(function(x) grepl("^LC0[89]_", x$id), items$features)
-if (!length(escenas)) stop("No hay escenas Landsat 8/9 para este polígono y fechas.")
+# Only Landsat 8 and 9 (OLI/TIRS)
+scenes <- Filter(function(x) grepl("^LC0[89]_", x$id), items$features)
+if (!length(scenes)) stop("No Landsat 8/9 scenes for this polygon and dates.")
 
-# El id de Planetary Computer omite la fecha de procesamiento; el id completo de USGS
-# es la carpeta que contiene los archivos.
-id_producto <- function(x) basename(dirname(sub("\\?.*", "", x$assets$mtl.txt$href)))
+# The Planetary Computer id omits the processing date; the complete USGS id
+# is the folder that contains the files.
+product_id <- function(x) basename(dirname(sub("\\?.*", "", x$assets$mtl.txt$href)))
 
-tabla <- do.call(rbind, lapply(escenas, function(x) data.frame(
-  id_producto = id_producto(x),
-  fecha = substr(x$properties$datetime, 1, 10),
-  satelite = x$properties$platform,
-  nubes_pct = x$properties[["eo:cloud_cover"]]
+scene_table <- do.call(rbind, lapply(scenes, function(x) data.frame(
+  product_id = product_id(x),
+  date = substr(x$properties$datetime, 1, 10),
+  satellite = x$properties$platform,
+  cloud_pct = x$properties[["eo:cloud_cover"]]
 )))
-tabla <- tabla[order(tabla$fecha, tabla$id_producto), ]
-rownames(tabla) <- NULL
-dir.create(destino, recursive = TRUE, showWarnings = FALSE)
-write.csv(tabla, file.path(destino, "escenas.csv"), row.names = FALSE)
-knitr::kable(tabla, digits = 2)
+scene_table <- scene_table[order(scene_table$date, scene_table$product_id), ]
+rownames(scene_table) <- NULL
+dir.create(dest, recursive = TRUE, showWarnings = FALSE)
+write.csv(scene_table, file.path(dest, "scenes.csv"), row.names = FALSE)
+knitr::kable(scene_table, digits = 2)
 ```
 
-## Nubosidad
+## Cloud cover
 
-`eo:cloud_cover` es el porcentaje de nubes de **toda la escena**, no del polígono.
+`eo:cloud_cover` is the cloud percentage of the **whole scene**, not of the polygon.
 
 ```{r}
 #| fig-height: 6
-plot(as.Date(tabla$fecha), tabla$nubes_pct, pch = 19, ylim = c(0, 100),
-     xlab = "Fecha de adquisición", ylab = "Nubosidad de la escena (%)")
-text(as.Date(tabla$fecha), tabla$nubes_pct, labels = seq_len(nrow(tabla)), pos = 3, cex = 0.7)
+plot(as.Date(scene_table$date), scene_table$cloud_pct, pch = 19, ylim = c(0, 100),
+     xlab = "Acquisition date", ylab = "Scene cloud cover (%)")
+text(as.Date(scene_table$date), scene_table$cloud_pct, labels = seq_len(nrow(scene_table)),
+     pos = 3, cex = 0.7)
 ```
 
-Los números sobre los puntos corresponden a las filas de la tabla y del CSV.
+The numbers above the points are the rows of the table and of the CSV file.
 
-## Selección de la escena de interés
+## Choosing the scene
 
-Si `ids` quedó vacío en el primer bloque, el documento solo muestra las escenas
-disponibles. Para descargar, copiar los **id_producto** elegidos de la tabla en
-`ids` y renderizar nuevamente.
+If `ids` was left empty in the first block, the document only shows the available
+scenes. To download, copy the chosen **product_id** values from the table into
+`ids` and render again.
 
 ```{r}
-solo_consulta <- !length(ids)
-if (solo_consulta) {
-  cat("Solo consulta. Para descargar, asignar en `ids` los id_producto elegidos de la tabla.\n")
+query_only <- !length(ids)
+if (query_only) {
+  cat("Search only. To download, assign the chosen product_id values from the table to `ids`.\n")
 }
 ```
 
 
-## Descargar los productos elegidos
+## Download the chosen products
 
 ```{r}
 #| eval: !expr length(ids) > 0
-stopifnot(all(ids %in% tabla$id_producto))
-options(timeout = 3600)  # download.file corta a los 60 s por defecto
+stopifnot(all(ids %in% scene_table$product_id))
+options(timeout = 3600)  # download.file stops after 60 s by default
 
-# shortcut: el token SAS dura ~1 h; si se descargan muchas escenas, volver a firmar por escena.
-firmadas <- items_sign(items, sign_planetary_computer())$features
+# shortcut: the SAS token lasts ~1 h; if many scenes are downloaded, sign again for each scene.
+signed <- items_sign(items, sign_planetary_computer())$features
 
-for (x in firmadas) {
-  id <- id_producto(x)
+for (x in signed) {
+  id <- product_id(x)
   if (!id %in% ids) next
-  carpeta <- file.path(destino, id)
-  dir.create(carpeta, showWarnings = FALSE)
+  folder <- file.path(dest, id)
+  dir.create(folder, showWarnings = FALSE)
   for (a in x$assets) {
-    nombre <- basename(sub("\\?.*", "", a$href))
-    if (!grepl("(\\.TIF|_MTL\\.txt)$", nombre)) next  # bandas y metadato txt
-    final <- file.path(carpeta, nombre)
+    name <- basename(sub("\\?.*", "", a$href))
+    if (!grepl("(\\.TIF|_MTL\\.txt)$", name)) next  # bands and the txt metadata
+    final <- file.path(folder, name)
     if (file.exists(final)) next
-    # .part evita dejar archivos truncados con el nombre final si se corta la descarga
+    # .part avoids leaving truncated files with the final name if the download is interrupted
     download.file(a$href, paste0(final, ".part"), mode = "wb", quiet = TRUE)
     file.rename(paste0(final, ".part"), final)
   }
-  cat("Descargado:", id, "-", length(list.files(carpeta)), "archivos.\n")
+  cat("Downloaded:", id, "-", length(list.files(folder)), "files.\n")
 }
 ```
 
@@ -157,48 +158,48 @@ for (x in firmadas) {
 #| fig-height: 6
 library(terra)
 
-carpeta <- file.path(destino, ids[1])
-bandas <- file.path(carpeta, paste0(ids[1], "_SR_B", c(5, 4, 3), ".TIF"))  # NIR, rojo, verde
-r <- rast(bandas)
+folder <- file.path(dest, ids[1])
+bands <- file.path(folder, paste0(ids[1], "_SR_B", c(5, 4, 3), ".TIF"))  # NIR, red, green
+r <- rast(bands)
 r[r == 0] <- NA  # fill value
 
 aoi_r <- project(vect(aoi), crs(r))
-zoom <- crop(r, ext(aoi_r) + 2000)  # 2 km de margen alrededor del AOI
+zoom <- crop(r, ext(aoi_r) + 2000)  # 2 km margin around the AOI
 
 par(mfrow = c(1, 2))
-plotRGB(r, stretch = "lin", main = "Escena completa")
+plotRGB(r, stretch = "lin", main = "Complete scene")
 lines(aoi_r, col = "yellow", lwd = 2)
-plotRGB(zoom, stretch = "lin", main = "Zoom AOI")
+plotRGB(zoom, stretch = "lin", main = "Zoom to the AOI")
 lines(aoi_r, col = "yellow", lwd = 2)
 ```
 
-## Bandas, factores de escala y offset
+## Bands, scale factors and offsets
 
-Los GeoTIFF de nivel 2 se guardan como enteros. Para obtener la magnitud física se
-aplica, por banda:
+The level 2 GeoTIFF files are stored as integers. To get the physical value,
+apply, for each band:
 
-$$\text{valor} = DN \times \text{factor} + \text{offset}$$
+$$\text{value} = DN \times \text{factor} + \text{offset}$$
 
-- Reflectancia superficial (SR_B1 a SR_B7): $\rho = DN \times 0.0000275 - 0.2$
-  (adimensional, rango válido 0 a 1).
-- Temperatura superficial (ST_B10): $T = DN \times 0.00341802 + 149$ (Kelvin).
-- Los píxeles con el *Fill Value* son sin dato y deben enmascararse antes de escalar.
-- Las bandas QA son campos de bits: no se escalan.
+- Surface reflectance (SR_B1 to SR_B7): $\rho = DN \times 0.0000275 - 0.2$
+  (unitless, valid range 0 to 1).
+- Surface temperature (ST_B10): $T = DN \times 0.00341802 + 149$ (Kelvin).
+- Pixels with the *Fill Value* have no data and must be masked before scaling.
+- The QA bands are bit fields: they are not scaled.
 
-Los mismos factores valen para Landsat 8 y 9 y figuran también en el `*_MTL.txt`
+The same factors apply to Landsat 8 and 9 and are also in the `*_MTL.txt` file
 (`REFLECTANCE_MULT_BAND_n`, `REFLECTANCE_ADD_BAND_n`, `TEMPERATURE_MULT_BAND_ST_B10`,
-`TEMPERATURE_ADD_BAND_ST_B10`). La columna *Asset PC* es el nombre del asset en
-Planetary Computer; el archivo descargado se llama `<id_producto>_<sufijo>`.
+`TEMPERATURE_ADD_BAND_ST_B10`). The column *PC asset* is the name of the asset in
+Planetary Computer; the downloaded file is named `<product_id>_<suffix>`.
 
-| Archivo | Asset PC | Banda | Longitud de onda (µm) | Tipo | Unidades | Rango | Fill Value | Factor | Offset |
+| File | PC asset | Band | Wavelength (µm) | Type | Units | Range | Fill Value | Factor | Offset |
 |---|---|---|---|---|---|---|---|---|---|
-| ProductID_SR_B1 | coastal | Band 1 SR (aerosol costero) | 0.43–0.45 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B2 | blue | Band 2 SR (azul) | 0.45–0.51 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B3 | green | Band 3 SR (verde) | 0.53–0.59 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B4 | red | Band 4 SR (rojo) | 0.64–0.67 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B5 | nir08 | Band 5 SR (NIR) | 0.85–0.88 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B6 | swir16 | Band 6 SR (SWIR 1) | 1.57–1.65 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
-| ProductID_SR_B7 | swir22 | Band 7 SR (SWIR 2) | 2.11–2.29 | UINT16 | Reflectancia | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B1 | coastal | Band 1 SR (coastal aerosol) | 0.43–0.45 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B2 | blue | Band 2 SR (blue) | 0.45–0.51 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B3 | green | Band 3 SR (green) | 0.53–0.59 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B4 | red | Band 4 SR (red) | 0.64–0.67 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B5 | nir08 | Band 5 SR (NIR) | 0.85–0.88 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B6 | swir16 | Band 6 SR (SWIR 1) | 1.57–1.65 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
+| ProductID_SR_B7 | swir22 | Band 7 SR (SWIR 2) | 2.11–2.29 | UINT16 | Reflectance | 1-65535 | 0 | 0.0000275 | -0.2 |
 | ProductID_ST_B10 | lwir11 | Band 10 ST (TIRS 1) | 10.60–11.19 | UINT16 | Kelvin | 1-65535 | 0 | 0.00341802 | 149 |
 | ProductID_QA_PIXEL | qa_pixel | Level 2 Pixel Quality Band | NA | UINT16 | Bit Index | 1-65535 | 1 | NA | NA |
 | ProductID_SR_QA_AEROSOL | qa_aerosol | Aerosol QA | NA | UINT8 | Bit Index | 0-255 | 1 | NA | NA |
@@ -213,18 +214,18 @@ Planetary Computer; el archivo descargado se llama `<id_producto>_<sufijo>`.
 | ProductID_ST_CDIST | cdist | Pixel distance to cloud | NA | INT16 | Kilometers | 0-24000 | -9999 | 0.01 | NA |
 | ProductID_MTL | mtl.txt | Level 2 Metadata file | NA | NA | NA | NA | NA | NA | NA |
 
-Ejemplo con `terra` para pasar una banda SR a reflectancia:
+Example with `terra` to convert an SR band to reflectance:
 
 ```{r}
 #| eval: false
-b4 <- terra::rast(list.files(file.path(destino, ids[1]), "_SR_B4\\.TIF$", full.names = TRUE))
+b4 <- terra::rast(list.files(file.path(dest, ids[1]), "_SR_B4\\.TIF$", full.names = TRUE))
 b4[b4 == 0] <- NA
 b4 <- b4 * 0.0000275 - 0.2
 ```
 
-## Referencias
+## References
 
 - [Planetary Computer: Landsat Collection 2 Level-2](https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2).
-- [rstac: búsqueda](https://brazil-data-cube.github.io/rstac/reference/stac_search.html) y
-  [firma de URLs](https://brazil-data-cube.github.io/rstac/reference/items_sign.html).
+- [rstac: search](https://brazil-data-cube.github.io/rstac/reference/stac_search.html) and
+  [URL signing](https://brazil-data-cube.github.io/rstac/reference/items_sign.html).
 - [USGS: Landsat 8-9 Collection 2 Level-2 Science Product Guide](https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products).

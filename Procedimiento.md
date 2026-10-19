@@ -1,4 +1,4 @@
-Desde la terminal.
+From the terminal.
 
-Para traer los cambios que están en el repositorio oficial:
+To bring the changes from the official repository:
 git pull upstream master

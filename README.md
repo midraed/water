@@ -29,13 +29,9 @@ Building the vignettes needs [pandoc](https://pandoc.org/); without it use
     ET <- ET24h(EB)  # ETinst, ETrF, ET24 (mm/day)
 
 You will see a warning if the radiation of the station at the overpass differs much from the clear-sky value (see the vignette). Start with the vignette "Landsat 8 and 9": `vignette("Landsat8", package = "water")`.
-Two guides (in Spanish) show how to search and download Level-2 scenes: with the
+Two guides show how to search and download Level-2 scenes: with the
 [USGS M2M API](https://github.com/midraed/water/blob/master/vignettes/Landsat_download_USGS.qmd)
 and with [Microsoft Planetary Computer](https://github.com/midraed/water/blob/master/vignettes/Landsat_download_Planetarycomputer.qmd).
-
-### En español
-
-El mismo código funciona para Landsat 8 y 9 Collection 2 Nivel 2: `loadImageSR()` lee la reflectancia y la temperatura de superficie, `cfmask()` enmascara las nubes, `read.WSdata()` lee la estación meteorológica (indique `tz`, la zona horaria de la estación), `METRIC.EB()` calcula el balance de energía (elige los píxeles de anclaje automáticamente; revise `summary(EB)`) y `ET24h(EB)` da la ET diaria en mm/día. Hay una viñeta en español: `vignette("Landsat8_es", package = "water")`, y dos guías para descargar escenas (en el repositorio, carpeta `vignettes`).
 
 ## Overview
 
