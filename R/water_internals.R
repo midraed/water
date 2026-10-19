@@ -125,6 +125,110 @@ checkExtraParameters <- function(extraParameters, Zom.method){
   invisible(TRUE)
 }
 
+# Named columns of read.WSdata() as the positional vector c(date, time,
+# radiation, wind, RH, temp, rain); datetime sets date and time, rain is
+# optional and pp is an old name of rain
+columnsByName <- function(columns){
+  roles <- c("date", "time", "radiation", "wind", "RH", "temp", "rain")
+  # what the vector meant when only its order was used
+  old <- unname(c(columns, rep(NA, 7))[1:7])
+  nm <- names(columns)
+  nm[nm == "pp"] <- "rain"
+  unknown <- nm[is.na(nm) | !nm %in% c(roles, "datetime")]
+  if(length(unknown)){
+    stop("Unknown names in columns: ", paste0("\"", unknown, "\"", collapse = ", "),
+         ". Use date, time (or datetime), radiation, wind, RH, temp and rain",
+         call. = FALSE)
+  }
+  if(anyDuplicated(nm)){
+    stop("Names repeated in columns: ", paste(unique(nm[duplicated(nm)]), collapse = ", "),
+         call. = FALSE)
+  }
+  if("datetime" %in% nm){
+    if(any(c("date", "time") %in% nm)){
+      stop("columns: use datetime, or date and time, not both", call. = FALSE)
+    }
+    dt <- columns[nm == "datetime"]
+    columns <- c(dt, dt, columns[nm != "datetime"])
+    nm <- c("date", "time", nm[nm != "datetime"])
+  }
+  names(columns) <- nm
+  needed <- setdiff(roles[1:6], nm)
+  if(length(needed)){
+    stop("columns has no ", paste0("\"", needed, "\"", collapse = ", "), call. = FALSE)
+  }
+  positional <- unname(columns[roles])  # NA for a missing rain
+  if(!identical(as.numeric(old), as.numeric(positional))){
+    warning("columns are matched by name (before version 0.8.5 only their ",
+            "order was used): check that the names are right")
+  }
+  positional
+}
+
+# Plausible weather station values (after cf): impossible values stop, unusual
+# ones warn with the likely unit problem. hours: time span of the records
+checkWSvalues <- function(radiation, wind, RH, temp, rain, hours){
+  rng <- function(x){
+    if(all(is.na(x))) c(NA, NA) else range(x, na.rm = TRUE)
+  }
+  span <- function(r, units){paste0("from ", signif(r[1], 4), " to ", signif(r[2], 4), " ", units)}
+  t <- rng(temp)
+  if(!anyNA(t)){
+    if(t[1] > 200){
+      stop("Temperature ", span(t, "C"), ": in Kelvin? Use Celsius ",
+           "(subtract 273.15)", call. = FALSE)
+    }
+    if(t[1] < -60 || t[2] > 60){
+      stop("Temperature ", span(t, "C"), " is outside -60 to 60 C: in Fahrenheit? ",
+           "Use Celsius, (F - 32) / 1.8 (see cf)", call. = FALSE)
+    }
+    if(t[2] > 45){
+      warning("Temperature up to ", signif(t[2], 4), " C: check that it is in Celsius")
+    }
+  }
+  h <- rng(RH)
+  if(!anyNA(h)){
+    if(h[1] < 0 || h[2] > 110){
+      stop("RH ", span(h, "%"), " is outside 0 to 110%", call. = FALSE)
+    }
+    if(h[2] <= 1){
+      stop("RH ", span(h, "%"), ": as a fraction? Use percent (multiply by 100)",
+           call. = FALSE)
+    }
+  }
+  w <- rng(wind)
+  if(!anyNA(w)){
+    if(w[1] < 0 || w[2] > 75){
+      stop("Wind speed ", span(w, "m/s"), " is outside 0 to 75 m/s", call. = FALSE)
+    }
+    if(w[2] > 20){
+      warning("Wind speed up to ", signif(w[2], 4), " m/s: in km/h? Use ",
+              "cf = c(1, 0.2777778, 1)")
+    }
+  }
+  s <- rng(radiation)
+  if(!anyNA(s)){
+    if(s[1] < -50 || s[2] > 2000){
+      stop("Solar radiation ", span(s, "W/m2"), " is outside -50 to 2000 W/m2: ",
+           "check the units (W/m2) and cf", call. = FALSE)
+    }
+    if(s[2] > 1400){
+      warning("Solar radiation up to ", signif(s[2], 4), " W/m2, above the ",
+              "usual clear-sky maximum: check the units (W/m2) and the sensor")
+    }
+    if(s[2] < 50 && isTRUE(hours >= 12)){
+      warning("Solar radiation is at most ", signif(s[2], 4), " W/m2 over ",
+              round(hours), " hours: in MJ m-2 h-1? Use W/m2 (multiply by ",
+              "277.8, e.g. with cf)")
+    }
+  }
+  r <- rng(rain)
+  if(!anyNA(r) && r[1] < 0){
+    stop("Rain from ", signif(r[1], 4), " mm: negative values", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 # One element of x at random; sample(x, 1) samples from 1:x when length(x) == 1
 sampleOne <- function(x){
   x[sample.int(length(x), 1)]

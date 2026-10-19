@@ -156,6 +156,16 @@ Input checks:
   overpass conditions (at.sat); it summed the first 24 records, another day
   in the examples. calcTOAr() and calcSR() no longer try to load or compute
   a missing image.
+* read.WSdata() (#83): a named columns vector is matched by name, in any
+  order (the names were ignored, so columns in another order were read as
+  the wrong variables); records are sorted by time (reversed records
+  failed, shuffled ones gave wrong overpass conditions), exact duplicates
+  are removed and records with the same time and different values (e.g.
+  the repeated hour when daylight saving time ends) are averaged, with a
+  warning; values are checked after cf: impossible ones stop and unusual
+  ones warn with the likely unit problem (Kelvin or Fahrenheit, RH as a
+  fraction, wind in km/h, radiation in MJ); a semicolon-separated file
+  points to read.WSdata2().
 
 Behaviour changes to check in existing scripts:
 
@@ -165,6 +175,10 @@ Behaviour changes to check in existing scripts:
   waterOptions(autoAoi) is ignored, with a warning: pass aoi instead (#87).
 * dailyET(date = ): the day is now taken in the time zone of the station
   records, as with the MTL date (it was the UTC day, a few hours off) (#87).
+* read.WSdata(): the names in columns are now used (they were ignored, and
+  only the order counted): a warning is given when the names change the
+  meaning of the vector. Check scripts whose names did not match the
+  columns (#83).
 
 * sf moved from Depends to Imports: library(water) no longer attaches sf,
   so call library(sf) to use its functions directly (#81).

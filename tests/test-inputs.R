@@ -81,6 +81,54 @@ ws2 <- read.WSdata2(WSdata = csv2, columns = c(1, 1, 2, 3, 4, 5, 6), lat = -33,
                     long = -68.9, elev = 927, height = 2, tz = "UTC",
                     datetime.format = "%Y-%m-%d %H:%M:%S")
 stopifnot(all(ws2$alldata$temp == 20.5))
+# ... and read.WSdata() points to it (it failed with "duplicate 'row.names'")
+expect_error(read.ws(csv2, tz = "UTC"), "read.WSdata2")
+
+## read.WSdata(): named columns are matched by name, in any order (#83)
+july <- ws.july()
+july$temp <- 20 + seq_len(48) %% 5
+july$RH <- 40 + seq_len(48) %% 7
+ref <- read.ws(july, tz = "UTC", MTL = mtl.july)
+by.name <- function(data, columns, ...) {
+  read.WSdata(WSdata = data, columns = columns, lat = -33, long = -68.9, elev = 927,
+              height = 2, tz = "UTC", ...)
+}
+swapped <- july[, c("datetime", "temp", "RH", "wind", "radiation", "rain")]
+ws.named <- expect_warning(by.name(swapped, c(datetime = 1, temp = 2, RH = 3, wind = 4,
+                                              radiation = 5, rain = 6), MTL = mtl.july),
+                           "matched by name")
+stopifnot(isTRUE(all.equal(ws.named$alldata, ref$alldata)),
+          isTRUE(all.equal(ws.named$at.sat, ref$at.sat)))
+expect_error(by.name(july, c(datetime = 1, humidity = 4)), "Unknown names in columns")
+expect_error(by.name(july, c(datetime = 1, radiation = 2, wind = 3, RH = 4)),
+             "columns has no \"temp\"")
+
+## read.WSdata(): units and plausible ranges (#83)
+f <- july; f$temp <- f$temp * 1.8 + 32
+expect_error(read.ws(f, tz = "UTC"), "Fahrenheit")
+k <- july; k$temp <- k$temp + 273.15
+expect_error(read.ws(k, tz = "UTC"), "Kelvin")
+fr <- july; fr$RH <- fr$RH / 100
+expect_error(read.ws(fr, tz = "UTC"), "fraction")
+kmh <- july; kmh$wind <- 30
+invisible(expect_warning(read.ws(kmh, tz = "UTC"), "km/h"))
+mj <- july; mj$radiation <- mj$radiation / 277.8
+invisible(expect_warning(read.ws(mj, tz = "UTC"), "MJ"))
+
+## read.WSdata(): records are sorted; duplicates removed or averaged (#83).
+## Reversed records failed, shuffled ones gave a wrong at.sat
+set.seed(1)
+stopifnot(isTRUE(all.equal(read.ws(july[48:1, ], tz = "UTC", MTL = mtl.july)$at.sat, ref$at.sat)),
+          isTRUE(all.equal(read.ws(july[sample(48), ], tz = "UTC", MTL = mtl.july)$at.sat,
+                           ref$at.sat)))
+ws.dup <- expect_warning(read.ws(rbind(july, july[10, ]), tz = "UTC", MTL = mtl.july),
+                         "duplicated records removed")
+stopifnot(isTRUE(all.equal(ws.dup$at.sat, ref$at.sat)))
+conflict <- july[c(1:48, 10), ]; conflict$temp[49] <- 30
+ws.avg <- expect_warning(read.ws(conflict, tz = "UTC"), "averaged")
+stopifnot(nrow(ws.avg$alldata) == 48, ws.avg$alldata$temp[10] == (july$temp[10] + 30) / 2)
+twice <- rbind(july, transform(july, temp = temp + 1))
+expect_error(read.ws(twice, tz = "UTC"), "share their time")
 
 ## hourlyET(): solar time correction for the centre of the time zone of the
 ## station clock, from its UTC offset (#77); it used the station longitude

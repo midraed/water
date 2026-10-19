@@ -36,12 +36,14 @@ Negative values for west longitude}
 
 \item{elev}{elevation of weather station in meters}
 
-\item{columns}{vector with the column numbers in WSdata for the 
-date, time, radiation, wind, RH, temperature and 
-rain. If date and time are in the same column, the 
-column number has to be the same. Names in this
-vector are ignored and are presented on Usage and 
-examples only as a reference.}
+\item{columns}{numeric vector with the column numbers in WSdata
+of the date, time, radiation, wind, RH,
+temperature and rain. If date and time are in the
+same column, give the same number twice (or use
+datetime). A named vector is matched by name, in
+any order: date and time (or datetime),
+radiation, wind, RH, temp and, optionally, rain.
+An unnamed vector is taken in that order.}
 
 \item{date.format}{date format. See strptime format argument.}
 
@@ -74,7 +76,8 @@ unchanged.
 }
 \details{
 For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
-temperature), cf should be: cf = c(1,0.2777778,1)
+temperature), cf should be: cf = c(1,0.2777778,1). The records are sorted
+and checked as in read.WSdata().
 }
 \seealso{
 Other Weather station related functions:

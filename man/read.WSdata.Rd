@@ -35,12 +35,14 @@ Negative values for west longitude}
 
 \item{elev}{elevation of weather station in meters}
 
-\item{columns}{vector with the column numbers in WSdata for the 
-date, time, radiation, wind, RH, temperature and 
-rain. If date and time are in the same column, the 
-column number has to be the same. Names in this
-vector are ignored and are presented on Usage and 
-examples only as a reference.}
+\item{columns}{numeric vector with the column numbers in WSdata
+of the date, time, radiation, wind, RH,
+temperature and rain. If date and time are in the
+same column, give the same number twice (or use
+datetime). A named vector is matched by name, in
+any order: date and time (or datetime),
+radiation, wind, RH, temp and, optionally, rain.
+An unnamed vector is taken in that order.}
 
 \item{date.format}{date format. See strptime format argument.}
 
@@ -77,6 +79,20 @@ satellite overpass.
 \details{
 For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 temperature), cf should be: cf = c(1,0.2777778,1)
+
+The records are sorted by time. Exact duplicates are removed, and records
+with the same time and different values (e.g. the repeated hour when
+daylight saving time ends) are averaged, with a warning.
+
+The values (after cf) are checked. Impossible values stop: temperature
+outside -60 to 60 C (Kelvin and Fahrenheit are suggested), RH outside 0 to
+110\% or never above 1 (a fraction), wind speed outside 0 to 75 m/s,
+radiation outside -50 to 2000 W/m2 and negative rain. Unusual values give a
+warning that points to a likely unit problem: temperature above 45 C, wind
+speed above 20 m/s (km/h), radiation above 1400 W/m2, or below 50 W/m2 over
+at least 12 hours (MJ m-2 h-1). Wind speed in km/h is not caught when it is
+below 20 km/h. A file with semicolon separators stops, pointing to
+read.WSdata2().
 }
 \examples{
 csvfile <- system.file("extdata", "apples.csv", package="water")

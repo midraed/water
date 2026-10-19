@@ -11,12 +11,14 @@
 #' @param long               longitude of weather station in decimal degrees. 
 #' Negative values for west longitude
 #' @param elev               elevation of weather station in meters
-#' @param columns            vector with the column numbers in WSdata for the 
-#'                           date, time, radiation, wind, RH, temperature and 
-#'                           rain. If date and time are in the same column, the 
-#'                           column number has to be the same. Names in this
-#'                           vector are ignored and are presented on Usage and 
-#'                           examples only as a reference.
+#' @param columns            numeric vector with the column numbers in WSdata
+#'                           of the date, time, radiation, wind, RH,
+#'                           temperature and rain. If date and time are in the
+#'                           same column, give the same number twice (or use
+#'                           datetime). A named vector is matched by name, in
+#'                           any order: date and time (or datetime),
+#'                           radiation, wind, RH, temp and, optionally, rain.
+#'                           An unnamed vector is taken in that order.
 #' @param date.format        date format. See strptime format argument.
 #' @param time.format        time format. See strptime format argument.
 #' @param datetime.format    datetime format. See strptime format argument.
@@ -35,6 +37,20 @@
 #' @details
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
 #' temperature), cf should be: cf = c(1,0.2777778,1)
+#'
+#' The records are sorted by time. Exact duplicates are removed, and records
+#' with the same time and different values (e.g. the repeated hour when
+#' daylight saving time ends) are averaged, with a warning.
+#'
+#' The values (after cf) are checked. Impossible values stop: temperature
+#' outside -60 to 60 C (Kelvin and Fahrenheit are suggested), RH outside 0 to
+#' 110\% or never above 1 (a fraction), wind speed outside 0 to 75 m/s,
+#' radiation outside -50 to 2000 W/m2 and negative rain. Unusual values give a
+#' warning that points to a likely unit problem: temperature above 45 C, wind
+#' speed above 20 m/s (km/h), radiation above 1400 W/m2, or below 50 W/m2 over
+#' at least 12 hours (MJ m-2 h-1). Wind speed in km/h is not caught when it is
+#' below 20 km/h. A file with semicolon separators stops, pointing to
+#' read.WSdata2().
 #' @examples
 #' csvfile <- system.file("extdata", "apples.csv", package="water")
 #' MTLfile <- system.file("extdata", "L7.MTL.txt", package="water")
@@ -78,6 +94,14 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     if(!isURL(WSdata) && !file.exists(WSdata)){
       stop("Weather station file not found: ", WSdata)
     }
+    if(is.null(list(...)$sep)){
+      header <- readLines(WSdata, n = 1, warn = FALSE)
+      count <- function(ch){lengths(regmatches(header, gregexpr(ch, header, fixed = TRUE)))}
+      if(length(header) && count(";") > count(",")){
+        stop("The file seems to use \";\" as separator (and decimal commas): use ",
+             "read.WSdata2(), or pass sep = \";\", dec = \",\"", call. = FALSE)
+      }
+    }
     WSdata <- utils::read.csv(WSdata, ...)
   } else if(is.data.frame(WSdata)){
     WSdata <- as.data.frame(WSdata)  # e.g. a tibble
@@ -116,10 +140,13 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   }
   
   ### New method for columns : the numeric method!
-  # vector with the column numbers in WSdata for the 
-  # date, time, radiation, wind, RH, temp and rain. If 
-  # date and time are in the same column, the column 
-  # number has to be the same.
+  # vector with the column numbers in WSdata for the
+  # date, time, radiation, wind, RH, temp and rain. If
+  # date and time are in the same column, the column
+  # number has to be the same. Named vectors are matched by name
+  if(is.numeric(columns) && !is.null(names(columns))){
+    columns <- columnsByName(columns)
+  }
   if(is.numeric(columns)){
     if(columns[1] != columns[2]){
       raw  <- paste(WSdata[, columns[1]],
@@ -152,7 +179,39 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
     temp <- temp[!bad]
     if(length(rain) > 1){rain <- rain[!bad]}
   }
-  
+  ## Records sorted by time, without duplicates
+  d <- data.frame(t = as.numeric(as.POSIXct(datetime)), radiation = radiation,
+                  wind = wind, RH = RH, temp = temp, rain = rain)
+  if(is.unsorted(d$t)){
+    o <- order(d$t)
+    d <- d[o, ]
+    datetime <- datetime[o]
+  }
+  exact <- duplicated(d)
+  if(any(exact)){
+    warning(sum(exact), " duplicated records removed")
+    d <- d[!exact, ]
+    datetime <- datetime[!exact]
+  }
+  same <- duplicated(d$t) | duplicated(d$t, fromLast = TRUE)
+  if(any(same)){
+    # e.g. the repeated hour when daylight saving time ends
+    n.times <- length(unique(d$t[same]))
+    if(n.times > max(4, 0.01 * length(unique(d$t)))){
+      stop(sum(same), " records share their time with other records with ",
+           "different values: check the logger clock and the date and time ",
+           "columns", call. = FALSE)
+    }
+    warning(sum(same), " records with the same time and different values were ",
+            "averaged: check the logger clock / daylight saving time")
+    datetime <- datetime[!duplicated(d$t)]
+    d <- stats::aggregate(d[, -1], by = list(t = d$t), FUN = mean)
+  }
+  radiation <- d$radiation; wind <- d$wind; RH <- d$RH; temp <- d$temp
+  if(length(rain) > 1){rain <- d$rain}
+  checkWSvalues(radiation = radiation, wind = wind, RH = RH, temp = temp,
+                rain = rain, hours = diff(range(d$t)) / 3600)
+
   ea = (RH/100)*0.6108*exp((17.27*temp)/(temp+237.3))
   WSdata <- data.frame(datetime=datetime, radiation=radiation, wind=wind,
                        RH=RH, ea=ea, temp=temp, rain=rain)
@@ -250,7 +309,8 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @param ...                additional parameters passed to read.csv2()
 #' @details
 #' For cf, if your data is in W/m2, km/h and Celsius (radiation, wind,
-#' temperature), cf should be: cf = c(1,0.2777778,1)
+#' temperature), cf should be: cf = c(1,0.2777778,1). The records are sorted
+#' and checked as in read.WSdata().
 #' @return A waterWeatherStation object, see \code{\link{read.WSdata}}.
 #' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
