@@ -84,10 +84,10 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
   }
   if(sat == "MODIS"){
     thermal <- list.files(path=path, pattern = paste0(".LST_Day_1km",
-                                                      ".(TIF|tif)$"), full.names = T)[1]
+                                                      ".(TIF|tif)$"), full.names = TRUE)[1]
     stack1[[8]] <- rast(thermal)
     time <- list.files(path=path, pattern = paste0(".Day_view_time",
-                                                      ".(TIF|tif)$"), full.names = T)[1]
+                                                      ".(TIF|tif)$"), full.names = TRUE)[1]
     stack1[[9]] <- rast(time)
   }
   raw.image <- do.call(c, stack1)
@@ -139,7 +139,7 @@ loadImage <-  function(path = getwd(), sat="auto", aoi){
 #' names(image.SR)
 #' plot(image.SR[["NIR"]])
 loadImageSR <-  function(path = getwd(),  aoi){
-  files <- list.files(path = path, pattern = "_SR_B[2-7]\\.(TIF|tif)$", full.names = T)
+  files <- list.files(path = path, pattern = "_SR_B[2-7]\\.(TIF|tif)$", full.names = TRUE)
   if(!length(files)){
     stop("No Collection 2 Level-2 surface reflectance bands (*_SR_B2.TIF to ",
          "*_SR_B7.TIF) found in ", path)
@@ -168,7 +168,7 @@ loadImageSR <-  function(path = getwd(),  aoi){
   }
   image_SR <- image_SR * 0.0000275 - 0.2
   # L8/L9 surface temperature, appended last so SR band positions don't change
-  st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = T)
+  st <- list.files(path = path, pattern = "^LC0[89]_.*_ST_B10\\.(TIF|tif)$", full.names = TRUE)
   if(length(st)){
     st <- aoiCrop(rast(st[1]), aoi)
     st[st == 0] <- NA
@@ -410,7 +410,7 @@ calcSR <- function(image.TOAr, sat="auto", incidence.hor,
                          0.000036, 0.000105, 0.00028, 0.005018, 0.004336, 0.004296,
                          0.0880, 0.0437, 0.0875, 0.1355, 0.056, 0.0155,
                          0.0789, -1.2697, 0.1014, 0.6621, 0.7757, 0.639,
-                         0.64, 0.31, 0.286, 0.189, 0.274, -0.186), byrow = T, nrow=6, ncol=6)
+                         0.64, 0.31, 0.286, 0.189, 0.274, -0.186), byrow = TRUE, nrow=6, ncol=6)
     tau_in <- list()
     tau_out <- list()
     for(i in 1:6){

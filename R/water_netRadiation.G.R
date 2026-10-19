@@ -148,7 +148,7 @@ getDEM <- function(image, source = "copernicus"){
 prepareSRTMdata <- function(path=getwd(), format="tif", extent){
   files <- list.files(path= path,  
                       pattern=paste("^[sn]\\d{2}_[we]\\d{3}_1arc_v3.", 
-                              format, "$", sep=""), full.names = T) 
+                              format, "$", sep=""), full.names = TRUE) 
   if(length(files) < 1){stop(paste("You need to download SRTM grids and save them to working directory \n try: checkSRTMgrids()"))}
   stack1 <- list()
   for(i in 1:length(files)){

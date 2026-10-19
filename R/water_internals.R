@@ -8,7 +8,7 @@ getSat <- function(path = NULL, MTL = NULL){
   }
   # 1. SPACECRAFT_ID from the MTL file, same in every Landsat product format
   if(is.null(MTL)){
-    MTL <- list.files(path = path, pattern = "MTL\\.txt$", full.names = T)
+    MTL <- list.files(path = path, pattern = "MTL\\.txt$", full.names = TRUE)
   } else {
     MTL <- findMTL(MTL)
   }

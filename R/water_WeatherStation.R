@@ -432,7 +432,7 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   op <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(op), add = TRUE)
   graphics::par(mar=c(5, 7, 4, 9.5) + 0.1)
-  plot(time, WSp$radiation, axes=F, ylim=c(0,max(WSp$radiation)), xlab="", 
+  plot(time, WSp$radiation, axes=FALSE, ylim=c(0,max(WSp$radiation)), xlab="", 
        ylab="",type="l",col="red", xlim=range(time), ...)
   if(sat == TRUE & "datetime" %in% names(x$at.sat)){
     graphics::abline(v=as.POSIXct(atsat), lwd=5, col="gray")
@@ -445,27 +445,27 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   # Rain
   #WSp[WSp$rain == 0] <- NA
   if(!all(is.na(WSp$rain))){ 
-    graphics::par(new=T)
-    plot(time, WSp$rain, axes=F, ylim=c(0,max(WSp$rain)*1.7), xlab="", ylab="", 
+    graphics::par(new=TRUE)
+    plot(time, WSp$rain, axes=FALSE, ylim=c(0,max(WSp$rain)*1.7), xlab="", ylab="", 
          type="h",col="light blue",lty=1, main="",xlim=range(time),lwd=3)
     graphics::axis(4, ylim=c(0,max(WSp$rain)*1.7),col="light blue", line = 6.7, lwd=1, cex.axis=0.5, tcl=-0.25)
     graphics::mtext(4,text=paste("Rain (mm)", daily_mean), cex=0.7, line = 8.4)
     }
   #
-  graphics::par(new=T)
-  plot(time, WSp$wind, axes=F, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
+  graphics::par(new=TRUE)
+  plot(time, WSp$wind, axes=FALSE, ylim=c(0,max(WSp$wind)), xlab="", ylab="", 
        type="l",col="green",lty=2, main="",xlim=range(time),lwd=2)
   graphics::axis(2, ylim=c(0,max(WSp$wind)),col="green",lwd=1,line=3.5, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$wind,pch=20,col="green")
   graphics::mtext(2,text=paste("Wind speed (m.s-1)", daily_mean),line=5.5, cex=0.7)
-  graphics::par(new=T)
-  plot(time, WSp$temp, axes=F, ylim=c(0,max(WSp$temp)), xlab="", ylab="", 
+  graphics::par(new=TRUE)
+  plot(time, WSp$temp, axes=FALSE, ylim=c(0,max(WSp$temp)), xlab="", ylab="", 
        type="l",col="black",lty=2, main="",xlim=range(time),lwd=2)
   graphics::axis(4, ylim=c(0,max(WSp$temp)),col="black",lwd=1, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$temp,pch=20,col="black")
   graphics::mtext(4,text=paste("Temperature (C)", daily_mean),line=1.7, cex=0.7)
-  graphics::par(new=T)
-  plot(time, WSp$ea, axes=F, ylim=c(0,max(WSp$ea)), xlab="", ylab="", 
+  graphics::par(new=TRUE)
+  plot(time, WSp$ea, axes=FALSE, ylim=c(0,max(WSp$ea)), xlab="", ylab="", 
        type="l",col="blue",lty=2, main="",xlim=range(time),lwd=2)
   graphics::axis(4, ylim=c(0,max(WSp$ea)),col="blue",lwd=1,line=3.5, cex.axis=0.5, tcl=-0.25)
   graphics::points(time, WSp$ea,pch=20,col="blue")

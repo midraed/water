@@ -308,15 +308,15 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                      Z.om<=0.005], na.rm=TRUE)
     cold.candidates <- values(LAI>=3) & values(LAI<=6) &
       values(albedo>=0.18) & values(albedo<=0.25) &
-      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+      values(NDVI>=max(values(NDVI), na.rm=TRUE)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
       values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     ### Test # anchors
-    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = TRUE)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = TRUE)
     if(cold.n < 1 | hot.n < 1){
       stop("Not enough pixels with the conditions for anchor pixels: found ",
            cold.n, " cold and ", hot.n, " hot candidates. ", anchorHint(albedo))
@@ -337,7 +337,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &
           values(albedo>=0.18) & values(albedo<=0.25) &
-          values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+          values(NDVI>=max(values(NDVI), na.rm=TRUE)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
           values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
         if(length(which(cold.candidates))<2){
@@ -385,15 +385,15 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                      Z.om<=0.005], na.rm=TRUE)
     cold.candidates <- values(LAI>=3) & values(LAI<=6) &
       values(albedo>=0.18) & values(albedo<=0.25) &
-      values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+      values(NDVI>=max(values(NDVI), na.rm=TRUE)-0.15) &
       values(Z.om>=0.03) & values(Z.om<=0.08) &
       values(Ts<(minT+deltaTemp)) & values(WS.buffer == 1)
     hot.candidates <- values(albedo>=0.13) & values(albedo<=0.15) &
       values(NDVI>=0.1) & values(NDVI<=0.28) &
       values(Z.om<=0.005) & values(Ts>(maxT-deltaTemp)) & values(WS.buffer == 1)
     ### Test # anchors
-    cold.n <- sum(as.numeric(cold.candidates), na.rm = T)
-    hot.n <- sum(as.numeric(hot.candidates), na.rm = T)
+    cold.n <- sum(as.numeric(cold.candidates), na.rm = TRUE)
+    hot.n <- sum(as.numeric(hot.candidates), na.rm = TRUE)
     if(cold.n < 1 | hot.n < 1){
       stop("Not enough pixels with the conditions for anchor pixels: found ",
            cold.n, " cold and ", hot.n, " hot candidates. ", anchorHint(albedo))
@@ -415,7 +415,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
         newAnchor <- NA
         cold.candidates <- values(LAI>=3) & values(LAI<=6) &
           values(albedo>=0.18) & values(albedo<=0.25) &
-          values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+          values(NDVI>=max(values(NDVI), na.rm=TRUE)-0.15) &
           values(Z.om>=0.03) & values(Z.om<=0.08) &
           values(Ts<(minT+deltaTemp)) & values(distbuffer==1) & values(WS.buffer == 1)
         values(Ts.cold)[!(cold.candidates %in% TRUE)] <- NA
@@ -469,7 +469,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                                 Z.om = c(0.03, 0.08))
     optValHot <- data.frame(albedo = c(0.13, 0.15), NDVI = c(0.1, 0.28),
                                Z.om = c(NA, 0.005), Ts = c(maxT-deltaTemp, NA))
-    NDVI.cold <- max(values(NDVI), na.rm=T)-0.15
+    NDVI.cold <- max(values(NDVI), na.rm=TRUE)-0.15
     coldCandidates <- function(opt, inBuffer){
       values(LAI>=opt$LAI[1]) & values(LAI<=opt$LAI[2]) &
         values(albedo>=opt$albedo[1]) & values(albedo<=opt$albedo[2]) &
@@ -542,7 +542,7 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
         newAnchor <- NA
         cold.candidates <- values(LAI>=optValCold$LAI[1]) & values(LAI<=optValCold$LAI[2]) &
           values(albedo>=optValCold$albedo[1]) & values(albedo<=optValCold$albedo[2]) &
-          values(NDVI>=max(values(NDVI), na.rm=T)-0.15) &
+          values(NDVI>=max(values(NDVI), na.rm=TRUE)-0.15) &
           values(Z.om>=optValCold$Z.om[1]) & values(Z.om<=optValCold$Z.om[2]) &
           values(Ts<(minT+deltaTemp)) & coldSearch$inBuffer &
           values(distbuffer==1)
