@@ -1,5 +1,4 @@
 .onLoad <- function(libname, pkgname) {
-  # Wickham it's the man!
   op <- options()
   op.water <- list(
     waterOverwrite = TRUE,
@@ -12,10 +11,6 @@
   invisible()
 }
 
-# .onAttach <- function(libname, pkgname) {
-#   packageStartupMessage("This package writes function's results to working directory. You can change")
-#   packageStartupMessage("output folder, or completely disable this feature using waterOptions()")
-# }
 
 
 #' Global options for water package
@@ -54,15 +49,6 @@
 waterOptions <- function (overwrite, writeResults, outputFolder,
                           SRTMrepo, autoAoi, default = FALSE) 
 {
-#   setFiletype <- function(format) {
-#     if (.isSupportedFormat(format)) {
-#       options(rasterFiletype = format)
-#     }
-#     else {
-#       warning(paste("Cannot set filetype to unknown or unsupported file format:", 
-#                     format, ". See writeFormats()"))
-#     }
-#   }
   setOverwrite <- function(overwrite) {
     if (is.logical(overwrite)) {
       options(waterOverwrite = overwrite)
@@ -103,22 +89,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
       }
     }
   }
-#   setToDisk <- function(todisk) {
-#     if (is.logical(todisk)) {
-#       options(rasterToDisk = todisk)
-#     }
-#     else {
-#       warning(paste("todisk argument must be a logical value"))
-#     }
-#   }
-#   depracatedWarnings <- function(x) {
-#     if (is.logical(x)) {
-#       if (is.na(x)) {
-#         x <- TRUE
-#       }
-#       options(rasterDepracatedWarnings = x)
-#     }
-#   }
   cnt <- 0
   if (default) {
     cnt <- 1
@@ -126,7 +96,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
     options(waterWriteResults = FALSE)
     options(waterOutputFolder = ".")
     options(waterSRTMrepo = NULL)
-    v <- utils::packageDescription("water")[["Version"]]
   }
   if (!missing(overwrite)) {
     setOverwrite(overwrite)
@@ -152,25 +121,6 @@ waterOptions <- function (overwrite, writeResults, outputFolder,
   }
   lst <- list(overwrite = overwrite, writeResults = writeResults,
               outputFolder = outputFolder, SRTMrepo= SRTMrepo)
-  save <- FALSE
-  if (save) {
-    v <- utils::packageDescription("water")[["Version"]]
-    fn <- paste(options("startup.working.directory"), "/rasterOptions_", 
-                v, sep = "")
-    oplst <- NULL
-    oplst <- c(oplst, paste("rasterFiletype='", lst$format, 
-                            "'", sep = ""))
-    oplst <- c(oplst, paste("rasterOverwrite=", lst$overwrite, 
-                            sep = ""))
-    oplst <- c(oplst, paste("rasterDatatype='", lst$datatype, 
-                            "'", sep = ""))
-    oplst <- c(oplst, paste("rasterTmpDir='", lst$tmpdir, 
-                            "'", sep = ""))
-    oplst <- c(oplst, paste("rasterTmpTime='", lst$tmptime, 
-                            "'", sep = ""))
-    r <- try(write(unlist(oplst), fn), silent = TRUE)
-    cnt <- 1
-  }
   if (cnt == 0) {
     cat("overwrite     :", lst$overwrite, "\n")
     cat("writeResults  :", lst$writeResults, "\n")

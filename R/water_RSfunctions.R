@@ -277,14 +277,7 @@ calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
     ## O using DN - QCALMIN with METRIC 2010 formula.
     Gain <- c(1.181, 1.210, 0.943, 0.969, 0.191, 0.066)
     Bias <- c(-7.38071, -7.60984, -5.94252, -6.06929, -1.19122, -0.41650)
-    time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-    date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-    sat.time <-regmatches(time.line,regexec(text=time.line,
-                                            pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-    sat.date <-regmatches(date.line,regexec(text=date.line,
-                                            pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-    sat.datetime <- strptime(paste(sat.date, sat.time), 
-                             format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+    sat.datetime <- as.POSIXlt(mtlDateTime(MTL))
     DOY <-  sat.datetime$yday +1
     d2 <- 1/(1+0.033*cos(DOY * 2 * pi/365))
     dr <- 1 + 0.033 * cos(DOY * (2 * pi / 365))

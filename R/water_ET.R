@@ -342,14 +342,7 @@ dailyET <- function(WeatherStation, DOY, height, lat, long, elev, ET="ETr",
         # local day of the overpass: DATE_ACQUIRED and SCENE_CENTER_TIME are
         # UTC (east of about UTC+10 the local day is the next one)
         MTL <- readLines(MTL, warn=FALSE)
-        date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-        time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-        sat.date <-regmatches(date.line,regexec(text=date.line,
-                                                pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-        sat.time <- regmatches(time.line, regexec(text = time.line,
-                                                  pattern = "([0-9]{2}):([0-9]{2}):([0-9]{2})"))[[1]][1]
-        sat.datetime <- as.POSIXct(paste(sat.date, sat.time), format = "%Y-%m-%d %H:%M:%S",
-                                   tz = "UTC")
+        sat.datetime <- mtlDateTime(MTL)
         day <- format(sat.datetime, "%Y-%m-%d",
                       tz = attr(as.POSIXlt(hourly$datetime[1]), "tzone")[1])
       } else if(!is.null(WeatherStation$at.sat)){

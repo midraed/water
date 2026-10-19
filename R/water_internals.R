@@ -673,3 +673,15 @@ anchorHint <- function(albedo){
 warn <- function(...){
   warning(..., call. = FALSE)
 }
+
+# Acquisition date and time (UTC, POSIXct) from the lines of an MTL file;
+# the fractional seconds of SCENE_CENTER_TIME are dropped
+mtlDateTime <- function(MTL){
+  date.line <- grep("DATE_ACQUIRED", MTL, value = TRUE)
+  time.line <- grep("SCENE_CENTER_TIME", MTL, value = TRUE)
+  sat.date <- regmatches(date.line, regexec(text = date.line,
+                         pattern = "([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
+  sat.time <- regmatches(time.line, regexec(text = time.line,
+                         pattern = "([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
+  as.POSIXct(paste(sat.date, sat.time), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+}

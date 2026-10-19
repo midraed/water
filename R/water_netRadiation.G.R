@@ -255,23 +255,13 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
   lat <- sf::st_coordinates(sf::st_transform(xy, 4326))[,2]
   values(latitude) <- rep(lat*pi/180,each=ncol(latitude))
   # declination
-  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-  date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-  sat.time <-regmatches(time.line,regexec(text=time.line,
-                                          pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-  sat.date <-regmatches(date.line,regexec(text=date.line,
-                                          pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-  sat.datetime <- strptime(paste(sat.date, sat.time), 
-                           format = "%Y-%m-%d %H:%M:%S", tz="GMT")
+  sat.datetime <- as.POSIXlt(mtlDateTime(MTL))
   DOY <-  sat.datetime$yday +1
   declination <- surface.model[[1]]
   values(declination) <- 0.409*sin((2*pi/365*DOY)-1.39)
   # hour angle
   hour.angle <- surface.model[[1]]
-  time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-  time.hours <-regmatches(time.line,regexec(text=time.line,
-                                            pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-  time.hours <- strptime(time.hours, format = "%H:%M:%S", tz="GMT")
+  time.hours <- as.POSIXlt(mtlDateTime(MTL))
   Sc <- (0.1645*sin(4*pi*(DOY-81)/364)-0.1255*cos(2*pi*(DOY-81)/364)-0.025*sin(2*pi*(DOY-81)/364))*60
   time.hours <- (time.hours$hour*3600+time.hours$min*60+time.hours$sec+WeatherStation$long/15*3600)/60 + Sc
   values(hour.angle) <- (as.numeric(time.hours)/60-12)*15/180*pi

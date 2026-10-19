@@ -295,14 +295,7 @@ read.WSdata <- function(WSdata, ..., height = 2.2, lat, long, elev,
   }
   if(!is.null(MTL)){
     MTL <- readLines(MTL, warn=FALSE)
-    time.line <- grep("SCENE_CENTER_TIME",MTL,value=TRUE)
-    date.line <- grep("DATE_ACQUIRED",MTL,value=TRUE)
-    sat.time <-regmatches(time.line,regexec(text=time.line,
-           pattern="([0-9]{2})(:)([0-9]{2})(:)([0-9]{2})(.)([0-9]{2})"))[[1]][1]
-    sat.date <-regmatches(date.line,regexec(text=date.line,
-                        pattern="([0-9]{4})(-)([0-9]{2})(-)([0-9]{2})"))[[1]][1]
-    sat.datetime <- strptime(paste(sat.date, sat.time),
-                             format = "%Y-%m-%d %H:%M:%S", tz="UTC")
+    sat.datetime <- as.POSIXlt(mtlDateTime(MTL))
     # same instant in the weather station time zone, to compare with its records
     sat.datetime <- as.POSIXlt(as.POSIXct(sat.datetime), tz = tz)
     if(timestamps != "instant"){
