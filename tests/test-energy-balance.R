@@ -209,6 +209,43 @@ stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
 
+## calcH(): the anchors are checked before iterating (#88)
+xy <- sf::st_coordinates(EB$anchors)
+df <- data.frame(X = xy[, 1], Y = xy[, 2], type = EB$anchors$type)
+Ts.eb <- EB$EB$surfaceTemperature
+H.args <- list(Ts = Ts.eb, Z.om = momentumRoughnessLength(LAI = LAI(image = image.SR)),
+               WeatherStation = WS, DEM = flatDEM(image.SR), Rn = EB$EB$NetRadiation,
+               G = EB$EB$SoilHeat, Z.om.ws = 0.03)
+runH <- function(anchors, ...) {
+  quiet(do.call(calcH, c(list(anchors = anchors), H.args, list(...))))
+}
+H0 <- runH(df)
+stopifnot(maxdiff(H0$H, EB$EB$SensibleHeat) < 1e-6)
+# hot-cold difference of the example, 1.6 K above the 5 K minimum
+dT <- water:::anchorCells(df, Ts = Ts.eb, Ts.datum = Ts.eb, Rn = EB$EB$NetRadiation,
+                          G = EB$EB$SoilHeat, Z.om = H.args$Z.om, DEM = H.args$DEM)$dT
+stopifnot(near(dT, 6.671291436))
+up <- df; up$type <- ifelse(df$type == "hot", "Hot", " COLD")
+stopifnot(maxdiff(runH(up)$H, H0$H) == 0)
+ll <- sf::st_transform(sf::st_as_sf(df, coords = c("X", "Y"), crs = terra::crs(Ts.eb)), 4326)
+stopifnot(maxdiff(runH(ll)$H, H0$H) == 0)
+sw <- df; sw$type <- ifelse(df$type == "hot", "cold", "hot")
+expect_error(runH(sw), "swapped")
+sw1 <- df; sw1$type[c(1, 6)] <- sw1$type[c(6, 1)]
+expect_error(runH(sw1, method = "lm"), "pair")
+far <- df; far$X[1] <- far$X[1] + 1e6
+expect_error(runH(far), "anchor\\(s\\) 1 are outside the image")
+na <- df; na[1, c("X", "Y")] <- terra::xyFromCell(Ts.eb, which(is.na(terra::values(Ts.eb)))[1])
+expect_error(runH(na), "is NA at anchor\\(s\\) 1")
+expect_error(runH(df[df$type == "hot", ]), "at least one hot and one cold")
+expect_error(runH(transform(df, type = "warm")), "must be \"hot\" or \"cold\"")
+# hot anchors 1-3 K warmer than the cold ones: the area lacks dry bare soil
+cold.T <- mean(terra::extract(Ts.eb, xy[df$type == "cold", , drop = FALSE])[, 1])
+warm <- which(terra::values(Ts.eb)[, 1] > cold.T + 1 & terra::values(Ts.eb)[, 1] < cold.T + 3)
+flat.area <- df
+flat.area[flat.area$type == "hot", c("X", "Y")] <- terra::xyFromCell(Ts.eb, warm[1:5])
+expect_error(runH(flat.area), "minimum 5 K")
+
 ## Cold pixels and ET24h() use the same alfalfa reference ET (Allen et al.
 ## 2007): the reference ET fraction (ETrF) of the cold pixels is ETp.coef
 cold <- terra::extract(EB$EB, terra::vect(EB$anchors[EB$anchors$type == "cold", ]))

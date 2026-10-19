@@ -53,6 +53,71 @@ landsatBands <- function(image, bands, pos = seq_along(bands)){
        " (layers: ", paste(names(image), collapse = ", "), ")", call. = FALSE)
 }
 
+# Cells of the hot and cold anchors of calcH(), checked: columns and labels
+# ("Hot" and "Cold" are accepted), inside the image, no NA inputs, and hot
+# anchors at least min.dT warmer than the cold ones (for method = "lm", in
+# every pair); the area must contain both wet and dry extremes
+anchorCells <- function(anchors, Ts, Ts.datum, Rn, G, Z.om, DEM, method = "mean",
+                        min.dT = 5){
+  if(inherits(anchors, "sf")){
+    if(!"type" %in% names(anchors)){
+      stop("anchors must have a type column (\"hot\" or \"cold\")", call. = FALSE)
+    }
+    if(!is.na(sf::st_crs(anchors)) && terra::crs(Ts) != ""){
+      anchors <- sf::st_transform(anchors, terra::crs(Ts))
+    }
+    xy <- sf::st_coordinates(anchors)
+  } else {
+    if(!is.data.frame(anchors) || !all(c("X", "Y", "type") %in% names(anchors))){
+      stop("anchors must have columns X, Y and type (\"hot\" or \"cold\")", call. = FALSE)
+    }
+    xy <- cbind(anchors$X, anchors$Y)
+  }
+  type <- tolower(trimws(as.character(anchors$type)))
+  wrong <- setdiff(unique(type), c("hot", "cold"))
+  if(length(wrong)){
+    stop("anchors type must be \"hot\" or \"cold\" (found ",
+         paste0("\"", wrong, "\"", collapse = ", "), ")", call. = FALSE)
+  }
+  if(!all(c("hot", "cold") %in% type)){
+    stop("anchors need at least one hot and one cold pixel", call. = FALSE)
+  }
+  cells <- terra::cellFromXY(Ts, xy)
+  if(anyNA(cells)){
+    stop("anchor(s) ", paste(which(is.na(cells)), collapse = ", "), " are outside ",
+         "the image", call. = FALSE)
+  }
+  at <- function(r){if(inherits(r, "SpatRaster")) as.numeric(r[cells][[1]]) else rep(r, length(cells))}
+  missing.input <- Reduce(`|`, lapply(list(Ts, Rn, G, Z.om, DEM), function(r) is.na(at(r))))
+  if(any(missing.input)){
+    stop("Ts, Rn, G, Z.om or DEM is NA at anchor(s) ",
+         paste(which(missing.input), collapse = ", "), " (masked pixel?): choose ",
+         "other anchors", call. = FALSE)
+  }
+  hot <- cells[type == "hot"]
+  cold <- cells[type == "cold"]
+  Td <- at(Ts.datum)
+  dT <- if(method == "lm"){
+    n <- min(length(hot), length(cold))
+    Td[type == "hot"][1:n] - Td[type == "cold"][1:n]
+  } else mean(Td[type == "hot"]) - mean(Td[type == "cold"])
+  which.pair <- function(i){if(method == "lm") paste0(" (pair ", i, ")") else ""}
+  i <- which.min(dT)
+  if(dT[i] <= 0){
+    stop("The hot anchors are not warmer than the cold anchors", which.pair(i),
+         ": difference ", round(dT[i], 2), " K. Are \"hot\" and \"cold\" swapped?",
+         call. = FALSE)
+  }
+  if(dT[i] < min.dT){
+    stop("The hot and cold anchors differ by only ", round(dT[i], 2), " K",
+         which.pair(i), " (minimum ", min.dT, " K): the area must contain both ",
+         "well-watered full-cover vegetation and dry bare soil. Use a larger ",
+         "area (tens of km) and crop the results, or choose the anchors",
+         call. = FALSE)
+  }
+  list(hot = hot, cold = cold, dT = dT)
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){

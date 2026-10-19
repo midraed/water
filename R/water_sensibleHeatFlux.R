@@ -495,8 +495,13 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @description          Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
 #' @param anchors        anchor pixels: the data.frame returned by calcAnchors(),
 #' another data.frame with X, Y (coordinates in the CRS of Ts) and type
-#' columns, or an sf POINT object with a type column. type must be "hot" or
-#' "cold"
+#' columns, or an sf POINT object with a type column (transformed to the CRS
+#' of Ts). type must be "hot" or "cold" (case is ignored). The anchors are
+#' checked before iterating: they must be inside the image, Ts, Rn, G, Z.om
+#' and DEM must not be NA there, and the hot anchors must be at least 5 K
+#' warmer than the cold ones (Ts corrected to the datum elevation; for
+#' method = "lm", in every pair). A smaller difference means that the area
+#' lacks the wet and dry extremes that METRIC needs
 #' @param method         Method when using more than 1 pair of anchor pixels:
 #' "mean" (default) uses the mean values of the cold pixels and of the hot
 #' pixels; "lm" iterates each hot/cold pair in turn (maxit applies to each
@@ -584,19 +589,17 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   }
   checkKelvin(Ts)
 
-  if(!inherits(anchors, "sf")){
-    anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
-  }
-  
-  hot <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="hot",]), cells=TRUE)[, "cell"])
-  cold <- as.numeric(terra::extract(Ts, terra::vect(anchors[anchors$type=="cold",]), cells=TRUE)[, "cell"])
-  
   # alfalfa reference ET, as in Allen et al. (2007) and in ET24h()
   ETr.hourly <- hourlyET(WeatherStation, hours = WeatherStation$hours,
                          DOY = WeatherStation$DOY, ET.instantaneous = TRUE,
                          ET= "ETr")
-  
+
   Ts.datum <- Ts + (DEM - WeatherStation$elev) * 6.49 / 1000
+  # hot and cold cells, checked before iterating
+  anchor.cells <- anchorCells(anchors, Ts = Ts, Ts.datum = Ts.datum, Rn = Rn,
+                              G = G, Z.om = Z.om, DEM = DEM, method = method)
+  hot <- anchor.cells$hot
+  cold <- anchor.cells$cold
   P <- 101.3*((293-0.0065 * DEM)/293)^5.26
   air.density <- 1000 * P / (1.01*(Ts)*287)
   latent.heat.vaporization <- (2.501-0.00236*(Ts-273.15))

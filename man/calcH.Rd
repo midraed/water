@@ -23,8 +23,13 @@ calcH(
 \arguments{
 \item{anchors}{anchor pixels: the data.frame returned by calcAnchors(),
 another data.frame with X, Y (coordinates in the CRS of Ts) and type
-columns, or an sf POINT object with a type column. type must be "hot" or
-"cold"}
+columns, or an sf POINT object with a type column (transformed to the CRS
+of Ts). type must be "hot" or "cold" (case is ignored). The anchors are
+checked before iterating: they must be inside the image, Ts, Rn, G, Z.om
+and DEM must not be NA there, and the hot anchors must be at least 5 K
+warmer than the cold ones (Ts corrected to the datum elevation; for
+method = "lm", in every pair). A smaller difference means that the area
+lacks the wet and dry extremes that METRIC needs}
 
 \item{method}{Method when using more than 1 pair of anchor pixels:
 "mean" (default) uses the mean values of the cold pixels and of the hot

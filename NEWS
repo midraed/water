@@ -189,6 +189,14 @@ Input checks:
   warning. A stack whose layers have the standard names (B, G, R, NIR,
   ...) but lacks one that is needed is an error; layers without standard
   names are used by position, with a warning.
+* calcH() checks the anchors before iterating (#88): columns and labels
+  ("Hot" and "Cold" are accepted), inside the image (sf anchors in another
+  CRS are transformed), Ts, Rn, G, Z.om and DEM not NA there, and the hot
+  anchors at least 5 K warmer than the cold ones (each pair for
+  method = "lm"). Swapped labels ran without complaint (mean H 378 instead
+  of 264 W/m2), and a smaller difference means an area without the wet
+  and dry extremes METRIC needs (in a 600 m farm crop, daily ET was about
+  40% low). The Landsat 8 example has 6.7 K.
 * Weather at the overpass (#84): read.WSdata() warns when the station
   radiation at the overpass is below 80% (or above 110%) of the ASCE-EWRI
   clear-sky radiation: the cold pixels are calibrated with it, and METRIC

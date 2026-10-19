@@ -473,8 +473,9 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   }
   #setTxtProgressBar(pb, 45)
   if(anchors.method == "flexible" && !is.null(anchors$flex)){
-     flex.cold <- anchors$flex[anchors$type == "cold"][1]
-     NDVIcold <- mean(as.numeric(anchors$NDVI[anchors$type == "cold"]))
+     is.cold <- tolower(trimws(as.character(anchors$type))) == "cold"
+     flex.cold <- anchors$flex[is.cold][1]
+     NDVIcold <- mean(as.numeric(anchors$NDVI[is.cold]))
      if(flex.cold > 0 & NDVIcold < 0.8){
        print(paste0("mean NDVI for cold pixel: ", NDVIcold))
        # NDVI and Kc relationship from:
