@@ -95,7 +95,9 @@ Reference Evapotranspiration.
 Other ET functions:
 \code{\link[=Crad]{Crad()}},
 \code{\link[=ET24h]{ET24h()}},
-\code{\link[=dailyET]{dailyET()}}
+\code{\link[=ETperiod]{ETperiod()}},
+\code{\link[=dailyET]{dailyET()}},
+\code{\link[=dailyETseries]{dailyETseries()}}
 }
 \author{
 Guillermo Federico Olmedo

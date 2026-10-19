@@ -37,9 +37,11 @@ for method = "custom"}
 
 \item{b}{"b" coefficient for Allen (2007) custom function to estimate Momentum roughness length. Only needed for method = "custom"}
 
-\item{fLAI}{proportion of LAI lying above h/2. Only needed for method = "Perrier"}
+\item{fLAI}{proportion of LAI lying above h/2: a number or a SpatRaster
+on the grid of LAI. Only needed for method = "Perrier"}
 
-\item{h}{crop height in meters. Only needed for method = "Perrier"}
+\item{h}{crop height in meters: a number or a SpatRaster on the
+grid of LAI (e.g. rasterized from a field map). Only needed for method = "Perrier"}
 
 \item{mountainous}{Logical. If TRUE applies the empirical adjustment for
 the effects of general terrain roughness on momentum and heat transfer

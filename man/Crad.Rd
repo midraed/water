@@ -45,7 +45,9 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 \seealso{
 Other ET functions:
 \code{\link[=ET24h]{ET24h()}},
+\code{\link[=ETperiod]{ETperiod()}},
 \code{\link[=dailyET]{dailyET()}},
+\code{\link[=dailyETseries]{dailyETseries()}},
 \code{\link[=hourlyET]{hourlyET()}}
 }
 \concept{ET functions}

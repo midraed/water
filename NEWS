@@ -149,6 +149,14 @@ Fixes that change results:
 
 New:
 
+* ETperiod() adds up the ET of a period (a month, a season) from the ETrF of
+  several images, as in Allen et al. (2007), Eqs. 58 and 59: ETrF is
+  interpolated for each day, pixel by pixel (cloud-masked dates are skipped),
+  and multiplied by the daily reference ET. It accepts C.rad and returns the
+  ET of the period, ETrF of the period and the number of valid dates.
+  dailyETseries() gives the daily reference ET of every day of the
+  weather station records for it.
+
 * momentumRoughnessLength(method = "Perrier") takes fLAI and h as numbers or as
   rasters on the grid of LAI, so that crop height can come from a field map.
 

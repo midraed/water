@@ -219,6 +219,28 @@ expect_error(momentumRoughnessLength(method = "short.crop", LAI = one),
              "did you mean \"short.crops\"")
 expect_error(momentumRoughnessLength(method = "Perrier", LAI = one, fLAI = 2, h = 1),
              "fLAI must be")
+## ETperiod(): Eqs. 58-59 with interpolation of ETrF between dates (#105)
+etr <- data.frame(date = as.Date("2013-02-01") + 0:9, ET = 6)
+f <- terra::rast(nrows = 1, ncols = 3, nlyrs = 2, vals = c(0.5, 0.2, NA, 0.5, 0.8, 0.4))
+per <- ETperiod(f, dates = c("2013-02-02", "2013-02-08"), ETr.daily = etr)
+v <- terra::values(per)
+stopifnot(isTRUE(all.equal(unname(v[1, ]), c(0.5 * 6 * 7, 0.5, 2))),   # constant ETrF
+          isTRUE(all.equal(unname(v[2, "ETrF.period"]), 0.5)),                # linear 0.2 -> 0.8
+          isTRUE(all.equal(unname(v[3, ]), c(0.4 * 6 * 7, 0.4, 1))))  # one valid date
+## C.rad scales ET but not the series, and gaps in ETr.daily are an error
+stopifnot(isTRUE(all.equal(unname(terra::values(ETperiod(f, c("2013-02-02", "2013-02-08"), etr,
+                                                  C.rad = 2))[1, 1]), 0.5 * 6 * 7 * 2)))
+etr.gap <- etr; etr.gap$ET[4] <- NA
+expect_error(ETperiod(f, c("2013-02-02", "2013-02-08"), etr.gap), "without ETr.daily")
+stopifnot(isTRUE(all.equal(unname(terra::values(ETperiod(f, c("2013-02-02", "2013-02-08"), etr.gap,
+                                                  fill.gaps = TRUE))[1, 1]), 0.5 * 6 * 7)))
+expect_error(ETperiod(f, c("2013-02-02", "2013-02-02"), etr), "different dates")
+## dailyETseries() is dailyET() for each day; days without records are NA
+ser <- dailyETseries(ws, dates = c(format(ws$at.sat$datetime, "%Y-%m-%d"), "2001-01-01"))
+stopifnot(isTRUE(all.equal(ser$ET[ser$date == as.Date(ws$at.sat$datetime)],
+                           dailyET(ws, date = format(ws$at.sat$datetime, "%Y-%m-%d")))),
+          is.na(ser$ET[ser$date == as.Date("2001-01-01")]))
+
 ## Perrier with rasters of fLAI and h equals the scalar result (#105)
 lai.r <- terra::rast(nrows = 2, ncols = 2, vals = c(0.5, 1, 3, 5))
 zp <- function(f, h) terra::values(momentumRoughnessLength(method = "Perrier", LAI = lai.r,

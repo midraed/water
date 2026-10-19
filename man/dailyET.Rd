@@ -93,6 +93,8 @@ Reference Evapotranspiration.
 Other ET functions:
 \code{\link[=Crad]{Crad()}},
 \code{\link[=ET24h]{ET24h()}},
+\code{\link[=ETperiod]{ETperiod()}},
+\code{\link[=dailyETseries]{dailyETseries()}},
 \code{\link[=hourlyET]{hourlyET()}}
 }
 \author{
