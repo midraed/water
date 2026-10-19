@@ -30,6 +30,10 @@ New:
   Kc. The old call with Rn, G, H and Ts gives the same ET24 as before (#91).
 * Single-layer results are named (e.g. "Rn", "G", "H", "albedo", "Z.om",
   "ET24"); they had empty names (#91).
+* anchors.control() and calcH.control() group the parameters of the anchor
+  selection and of the H iteration: METRIC.EB(anchors.control = ,
+  calcH.control = ). deltaTemp, minDist and WSbuffer in extraParameters
+  still work, with a deprecation message (#102).
 
 * calcH(): the ET of the cold pixels was ETp.coef times the hourly grass
   reference ET (ETo), while ET24h() and dailyET() extrapolate with the

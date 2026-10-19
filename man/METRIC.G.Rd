@@ -133,7 +133,9 @@ R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mappi
 \seealso{
 Other METRIC model functions:
 \code{\link[=METRIC.EB]{METRIC.EB()}},
-\code{\link[=METRIC.Rn]{METRIC.Rn()}}
+\code{\link[=METRIC.Rn]{METRIC.Rn()}},
+\code{\link[=anchors.control]{anchors.control()}},
+\code{\link[=calcH.control]{calcH.control()}}
 }
 \author{
 Guillermo Federico Olmedo

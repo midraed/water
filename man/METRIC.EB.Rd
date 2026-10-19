@@ -28,7 +28,9 @@ METRIC.EB(
   verbose = FALSE,
   extraParameters = vector(),
   surf.temp,
-  Kt = 1
+  Kt = 1,
+  anchors.control = NULL,
+  calcH.control = NULL
 )
 }
 \arguments{
@@ -127,6 +129,13 @@ give a warning.}
 \item{Kt}{clearness (turbidity) coefficient of the atmosphere,
 0 < Kt <= 1: 1 (default) for clean air, 0.5 for extremely turbid, dusty or
 polluted air (Allen et al., 2007). See \code{\link{SWtrasmisivity}}}
+
+\item{anchors.control}{parameters of the automatic selection of anchor
+pixels: a list from \code{\link{anchors.control}} (or a plain list with
+some of its elements)}
+
+\item{calcH.control}{parameters of the iteration of H: a list from
+\code{\link{calcH.control}} (or a plain list with some of its elements)}
 }
 \value{
 An object of class \code{waterLSEB}, a list with:
@@ -179,8 +188,8 @@ for "Perrier":
 \itemize{
   \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
   \item for momentumRoughnessLength() when Zom.method = "custom": a, b;
-  \item for calcAnchors(): minDist (default 500), WSbuffer (default 30000)
-    and deltaTemp (default 5).
+  \item deprecated: minDist, WSbuffer and deltaTemp for calcAnchors(); use
+    anchors.control = anchors.control(...) instead.
 }
 }
 
@@ -221,7 +230,9 @@ Reyes-González, A., Hay, C., Kjaersgaard, J., & Neale, C. M. U. (2015). Use of 
 \seealso{
 Other METRIC model functions:
 \code{\link[=METRIC.G]{METRIC.G()}},
-\code{\link[=METRIC.Rn]{METRIC.Rn()}}
+\code{\link[=METRIC.Rn]{METRIC.Rn()}},
+\code{\link[=anchors.control]{anchors.control()}},
+\code{\link[=calcH.control]{calcH.control()}}
 }
 \author{
 Guillermo Federico Olmedo

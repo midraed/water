@@ -326,6 +326,11 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' non default methods, e.g. c(fLAI = 0.5, h = 1.8) for Zom.method =
 #' "Perrier". See \code{\link{momentumRoughnessLength}} and the Extra
 #' Parameters section.
+#' @param anchors.control  parameters of the automatic selection of anchor
+#' pixels: a list from \code{\link{anchors.control}} (or a plain list with
+#' some of its elements)
+#' @param calcH.control    parameters of the iteration of H: a list from
+#' \code{\link{calcH.control}} (or a plain list with some of its elements)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
@@ -359,8 +364,8 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' \itemize{
 #'   \item for momentumRoughnessLength() when Zom.method = "Perrier": fLAI, h;
 #'   \item for momentumRoughnessLength() when Zom.method = "custom": a, b;
-#'   \item for calcAnchors(): minDist (default 500), WSbuffer (default 30000)
-#'     and deltaTemp (default 5).
+#'   \item deprecated: minDist, WSbuffer and deltaTemp for calcAnchors(); use
+#'     anchors.control = anchors.control(...) instead.
 #' }
 #' @return An object of class \code{waterLSEB}, a list with:
 #' \describe{
@@ -412,13 +417,21 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       Zom.method = "short.crops", anchors.method = "flexible",
                       anchors, n = 1, ETp.coef= 1.05, Z.om.ws=0.015,
                       verbose = FALSE, extraParameters = vector(), surf.temp,
-                      Kt = 1){
+                      Kt = 1, anchors.control = NULL, calcH.control = NULL){
   checkMetricArgs(sat = sat, alb.coeff = alb.coeff, LAI.method = LAI.method,
                   LST.method = LST.method, G.method = G.method,
                   Zom.method = Zom.method)
   checkKt(Kt)
   anchors.method <- checkAnchorsMethod(anchors.method)
   checkExtraParameters(extraParameters, Zom.method)
+  anchors.control <- controlList(anchors.control, "anchors.control")
+  calcH.control <- controlList(calcH.control, "calcH.control")
+  old <- intersect(c("deltaTemp", "minDist", "WSbuffer"), names(extraParameters))
+  if(length(old)){
+    message("extraParameters ", paste(old, collapse = ", "), " are deprecated: ",
+            "use anchors.control = anchors.control(", old[1], " = ...)")
+    anchors.control[old] <- as.list(extraParameters[old])
+  }
   if(sat=="auto"){sat <- getSat(MTL = if(!missing(MTL)) MTL)}
   checkLSTmethod(LST.method, sat, missing(surf.temp))
   if(missing(image.SR) && (missing(image.DN) || !sat %in% c("L7", "MODIS"))){
@@ -486,16 +499,13 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   } else {Z.om.sc <- Z.om}
   par(mfrow=c(1,2))
   if(missing(anchors)){
-    if(is.na(extraParameters["deltaTemp"])){extraParameters['deltaTemp'] = 5}
-    if(is.na(extraParameters["minDist"])){extraParameters['minDist'] = 500}
-    if(is.na(extraParameters["WSbuffer"])){extraParameters['WSbuffer'] = 30000}
     anchors <- muffleKelvin(
       calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, plots = T,
                   albedo = albedo, Z.om = Z.om.sc, n = n,
                   anchors.method = anchors.method, WeatherStation = WeatherStation,
-                  deltaTemp = extraParameters['deltaTemp'],
-                  minDist = extraParameters['minDist'],
-                  WSbuffer = extraParameters['WSbuffer'],
+                  deltaTemp = anchors.control$deltaTemp,
+                  minDist = anchors.control$minDist,
+                  WSbuffer = anchors.control$WSbuffer,
                   verbose = verbose))
     print(anchors)
   }
@@ -521,7 +531,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
   H <- muffleKelvin(
     calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
           WeatherStation = WeatherStation, ETp.coef = ETp.coef,
-          Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose))
+          Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose,
+          maxit = calcH.control$maxit))
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
   H <-  H$H
@@ -545,7 +556,8 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
                       LAI.method = LAI.method, Zom.method = Zom.method, 
                       anchors.method = anchors.method, plain = plain,
                       ETp.coef= ETp.coef, Z.om.ws=Z.om.ws, Kt = Kt,
-                      extraParameters = extraParameters)
+                      extraParameters = extraParameters,
+                      unlist(anchors.control), unlist(calcH.control))
   class(result) <- "waterLSEB"
   return(result)
 }

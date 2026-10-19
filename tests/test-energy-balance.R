@@ -213,6 +213,23 @@ stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
 
+## anchors.control and calcH.control (#102); the calcAnchors() parameters
+## in extraParameters still work, with a message
+EBctl <- quiet(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                         WeatherStation = WS, MTL = MTL.L2, alb.coeff = "Olmedo",
+                         n = 5, Z.om.ws = 0.03, anchors.control = list(minDist = 500),
+                         calcH.control = calcH.control(maxit = 20)))
+EBold <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
+                                          WeatherStation = WS, MTL = MTL.L2,
+                                          alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03,
+                                          extraParameters = c(minDist = 500))))
+stopifnot(maxdiff(EBctl$EB$LatentHeat, EB$EB$LatentHeat) == 0,
+          maxdiff(EBold$EB$LatentHeat, EB$EB$LatentHeat) == 0)
+expect_error(anchors.control(minDist = -1), "above 0")
+expect_error(calcH.control(maxit = 0.5), "whole number")
+expect_error(METRIC.EB(image.SR = "x", anchors.control = list(mindist = 1)),
+             "Unknown elements in anchors.control")
+
 ## calcH(): the anchors are checked before iterating (#88)
 xy <- sf::st_coordinates(EB$anchors)
 df <- data.frame(X = xy[, 1], Y = xy[, 2], type = EB$anchors$type)
