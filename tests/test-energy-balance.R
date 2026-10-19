@@ -207,8 +207,8 @@ stopifnot(terra::nlyr(terra::rast(f)) == 5)
 ## the results are deliberate (relative tolerance, for other platforms)
 near <- function(x, y, tol = 1e-6) all(abs(x - y) <= tol * abs(y))
 # (#85: surface reflectance outside 0-1 masked, mean LE +4.2%; #89: ASCE
-# reference ET at the overpass, LE +0.01%)
-pin.L8 <- c(576.7867019656, 89.5582897965, 232.5746736555, 259.7305664032, 311.2443506301)
+# reference ET at the overpass, LE +0.01%; #94: Z.om at least 0.005 m, LE -1.6%)
+pin.L8 <- c(576.7867019656, 89.5582897965, 236.6041652690, 255.5225786928, 311.2443506301)
 stopifnot(near(terra::global(EB$EB, "mean", na.rm = TRUE)[, 1], pin.L8),
           setequal(terra::cellFromXY(EB$EB, sf::st_coordinates(EB$anchors)),
                    c(4517, 11142, 23763, 24554, 16283, 1166, 12315, 4794, 6342, 18343)))
@@ -266,6 +266,22 @@ warm <- which(terra::values(Ts.eb)[, 1] > cold.T + 1 & terra::values(Ts.eb)[, 1]
 flat.area <- df
 flat.area[flat.area$type == "hot", c("X", "Y")] <- terra::xyFromCell(Ts.eb, warm[1:5])
 expect_error(runH(flat.area), "minimum 5 K")
+
+## calcH(): exact maxit, wind floor, damping, Z.om floor, diagnostics (#94)
+stopifnot(isTRUE(EB$calibration$converged), EB$calibration$iterations <= 20,
+          suppressWarnings(runH(df, maxit = 1))$iterations == 1,
+          !suppressWarnings(runH(df, maxit = 1))$converged)
+calm <- WS; calm$at.sat$wind <- 0.3
+H.calm <- expect_warning(do.call(calcH, c(list(anchors = df),
+                                          modifyList(H.args, list(WeatherStation = calm)))),
+                         "below the minimum of 2 m/s")
+stopifnot(H.calm$u200 == 2)
+H.damped <- runH(df, damping = 0.5)
+stopifnot(H.damped$converged,
+          abs(terra::global(H.damped$H, "mean", na.rm = TRUE)[1, 1] /
+                terra::global(H0$H, "mean", na.rm = TRUE)[1, 1] - 1) < 0.01,
+          terra::global(momentumRoughnessLength(LAI = 0 * lai), "min", na.rm = TRUE)[1, 1] == 0.005)
+expect_error(calcH.control(damping = 1), "damping")
 
 ## Cold pixels and ET24h() use the same alfalfa reference ET (Allen et al.
 ## 2007): the reference ET fraction (ETrF) of the cold pixels is ETp.coef
@@ -368,7 +384,7 @@ stopifnot(inherits(Rn.low, "SpatRaster"))
 ## METRIC.EB() with Landsat 7 digital numbers, as in the METRIC_simple vignette
 EB7 <- quiet(METRIC.EB(image.DN = L7, WeatherStation = WS7, MTL = MTL.L7, n = 5,
                        sat = "L7", thermalband = L7$Thermal1))
-pin.L7 <- c(547.5577230608, 85.3656706699, 171.1774240015, 291.0163216654, 313.8947743373)
+pin.L7 <- c(547.5577230608, 85.3656706699, 168.5586105085, 293.6354141959, 313.8947743373)
 stopifnot(near(terra::global(EB7$EB, "mean", na.rm = TRUE)[, 1], pin.L7),
           setequal(terra::cellFromXY(EB7$EB, sf::st_coordinates(EB7$anchors)),
                    c(61345, 112247, 45977, 22960, 22009, 49292, 129603, 148901, 176846, 44752)))

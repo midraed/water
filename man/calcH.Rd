@@ -17,7 +17,9 @@ calcH(
   Rn,
   G,
   verbose = FALSE,
-  maxit = 20
+  maxit = 20,
+  u200.min = 2,
+  damping = 0
 )
 }
 \arguments{
@@ -71,12 +73,20 @@ adjusted for mountainous terrain}
 iteration to console}
 
 \item{maxit}{Maximum number of iterations. Default 20.}
+
+\item{u200.min}{minimum wind speed at 200 m (m/s, default 2). See
+\code{\link{calcH.control}}}
+
+\item{damping}{weight of the previous aerodynamic resistance in each
+iteration (default 0, no damping). See \code{\link{calcH.control}}}
 }
 \value{
 A list with a and b (coefficients of dT = a * Ts_datum + b), dT
-(SpatRaster, near-surface temperature difference, K) and H (SpatRaster,
-sensible heat flux, W/m2). The aerodynamic resistance of the anchor pixels at
-each iteration is plotted.
+(SpatRaster, near-surface temperature difference, K), H (SpatRaster,
+sensible heat flux, W/m2), converged (logical), iterations (number of
+iterations; one per pair for method = "lm") and u200 (wind speed at 200 m
+used, m/s). The aerodynamic resistance of the anchor pixels at each
+iteration is plotted. The iteration stops with an error when it diverges.
 }
 \description{
 Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.

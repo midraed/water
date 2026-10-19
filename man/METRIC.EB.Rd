@@ -144,6 +144,8 @@ An object of class \code{waterLSEB}, a list with:
     LatentHeat (W/m2), and surfaceTemperature (K).}
   \item{WeatherStation}{the weather station data used.}
   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
+  \item{calibration}{list with a and b (dT = a * Ts_datum + b), converged,
+    iterations and u200 (wind speed at 200 m used, m/s), from calcH().}
   \item{methods}{named character vector with the methods and parameters used.}
 }
 }

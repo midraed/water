@@ -118,6 +118,16 @@ anchorCells <- function(anchors, Ts, Ts.datum, Rn, G, Z.om, DEM, method = "mean"
   list(hot = hot, cold = cold, dT = dT)
 }
 
+# Stop when the H iteration of calcH() diverges: a and b of dT = a Ts + b,
+# or the friction velocity u at the anchors, not finite (u also not positive)
+checkIteration <- function(a = 0, b = 0, u = 1){
+  if(!all(is.finite(c(a, b, u))) || any(u <= 0)){
+    stop("The H iteration diverged: check the weather data at the overpass ",
+         "(temp, RH, wind), the roughness (Z.om) and the anchors", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 # Surface temperature must be in Kelvin. Below 200 K is Celsius (all cells),
 # or unmasked fill or cloud tops (some cells: a warning, unless they are many)
 checkKelvin <- function(Ts, name = "Ts"){

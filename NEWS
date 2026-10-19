@@ -19,6 +19,15 @@ Fixes that change results:
   test case of the RefET package (ASCE method) within 1e-5 mm/h.
 * dailyET() accepts a Date for date, and returns NA with a warning when the
   records do not cover the day (it summed the hours available) (#90).
+* calcH() (#94): when the wind extrapolated to 200 m is below 2 m/s, 2 m/s
+  is used (calcH.control(u200.min = ); before, below 1 m/s it jumped to
+  4 m/s, so 0.50 and 0.53 m/s at the station gave very different results);
+  the momentum roughness length is at least 0.005 m (bare soil, Allen et
+  al. 2007), for every method; maxit is the number of iterations (one fewer
+  were run); the iteration stops with an error when it diverges. Optional
+  damping: calcH.control(damping = 0.5). calcH() and METRIC.EB()
+  ($calibration) report a, b, converged, iterations and u200. Mean LE:
+  Landsat 8 example -1.6% (roughness floor), Landsat 7 example +0.9%.
 
 New:
 

@@ -4,10 +4,20 @@
 \alias{calcH.control}
 \title{Parameters for the iteration of H and the aerodynamic resistance}
 \usage{
-calcH.control(maxit = 20)
+calcH.control(maxit = 20, u200.min = 2, damping = 0)
 }
 \arguments{
 \item{maxit}{maximum number of iterations}
+
+\item{u200.min}{minimum wind speed at 200 m (m/s). With a lower wind
+speed extrapolated from the station, u200.min is used, with a warning. 2
+m/s corresponds to about 1 m/s at 2 m over grass. A choice of this package,
+not of Allen et al. (2007)}
+
+\item{damping}{weight of the previous aerodynamic resistance in each
+iteration, 0 (default, no damping) to below 1: r_ah = (1 - damping) * new +
+damping * previous. Damping keeps the same solution and helps runs that
+oscillate instead of converging. A choice of this package}
 }
 \value{
 A list of class waterControl with the parameters.

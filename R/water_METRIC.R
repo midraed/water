@@ -373,6 +373,8 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #'     LatentHeat (W/m2), and surfaceTemperature (K).}
 #'   \item{WeatherStation}{the weather station data used.}
 #'   \item{anchors}{sf POINT object with the hot and cold anchor pixels.}
+#'   \item{calibration}{list with a and b (dT = a * Ts_datum + b), converged,
+#'     iterations and u200 (wind speed at 200 m used, m/s), from calcH().}
 #'   \item{methods}{named character vector with the methods and parameters used.}
 #' }
 #' @author Guillermo Federico Olmedo
@@ -532,9 +534,11 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, mountainous = !plain,
           WeatherStation = WeatherStation, ETp.coef = ETp.coef,
           Z.om.ws = Z.om.ws, DEM = DEM, Rn = Rn, G = G, verbose = verbose,
-          maxit = calcH.control$maxit))
+          maxit = calcH.control$maxit, u200.min = calcH.control$u200.min,
+          damping = calcH.control$damping))
   par(mfrow=c(1,1))
   #setTxtProgressBar(pb, 99)
+  calibration <- H[c("a", "b", "converged", "iterations", "u200")]
   H <-  H$H
   # H[H < 0]  <-  0  not a good solution...! not for any of the components
   LE <- Rn - G - H
@@ -552,6 +556,7 @@ METRIC.EB <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
     anchors <- sf::st_as_sf(anchors, coords = c("X", "Y"), crs = terra::crs(Ts))
   }
   result$anchors <- anchors
+  result$calibration <- calibration
   result$methods <- c(sat = sat, alb.coeff = alb.coeff, LST.method = LST.method,
                       LAI.method = LAI.method, Zom.method = Zom.method, 
                       anchors.method = anchors.method, plain = plain,

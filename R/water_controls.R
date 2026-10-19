@@ -25,18 +25,31 @@ anchors.control <- function(deltaTemp = 5, minDist = 500, WSbuffer = 30000){
 #' Parameters for the iteration of H and the aerodynamic resistance
 #' @description
 #' Parameters of calcH() for METRIC.EB(calcH.control = ).
-#' @param maxit  maximum number of iterations
+#' @param maxit     maximum number of iterations
+#' @param u200.min  minimum wind speed at 200 m (m/s). With a lower wind
+#' speed extrapolated from the station, u200.min is used, with a warning. 2
+#' m/s corresponds to about 1 m/s at 2 m over grass. A choice of this package,
+#' not of Allen et al. (2007)
+#' @param damping   weight of the previous aerodynamic resistance in each
+#' iteration, 0 (default, no damping) to below 1: r_ah = (1 - damping) * new +
+#' damping * previous. Damping keeps the same solution and helps runs that
+#' oscillate instead of converging. A choice of this package
 #' @return A list of class waterControl with the parameters.
 #' @family METRIC model functions
 #' @seealso \code{\link{calcH}}
 #' @examples
 #' calcH.control(maxit = 30)
 #' @export
-calcH.control <- function(maxit = 20){
+calcH.control <- function(maxit = 20, u200.min = 2, damping = 0){
   if(!is.numeric(maxit) || length(maxit) != 1 || !isTRUE(maxit >= 1) || maxit %% 1 != 0){
     stop("maxit must be a whole number, 1 or more", call. = FALSE)
   }
-  structure(list(maxit = maxit), class = c("waterControl", "list"))
+  positive(u200.min, "u200.min")
+  if(!is.numeric(damping) || length(damping) != 1 || !isTRUE(damping >= 0 && damping < 1)){
+    stop("damping must be a number from 0 to below 1", call. = FALSE)
+  }
+  structure(list(maxit = maxit, u200.min = u200.min, damping = damping),
+            class = c("waterControl", "list"))
 }
 
 #' @export

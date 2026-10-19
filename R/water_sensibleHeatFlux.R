@@ -23,6 +23,8 @@
 #' Only needed if mountainous = TRUE
 #' @details According to Allen et al. (2010), Zom is a measure of the form drag
 #' and skin friction for the layer of air that interacts with the surface.
+#' Values below 0.005 m (bare agricultural soil, Allen et al., 2007) are set
+#' to 0.005 m, for every method.
 #' @return SpatRaster with the momentum roughness length (m).
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
@@ -69,6 +71,8 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
   if(mountainous==TRUE){
     Z.om <- Z.om * (1 + (180/pi*surface.model$Slope - 5)/20)
   }
+  # minimum 0.005 m, bare agricultural soil (Allen et al., 2007, after Eq. 33)
+  Z.om <- terra::ifel(Z.om < 0.005, 0.005, Z.om)
   Z.om <- saveLoadClean(imagestack = Z.om,
                         file = "Z.om", overwrite=TRUE)
   return(Z.om)
@@ -537,6 +541,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @param verbose        Logical. If TRUE will print information about every
 #' iteration to console
 #' @param maxit          Maximum number of iterations. Default 20.
+#' @param u200.min       minimum wind speed at 200 m (m/s, default 2). See
+#' \code{\link{calcH.control}}
+#' @param damping        weight of the previous aerodynamic resistance in each
+#' iteration (default 0, no damping). See \code{\link{calcH.control}}
 #' @details Sensible heat flux is the rate of heat loss to the air by convection
 #' and conduction, due to a temperature difference. This parameter is computed
 #' using a one-dimensional, aerodynamic, temperature-gradient-based equation for
@@ -554,9 +562,11 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' satellite overpass, as in Allen et al. (2007). ET24h() and dailyET() use the
 #' same reference.
 #' @return A list with a and b (coefficients of dT = a * Ts_datum + b), dT
-#' (SpatRaster, near-surface temperature difference, K) and H (SpatRaster,
-#' sensible heat flux, W/m2). The aerodynamic resistance of the anchor pixels at
-#' each iteration is plotted.
+#' (SpatRaster, near-surface temperature difference, K), H (SpatRaster,
+#' sensible heat flux, W/m2), converged (logical), iterations (number of
+#' iterations; one per pair for method = "lm") and u200 (wind speed at 200 m
+#' used, m/s). The aerodynamic resistance of the anchor pixels at each
+#' iteration is plotted. The iteration stops with an error when it diverges.
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
 #' @author Fernando Fuentes-Peñailillo
@@ -570,8 +580,10 @@ calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1, aoi,
 #' @export
 calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
-                   DEM, Rn, G, verbose=FALSE, maxit = 20) {
+                   DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,
+                   damping = 0) {
   checkChoice(method, c("mean", "lm"), "method")
+  control <- calcH.control(maxit = maxit, u200.min = u200.min, damping = damping)
 
   # ---- helper: safe numeric values by cell (Option A) ----
   cell_vals <- function(r, cells) {
@@ -618,10 +630,13 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   # initial conditions assuming neutral stability
   u.ws <- WeatherStation$wind * 0.41 / log(WeatherStation$height/Z.om.ws)
   u200.v <- u.ws / 0.41 * log(200/Z.om.ws)
-  if(u200.v < 1){
-    warning(paste0("u200 less than threshold value = ",
-                   round(u200.v,4), "m/s. using u200 = 4m/s"))
-    u200.v <- 4
+  if(u200.v < u200.min){
+    warning("Wind at the station at the overpass is ", round(WeatherStation$wind, 2),
+            " m/s, so the wind extrapolated to 200 m (", round(u200.v, 2), " m/s) ",
+            "is below the minimum of ", u200.min, " m/s, which is used. Check the ",
+            "wind units (cf in read.WSdata()) and the sensor: results are ",
+            "sensitive to this value", call. = FALSE)
+    u200.v <- u200.min
   }
   
   u200 <- rast(DEM)
@@ -666,7 +681,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
     )))
   }
   
-  plot(1, cell_mean(r.ah, hot), xlim=c(0,15), ylim=c(0, cell_mean(r.ah, hot)),
+  plot(1, cell_mean(r.ah, hot), xlim=c(0, maxit + 1), ylim=c(0, cell_mean(r.ah, hot)),
        col="red", ylab="aerodynamic resistance s m-1", xlab="iteration", pch=20)
   graphics::points(1, cell_mean(r.ah, cold), col="blue", pch=20)
   
@@ -690,6 +705,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       
       a <- (dT.hot - dT.cold) / (cell_mean(Ts.datum, hot) - cell_mean(Ts.datum, cold))
       b <- -a * cell_mean(Ts.datum, cold) + dT.cold
+      checkIteration(a, b)
       
       if(verbose==TRUE){
         print(paste("a",a))
@@ -734,10 +750,12 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
       friction.velocity[friction.velocity==0] <- 0.1
       
+      checkIteration(u = cell_vals(friction.velocity, c(hot, cold)))
       r.ah.hot.previous  <- cell_mean(r.ah, hot)
       r.ah.cold.previous <- cell_mean(r.ah, cold)
       
-      r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
+      r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
+      r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
       
       graphics::points(i, cell_mean(r.ah, hot),  col="red",  pch=20)
       graphics::points(i, cell_mean(r.ah, cold), col="blue", pch=20)
@@ -759,14 +777,19 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
       }
       
       if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-      if(i == maxit){
-        warning(paste0("No convergence after ", i, " iterations: try different anchor values?"))
+      if(!converge && i - 1 >= maxit){
+        warning("No convergence after ", i - 1, " iterations: try calcH.control(",
+                "damping = 0.5), more iterations or other anchors", call. = FALSE)
         break
       }
     }
     
+    iterations <- i - 1
+    converged <- converge
   } else if(method=="lm"){
     
+    iterations <- integer()
+    converged <- TRUE
     converge <- FALSE
     last.loop <- FALSE
     i <- 1
@@ -793,6 +816,7 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         
         a <- (dT.hot - dT.cold) / (cell_vals(Ts.datum, hot[pair]) - cell_vals(Ts.datum, cold[pair]))
         b <- -a * cell_vals(Ts.datum, cold[pair]) + dT.cold
+        checkIteration(a, b)
         
         if(verbose==TRUE){
           print(paste("a",a))
@@ -835,10 +859,12 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         friction.velocity <- 0.41 * u200 / (log(200/Z.om) - phi.200)
         friction.velocity[friction.velocity==0] <- 0.1
         
+        checkIteration(u = cell_vals(friction.velocity, c(hot[pair], cold[pair])))
         r.ah.hot.previous  <- cell_vals(r.ah, hot[pair])
         r.ah.cold.previous <- cell_vals(r.ah, cold[pair])
         
-        r.ah <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
+        r.ah.new <- (log(2/0.1) - phi.2 + phi.01) / (friction.velocity * 0.41)
+        r.ah <- if(damping > 0) (1 - damping) * r.ah.new + damping * r.ah else r.ah.new
         
         graphics::points(i, cell_vals(r.ah, hot[pair]),  col="red",  pch=20)
         graphics::points(i, cell_vals(r.ah, cold[pair]), col="blue", pch=20)
@@ -860,12 +886,15 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
         }
         
         if(abs(delta.r.ah.hot) < 1 & abs(delta.r.ah.cold) < 1){last.loop <-  TRUE}
-        if(i >= maxit){
-          warning(paste0("No convergence after ", i, " iterations for anchor pair ",
-                         pair, ": try different anchor values?"))
+        if(!converge && i - 1 >= maxit){
+          warning("No convergence after ", i - 1, " iterations for anchor pair ",
+                  pair, ": try calcH.control(damping = 0.5), more iterations or ",
+                  "other anchors", call. = FALSE)
+          converged <- FALSE
           converge <- TRUE
         }
       }
+      iterations <- c(iterations, i - 1)
     }
   }
   
@@ -876,5 +905,8 @@ calcH  <- function(anchors, method = "mean", Ts, Z.om, WeatherStation, ETp.coef=
   result$b  <- b
   result$dT <- dT
   result$H  <- H
+  result$converged <- converged
+  result$iterations <- iterations
+  result$u200 <- u200.v
   return(result)
 }

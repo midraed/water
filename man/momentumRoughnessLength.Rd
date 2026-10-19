@@ -58,6 +58,8 @@ LAI and crop height ("Perrier").
 \details{
 According to Allen et al. (2010), Zom is a measure of the form drag
 and skin friction for the layer of air that interacts with the surface.
+Values below 0.005 m (bare agricultural soil, Allen et al., 2007) are set
+to 0.005 m, for every method.
 }
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
