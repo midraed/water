@@ -25,6 +25,10 @@
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # Landsat 8 Level-1 example bands (digital numbers)
+#' image.DN <- loadImage(path = system.file("extdata", package = "water"), sat = "L8")
+#' image.DN
 loadImage <-  function(path = getwd(), sat="auto", aoi){
   checkChoice(sat, waterChoices$sat, "sat")
   if(sat=="auto"){sat = getSat(path)} #DRY!
@@ -204,6 +208,15 @@ loadImageSR <-  function(path = getwd(),  aoi){
 #'
 #' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' calcRadiance(image.DN, sat = "L7", MTL = MTL)
 calcRadiance <- function(image.DN, sat = "auto", MTL){
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
   if(sat=="auto"){sat = getSat(MTL = if(!missing(MTL)) MTL)}
@@ -256,6 +269,20 @@ calcRadiance <- function(image.DN, sat = "auto", MTL){
 #'
 #' U.S. Geological Survey (2019). Landsat 8 (L8) Data Users Handbook, LSDS-1574. EROS, Sioux Falls, South Dakota. https://www.usgs.gov/landsat-missions/landsat-8-data-users-handbook \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' plot(image.TOAr)
 calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
   unusedAoi(missing(aoi))
   checkChoice(sat, c("auto", "L7", "L8", "L9"), "sat")
@@ -341,6 +368,22 @@ calcTOAr <- function(image.DN, sat="auto", incidence.rel, MTL, aoi){
 #'
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' plot(image.SR)
 # incidence hor from TML?? 
 calcSR <- function(image.TOAr, sat="auto", incidence.hor,
                    WeatherStation, surface.model, MTL, Kt = 1, aoi){
@@ -421,6 +464,11 @@ calcSR <- function(image.TOAr, sat="auto", incidence.hor,
 #' @author Guillermo Federico Olmedo
 #' @family remote sensing support functions
 #' @export
+#' @examples
+#' scene <- system.file("extdata", "L8_C2", package = "water")
+#' image.SR <- loadImageSR(scene)
+#' image.SR <- cfmask(path = scene, image = image.SR)
+#' plot(image.SR[[1]])
 cfmask <-  function(path = getwd(), image, cfmask, keep, buffer = 60){
   if(missing(cfmask)){
     file <- list.files(path = path, pattern = "_QA_PIXEL\\.(TIF|tif)$", full.names = TRUE)

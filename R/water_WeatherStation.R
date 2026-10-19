@@ -395,6 +395,15 @@ read.WSdata2 <- function(WSdata, ..., height = 2.2, lat, long, elev,
 #' @export
 #' @family Weather station related functions
 #' @method plot waterWeatherStation
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' plot(WeatherStation, hourly = TRUE)
 plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
   # Based on http://evolvingspaces.blogspot.cl/2011/05/multiple-y-axis-in-r-plot.html
   WSp <- x$hourly
@@ -478,6 +487,15 @@ plot.waterWeatherStation <- function(x, hourly=FALSE, sat=TRUE, date, ...){
 #' @export
 #' @family Weather station related functions
 #' @method print waterWeatherStation
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' print(WeatherStation)
 print.waterWeatherStation <- function(x, ...){
   cat("Weather Station @ lat:", round(x$location$lat, 2), "long:", 
       round(x$location$long, 2), "elev:", round(x$location$elev, 2), "\n")
@@ -507,6 +525,15 @@ print.waterWeatherStation <- function(x, ...){
 #' @family Weather station related functions
 #' @author Guillermo Federico Olmedo
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' getDataWS(WeatherStation)
 getDataWS <- function(WeatherStation){
   if(is.null(WeatherStation$at.sat)){
     stop("The weather station data has no conditions at the satellite overpass ",

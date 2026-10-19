@@ -249,6 +249,13 @@ Landsat 8 and 9 (Collection 2):
 
 Other changes and fixes:
 
+* Every function has an example that runs in a few seconds on a small window
+  of the example scenes, and there is a Spanish vignette ("Landsat8_es").
+
+* Crad() is about six times faster (it works on blocks of cells instead of
+  about 3000 raster operations); the results are the same to rounding.
+  SWtransmissivity() also accepts numbers with NA.
+
 * calcTOAr() for Landsat 7 takes the radiance gains and offsets of the scene
   from the MTL file (RADIANCE_MULT_BAND_n, RADIANCE_ADD_BAND_n), which depend
   on the gain state of each band; the Landsat 7 Handbook values are used

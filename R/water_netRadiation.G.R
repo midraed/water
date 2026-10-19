@@ -42,6 +42,16 @@ createAoi <- function(topleft, bottomright, EPSG){
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family support functions
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' # names of the SRTM tiles needed to cover the image
+#' checkSRTMgrids(image.DN)
 # Get links or optionally open web pages... 
 # Check if the files are present on path o in a specific SRTM local repo
 checkSRTMgrids <-function(raw.image){
@@ -190,6 +200,16 @@ prepareSRTMdata <- function(path=getwd(), format="tif", extent){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' plot(surface.model)
 METRICtopo <- function(DEM){
   aspect <- terrain(DEM, v="aspect", unit="radians")
   slope <- terrain(DEM, v="slope", unit="radians")
@@ -234,6 +254,18 @@ METRICtopo <- function(DEM){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' plot(solar.angles)
 ### Change to look in metadata for keyword instead of using line #
 solarAngles <- function(surface.model, MTL, WeatherStation){
   if(inherits(WeatherStation, "waterWeatherStation")){
@@ -310,6 +342,20 @@ solarAngles <- function(surface.model, MTL, WeatherStation){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' plot(Rs.inc)
 incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
   checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){
@@ -357,42 +403,56 @@ incSWradiation <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' @references
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Crad(surface.model, solar.angles, WeatherStation)
 Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
   checkKt(Kt)
   if(inherits(WeatherStation, "waterWeatherStation")){
     WeatherStation <- getDataWS(WeatherStation)
   }
   ea <- (WeatherStation$RH/100)*0.6108*exp((17.27*WeatherStation$temp)/(WeatherStation$temp+237.3))
-  lat <- solar.angles$latitude
-  dec <- solar.angles$declination
-  slope <- surface.model$Slope
-  aspect <- surface.model$Aspect
-  # cosine of the solar incidence angle on the sloping and on the horizontal
-  # surface for hour angle w, as in solarAngles() (Eq. 7)
-  cosRel <- function(w){
-    sin(dec)*sin(lat)*cos(slope) - sin(dec)*cos(lat)*sin(slope)*cos(aspect) +
-      cos(dec)*cos(lat)*cos(slope)*cos(w) +
-      cos(dec)*sin(lat)*sin(slope)*cos(aspect)*cos(w) +
-      cos(dec)*sin(aspect)*sin(slope)*sin(w)
-  }
-  cosHor <- function(w){sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(w)}
+  # ratio of the daily Rso of the sloping surface to that of the horizontal
+  # one, by blocks of cells (lapp), summing the hour angles of the day: the
   # Rso of Eq. 3 without the constant Gsc / d2, which cancels
-  rso <- function(cos.surface, cos.hor){
-    lit <- cos.hor > 0.01
-    tau <- SWtransmissivity(Kt = Kt, ea, surface.model$DEM, acos(ifel(lit, cos.hor, 1)))
-    ifel(lit & cos.surface > 0, cos.surface * tau, 0)
+  daily.ratio <- function(lat, dec, slope, aspect, dem){
+    # cosine of the solar incidence angle on the sloping surface for hour
+    # angle w, as in solarAngles() (Eq. 7): c0 + c1 cos(w) + c2 sin(w); and on
+    # the horizontal surface, h0 + h1 cos(w)
+    c0 <- sin(dec)*sin(lat)*cos(slope) - sin(dec)*cos(lat)*sin(slope)*cos(aspect)
+    c1 <- cos(dec)*cos(lat)*cos(slope) + cos(dec)*sin(lat)*sin(slope)*cos(aspect)
+    c2 <- cos(dec)*sin(aspect)*sin(slope)
+    h0 <- sin(dec)*sin(lat)
+    h1 <- cos(dec)*cos(lat)
+    pixel.24 <- horizontal.24 <- 0
+    for(w in seq(-pi, pi, by = pi/24)){
+      cos.hor <- h0 + h1*cos(w)
+      cos.surface <- c0 + c1*cos(w) + c2*sin(w)
+      lit <- !is.na(cos.hor) & cos.hor > 0.01
+      tau <- SWtransmissivity(Kt = Kt, ea, dem, acos(ifelse(lit, cos.hor, 1)))
+      pixel.24 <- pixel.24 + ifelse(lit & cos.surface > 0, cos.surface * tau, 0)
+      horizontal.24 <- horizontal.24 + ifelse(lit, cos.hor * tau, 0)
+    }
+    pixel.24 / horizontal.24
   }
-  pixel.24 <- horizontal.24 <- 0
-  for(w in seq(-pi, pi, by = pi/24)){
-    ch <- cosHor(w)
-    pixel.24 <- pixel.24 + rso(cosRel(w), ch)
-    horizontal.24 <- horizontal.24 + rso(ch, ch)
-  }
+  inputs <- c(solar.angles$latitude, solar.angles$declination, surface.model$Slope,
+              surface.model$Aspect, surface.model$DEM)
+  names(inputs) <- c("lat", "dec", "slope", "aspect", "dem")
+  ratio.24 <- terra::lapp(inputs, daily.ratio)
   cos.hor.i <- cos(solar.angles$incidence.hor)
   cos.rel.i <- cos(solar.angles$incidence.rel)
   # slopes barely lit (or not lit) at the overpass: cos at least 0.1, and
   # C_rad within 0.5 to 2 (a choice of this package)
-  C.rad <- cos.hor.i / max(cos.rel.i, 0.1) * pixel.24 / horizontal.24
+  C.rad <- cos.hor.i / max(cos.rel.i, 0.1) * ratio.24
   C.rad <- clamp(C.rad, lower = 0.5, upper = 2, values = TRUE)
   saveLoadClean(imagestack = C.rad, stack.names = "C.rad", file = "C.rad", overwrite = TRUE)
 }
@@ -432,6 +492,23 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' Tasumi, M., Allen, R. G., & Trezza, R. (2008). At-surface reflectance and albedo from satellite for operational calculation of land surface energy balance. Journal of Hydrologic Engineering, 13(2), 51-63. https://doi.org/10.1061/(ASCE)1084-0699(2008)13:2(51) \cr
 #' Liang, S. (2001). Narrowband to broadband conversions of land surface albedo I: Algorithms. Remote Sensing of Environment, 76(2), 213-238. https://doi.org/10.1016/S0034-4257(00)00205-4 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' plot(albedo)
 albedo <- function(image.SR, coeff="Tasumi", sat="auto", aoi){
   # aoi was the second argument: albedo(image.SR, aoi, coeff, sat)
   if(inherits(coeff, c("sf", "sfc", "SpatVector", "SpatExtent"))){
@@ -527,6 +604,21 @@ albedo <- function(image.SR, coeff="Tasumi", sat="auto", aoi){
 #' Johnson, L. F. (2003). Temporal stability of an NDVI-LAI relationship in a Napa Valley vineyard. Australian Journal of Grape and Wine Research, 9(2), 96-101. https://doi.org/10.1111/j.1755-0238.2003.tb00258.x \cr
 #' Turner, D. P., Cohen, W. B., Kennedy, R. E., Fassnacht, K. S., & Briggs, J. M. (1999). Relationships between leaf area index and Landsat TM spectral vegetation indices across three temperate zone sites. Remote Sensing of Environment, 70(1), 52–68. http://doi.org/10.1016/S0034-4257(99)00057-7
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' plot(LAI)
 ## Cite Pocas work for LAI from METRIC2010
 LAI <- function(image, method="metric2010", L=0.1, aoi, sat){
   # the method was the first argument: LAI("metric", image)
@@ -613,13 +705,19 @@ LAI <- function(image, method="metric2010", L=0.1, aoi, sat){
 #'
 #' ASCE-EWRI The ASCE Standardized Reference Evapotranspiration Equation Report of the ASCE-EWRI Task Committee on Standardization of Reference Evapotranspiration, 2005 \cr
 #' @export
+#' @examples
+#' # Kt = 1 for clean air; ea in kPa, dem in m, incidence in radians
+#' SWtransmissivity(Kt = 1, ea = 1.5, dem = 200, incidence.hor = 0.5)
 SWtransmissivity <- function(Kt = 1, ea, dem, incidence.hor){
   P <- 101.3*((293-0.0065 * dem)/293)^5.26
   W <- 0.14 * ea * P + 2.1
   tauB <- 0.98 * exp(((-0.00146 * P )/ (Kt * 
                       cos(incidence.hor)))-0.075*((W / cos(incidence.hor))^0.4))
   tauD <- 0.35 - 0.36 * tauB 
-  tauD[tauB < 0.15] <- 0.18 + 0.82 * tauB[tauB < 0.15]
+  # (numbers with NA, and rasters, are both allowed)
+  tauD <- if(inherits(tauB, "SpatRaster")){
+    terra::ifel(tauB < 0.15, 0.18 + 0.82 * tauB, tauD)
+  } else ifelse(tauB < 0.15, 0.18 + 0.82 * tauB, tauD)
   tau.sw <- tauB + tauD
   # Next one it's from METRIC 2007, previous from METRIC 2010
   #sw.t <- 0.35 + 0.627 * exp((-0.00146 * P / Kt * 
@@ -686,6 +784,28 @@ SWtrasmisivity <- function(Kt = 1, ea, dem, incidence.hor){
 #' infrared sensor data.  IEEE Geoscience and Remote Sensing Letters, 11(10), 
 #' 1840-1843. http://doi.org/10.1109/LGRS.2014.2312032
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' plot(Ts)
 surfaceTemperature <- function(image.DN, sat="auto", LAI, method = "METRIC",
                                WeatherStation, thermalband, MTL, atmosphere, aoi){
   unusedAoi(missing(aoi))
@@ -778,6 +898,29 @@ surfaceTemperature <- function(image.DN, sat="auto", LAI, method = "METRIC",
 #' mapping evapotranspiration with internalized calibration (METRIC) - Model" 
 #' Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' plot(Rl.out)
 outLWradiation <- function(LAI, Ts){
   surf.emissivity <- 0.95 + 0.01 * LAI
   surf.emissivity[LAI>3] <- 0.98
@@ -814,6 +957,31 @@ outLWradiation <- function(LAI, Ts){
 #'
 #' Allen R. RAPID long-wave radiation calculations and model comparisons Internal report, University of Idaho, Kimberly, Idaho, 2000 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' Rl.inc <- incLWradiation(WeatherStation, DEM = surface.model$DEM,
+#'                          solar.angles = solar.angles, Ts = Ts)
+#' plot(Rl.inc)
 # Add a function to get "cold" pixel temperature so in can be used in the next function
 incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts, Kt = 1){
   checkKt(Kt)
@@ -851,6 +1019,32 @@ incLWradiation <- function(WeatherStation, DEM, solar.angles, Ts, Kt = 1){
 #' @references 
 #' R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' Rl.inc <- incLWradiation(WeatherStation, DEM = surface.model$DEM,
+#'                          solar.angles = solar.angles, Ts = Ts)
+#' Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+#' plot(Rn)
 netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
   surf.emissivity <- 0.95 + 0.01 * LAI 
   surf.emissivity[LAI>3] <- 0.98
@@ -887,6 +1081,33 @@ netRadiation <- function(LAI, albedo, Rs.inc, Rl.inc, Rl.out){
 #'
 #' Bastiaanssen, W. G. M. (2000). SEBAL-based sensible and latent heat fluxes in the irrigated Gediz Basin, Turkey. Journal of Hydrology, 229(1-2), 87-100. https://doi.org/10.1016/S0022-1694(99)00202-4 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' Rl.inc <- incLWradiation(WeatherStation, DEM = surface.model$DEM,
+#'                          solar.angles = solar.angles, Ts = Ts)
+#' Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+#' G <- soilHeatFlux(image = image.SR, Ts = Ts, albedo = albedo, Rn = Rn, LAI = LAI)
+#' plot(G)
 soilHeatFlux <- function(image, Ts, albedo, LAI, Rn, method = "Tasumi", aoi){
   unusedAoi(missing(aoi))
   checkChoice(method, waterChoices$G.method, "method")

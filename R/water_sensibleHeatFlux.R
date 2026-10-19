@@ -41,6 +41,23 @@
 #'
 #' Santos, C., Lorite, I.J., Allen, R.G., Tasumi, M., 2012. Aerodynamic Parameterization of the Satellite-Based Energy Balance (METRIC) Model for ET Estimation in Rainfed Olive Orchards of Andalusia, Spain. Water Resour Manage 26, 3267-3283. doi:10.1007/s11269-012-0071-8 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Z.om <- momentumRoughnessLength(LAI = LAI, mountainous = TRUE, method = "short.crops",
+#'                                 surface.model = surface.model)
+#' plot(Z.om)
 ## Create a function to estimate a and b coefficients or the function between Z.om and NDVI
 ## using some points and tabulated z.om for their covers.
 ## Perrier by Santos 2012 and Pocas 2014.
@@ -209,6 +226,37 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' Journal of the American Water Resources Association, 49(3), 549-562.
 #' https://doi.org/10.1111/jawr.12054
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' Rl.inc <- incLWradiation(WeatherStation, DEM = surface.model$DEM,
+#'                          solar.angles = solar.angles, Ts = Ts)
+#' Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+#' G <- soilHeatFlux(image = image.SR, Ts = Ts, albedo = albedo, Rn = Rn, LAI = LAI)
+#' Z.om <- momentumRoughnessLength(LAI = LAI, mountainous = TRUE, method = "short.crops",
+#'                                 surface.model = surface.model)
+#' anchors <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, albedo = albedo, Z.om = Z.om,
+#'                       WeatherStation = WeatherStation, plots = FALSE, verbose = FALSE)
+#' head(anchors)
 calcAnchors  <- function(image, Ts, LAI, albedo, Z.om, n=1,
                          anchors.method= "percentile", WeatherStation,
                          plots=interactive(), deltaTemp=5, minDist = 500, WSbuffer = 30000,
@@ -786,6 +834,39 @@ rahStep <- function(p, a, b, damping = 0){
 #'
 #' Allen, R., Irmak, A., Trezza, R., Hendrickx, J.M.H., Bastiaanssen, W., Kjaersgaard, J., 2011. Satellite-based ET estimation in agriculture using SEBAL and METRIC. Hydrol. Process. 25, 4011-4027. doi:10.1002/hyp.8408 \cr
 #' @export
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' surface.model <- METRICtopo(DEM)
+#' solar.angles <- solarAngles(surface.model = surface.model,
+#'                             WeatherStation = WeatherStation, MTL = MTL)
+#' Rs.inc <- incSWradiation(surface.model = surface.model, solar.angles = solar.angles,
+#'                          WeatherStation = WeatherStation)
+#' image.TOAr <- calcTOAr(image.DN, sat = "L7", MTL = MTL,
+#'                        incidence.rel = solar.angles$incidence.rel)
+#' image.SR <- suppressWarnings(calcSR(image.TOAr, sat = "L7", surface.model = surface.model,
+#'                    incidence.hor = solar.angles$incidence.hor, WeatherStation = WeatherStation))
+#' albedo <- albedo(image.SR, coeff = "Tasumi", sat = "L7")
+#' LAI <- LAI(method = "metric2010", image = image.TOAr, L = 0.1)
+#' Ts <- suppressWarnings(surfaceTemperature(image.DN = image.DN, LAI = LAI, sat = "L7",
+#'                                           WeatherStation = WeatherStation))
+#' Rl.out <- outLWradiation(LAI = LAI, Ts = Ts)
+#' Rl.inc <- incLWradiation(WeatherStation, DEM = surface.model$DEM,
+#'                          solar.angles = solar.angles, Ts = Ts)
+#' Rn <- netRadiation(LAI, albedo, Rs.inc, Rl.inc, Rl.out)
+#' G <- soilHeatFlux(image = image.SR, Ts = Ts, albedo = albedo, Rn = Rn, LAI = LAI)
+#' Z.om <- momentumRoughnessLength(LAI = LAI, mountainous = TRUE, method = "short.crops",
+#'                                 surface.model = surface.model)
+#' anchors <- calcAnchors(image = image.TOAr, Ts = Ts, LAI = LAI, albedo = albedo, Z.om = Z.om,
+#'                       WeatherStation = WeatherStation, plots = FALSE, verbose = FALSE)
+#' H <- calcH(anchors = anchors, Ts = Ts, Z.om = Z.om, WeatherStation = WeatherStation,
+#'            DEM = DEM, Rn = Rn, G = G, plots = FALSE, verbose = FALSE)
+#' plot(H$H)
 calcH  <- function(anchors, Ts, Z.om, WeatherStation, ETp.coef= 1.05,
                    Z.om.ws=0.015, mountainous=FALSE,
                    DEM, Rn, G, verbose=FALSE, maxit = 20, u200.min = 2,

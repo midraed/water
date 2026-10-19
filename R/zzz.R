@@ -46,6 +46,9 @@
 #' package version 2.4-18. https://CRAN.R-project.org/package=raster
 #' @author Guillermo Federico Olmedo
 #' @export
+#' @examples
+#' # show the options
+#' waterOptions()
 waterOptions <- function (overwrite, writeResults, outputFolder,
                           SRTMrepo, autoAoi, default = FALSE) 
 {

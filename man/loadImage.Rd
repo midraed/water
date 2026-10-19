@@ -33,6 +33,11 @@ Level-2 surface reflectance files are skipped (use loadImageSR()). If the
 folder holds more than one image, the first one is used, with a warning.
 For Landsat, the fill value (DN 0) is set to NA.
 }
+\examples{
+# Landsat 8 Level-1 example bands (digital numbers)
+image.DN <- loadImage(path = system.file("extdata", package = "water"), sat = "L8")
+image.DN
+}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 }

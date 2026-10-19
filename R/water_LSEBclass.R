@@ -7,6 +7,17 @@
 #' @export
 #' @family LSEB objects related functions
 #' @method plot waterLSEB
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' plot(Energy.Balance)
 plot.waterLSEB <- function(x, ...){
   plot(x$EB[[1:4]])
 }
@@ -22,6 +33,17 @@ plot.waterLSEB <- function(x, ...){
 #' @export
 #' @family LSEB objects related functions
 #' @method print waterLSEB
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' print(Energy.Balance)
 print.waterLSEB <- function(x, ...){
   print(x$EB, ...)
   print(x$WeatherStation, ...)
@@ -49,6 +71,17 @@ print.waterLSEB <- function(x, ...){
 #' @export
 #' @family LSEB objects related functions
 #' @method summary waterLSEB
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' summary(Energy.Balance)
 summary.waterLSEB <- function(object, ...){
   k <- object$calibration
   pct <- function(x){paste0(round(100 * x, 1), "%")}
@@ -83,6 +116,17 @@ summary.waterLSEB <- function(object, ...){
 #' @author Guillermo Federico Olmedo
 #' @export
 #' @family LSEB objects related functions
+#' @examples
+#' # a small window of the Landsat 7 example scene, to run quickly
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' plotAnchors(Energy.Balance)
 plotAnchors <- function(x, image.SR, ...){
   if(!inherits(x, "waterLSEB")){stop("x must be a METRIC.EB() result", call. = FALSE)}
   if(!missing(image.SR)){
@@ -150,6 +194,16 @@ reportCalibration <- function(k){
 #' @name writeRaster.waterLSEB
 #' @aliases writeRaster,waterLSEB,character-method
 #' @exportMethod writeRaster
+#' @examples
+#' MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+#' WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+#'   date.format = "%d/%m/%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+#'   cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+#' image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+#' Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+#'                             sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+#' # writes the layers of the energy balance as a GeoTIFF file
+#' writeRaster(Energy.Balance, tempfile(fileext = ".tif"))
 #' @importFrom methods setOldClass setMethod
 NULL
 

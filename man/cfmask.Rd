@@ -34,6 +34,12 @@ band. Use it after loading the image (e.g. with loadImageSR()) and before
 METRIC.EB(), so that cloudy pixels are not used as anchor pixels. All layers
 of the image are masked, including the surface temperature (Band_10).
 }
+\examples{
+scene <- system.file("extdata", "L8_C2", package = "water")
+image.SR <- loadImageSR(scene)
+image.SR <- cfmask(path = scene, image = image.SR)
+plot(image.SR[[1]])
+}
 \seealso{
 Other remote sensing support functions:
 \code{\link[=calcRadiance]{calcRadiance()}},

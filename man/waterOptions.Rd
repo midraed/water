@@ -48,6 +48,10 @@ list of the current options (invisibly). If no arguments are provided the option
 Sets or shows the global options of the water package. Inspired by
 rasterOptions() of the raster package (Robert J. Hijmans).
 }
+\examples{
+# show the options
+waterOptions()
+}
 \references{
 Robert J. Hijmans (2015). raster: Geographic Data Analysis and Modeling. R
 package version 2.4-18. https://CRAN.R-project.org/package=raster

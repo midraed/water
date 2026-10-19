@@ -20,6 +20,17 @@ terra::writeRaster().
 Writes the energy balance layers (\code{x$EB}) of a
 METRIC.EB() result to a file.
 }
+\examples{
+MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+  date.format = "\%d/\%m/\%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+  cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+                            sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+# writes the layers of the energy balance as a GeoTIFF file
+writeRaster(Energy.Balance, tempfile(fileext = ".tif"))
+}
 \seealso{
 Other LSEB objects related functions:
 \code{\link[=plot.waterLSEB]{plot.waterLSEB()}},

@@ -28,6 +28,10 @@ Short-wave transmissivity is estimated for broad-band considering an
 extended equation developed by Allen (1996), based on Majumdar et al.
 (1972), using coefficients developed by ASCE-EWRI (2005).
 }
+\examples{
+# Kt = 1 for clean air; ea in kPa, dem in m, incidence in radians
+SWtransmissivity(Kt = 1, ea = 1.5, dem = 200, incidence.hor = 0.5)
+}
 \references{
 R. G. Allen, M. Tasumi, and R. Trezza, "Satellite-based energy balance for mapping evapotranspiration with internalized calibration (METRIC) - Model" Journal of Irrigation and Drainage Engineering, vol. 133, p. 380, 2007 \cr
 

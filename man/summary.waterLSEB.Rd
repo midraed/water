@@ -25,6 +25,18 @@ pixels should be above about 1.1 (Allen et al., 2007): many pixels above
 1.1 mean that the cold anchors are too warm. Pixels with H > Rn - G have
 negative ETrF, and LE is set to 0 there.
 }
+\examples{
+# a small window of the Landsat 7 example scene, to run quickly
+MTL <- system.file("extdata", "L7.MTL.txt", package = "water")
+WeatherStation <- read.WSdata(WSdata = system.file("extdata", "apples.csv", package = "water"),
+  date.format = "\%d/\%m/\%Y", lat = -35.42222, long = -71.38639, elev = 201, height = 2.2,
+  cf = c(1, 0.2777778, 1), tz = "America/Santiago", MTL = MTL)
+image.DN <- terra::rast(L7_Talca)[1:60, 1:80, drop = FALSE]
+DEM <- terra::rast(DEM_Talca)[1:60, 1:80, drop = FALSE]
+Energy.Balance <- METRIC.EB(image.DN = image.DN, WeatherStation = WeatherStation, MTL = MTL,
+                            sat = "L7", thermalband = image.DN$Thermal1, plain = TRUE)
+summary(Energy.Balance)
+}
 \seealso{
 Other LSEB objects related functions:
 \code{\link[=plot.waterLSEB]{plot.waterLSEB()}},
