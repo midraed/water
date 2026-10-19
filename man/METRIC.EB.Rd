@@ -183,6 +183,8 @@ temperature (surf.temp), both from loadImageSR().
 }
 \details{
 There are different models to convert narrowband data to broadband albedo.
+With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
+and 9, Tasumi for Landsat 7 and Liang for MODIS.
 You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo

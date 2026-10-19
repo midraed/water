@@ -123,7 +123,7 @@ momentumRoughnessLength <- function(method="short.crops", LAI, NDVI,
 #' between two anchor pixels of the same type
 #' @param WSbuffer         maximum distance (m) to the weather station. If no
 #' pixel is within WSbuffer, the whole image is used, with a warning
-#' @param verbose          Logical. If TRUE will print additional data to console
+#' @param verbose          Logical. If TRUE, additional data are shown (as messages)
 #' @param min.candidates   minimum number of hot and of cold candidates (default
 #' 20) below which a warning is given: the area may be too small or too
 #' homogeneous for the calibration
@@ -711,8 +711,8 @@ rahStep <- function(p, a, b, damping = 0){
 #' @param DEM            Digital Elevation Model in meters.
 #' @param Rn             Net radiation. See \code{\link{netRadiation}}
 #' @param G              Soil Heat Flux. See \code{\link{soilHeatFlux}}
-#' @param verbose        Logical. If TRUE will print information about every
-#' iteration to console
+#' @param verbose        Logical. If TRUE, information about every iteration is
+#' shown (as messages)
 #' @param maxit          Maximum number of iterations. Default 20.
 #' @param u200.min       minimum wind speed at 200 m (m/s, default 2). See
 #' \code{\link{calcH.control}}
@@ -745,7 +745,8 @@ rahStep <- function(p, a, b, damping = 0){
 #' sensible heat flux, W/m2), converged (logical), iterations (number of
 #' iterations; one per pair for method = "lm") and u200 (wind speed at 200 m
 #' used, m/s). The aerodynamic resistance of the anchor pixels at each
-#' iteration is plotted. The iteration stops with an error when it diverges.
+#' iteration is plotted with plots = TRUE. The iteration stops with an error when
+#' it diverges.
 #' @author Guillermo Federico Olmedo
 #' @author Daniel de la Fuente-Sáiz
 #' @author Fernando Fuentes-Peñailillo

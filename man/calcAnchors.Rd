@@ -68,7 +68,7 @@ between two anchor pixels of the same type}
 \item{WSbuffer}{maximum distance (m) to the weather station. If no
 pixel is within WSbuffer, the whole image is used, with a warning}
 
-\item{verbose}{Logical. If TRUE will print additional data to console}
+\item{verbose}{Logical. If TRUE, additional data are shown (as messages)}
 
 \item{min.candidates}{minimum number of hot and of cold candidates (default
 20) below which a warning is given: the area may be too small or too

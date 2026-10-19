@@ -154,6 +154,9 @@ stopifnot(maxdiff(expect_warning(LAI("metric2010", sr0), "first argument"), LAI(
           water:::albedoCoeff("auto", "L8") == "Olmedo", water:::albedoCoeff("auto", "L7") == "Tasumi",
           water:::albedoCoeff("Liang", "L8") == "Liang")
 invisible(expect_warning(LAI(sr0, aoi = terra::ext(sr0)), "aoi is not used"))
+# old positional calls that cannot be recovered stop, instead of dropping arguments
+expect_error(suppressWarnings(LAI("metric2010", sr0, terra::ext(sr0))), "name them")
+expect_error(suppressWarnings(albedo(sr0, terra::ext(sr0), "Olmedo", terra::ext(sr0))), "name them")
 expect_error(METRIC.Rn(image.DN, WS, MTL.L1), "order of METRIC.EB")
 expect_error(METRIC.Rn(image.SR = sr0, surf.temp = sr0$Band_10, WeatherStation = WS, MTL = MTL.L2,
                        plain = FALSE, DEM = terra::shift(flatDEM(sr0), dx = 15)),

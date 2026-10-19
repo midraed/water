@@ -183,8 +183,8 @@ checkGrids <- function(...){
   for(n in names(r)[-1]){
     if(!terra::compareGeom(r[[1]], r[[n]], stopOnError = FALSE)){
       stop(n, " is not on the grid of ", names(r)[1], " (extent, resolution or ",
-           "CRS differ): use e.g. terra::project(", n, ", ", names(r)[1], "[[1]])",
-           call. = FALSE)
+           "CRS differ, within terra's tolerance): use e.g. terra::project(", n,
+           ", ", names(r)[1], "[[1]])", call. = FALSE)
     }
   }
   invisible(TRUE)

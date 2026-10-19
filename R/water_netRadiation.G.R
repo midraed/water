@@ -66,6 +66,8 @@ checkSRTMgrids <-function(raw.image){
 #' CRS and grid of the DEM
 #' @param source  DEM source. Currently only "copernicus" (Copernicus DEM
 #' GLO-30)
+#' Tiles that do not exist (ocean) are skipped and reported, any other error
+#' (e.g. no internet connection) stops, and the share of NA cells is reported.
 #' @return SpatRaster with one layer named DEM: elevation (m, relative to the
 #' EGM2008 geoid) on the grid of image.
 #' @references
@@ -430,7 +432,8 @@ Crad <- function(surface.model, solar.angles, WeatherStation, Kt = 1){
 #' calculated for Landsat 7; coeff = "Liang" to use Liang (2001) Landsat 7
 #' coefficients or coeff = "Olmedo" to use Olmedo coefficients for Landsat 8
 #' and 9.
-#' @return SpatRaster with broadband surface albedo (unitless).
+#' @return SpatRaster with broadband surface albedo (unitless). Here the default
+#' coeff is "Tasumi" (METRIC.EB() and the other METRIC functions use "auto").
 #' @author Guillermo Federico Olmedo
 #' @author David Fonseca-Luengo
 #' @family net radiation related functions
@@ -444,9 +447,14 @@ albedo <- function(image.SR, coeff="Tasumi", sat="auto", aoi){
   if(inherits(coeff, c("sf", "sfc", "SpatVector", "SpatExtent"))){
     warn("albedo(): coeff is now the second argument and aoi the last one; ",
          "name the arguments")
+    if(!missing(aoi) && !is.character(aoi)){
+      stop("albedo(): the arguments changed; name them (albedo(image.SR, coeff = , ",
+           "sat = , aoi = ))", call. = FALSE)
+    }
+    old.sat <- if(!missing(aoi)) aoi else "auto"
     aoi <- coeff
     coeff <- if(sat %in% waterChoices$alb.coeff) sat else "Tasumi"
-    sat <- "auto"
+    sat <- old.sat
   }
   checkChoice(coeff, waterChoices$alb.coeff, "coeff")
   checkChoice(sat, waterChoices$sat, "sat")
@@ -528,6 +536,10 @@ LAI <- function(image, method="metric2010", L=0.1, aoi, sat){
     warn("LAI(): the image is now the first argument; name the arguments ",
          "(LAI(image = , method = ))")
     m <- image; image <- method; method <- m
+    if(!missing(L) && !is.numeric(L)){
+      stop("LAI(): the arguments changed; name them (LAI(image = , method = ))",
+           call. = FALSE)
+    }
   }
   unusedAoi(missing(aoi))
   checkChoice(method, waterChoices$LAI.method, "method")

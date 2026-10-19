@@ -25,14 +25,15 @@
 #' @param overwrite     Logical. If TRUE and writeResults is TRUE, the final
 #' outputs overwrite files of earlier sessions; a file written earlier in the
 #' same session is never overwritten (an object may still read it): a new name
-#' is used, with a warning. If FALSE, a time stamp is appended to the file name
+#' is used, with a warning (so, in one session, EB.tif keeps the first result). If FALSE, a time stamp is appended to the file name
 #' (name_YYYYmmddHHMMSS.tif).
 #' @param writeResults  Logical. If TRUE (default FALSE) results are written to
 #' disk as GeoTIFF files: the final outputs (EB from METRIC.EB(), ET24 from
 #' ET24h(), DEM from getDEM() and prepareSRTMdata()) to outputFolder, and the
 #' intermediate results to terra's temporary files, with unique names. This is
 #' slower, but avoids out-of-memory problems with large images. Values are
-#' stored as 32-bit floats.
+#' stored as 32-bit floats. The temporary files are deleted when the R session
+#' ends (they can be large for full scenes).
 #' @param outputFolder  Name of a folder to save files, relative to the working
 #' directory.
 #' @param SRTMrepo      A folder where SRTM grids are stored. Currently not

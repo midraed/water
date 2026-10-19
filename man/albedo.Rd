@@ -26,7 +26,8 @@ use the same coefficients)}
 the result. If missing, the result is not cropped}
 }
 \value{
-SpatRaster with broadband surface albedo (unitless).
+SpatRaster with broadband surface albedo (unitless). Here the default
+coeff is "Tasumi" (METRIC.EB() and the other METRIC functions use "auto").
 }
 \description{
 Broadband surface albedo is estimated considering the integration of all

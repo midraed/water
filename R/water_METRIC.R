@@ -57,6 +57,8 @@
 #' only in interactive sessions)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
+#' With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
+#' and 9, Tasumi for Landsat 7 and Liang for MODIS.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 #' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 #' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo
@@ -72,7 +74,7 @@
 #' apply, G.method, Zom.method and anchors.method) must be one of the listed
 #' names, exactly (case included): an unknown name stops before any
 #' computation, with a hint for typos.
-#' @return SpatRaster with net radiation (W/m2). The result is also plotted.
+#' @return SpatRaster with net radiation (W/m2). Plotted with plots = TRUE.
 #' @family METRIC model functions
 #' @author Guillermo Federico Olmedo
 #' @references
@@ -128,7 +130,7 @@ METRIC.Rn <- function(image.DN, image.SR, WeatherStation, MTL, sat = "auto",
 #' missing it is computed as in METRIC.Rn()
 #' @param G.method         method used for the G estimation: "Tasumi" (Tasumi,
 #' 2003; default) or "Bastiaanssen" (Bastiaanssen, 2000). See \code{\link{soilHeatFlux}}
-#' @return SpatRaster with soil heat flux G (W/m2). The result is also plotted.
+#' @return SpatRaster with soil heat flux G (W/m2). Plotted with plots = TRUE.
 #' @author Guillermo Federico Olmedo
 #' @family METRIC model functions
 #' @references
@@ -376,6 +378,8 @@ metricRn <- function(surface, WeatherStation, Kt = 1){
 #' \code{\link{calcH.control}} (or a plain list with some of its elements)
 #' @details
 #' There are different models to convert narrowband data to broadband albedo.
+#' With alb.coeff = "auto" (default) the coefficients are Olmedo for Landsat 8
+#' and 9, Tasumi for Landsat 7 and Liang for MODIS.
 #' You can choose alb.coeff = "Tasumi" to use Tasumi et al. (2008)
 #' coefficients, calculated for Landsat 7; alb.coeff = "Liang" to use Liang
 #' (2001) Landsat 7 coefficients or alb.coeff = "Olmedo" to use Olmedo

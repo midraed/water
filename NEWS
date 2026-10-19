@@ -37,7 +37,7 @@ Fixes that change results:
   fixed windows of "flexible" (n = 5), the Landsat 8 example had ETrF >
   1.1 on 15.8% of the pixels (cold anchors warmer than many crops); with
   "percentile", 0.6%; mean LE 255.5 -> 223.6 W/m2 (-12.5%), daily ET 4.13 -> 3.62 mm;
-  Landsat 7 example mean LE -5.6%. The other methods are unchanged; use
+  Landsat 7 example mean LE -5.6% (before the NDVI quantiles over land). The other methods are unchanged; use
   anchors.method = "flexible" for the old default. Parameters in
   anchors.control().
 * Land surface temperature (#95): LST.method = "auto" (new default) uses
@@ -188,14 +188,15 @@ New:
   connection, stop instead of returning a DEM with holes), and reports the
   missing tiles and the share of NA cells.
 * Consistent arguments (#102): METRIC.Rn() and METRIC.G() take their
-  arguments in the order of METRIC.EB() (image.DN, image.SR,
-  WeatherStation, MTL, ...); LAI(image, method), albedo(image.SR, coeff,
+  shared arguments in the order of METRIC.EB() (image.DN, image.SR,
+  WeatherStation, MTL, ...; Rn of METRIC.G() and plots come last); LAI(image, method), albedo(image.SR, coeff,
   sat, aoi) and calcH(anchors, Ts, ..., method) take the data first (old
   positional calls of LAI() and albedo() work, with a warning; the others
   stop with a clear error); unused aoi arguments are last and warn when
   passed; METRIC.EB(), METRIC.Rn() and METRIC.G() check that image.SR,
   image.DN, surf.temp, thermalband and DEM are on the same grid. New
-  default alb.coeff = "auto": "Olmedo" for Landsat 8 and 9, "Tasumi" for
+  default alb.coeff = "auto" in the METRIC functions (albedo() keeps
+  "Tasumi"): "Olmedo" for Landsat 8 and 9, "Tasumi" for
   Landsat 7, "Liang" for MODIS (Landsat 8/9 runs that relied on the old
   default "Tasumi" change by about 0.6% in LE).
 * anchors.control() and calcH.control() group the parameters of the anchor

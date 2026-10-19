@@ -11,7 +11,9 @@ getDEM(image, source = "copernicus")
 CRS and grid of the DEM}
 
 \item{source}{DEM source. Currently only "copernicus" (Copernicus DEM
-GLO-30)}
+GLO-30)
+Tiles that do not exist (ocean) are skipped and reported, any other error
+(e.g. no internet connection) stops, and the share of NA cells is reported.}
 }
 \value{
 SpatRaster with one layer named DEM: elevation (m, relative to the

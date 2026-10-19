@@ -68,8 +68,8 @@ adjusted for mountainous terrain}
 
 \item{G}{Soil Heat Flux. See \code{\link{soilHeatFlux}}}
 
-\item{verbose}{Logical. If TRUE will print information about every
-iteration to console}
+\item{verbose}{Logical. If TRUE, information about every iteration is
+shown (as messages)}
 
 \item{maxit}{Maximum number of iterations. Default 20.}
 
@@ -99,7 +99,8 @@ A list with a and b (coefficients of dT = a * Ts_datum + b), dT
 sensible heat flux, W/m2), converged (logical), iterations (number of
 iterations; one per pair for method = "lm") and u200 (wind speed at 200 m
 used, m/s). The aerodynamic resistance of the anchor pixels at each
-iteration is plotted. The iteration stops with an error when it diverges.
+iteration is plotted with plots = TRUE. The iteration stops with an error when
+it diverges.
 }
 \description{
 Generates an iterative solution to estimate r.ah and H because both are unknown at each pixel.
