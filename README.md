@@ -32,6 +32,10 @@ Start with the vignette "Landsat 8 and 9": `vignette("Landsat8", package = "wate
 The guides "Download Landsat 8/9 data from USGS" and "from Microsoft
 Planetary Computer" show how to get Level-2 scenes.
 
+### En español
+
+El mismo código funciona para Landsat 8 y 9 Collection 2 Nivel 2: `loadImageSR()` lee la reflectancia y la temperatura de superficie, `cfmask()` enmascara las nubes, `read.WSdata()` lee la estación meteorológica (indique `tz`, la zona horaria de la estación), `METRIC.EB()` calcula el balance de energía (elige los píxeles de anclaje automáticamente; revise `summary(EB)`) y `ET24h(EB)` da la ET diaria en mm/día. Hay una viñeta en español: `vignette("Landsat8_es", package = "water")`, y dos guías para descargar escenas (en el repositorio, carpeta `vignettes`).
+
 ## Overview
 
 water implements the METRIC surface energy balance model (Allen et al., 2007)
