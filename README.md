@@ -65,4 +65,4 @@ License: GPL (>= 2)
 
 ## Contributing
 
-Contributions are accepted by [fork](https://help.github.com/articles/fork-a-repo/) and [pull-request](https://help.github.com/articles/using-pull-requests/)
+Contributions are accepted by [fork](https://docs.github.com/articles/fork-a-repo/) and [pull-request](https://docs.github.com/articles/using-pull-requests/)
