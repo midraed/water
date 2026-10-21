@@ -24,6 +24,7 @@ quiet <- function(expr) {
   invisible(utils::capture.output(value <- suppressWarnings(expr)))
   value
 }
+# the same computation done twice can differ by rounding on other platforms
 maxdiff <- function(x, y) terra::global(abs(x - y), "max", na.rm = TRUE)[1, 1]
 
 extdata <- system.file("extdata", package = "water")
@@ -55,7 +56,7 @@ stopifnot(terra::global(angles$hour.angle, "max")[1, 1] < 0)
 
 ## Kt (clearness of the atmosphere) is an argument (#84); it was fixed at 1
 sw1 <- incSWradiation(flat, angles, WS)
-stopifnot(maxdiff(incSWradiation(flat, angles, WS, Kt = 1), sw1) == 0,
+stopifnot(maxdiff(incSWradiation(flat, angles, WS, Kt = 1), sw1) < 1e-9,
           terra::global(incSWradiation(flat, angles, WS, Kt = 0.5) - sw1, "max")[1, 1] < 0)
 
 ## Weather at the overpass (#84): radiation against clear sky, period means
@@ -131,26 +132,26 @@ stopifnot(isTRUE(all.equal(as.numeric(terra::values(LAI(method = "turner", image
 ## layers without standard names are used by position, with a warning
 sr0 <- suppressMessages(loadImageSR(c2))
 rev6 <- sr0[[c("NIR", "R", "G", "B", "SWIR2", "SWIR1")]]
-stopifnot(maxdiff(LAI(image = rev6), LAI(image = sr0)) == 0,
+stopifnot(maxdiff(LAI(image = rev6), LAI(image = sr0)) < 1e-9,
           maxdiff(albedo(rev6, coeff = "Olmedo", sat = "L8"),
-                  albedo(sr0, coeff = "Olmedo", sat = "L8")) == 0,
+                  albedo(sr0, coeff = "Olmedo", sat = "L8")) < 1e-9,
           # a Landsat stack that starts with R and NIR is not MODIS
           maxdiff(albedo(sr0[[c("R", "NIR", "B", "G", "SWIR1", "SWIR2")]], coeff = "Olmedo"),
-                  albedo(sr0, coeff = "Olmedo")) == 0)
+                  albedo(sr0, coeff = "Olmedo")) < 1e-9)
 noR <- sr0; names(noR)[3] <- "Red"
 expect_error(LAI(image = noR), "no layer named \"R\"")
 unnamed <- sr0[[1:6]]; names(unnamed) <- paste0("lyr", 1:6)
-stopifnot(maxdiff(expect_warning(LAI(image = unnamed), "by position"), LAI(image = sr0)) == 0)
+stopifnot(maxdiff(expect_warning(LAI(image = unnamed), "by position"), LAI(image = sr0)) < 1e-9)
 # MODIS stacks start with R and NIR: LAI used B and G
 stopifnot(maxdiff(LAI(image = sr0[[c("R", "NIR", "B", "G", "SWIR1", "SWIR2")]]),
-                  LAI(image = sr0)) == 0)
+                  LAI(image = sr0)) < 1e-9)
 
 ## Consistent arguments (#102): data first; old positional calls are caught;
 ## unused aoi warns; inputs must be on the same grid; alb.coeff = "auto"
-stopifnot(maxdiff(expect_warning(LAI("metric2010", sr0), "first argument"), LAI(sr0)) == 0,
-          maxdiff(albedo(sr0, "Olmedo"), albedo(sr0, coeff = "Olmedo")) == 0,
+stopifnot(maxdiff(expect_warning(LAI("metric2010", sr0), "first argument"), LAI(sr0)) < 1e-9,
+          maxdiff(albedo(sr0, "Olmedo"), albedo(sr0, coeff = "Olmedo")) < 1e-9,
           maxdiff(expect_warning(albedo(sr0, terra::ext(sr0), "Olmedo"), "second argument"),
-                  albedo(sr0, coeff = "Olmedo")) == 0,
+                  albedo(sr0, coeff = "Olmedo")) < 1e-9,
           water:::albedoCoeff("auto", "L8") == "Olmedo", water:::albedoCoeff("auto", "L7") == "Tasumi",
           water:::albedoCoeff("Liang", "L8") == "Liang")
 invisible(expect_warning(LAI(sr0, aoi = terra::ext(sr0)), "aoi is not used"))
@@ -182,7 +183,7 @@ sr[cloud] <- NA
 Ts[cloud] <- 285  # cold cloud tops, not masked in the thermal band
 alb <- albedo(sr, coeff = "Olmedo", sat = "L8")
 # sat = "auto" no longer needs Landsat files in the working directory (#78)
-stopifnot(maxdiff(albedo(sr, coeff = "Olmedo"), alb) == 0)
+stopifnot(maxdiff(albedo(sr, coeff = "Olmedo"), alb) < 1e-9)
 lai <- LAI(method = "metric2010", image = sr)
 zom <- momentumRoughnessLength(LAI = lai)
 anchors <- quiet(calcAnchors(image = sr, Ts = Ts, LAI = lai, albedo = alb, Z.om = zom,
@@ -312,8 +313,8 @@ EBold <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image
                                           WeatherStation = WS, MTL = MTL.L2,
                                           alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03, anchors.method = "flexible",
                                           extraParameters = c(minDist = 500))))
-stopifnot(maxdiff(EBctl$EB$LatentHeat, EB$EB$LatentHeat) == 0,
-          maxdiff(EBold$EB$LatentHeat, EB$EB$LatentHeat) == 0)
+stopifnot(maxdiff(EBctl$EB$LatentHeat, EB$EB$LatentHeat) < 1e-9,
+          maxdiff(EBold$EB$LatentHeat, EB$EB$LatentHeat) < 1e-9)
 expect_error(anchors.control(minDist = -1), "above 0")
 expect_error(calcH.control(maxit = 0.5), "whole number")
 expect_error(METRIC.EB(image.SR = "x", anchors.control = list(mindist = 1)),
@@ -336,9 +337,9 @@ dT <- water:::anchorCells(df, Ts = Ts.eb, Ts.datum = Ts.eb, Rn = EB$EB$NetRadiat
                           G = EB$EB$SoilHeat, Z.om = H.args$Z.om, DEM = H.args$DEM)$dT
 stopifnot(near(dT, 6.671291436))
 up <- df; up$type <- ifelse(df$type == "hot", "Hot", " COLD")
-stopifnot(maxdiff(runH(up)$H, H0$H) == 0)
+stopifnot(maxdiff(runH(up)$H, H0$H) < 1e-9)
 ll <- sf::st_transform(sf::st_as_sf(df, coords = c("X", "Y"), crs = terra::crs(Ts.eb)), 4326)
-stopifnot(maxdiff(runH(ll)$H, H0$H) == 0)
+stopifnot(maxdiff(runH(ll)$H, H0$H) < 1e-9)
 sw <- df; sw$type <- ifelse(df$type == "hot", "cold", "hot")
 expect_error(runH(sw), "swapped")
 sw1 <- df; sw1$type[c(1, 6)] <- sw1$type[c(6, 1)]
@@ -389,7 +390,7 @@ expect_error(calcH.control(damping = 1), "damping")
 H.wet <- runH(df, ETrF.hot = 0.2)
 hot.cells <- terra::cellFromXY(Ts.eb, xy[df$type == "hot", , drop = FALSE])
 stopifnot(mean(terra::values(H.wet$H)[hot.cells, 1]) < mean(terra::values(H0$H)[hot.cells, 1]),
-          maxdiff(runH(df, ETrF.hot = 0)$H, H0$H) == 0)
+          maxdiff(runH(df, ETrF.hot = 0)$H, H0$H) < 1e-9)
 EBrule <- quiet(suppressMessages(METRIC.EB(image.SR = image.SR, surf.temp = image.SR$Band_10,
                                            WeatherStation = WS, MTL = MTL.L2,
                                            alb.coeff = "Olmedo", n = 5, Z.om.ws = 0.03,
@@ -414,7 +415,7 @@ et.old <- quiet(ET24h(EB$EB$NetRadiation, EB$EB$SoilHeat, EB$EB$SensibleHeat,
 et.all <- quiet(suppressMessages(ET24h(EB)))
 stopifnot(names(et.old) == "ET24",
           identical(names(et.all), c("ETinst", "ETrF", "ET24", "HgtRnG")),
-          maxdiff(et.all$ET24, et.old) == 0,
+          maxdiff(et.all$ET24, et.old) < 1e-9,
           terra::global(et.all$HgtRnG, "sum", na.rm = TRUE)[1, 1] ==
             terra::global(EB$EB$SensibleHeat > EB$EB$NetRadiation - EB$EB$SoilHeat,
                           "sum", na.rm = TRUE)[1, 1],
@@ -517,7 +518,7 @@ Rn.auto <- quiet(suppressMessages(METRIC.Rn(image.DN = image.DN, image.SR = sr.c
 Rn.L2 <- quiet(METRIC.Rn(image.DN = image.DN, image.SR = sr.c2, surf.temp = sr.c2$Band_10,
                          WeatherStation = WS, MTL = MTL.L1, sat = "L8",
                          alb.coeff = "Olmedo"))
-stopifnot(maxdiff(Rn.auto, Rn.L2) == 0)
+stopifnot(maxdiff(Rn.auto, Rn.L2) < 1e-9)
 lai.dn <- LAI(image = sr.c2)
 Ts.metric <- expect_warning(surfaceTemperature(image.DN = image.DN, sat = "L8", LAI = lai.dn,
                                                MTL = MTL.L1), "biased by several K")
@@ -526,7 +527,7 @@ Ts.atm <- withCallingHandlers(
   surfaceTemperature(image.DN = image.DN, sat = "L8", LAI = lai.dn, MTL = MTL.L1,
                      atmosphere = list(tau = 0.866, Rp = 0.91, Rsky = 1.32)),
   warning = function(c) { w95 <<- c(w95, conditionMessage(c)); invokeRestart("muffleWarning") })
-stopifnot(length(w95) == 0, maxdiff(Ts.metric, Ts.atm) == 0,
+stopifnot(length(w95) == 0, maxdiff(Ts.metric, Ts.atm) < 1e-9,
           abs(stats::median(terra::values(Ts.metric - sr.c2$Band_10), na.rm = TRUE) + 6.2) < 0.3)
 expect_error(METRIC.Rn(image.SR = "x", LST.method = "SC"), "removed in version 1.0")
 expect_error(METRIC.EB(image.SR = "x", sat = "L7", LST.method = "L2"), "only for Landsat 8")
@@ -571,6 +572,6 @@ stopifnot(near(terra::global(EBmtn$EB, "mean", na.rm = TRUE)[, 1], pin.mtn),
           terra::global(ET.mtn$C.rad, "max", na.rm = TRUE)[1, 1] <= 2,
           terra::global(is.na(ET.mtn$C.rad) & !is.na(ET.mtn$ET24), "sum")[1, 1] == 0)
 # on a flat surface C_rad is 1
-stopifnot(all(terra::values(Crad(flat, angles, WS)) == 1))
+stopifnot(all(abs(terra::values(Crad(flat, angles, WS)) - 1) < 1e-9))
 
 cat("test-energy-balance.R: all tests passed\n")
