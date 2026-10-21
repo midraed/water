@@ -10,3 +10,6 @@
 ^roadto1$
 ^Rplots\.pdf$
 ^\.github$
+^00check\.log$
+^00install\.txt$
+^water_.*\.(zip|tar\.gz)$

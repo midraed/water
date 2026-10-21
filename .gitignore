@@ -5,3 +5,8 @@
 /inst/extdata/L8
 /vignettes/descargas/
 Rplots.pdf
+00check.log
+00install.txt
+water_*.zip
+water_*.tar.gz
+*.Rcheck/
