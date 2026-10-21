@@ -8,9 +8,13 @@ energy balance (see NEWS).
 
 ## Test environments
 * local Windows 11, R 4.5.3 (R CMD check --as-cran, with --run-donttest)
+* R-hub (GitHub Actions), R-devel: Linux and Windows, no errors
+  (commit faa5078); macOS (Intel and Apple Silicon) passed on the previous
+  commit (a587ab9, tests only changed afterwards).
+* macOS arm64 R-devel on the final commit: TO FILL IN before submission.
 
 ## R CMD check results
-There were no ERRORs or WARNINGs.
+There were no ERRORs or WARNINGs locally.
 
 NOTEs:
 
@@ -19,6 +23,8 @@ NOTEs:
 * On the local machine pandoc is not installed, so README.md and the
   vignettes could not be checked there.
 
-## Not checked locally
-win-builder, r-hub and macOS checks, and the vignette build, are to be run
-before submission.
+## Not checked
+win-builder and the vignette build (pandoc is not installed locally) are to
+be run before submission. The Intel macOS R-devel job of R-hub currently fails
+in its own setup step (it cannot download R-devel), before the package is
+built.
