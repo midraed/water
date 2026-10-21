@@ -3,15 +3,18 @@
 Actual Evapotranspiration with Energy Balance Models. Repository for the
 development version of the water package.
 
-water is not on CRAN at the moment (the CRAN version was archived on
-2021-10-05). Install it from GitHub:
+Install the released version from CRAN:
+
+    install.packages("water")
+
+or the development version from GitHub:
 
     install.packages("remotes")
     remotes::install_github("midraed/water", build_vignettes = TRUE)
 
 Building the vignettes needs [pandoc](https://pandoc.org/) (RStudio includes
 it). Without pandoc use `remotes::install_github("midraed/water")`; the
-vignettes are then not installed, but you can read their sources on GitHub:
+vignettes are then not installed (they are in the CRAN version), but you can read their sources on GitHub:
 [Landsat 8 and 9](https://github.com/midraed/water/blob/master/vignettes/Landsat8.Rmd),
 [METRIC simple](https://github.com/midraed/water/blob/master/vignettes/METRIC_simple.Rmd) and
 [METRIC advanced](https://github.com/midraed/water/blob/master/vignettes/METRIC_advanced.Rmd).
